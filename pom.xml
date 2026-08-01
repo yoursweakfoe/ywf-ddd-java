@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  根聚合 POM —— 仅用于统一构建顺序（mvn clean install 一键构建全项目）。
+
+  设计说明：
+  - 本 POM 不作为任何模块的 <parent>（两棵子树各自 parent spring-boot-starter-parent）
+  - 仅通过 <modules> 声明构建顺序：common 先于 sample（sample 依赖 common 的 install 产物）
+  - 不声明 dependencyManagement / properties（避免与子树 parent 冲突）
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>ywf-ddd-java</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>ywf-ddd-java</name>
+    <description>DDD 战术模式微服务框架（根聚合）</description>
+
+    <modules>
+        <!-- 框架公共模块（先构建，sample 依赖其 install 产物） -->
+        <module>ywf-ddd-common</module>
+        <!-- 示例业务应用 -->
+        <module>sample-application</module>
+    </modules>
+
+</project>
