@@ -10,12 +10,8 @@ import java.util.Map;
  * 业务异常 —— 所有业务层面错误的统一异常。
  *
  * <p>覆盖场景：业务规则违反、流程状态不合法、外部服务调用失败等。
- * 由全局异常处理双通道捕获并翻译：
- * <ul>
- *   <li>REST 通道：{@code GlobalRestExceptionHandler}（{@code @RestControllerAdvice}）→ HTTP 422 + RFC 9457
- *   <li>gRPC 通道：{@code GrpcExceptionServerInterceptor} → FAILED_PRECONDITION + Trailers
- *       （Consumer 侧经 {@code GrpcExceptionClientInterceptor} 还原为本异常）
- * </ul>
+ * 由全局异常处理捕获并翻译：REST 通道 {@code GlobalRestExceptionHandler}
+ * （{@code @RestControllerAdvice}）→ HTTP 422 + RFC 9457。
  *
  * <p><b>生效方式</b>：上述翻译逻辑位于 {@code common-exception} 模块的
  * {@code ExceptionAutoConfiguration}（Spring Boot 自动装配），引入依赖即生效。

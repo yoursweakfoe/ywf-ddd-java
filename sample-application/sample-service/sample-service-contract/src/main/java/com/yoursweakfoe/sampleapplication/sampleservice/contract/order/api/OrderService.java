@@ -9,8 +9,8 @@ import java.util.UUID;
  * 订单服务接口 —— 服务内部用例契约（方法签名单一事实源）。
  *
  * <p>对外 REST 面由服务端 {@code adapter.web.OrderController} 以 spring-web
- * 原生注解显式声明路径并实现本接口；东西向 RPC 面见
- * {@code src/main/proto} 下的 proto 契约（proto-first，按需最小化）。
+ * 原生注解显式声明路径并实现本接口；东西向服务间调用同样经 HTTP 消费本契约
+ * （消费方 RestClient 直连服务端 REST 端点）。
  */
 public interface OrderService {
 

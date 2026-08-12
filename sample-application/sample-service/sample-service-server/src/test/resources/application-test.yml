@@ -4,10 +4,6 @@ spring:
   threads:
     virtual:
       enabled: true
-  # gRPC 测试通道：随机端口，测试经 GrpcServerStartedEvent 发现实际端口
-  grpc:
-    server:
-      port: 0
   datasource:
     dynamic:
       primary: master

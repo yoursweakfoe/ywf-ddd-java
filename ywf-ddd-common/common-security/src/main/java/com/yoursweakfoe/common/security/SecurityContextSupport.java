@@ -10,12 +10,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * 身份上下文建立支撑 —— REST 入站（{@code SecurityWebFilter}）与
- * gRPC 入站（{@code GrpcSecurityServerInterceptor}）共用的构建 + 写入逻辑。
+ * 身份上下文建立支撑 —— REST 入站（{@code SecurityWebFilter}）使用的构建 + 写入逻辑。
  *
- * <p>两个入口的身份来源不同（Header / Metadata），但"解析角色 → 构建 Authentication →
- * 写入 ThreadLocal"完全一致，集中于此避免两侧实现漂移。身份来源以
- * {@link IdentityDetails} 标记在 Authentication 的 details 槽位。
+ * <p>身份来源以 {@link IdentityDetails} 标记在 Authentication 的 details 槽位。
  *
  * <p><b>清理责任</b>：本类只负责建立，调用方**必须**在 {@code finally} 中调用
  * {@link #clear()}，否则线程归还线程池时身份泄漏给后续请求。
@@ -30,7 +27,7 @@ public final class SecurityContextSupport {
      * @param userId   用户 ID（principal，调用方需先判空）
      * @param username 用户名（可为 null）
      * @param roles    逗号分隔角色（不含 {@code ROLE_} 前缀，可为 null）
-     * @param source   身份来源（edge / propagated）
+     * @param source   身份来源（edge）
      */
     public static Authentication buildAuthentication(
             String userId, String username, String roles, IdentitySource source) {
@@ -49,7 +46,7 @@ public final class SecurityContextSupport {
      * @param userId   用户 ID（principal，调用方需先判空）
      * @param username 用户名（可为 null）
      * @param roles    逗号分隔角色（不含 {@code ROLE_} 前缀，可为 null）
-     * @param source   身份来源（edge / propagated）
+     * @param source   身份来源（edge）
      */
     public static void establish(String userId, String username, String roles, IdentitySource source) {
         establish(buildAuthentication(userId, username, roles, source));

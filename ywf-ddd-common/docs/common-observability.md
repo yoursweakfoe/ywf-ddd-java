@@ -45,7 +45,7 @@
 | MDC 字段 | `trace_id` / `span_id`（OTel Agent 自动注入，未挂 Agent 时显示空串） |
 | JSON 字段（prod） | `ts`, `lvl`, `app`, `trace_id`, `span_id`, `thread`, `logger`, `msg`, `ex` |
 | Pattern（dev/test） | 彩色人类可读：时间 + 级别 + [app,trace_id,span_id] + [thread] + logger + msg |
-| Logger 覆盖 | `com.yoursweakfoe`=DEBUG(dev)/INFO；`io.grpc`=WARN；`org.apache.seata`=WARN；`org.mybatis`=WARN/ERROR(prod) |
+| Logger 覆盖 | `com.yoursweakfoe`=DEBUG(dev)/INFO；`org.apache.seata`=WARN；`org.mybatis`=WARN/ERROR(prod) |
 | Root level | INFO（所有 profile） |
 | Appender | 唯一 CONSOLE（ConsoleAppender），stdout 输出，无文件落盘 |
 | Profile 匹配 | `<springProfile name="dev">` / `"test"` / `"prod"` / `"!dev & !test & !prod"`（兖底） |

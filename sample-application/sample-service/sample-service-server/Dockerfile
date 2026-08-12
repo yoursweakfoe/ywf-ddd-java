@@ -25,9 +25,8 @@ ENV OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED=true
 ENV OTEL_INSTRUMENTATION_LOGBACK_MDC_ENABLED=true
 ENV OTEL_TRACES_SAMPLER=parentbased_always_on
 
-# 8080：REST 面（Spring MVC，经 Higress 网关入口）
-# 50051：gRPC 东西向内部通道（仅集群内部，不得直暴公网）
-EXPOSE 8080 50051
+# 8080：REST 面（Spring MVC；对外经 Higress 网关入口，东西向服务间 HTTP 直连）
+EXPOSE 8080
 
 # 健康检查：依赖 Spring Boot Actuator /actuator/health 端点
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \

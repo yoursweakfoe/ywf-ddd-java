@@ -10,10 +10,10 @@ ywf-ddd-common/
 ├── docs/                  # 各模块详细文档
 ├── common-contract/       # CQRS 契约标记接口（Command / Query / Event）
 ├── common-ddd/            # DDD 框架（领域模型 + CQRS 契约 + MyBatis-Plus 仓储 + 领域事件）
-├── common-exception/      # 统一异常体系（BusinessException + REST/gRPC 双通道全局异常处理）
+├── common-exception/      # 统一异常体系（BusinessException + REST 全局异常处理）
 ├── common-pg/             # PostgreSQL TypeHandler 扩展（UUID / JSONB / 数组）
-├── common-security/       # 身份上下文（REST 边界 Header 解析 + gRPC Metadata 传递 → SecurityContext）
-├── common-cloud/          # 微服务治理（Boot 原生 gRPC + springdoc + Nacos 预留 + Seata）
+├── common-security/       # 身份上下文（REST 边界 Header 解析 → SecurityContext）
+├── common-cloud/          # 微服务治理（springdoc + Nacos 预留 + Seata）
 ├── common-observability/  # 可观测性（结构化日志 + Actuator + Prometheus）
 └── common-test/           # 测试基础设施（ArchUnit 架构守护 + Spring Boot Test）
 ```
@@ -23,7 +23,7 @@ ywf-ddd-common/
 ```
 common-contract（独立，纯标记接口）
      ↑
-common-exception（独立，REST/gRPC 双通道异常处理）
+common-exception（独立，REST 异常处理）
      ↑
 common-ddd → common-contract + common-exception
      ↑

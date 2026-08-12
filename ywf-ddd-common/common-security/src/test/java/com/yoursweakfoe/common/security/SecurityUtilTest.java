@@ -77,12 +77,6 @@ class SecurityUtilTest {
     }
 
     @Test
-    void getIdentitySource_propagated_returnsPropagated() {
-        setAuthentication("u1", new IdentityDetails("john", IdentitySource.PROPAGATED), List.of());
-        assertThat(SecurityUtil.getIdentitySource()).isEqualTo(IdentitySource.PROPAGATED);
-    }
-
-    @Test
     void getIdentitySource_foreignDetails_returnsNull() {
         setAuthentication("u1", "plain-details", List.of());
         assertThat(SecurityUtil.getIdentitySource()).isNull();

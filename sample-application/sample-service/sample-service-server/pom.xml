@@ -34,7 +34,7 @@
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-observability</artifactId>
         </dependency>
-        <!-- 微服务治理（Boot 原生 gRPC + springdoc + Nacos 预留 + Seata） -->
+        <!-- 微服务治理（springdoc + Nacos 预留 + Seata） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-cloud</artifactId>

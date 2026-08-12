@@ -3,19 +3,8 @@
 #
 # 激活方式：SPRING_PROFILES_ACTIVE=dev（ide-dev.env / docker-compose 已配置）
 # 与 prod 的差异：
-#   - gRPC 客户端通道：连本机服务
 #   - Actuator：与业务同端口，不拆分独立管理端口
 # ============================================================================
-
-# gRPC 客户端命名通道（东西向调用目标，一期静态地址直连）
-# 二期接入 Nacos gRPC NameResolver 后由服务发现替代静态地址
-spring:
-  grpc:
-    client:
-      channels:
-        # 示例：本机自调用的演示通道（供订单侧查询商品内部接口）
-        product-internal:
-          address: localhost:50051
 
 # Nacos 配置中心（二期恢复；部署多服务时启用，本地开发无需开启）
 # spring:

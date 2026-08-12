@@ -42,11 +42,11 @@ class SecurityContextSupportTest {
     @Test
     void buildAuthentication_nullUsernameAndRoles_tolerated() {
         Authentication auth = SecurityContextSupport.buildAuthentication(
-                "user-1", null, null, IdentitySource.PROPAGATED);
+                "user-1", null, null, IdentitySource.EDGE);
 
         IdentityDetails details = (IdentityDetails) auth.getDetails();
         assertThat(details.username()).isNull();
-        assertThat(details.source()).isEqualTo(IdentitySource.PROPAGATED);
+        assertThat(details.source()).isEqualTo(IdentitySource.EDGE);
         assertThat(auth.getAuthorities()).isEmpty();
     }
 
@@ -68,11 +68,11 @@ class SecurityContextSupportTest {
         SecurityContextSupport.establish("stale-user", "stale", "STALE_ROLE", IdentitySource.EDGE);
 
         Authentication fresh = SecurityContextSupport.buildAuthentication(
-                "fresh-user", null, null, IdentitySource.PROPAGATED);
+                "fresh-user", null, null, IdentitySource.EDGE);
         SecurityContextSupport.establish(fresh);
 
         assertThat(SecurityUtil.getCurrentUserId()).isEqualTo("fresh-user");
-        assertThat(SecurityUtil.getIdentitySource()).isEqualTo(IdentitySource.PROPAGATED);
+        assertThat(SecurityUtil.getIdentitySource()).isEqualTo(IdentitySource.EDGE);
         assertThat(SecurityUtil.getRoles()).isEmpty();
     }
 

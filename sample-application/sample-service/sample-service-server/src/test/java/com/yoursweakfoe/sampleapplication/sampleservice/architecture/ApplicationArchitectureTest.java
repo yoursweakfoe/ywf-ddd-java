@@ -15,7 +15,7 @@ import com.tngtech.archunit.library.Architectures;
  * <p>本测试覆盖四条应用层特有规则：
  * <ul>
  *   <li>A1 —— 四层依赖方向：Adapter → Application → Domain；Infrastructure → Domain</li>
- *   <li>A2 —— Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus / gRPC</li>
+ *   <li>A2 —— Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus</li>
  *   <li>A3 —— Repository 接口必须在 domain..repository.. 包下</li>
  *   <li>A4 —— CommandHandler / QueryHandler 实现必须在 application.. 包下</li>
  * </ul>
@@ -49,7 +49,7 @@ class ApplicationArchitectureTest {
 
     // ── A2 Domain 层零框架依赖 ────────────────────────────────────────
 
-    /** A2 —— Domain 层不依赖 Spring / MyBatis-Plus / gRPC 等框架。 */
+    /** A2 —— Domain 层不依赖 Spring / MyBatis-Plus 等框架。 */
     @ArchTest
     static final ArchRule a2_domain_zero_framework_dependency = noClasses()
             .that()
@@ -58,9 +58,8 @@ class ApplicationArchitectureTest {
             .dependOnClassesThat()
             .resideInAnyPackage(
                     "org.springframework..",
-                    "com.baomidou.mybatisplus..",
-                    "io.grpc..")
-            .as("A2 Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus / gRPC");
+                    "com.baomidou.mybatisplus..")
+            .as("A2 Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus");
 
     // ── A3 Repository 接口位置 ────────────────────────────────────────
 

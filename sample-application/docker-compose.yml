@@ -58,8 +58,7 @@ services:
       # - DB_MASTER_USER=postgres
       # - DB_MASTER_PASSWORD=postgres
     ports:
-      - "8080:8080"    # REST 面（经 Higress 网关入口）
-      - "50051:50051"  # gRPC 东西向通道（仅集群内部，不得直暴公网）
+      - "8080:8080"    # REST 面（对外经 Higress 网关入口，东西向服务间 HTTP 直连）
     # 启用容器内基础设施时取消注释：
     # depends_on:
     #   postgres:

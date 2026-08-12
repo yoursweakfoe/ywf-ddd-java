@@ -34,8 +34,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- ========== 微服务基础设施（common-cloud） ========== -->
-        <!-- gRPC 版本（grpc-java / spring-grpc-core / protobuf-maven-plugin）由 Boot 4.1 dependency management 统一托管，
-             starter 构件：spring-boot-starter-grpc-server / spring-boot-starter-grpc-client，无需声明版本 -->
         <nacos-client.version>3.2.3</nacos-client.version>
         <seata.version>2.6.0</seata.version>
         <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
@@ -104,9 +102,7 @@
             </dependency>
 
             <!-- ==================== 微服务基础设施（精确声明，不引入整包 BOM） ==================== -->
-            <!-- gRPC：starter 与核心库版本由 Boot 4.1 dependency management 托管（spring-grpc 1.1.0 / grpc-java 1.80.0），
-                 此处仅管理 Boot 未托管的构件 -->
-            <!-- Nacos 客户端：版本独立管理，为二期 gRPC NameResolver 与配置中心恢复预留 -->
+            <!-- Nacos 客户端：版本独立管理，为二期服务注册发现与配置中心恢复预留 -->
             <dependency>
                 <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-client</artifactId>
@@ -120,13 +116,6 @@
                 <artifactId>seata-spring-boot-starter</artifactId>
                 <version>${seata.version}</version>
             </dependency>
-            <!-- Seata gRPC XID 透传 interceptor（ServerTransactionInterceptor / ClientTransactionInterceptor） -->
-            <dependency>
-                <groupId>org.apache.seata</groupId>
-                <artifactId>seata-grpc</artifactId>
-                <version>${seata.version}</version>
-            </dependency>
-
             <!-- ==================== REST API 文档（common-cloud 消费） ==================== -->
             <dependency>
                 <groupId>org.springdoc</groupId>

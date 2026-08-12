@@ -148,7 +148,7 @@ class PayOrderHandlerTest {
 | 规则集为静态常量 | 业务服务直接引用 `DddArchitectureRules.XXX`，无需重复定义 |
 | **未实现** Testcontainers | 各服务数据库/中间件组合不同，由业务项目自行引入 |
 | **未实现** 测试数据工厂（Fixture Builder） | 领域对象构造与业务强相关，通用工厂反而增加维护成本 |
-| **未实现** 契约测试（Spring Cloud Contract / Pact） | 东西向服务间通过 proto 契约（强类型，编译期生成 stub）通信，编译期即可发现契约不兼容 |
+| **未实现** 契约测试（Spring Cloud Contract / Pact） | 东西向经 HTTP 通信，contract jar 的 Java 接口 + CO 类型即方法签名单一事实源，编译期即可发现契约变更 |
 | **未实现** 性能/压力测试工具 | 属于 CI/CD 流水线职责（JMeter / k6），不纳入代码仓库依赖 |
 
 ## 依赖关系
@@ -164,8 +164,8 @@ common-test（独立，test scope 使用）
 | 模块 | scope | 用途 |
 |------|-------|------|
 | common-ddd | test | 框架组件自测（领域模型、仓储、事件发布、自动填充） |
-| common-exception | test | 异常体系自测（BusinessException、REST/RPC 异常处理） |
-| common-security | test | 安全组件自测（SecurityWebFilter、gRPC 身份拦截器、SecurityUtil） |
+| common-exception | test | 异常体系自测（BusinessException、REST 异常处理） |
+| common-security | test | 安全组件自测（SecurityWebFilter、SecurityUtil） |
 | 业务服务 | test | ArchUnit 架构守护 + 集成测试 |
 
 > test scope 不传递：业务服务引入 common-ddd 时不会自动获得 common-test，需显式声明。

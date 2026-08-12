@@ -38,7 +38,6 @@
 | GetOrderQuery | QueryHandler、读路径 |
 | OrderAssembler / OrderConverter | BasicAssembler（应用层）、BasicConverter（基础设施层） |
 | OrderController / ProductController（Adapter web） | Spring MVC REST 面、纯透传 |
-| ProductInternalGrpcService（Adapter grpc） | Boot 原生 gRPC 东西向通道、纯透传 |
 | ArchUnit 测试 | common-test 架构守护 |
 | 并发下单压测 | OptimisticLockerInnerInterceptor 防超卖 |
 

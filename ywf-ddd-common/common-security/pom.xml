@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>common-security</artifactId>
-    <description>身份上下文模块 - REST 边界解析网关 Header + gRPC 内部 Metadata 传递，构建带来源标记的 SecurityContext（opt-in）</description>
+    <description>身份上下文模块 - REST 边界解析网关 Header，构建带来源标记的 SecurityContext（opt-in）</description>
 
     <dependencies>
         <!-- Spring Security（core + config + web：SecurityContext + SecurityFilterChain + @PreAuthorize）
@@ -27,7 +27,7 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
 
-        <!-- spring-web（OncePerRequestFilter；optional：纯 gRPC 服务无需） -->
+        <!-- spring-web（OncePerRequestFilter；optional：非 Web 服务无需） -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
@@ -39,20 +39,6 @@
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- gRPC API（ServerInterceptor / ClientInterceptor / Metadata；optional：纯 REST 服务无需） -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-api</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- spring-grpc 核心（@GlobalServerInterceptor / @GlobalClientInterceptor 注册注解；optional） -->
-        <dependency>
-            <groupId>org.springframework.grpc</groupId>
-            <artifactId>spring-grpc-core</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- ========== 测试 ========== -->

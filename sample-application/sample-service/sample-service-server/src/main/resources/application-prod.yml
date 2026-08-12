@@ -14,14 +14,6 @@ springdoc:
   swagger-ui:
     enabled: false
 
-# gRPC 客户端命名通道（东西向调用目标，一期静态地址直连，地址由环境变量注入）
-# spring:
-#   grpc:
-#     client:
-#       channels:
-#         product-internal:
-#           address: ${PRODUCT_INTERNAL_ADDRESS}
-
 # Actuator 生产收紧：独立端口 + 仅 loopback
 management:
   server:

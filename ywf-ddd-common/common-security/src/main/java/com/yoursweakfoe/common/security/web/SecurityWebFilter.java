@@ -15,12 +15,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *
  * <p><b>职责边界（HTTP 入站通道）：</b>本 Filter 只负责 <b>HTTP 入站</b>身份解析，
  * 身份来源唯一为网关透传 Header（{@link AuthConstants#HDR_USER_ID} 等）。
- * gRPC 入站由 {@code GrpcSecurityServerInterceptor} 独立负责，两者互不依赖。
  *
  * <p><b>注册方式：</b>作为普通 Filter Bean 由 {@code SecurityAutoConfiguration} 注册，
  * Boot 自动将其加入 Servlet 过滤器链。
  *
- * <p><b>上下文生命周期：</b>业务方法（含其发起的下游 gRPC 调用）在
+ * <p><b>上下文生命周期：</b>业务方法（含其发起的下游调用）在
  * {@code filterChain.doFilter()} 内部同步执行，本 Filter 建立的 ThreadLocal
  * 上下文对整条链路可见；{@code finally} 中清理，防止线程归还线程池时身份泄漏。
  *

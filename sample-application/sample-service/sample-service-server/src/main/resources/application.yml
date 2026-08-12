@@ -2,8 +2,8 @@
 # 主配置（profile 无关，所有环境共享）
 #
 # 与分环境配置的权责边界：
-#   - 本文件：服务端口 / 应用名 / gRPC 端口 / MyBatis-Plus / Actuator 端点暴露
-#   - application-{profile}.yml：gRPC 客户端通道地址 / 安全策略 / 管理端口绑定
+#   - 本文件：服务端口 / 应用名 / MyBatis-Plus / Actuator 端点暴露
+#   - application-{profile}.yml：安全策略 / 管理端口绑定
 #   - 环境变量 / K8s ConfigMap：敏感凭证（DB 密码等）
 # ============================================================================
 
@@ -22,20 +22,12 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   threads:
     # JDK 21 虚拟线程：Tomcat 请求处理、Spring 异步任务、定时任务均使用虚拟线程
-    # 无 synchronized 块（零 pinning），SecurityContextHolder / gRPC 回调的 ThreadLocal 均已有 finally 清理
+    # 无 synchronized 块（零 pinning），SecurityContextHolder 等 ThreadLocal 均已有 finally 清理
     virtual:
       enabled: true
   lifecycle:
-    # 优雅停机等待窗口（REST in-flight 请求 + gRPC server shutdown）
+    # 优雅停机等待窗口（REST in-flight 请求）
     timeout-per-shutdown-phase: 30s
-
-  # ----------------------------------------------------------------------------
-  # gRPC 服务端（Boot 4.1 原生自动配置，Netty 传输）
-  # 东西向内部通道，与 REST 面（server.port）双端口分离
-  # ----------------------------------------------------------------------------
-  grpc:
-    server:
-      port: 50051
 
   # ----------------------------------------------------------------------------
   # 多数据源（dynamic-datasource + HikariCP）

@@ -79,7 +79,7 @@ public record GetOrderQuery(UUID orderId) implements Query {}
 | 决策 | 理由 |
 |------|------|
 | 纯标记接口，不含泛型 | Query 定义在 contract（对外），Handler 在 application（内部）；绑定泛型会导致内外类型耦合 |
-| 不含 REST/RPC 注解 | REST 面由服务端 Controller（spring-web 注解）显式声明；东西向走 proto 契约（proto-first），契约 jar 保持纯类型 |
+| 不含 REST/RPC 注解 | REST 面由服务端 Controller（spring-web 注解）显式声明；东西向复用同一契约接口（HTTP 直连），契约 jar 保持纯类型 |
 | **未实现** CQE 基类 / 抽象类 | 标记接口足够；基类会强制继承关系，与 record 不兼容 |
 | **未实现** 序列化 / 校验注解 | 各服务序列化策略不同；校验由 spring-boot-starter-validation 在 Handler 层处理 |
 

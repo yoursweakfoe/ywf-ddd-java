@@ -10,25 +10,13 @@
     </parent>
 
     <artifactId>common-cloud</artifactId>
-    <description>微服务治理 - Spring gRPC（Boot 4.1 原生）、springdoc OpenAPI、Nacos 客户端预留、Seata 分布式事务（opt-in）</description>
+    <description>微服务治理聚合包 - springdoc OpenAPI + Nacos 客户端（预留）+ Seata 分布式事务（opt-in，纯聚合无自有代码）</description>
 
     <dependencies>
-        <!-- 统一异常体系（BusinessException + REST/gRPC 双通道异常处理） -->
+        <!-- 统一异常体系（BusinessException + REST 全局异常处理） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-exception</artifactId>
-        </dependency>
-
-        <!-- gRPC 服务端（Boot 4.1 原生自动配置，Netty 传输，spring.grpc.server.* 属性） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-grpc-server</artifactId>
-        </dependency>
-
-        <!-- gRPC 客户端（GrpcChannelFactory + 命名通道 spring.grpc.client.channels.*） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-grpc-client</artifactId>
         </dependency>
 
         <!-- REST API 文档（springdoc-openapi；Swagger 注解挂 Controller） -->
@@ -38,7 +26,7 @@
         </dependency>
 
         <!-- Nacos 客户端（版本独立管理；一期不启用注册发现/配置中心，
-             为二期 gRPC NameResolver 与配置中心恢复预留） -->
+             为二期服务注册发现与配置中心恢复预留） -->
         <dependency>
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
@@ -59,43 +47,12 @@
                     <groupId>com.alibaba</groupId>
                     <artifactId>druid</artifactId>
                 </exclusion>
-                <!-- gRPC/Netty 按需引入具体子模块，不需要 netty-all -->
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>netty-all</artifactId>
-                </exclusion>
                 <!-- 1.x 已被 commons-pool2 取代，Seata 2.x 仅使用 pool2 -->
                 <exclusion>
                     <groupId>commons-pool</groupId>
                     <artifactId>commons-pool</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <!-- Seata gRPC XID 透传（ServerTransactionInterceptor / ClientTransactionInterceptor，
-             由 SeataGrpcAutoConfiguration 注册为全局 gRPC interceptor） -->
-        <dependency>
-            <groupId>org.apache.seata</groupId>
-            <artifactId>seata-grpc</artifactId>
-        </dependency>
-
-        <!-- Boot 自动装配（@AutoConfiguration / 条件注解） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-
-        <!-- spring-grpc 核心（@GlobalServerInterceptor / @GlobalClientInterceptor 注册注解） -->
-        <dependency>
-            <groupId>org.springframework.grpc</groupId>
-            <artifactId>spring-grpc-core</artifactId>
-        </dependency>
-
-        <!-- ========== 测试 ========== -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

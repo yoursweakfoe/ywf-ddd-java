@@ -29,7 +29,7 @@ public final class SecurityUtil {
     }
 
     /**
-     * 获取当前用户的用户名（来自网关透传 Header 或上游 gRPC Metadata）。
+     * 获取当前用户的用户名（来自网关透传 Header）。
      *
      * @return 用户名字符串，未登录或未透传时返回 null
      */
@@ -47,8 +47,7 @@ public final class SecurityUtil {
     /**
      * 获取当前身份的来源通道。
      *
-     * @return {@link IdentitySource#EDGE}（REST 入站）/ {@link IdentitySource#PROPAGATED}（gRPC 入站），
-     *         未登录或非本框架建立的身份返回 null
+     * @return {@link IdentitySource#EDGE}（REST 入站），未登录或非本框架建立的身份返回 null
      */
     public static IdentitySource getIdentitySource() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

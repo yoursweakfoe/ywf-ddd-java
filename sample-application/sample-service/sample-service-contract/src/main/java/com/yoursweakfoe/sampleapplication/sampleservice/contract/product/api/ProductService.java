@@ -7,8 +7,8 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.Cre
  * 商品服务接口 —— 服务内部用例契约（方法签名单一事实源）。
  *
  * <p>对外 REST 面由服务端 {@code adapter.web.ProductController} 以 spring-web
- * 原生注解显式声明路径并实现本接口；东西向内部查询走 proto 契约
- * {@code ProductInternalService}（src/main/proto）。
+ * 原生注解显式声明路径并实现本接口；东西向内部查询同样经 HTTP 直连
+ * 本契约的 REST 端点（消费方 RestClient 调用）。
  */
 public interface ProductService {
 

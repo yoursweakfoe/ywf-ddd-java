@@ -60,7 +60,6 @@
         </appender>
 
         <logger name="com.yoursweakfoe" level="DEBUG"/>
-        <logger name="io.grpc" level="WARN"/>
         <logger name="org.apache.seata" level="WARN"/>
         <logger name="org.mybatis" level="WARN"/>
 
@@ -79,7 +78,6 @@
         </appender>
 
         <logger name="com.yoursweakfoe" level="INFO"/>
-        <logger name="io.grpc" level="WARN"/>
         <logger name="org.apache.seata" level="WARN"/>
         <logger name="org.mybatis" level="WARN"/>
 
@@ -98,7 +96,6 @@
         </appender>
 
         <logger name="com.yoursweakfoe" level="INFO"/>
-        <logger name="io.grpc" level="WARN"/>
         <logger name="org.apache.seata" level="WARN"/>
         <logger name="org.mybatis" level="ERROR"/>
 
@@ -117,7 +114,6 @@
         </appender>
 
         <logger name="com.yoursweakfoe" level="INFO"/>
-        <logger name="io.grpc" level="WARN"/>
         <logger name="org.apache.seata" level="WARN"/>
         <logger name="org.mybatis" level="WARN"/>
 
