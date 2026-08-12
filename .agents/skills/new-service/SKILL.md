@@ -66,7 +66,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 6. 依赖（按需选择）：
    - `common-ddd`（必选，DDD 构建块 + MyBatis-Plus）
-   - `common-cloud`（必选，Boot 原生 gRPC + springdoc + Seata）
+   - `common-cloud`（必选，springdoc + Nacos 预留 + Seata）
    - `spring-boot-starter-webmvc`（必选，REST 面 + 内嵌 Tomcat）
    - `common-observability`（推荐，Actuator + 日志）
    - `common-pg`（使用 PostgreSQL 时）
@@ -74,7 +74,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
    - `common-test`（test scope）
 7. 创建分层包结构：
    ```
-   adapter/web/（Controller）+ adapter/grpc/（gRPC service，如有东西向接口）
+   adapter/web/（Controller；东西向同样经 HTTP 消费契约接口）
    application/{agg}/handler/ + assembler/ + presenter/ + dto/
    domain/{agg}/model/ + repository/ + portal/
    domain/shared/service/
@@ -86,8 +86,8 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 ### Phase 4: 配置文件
 
-9. `application.yml`（主配置：REST 端口 / gRPC 端口 / 数据源 / MyBatis-Plus / Actuator）
-10. `application-dev.yml`（开发环境：gRPC 客户端通道地址）
+9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis-Plus / Actuator）
+10. `application-dev.yml`（开发环境：与 prod 的差异项，如 Nacos 配置中心预留）
 11. `application-prod.yml`（生产环境：springdoc 禁用 + 管理端口收紧）
 
 ### Phase 5: 部署

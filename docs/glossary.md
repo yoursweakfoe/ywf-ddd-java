@@ -19,7 +19,6 @@
 | Handler | — | 用例执行单元。CommandHandler（写）或 QueryHandler（读），与 CQE 1:1 对应 |
 | AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口，spring-web 注解声明 REST 路径，纯透传 AppService |
-| GrpcService | — | Adapter 层 grpc 组件（@GrpcService），实现 proto stub，纯透传 AppService |
 | DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外。"我告诉别人" |
 | IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务消费（MQ）。对外发布 |
 | Publisher | — | Application 层组件，将领域事件翻译为集成事件并投递 MQ |
@@ -32,7 +31,6 @@
 | Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
 | Consumer | — | Adapter 层组件，MQ 消息消费入口，反序列化后透传 AppService |
 | opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |
-| GrpcExceptionServerInterceptor | — | common-exception 的 gRPC 服务端全局异常拦截器，将内部异常映射为 Status + Trailers；客户端拦截器还原 BusinessException，避免堆栈泄漏 |
 | PgArrayType | — | common-pg 枚举，定义 Java 数组类型与 PG 数组类型名的映射（如 INTEGER → `integer[]`） |
 | DddArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 6 条 DDD 分层守护规则 |
 | RFC 9457 | Problem Details for HTTP APIs | HTTP 错误响应标准（原 RFC 7807），定义 type/title/status/detail/instance 字段 + `application/problem+json` 媒体类型 |

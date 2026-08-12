@@ -42,7 +42,7 @@
 
 - 禁止任何实现类（纯接口 + 数据载体）
 - 禁止业务逻辑
-- 禁止依赖 Spring / gRPC / MyBatis
+- 禁止依赖 Spring / MyBatis
 - 禁止依赖 server 模块
 
 ## 通用禁止

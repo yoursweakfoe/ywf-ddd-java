@@ -49,7 +49,7 @@
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略，MyBatis-Plus 场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 已实现 `findDomainPage` + `PageResult<Domain>`，但不在 Domain 层 Repository 接口暴露（分页属于读侧 CQRS Query） |
-| 领域事件异步/跨进程发布 | Axon Framework、EventStoreDB、Kafka + Outbox | 当前为进程内 Spring Event；跨服务通过 Seata + RPC 显式调用，不引入 MQ 耦合 |
+| 领域事件异步/跨进程发布 | Axon Framework、EventStoreDB、Kafka + Outbox | 当前为进程内 Spring Event；跨服务通过 Seata + HTTP 显式调用，不引入 MQ 耦合 |
 
 ### CQRS 与事件架构
 
@@ -67,7 +67,7 @@
 |------|---------|----------|
 | Mediator / Dispatcher (MediatR) | MediatR (.NET)、Spring Modulith、COLA ExtensionExecutor | Handler 数量少时直接注入更简单透明；引入 Mediator 增加间接层但无实际收益 |
 | Event Sourcing | Axon Framework、EventStoreDB、Greg Young | 当前业务无审计回放 / 时间旅行需求；CRUD + 乐观锁已满足 |
-| Outbox 模式（可靠事件发布） | Chris Richardson、Debezium、Microsoft eShop | 领域事件为进程内 Spring Event；跨服务通过 Seata + RPC，无需消息中间件配套 |
+| Outbox 模式（可靠事件发布） | Chris Richardson、Debezium、Microsoft eShop | 领域事件为进程内 Spring Event；跨服务通过 Seata + HTTP 调用，无需消息中间件配套 |
 | 读模型投影 / 物化视图 | Greg Young CQRS、EventStoreDB、Axon | CQRS 读侧直接通过 Repository 投影 DTO，数据量未达需要物化视图的规模 |
 | Change Data Capture (CDC) | Debezium、Canal、Maxwell | 无事件溯源 / 实时同步需求，不引入额外中间件 |
 | 事件存储 (Event Store) | EventStoreDB、Axon Server | 非 Event Sourcing 架构，无事件持久化重放需求 |
@@ -81,9 +81,9 @@
 |------|--------|
 | Anti-Corruption Layer (Evans DDD) | Gateway 实现内部将外部 SDK 模型翻译为领域语言，防止外部概念污染 Domain |
 | Strategy Pattern (GoF) | Domain Policy——isApplicable + 业务方法；三种形态（互斥 / 叠加 / 精准路由）；OCP |
-| Facade Pattern (GoF) | adapter/web 与 adapter/grpc 纯透传 AppService，不含业务逻辑、不含转换 |
+| Facade Pattern (GoF) | adapter/web 纯透传 AppService，不含业务逻辑、不含转换 |
 | Presenter / ViewModel (MVP 变体) | Handler 返回 DTO（内部视图），AppService 通过 Presenter 呈现为 CO（外部安全视图） |
-| Contract-First / API-First | contract 模块纯类型定义、零实现；消费方仅依赖 contract jar |
+| Contract-First / API-First | contract 模块纯 Java 类型定义（Service 接口 + CQE + CO + IntegrationEvent）、零实现；消费方仅依赖 contract jar |
 
 ### SOLID 与工程原则
 
@@ -102,7 +102,7 @@
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| 服务熔断/降级 (Sentinel / Resilience4j) | Spring Cloud Alibaba、Netflix OSS | 当前服务规模小，gRPC deadline/重试已够用；引入 Sentinel 增加部署复杂度 |
+| 服务熔断/降级 (Sentinel / Resilience4j) | Spring Cloud Alibaba、Netflix OSS | 当前服务规模小，HTTP 超时/重试（RestClient）已够用；引入 Sentinel 增加部署复杂度 |
 | 服务网格 / Sidecar (Istio / Linkerd) | CNCF 生态 | 当前部署规模不需要 Mesh；Higress 网关已提供流量治理能力 |
 | 灰度发布 / 流量染色 SDK | Spring Cloud Alibaba | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
 | 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装 |
@@ -130,7 +130,7 @@
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
 | Testcontainers | Spring Boot 官方推荐 | 各服务数据库/中间件组合不同，由业务项目自行引入 |
-| 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 东西向通过 proto 契约（强类型，编译期生成 stub）通信，编译期即可发现契约不兼容 |
+| 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 东西向消费方依赖同一 contract jar（纯 Java 强类型契约），编译期即可发现契约不兼容 |
 | 测试数据工厂 (Fixture Builder) | Test Data Builder 模式、Instancio | 领域对象构造与业务强相关，通用工厂反而增加维护成本 |
 | 性能/压力测试工具 | JMeter、k6、Gatling | 属于 CI/CD 流水线职责，不纳入代码仓库依赖 |
 
@@ -142,7 +142,7 @@
 |------|--------|
 | RFC 9457 Problem Details | REST 错误响应贴靠标准（type/title/status/detail/instance + `application/problem+json`），外部消费方可程序化处理 |
 | JDK 21 虚拟线程 | `spring.threads.virtual.enabled: true`；Tomcat/Spring 异步/定时任务均用虚拟线程；禁止 synchronized（pinning） |
-| RPC 异常不透传内部堆栈 | GrpcExceptionServerInterceptor 映射为 Status + Trailers，客户端拦截器还原 BusinessException，Consumer 仅收到 messageKey + params |
+| 异常不透传内部堆栈 | REST 通道 GlobalRestExceptionHandler（@RestControllerAdvice）将 BusinessException 统一映射为 HTTP 422 + RFC 9457 Problem Details，Consumer 仅收到 messageKey + params |
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
 | springdoc-openapi | REST 面 OpenAPI 3.0 文档（`/v3/api-docs` + Swagger UI），配合 Apifox 导入同步 |

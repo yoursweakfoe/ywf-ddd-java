@@ -66,7 +66,7 @@ public interface PaymentService {
 ```
 
 > REST 路径由服务端 Controller 以 spring-web 注解显式声明（见 ⑥）；
-> 东西向接口如有需要，另在 contract 模块 `src/main/proto/` 定义 proto 契约。
+> 东西向调用复用同一契约接口（HTTP 直连），无需额外定义。
 
 ## ②③④ Contract — 数据类（CO / Command / Query）
 

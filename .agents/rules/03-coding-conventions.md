@@ -138,11 +138,11 @@ public void cancelOrder(CancelOrderCommand command) {
 - Repository 使用 `findDomainPage(wrapper, pageNum, pageSize)` → 返回 `PageResult<Domain>`
 - Handler 返回 `PageResult<DTO>`，AppService 返回 `PageResult<CO>`
 
-## 双通道 Adapter（REST + gRPC）
+## Adapter（REST）
 
 - Adapter 层 web 入口为 `@RestController`（实现 contract 接口），REST 路径通过 spring-web 注解标注（`@RequestMapping` / `@PostMapping` / `@GetMapping`），位于 Controller 上
-- Adapter 层 grpc 入口为 `@GrpcService`（实现 contract 模块 proto 生成的 stub），仅用于真实的东西向接口
-- web/grpc 入口纯透传 AppService，禁止业务判断、禁止修改 Command/Query 内容
+- 东西向服务间调用复用同一契约接口，消费方经 RestClient 调用提供方 REST 端点（HTTP 直连，一期静态地址）
+- web 入口纯透传 AppService，禁止业务判断、禁止修改 Command/Query 内容
 
 ## SecurityUtil 使用层归属
 
@@ -156,7 +156,7 @@ public void cancelOrder(CancelOrderCommand command) {
 - Tomcat 请求处理、Spring 异步任务、定时任务均运行在虚拟线程上
 - **禁止引入 `synchronized` 块**（会导致虚拟线程 pinning，载体线程被钉住）
 - 需要互斥时使用 `java.util.concurrent.locks.ReentrantLock` 替代
-- ThreadLocal 在虚拟线程下正常工作，但必须在 finally 中清理（已有模式：SecurityWebFilter、gRPC 监听器代理）
+- ThreadLocal 在虚拟线程下正常工作，但必须在 finally 中清理（已有模式：SecurityWebFilter）
 
 ## Lombok 使用约定
 

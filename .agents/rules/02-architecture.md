@@ -26,9 +26,9 @@ adapter → application → domain ← infrastructure
 
 ## contract 模块
 
-- 仅包含：Service 接口、proto 契约、Command/Query、CO、IntegrationEvent、枚举
-- 仅依赖 `common-contract`（标记接口）+ grpc/protobuf 生成代码依赖
-- 东西向消费方依赖 contract jar，使用 proto 生成的 stub 调用
+- 仅包含：Service 接口、Command/Query、CO、IntegrationEvent、枚举
+- 仅依赖 `common-contract`（标记接口）
+- 东西向消费方依赖 contract jar，经 HTTP（RestClient）调用提供方 REST 端点
 
 ## 依赖倒置
 
@@ -45,8 +45,8 @@ adapter → application → domain ← infrastructure
 domain/order/          → model/ + repository/ + portal/ + service/ + model/event/
 application/order/     → OrderAppService + handler/ + assembler/ + presenter/ + dto/
 infrastructure/.../order/ → po/ + converter/ + mapper/ + repository/
-adapter/order/         → web/（Controller）+ grpc/（gRPC service）
-contract/order/        → api/ + dto/ + co/ + enums/（另 src/main/proto/ 东西向契约）
+adapter/order/         → web/（Controller）
+contract/order/        → api/ + dto/ + co/ + enums/
 ```
 
 → 详见 `docs/sample-application/module-design/{layer}.md`

@@ -55,11 +55,10 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 - [ ] Domain Service 零框架注解（Bean 注册在 `infrastructure/config/`）
 - [ ] Repository 实现类的 `save()`/`update()` 标注 `@Transactional(rollbackFor = Exception.class)`（基类自调用不生效）
 
-### 双通道与适配器
+### 适配器
 
 - [ ] web 入口为 `@RestController`（实现 contract 接口，spring-web 注解声明路径）
-- [ ] gRPC 入口为 `@GrpcService`（实现 proto stub，仅真实东西向接口）
-- [ ] web/grpc 入口纯透传（无 Assembler/Presenter 调用、无业务判断）
+- [ ] web 入口纯透传（无 Assembler/Presenter 调用、无业务判断）
 
 ### 虚拟线程兼容性
 

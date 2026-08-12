@@ -60,16 +60,17 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
     private final OrderRepository orderRepository;
     private final OrderAssembler orderAssembler;
-    private final ProductInternalServiceGrpc.ProductInternalServiceBlockingStub productStub;  // 远程服务（gRPC stub）
+    private final RestClient productRestClient;  // 远程服务（HTTP，静态 baseUrl 直连）
 
     @Override
     @GlobalTransactional(rollbackFor = Exception.class)  // Seata 全局事务
     public OrderDTO handle(PlaceOrderCommand command) {
-        // 1. 远程扣库存（跨服务 gRPC 调用，XID 经 seata-grpc 拦截器透传，Seata 分支事务）
-        productStub.deductStock(DeductStockRequest.newBuilder()
-                .setProductId(command.getProductId())
-                .setQuantity(command.getQuantity())
-                .build());
+        // 1. 远程扣库存（跨服务 HTTP 调用，XID 经出站拦截器写入 TX_XID header 透传，Seata 分支事务）
+        productRestClient.post()
+                .uri("/products/internal/deduct-stock")
+                .body(new DeductStockCommand(command.getProductId(), command.getQuantity()))
+                .retrieve()
+                .toBodilessEntity();
 
         // 2. 本地创建订单（Seata 分支事务，同一全局事务内）
         Order order = new Order(UUID.randomUUID(), command.toItems(), command.getCustomerId());
@@ -83,8 +84,57 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
 要点：
 - `@GlobalTransactional` 标注在发起方（TC 协调入口）
-- 远程服务（Product）的 `deductStock` 自动注册为分支事务（Seata Agent 拦截 DataSource）
+- 消费方 RestClient 以静态 baseUrl 构建（一期静态地址直连），请求/响应类型复用 contract 中的 CQE/CO
+- 远程服务（Product）的扣库存端点自动注册为分支事务（Seata Agent 拦截 DataSource）
 - 任一分支失败 → TC 通知所有分支回滚（undo_log 逆向补偿）
+
+### XID 透传（HTTP）
+
+Seata 全局事务的 XID 必须在跨服务 HTTP 调用间透传，否则分支事务无法加入全局事务。配方为两段手写组件：
+
+```java
+// infrastructure/config/SeataXidClientInterceptor.java（出站：调用方侧）
+@Component
+public class SeataXidClientInterceptor implements ClientHttpRequestInterceptor {
+
+    @Override
+    public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+                                        ClientHttpRequestExecution execution) throws IOException {
+        String xid = RootContext.getXID();
+        if (xid != null) {
+            request.getHeaders().add(RootContext.KEY_XID, xid);  // header 名即 TX_XID
+        }
+        return execution.execute(request, body);
+    }
+}
+// 注册：RestClient.builder().baseUrl(...).requestInterceptor(new SeataXidClientInterceptor()).build()
+```
+
+```java
+// infrastructure/config/SeataXidBindFilter.java（入站：提供方侧）
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class SeataXidBindFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        String xid = ((HttpServletRequest) request).getHeader(RootContext.KEY_XID);
+        if (xid != null) {
+            RootContext.bind(xid);
+        }
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            if (xid != null) {
+                RootContext.unbind();
+            }
+        }
+    }
+}
+```
+
+> 框架（common-cloud）不内置透传组件，业务侧按本配方实现；Spring Cloud Alibaba 路线不适用（本项目未引入）。
 
 ## 2. 同服务场景 — 本地事务即可
 
@@ -117,5 +167,7 @@ TM（Transaction Manager）—— @GlobalTransactional 标注的方法
 | 层 | 文件 | 职责 |
 |----|------|------|
 | application | `handler/PlaceOrderHandler.java` | @GlobalTransactional 入口 |
-| contract | `product_internal.proto` | 东西向 gRPC 契约（stub 消费） |
-| infrastructure | Seata 自动代理 DataSource + seata-grpc 拦截器透传 XID | 无需手写代码 |
+| contract | `product/dto/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） |
+| infrastructure | `config/SeataXidClientInterceptor.java` | 出站：RootContext.getXID() 写入 TX_XID header |
+| infrastructure | `config/SeataXidBindFilter.java` | 入站：读取 header 并 bind/unbind RootContext |
+| infrastructure | Seata 自动代理 DataSource | 无需手写代码 |

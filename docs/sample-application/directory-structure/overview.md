@@ -22,8 +22,6 @@ contract/
     ├── dto/                         # Command + Query（CQE 请求对象）
     │   └── event/                   # Integration Event（集成事件）
     └── enums/                       # 契约共享枚举
-
-# 另：src/main/proto/                  东西向 gRPC 契约（proto-first，protobuf-maven-plugin 生成 stub）
 ```
 
 | 目录 | 职责 |
@@ -42,7 +40,6 @@ contract/
 server/
 ├── adapter/                         # 入站适配器（driving adapter）
 │   ├── web/                           # REST 面：@RestController 实现 contract 接口（纯透传）
-│   ├── grpc/                          # gRPC 面：@GrpcService 实现 proto stub（纯透传）
 │   ├── consumer/                      # MQ 消费入口（Integration Event 入站）【按需】
 │   ├── scheduler/                     # 定时任务入口【按需】
 │   └── shared/                        # 跨聚合/系统级入口【按需】
