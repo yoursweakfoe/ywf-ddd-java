@@ -15,6 +15,7 @@
 .kilo/
 .opencode/
 .pi/
+.omo/
 
 # ===== OS =====
 .DS_Store

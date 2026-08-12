@@ -60,14 +60,16 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
     private final OrderRepository orderRepository;
     private final OrderAssembler orderAssembler;
-    @DubboReference
-    private ProductService productService;  // 远程服务
+    private final ProductInternalServiceGrpc.ProductInternalServiceBlockingStub productStub;  // 远程服务（gRPC stub）
 
     @Override
     @GlobalTransactional(rollbackFor = Exception.class)  // Seata 全局事务
     public OrderDTO handle(PlaceOrderCommand command) {
-        // 1. 远程扣库存（跨服务，Seata 分支事务）
-        productService.deductStock(new DeductStockCommand(command.getProductId(), command.getQuantity()));
+        // 1. 远程扣库存（跨服务 gRPC 调用，XID 经 seata-grpc 拦截器透传，Seata 分支事务）
+        productStub.deductStock(DeductStockRequest.newBuilder()
+                .setProductId(command.getProductId())
+                .setQuantity(command.getQuantity())
+                .build());
 
         // 2. 本地创建订单（Seata 分支事务，同一全局事务内）
         Order order = new Order(UUID.randomUUID(), command.toItems(), command.getCustomerId());
@@ -115,5 +117,5 @@ TM（Transaction Manager）—— @GlobalTransactional 标注的方法
 | 层 | 文件 | 职责 |
 |----|------|------|
 | application | `handler/PlaceOrderHandler.java` | @GlobalTransactional 入口 |
-| contract | `ProductService.java` | 远程服务接口（@DubboReference 消费） |
-| infrastructure | Seata Agent 自动代理 DataSource | 无需手写代码 |
+| contract | `product_internal.proto` | 东西向 gRPC 契约（stub 消费） |
+| infrastructure | Seata 自动代理 DataSource + seata-grpc 拦截器透传 XID | 无需手写代码 |

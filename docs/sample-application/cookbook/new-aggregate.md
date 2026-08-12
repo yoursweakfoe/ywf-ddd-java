@@ -23,15 +23,15 @@
 sample-service/
 ├── sample-service-contract/src/main/java/.../contract/
 │   └── payment/
-│       ├── api/PaymentService.java              ← ① RPC 接口
+│       ├── api/PaymentService.java              ← ① 用例契约接口
 │       ├── co/PaymentCO.java                    ← ② 契约输出
 │       ├── dto/CreatePaymentCommand.java        ← ③ Command
 │       ├── dto/GetPaymentQuery.java             ← ④ Query
 │       └── dto/event/PaymentCreatedIntegrationEvent.java  ← ⑤ 集成事件（可选）
 │
 └── sample-service-server/src/main/java/.../
-    ├── adapter/payment/facade/
-    │   └── PaymentServiceImpl.java              ← ⑥ Facade
+    ├── adapter/web/
+    │   └── PaymentController.java               ← ⑥ Controller（REST 入口）
     ├── application/payment/
     │   ├── PaymentAppService.java               ← ⑦ AppService
     │   ├── dto/PaymentDTO.java                  ← ⑧ 内部 DTO
@@ -52,28 +52,25 @@ sample-service/
         └── repository/PaymentRepositoryImpl.java← ⑳ RepositoryImpl
 ```
 
-## ① Contract — RPC 接口
+## ① Contract — 用例契约接口
 
 ```java
 package ...contract.payment.api;
 
-import javax.ws.rs.*;
-
-@Path("/payments")
 public interface PaymentService {
 
-    @POST
     PaymentCO createPayment(CreatePaymentCommand command);
 
-    @GET
-    @Path("/{paymentId}")
-    PaymentCO getPayment(@PathParam("paymentId") String paymentId);
+    PaymentCO getPayment(String paymentId);
 }
 ```
 
+> REST 路径由服务端 Controller 以 spring-web 注解显式声明（见 ⑥）；
+> 东西向接口如有需要，另在 contract 模块 `src/main/proto/` 定义 proto 契约。
+
 ## ②③④ Contract — 数据类（CO / Command / Query）
 
-三者模式相同：`@Data` + `implements Serializable` + `@Schema` 注解。差异仅在标记接口：
+三者模式相同：`@Data` + `implements Serializable`。差异仅在标记接口：
 
 | 类 | 标记接口 | 用途 |
 |----|---------|------|
@@ -84,15 +81,11 @@ public interface PaymentService {
 ```java
 // CO 示例
 @Data @NoArgsConstructor @AllArgsConstructor
-@Schema(description = "支付契约输出对象")
 public class PaymentCO implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
-    @Schema(description = "支付 ID")
     private String id;
-    @Schema(description = "支付状态")
     private String status;
-    @Schema(description = "支付金额")
     private BigDecimal amount;
 }
 
@@ -101,9 +94,7 @@ public class PaymentCO implements Serializable {
 public class CreatePaymentCommand implements Command, Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private String orderId;
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private BigDecimal amount;
 }
 ```
@@ -118,25 +109,28 @@ public class PaymentCreatedIntegrationEvent implements Event, Serializable {
 }
 ```
 
-## ⑥ Adapter — Facade
+## ⑥ Adapter — Controller
 
 ```java
-@DubboService
-public class PaymentServiceImpl implements PaymentService {
+@RestController
+@RequestMapping("/payments")
+public class PaymentController implements PaymentService {
 
     private final PaymentAppService paymentAppService;
 
-    public PaymentServiceImpl(PaymentAppService paymentAppService) {
+    public PaymentController(PaymentAppService paymentAppService) {
         this.paymentAppService = paymentAppService;
     }
 
     @Override
-    public PaymentCO createPayment(CreatePaymentCommand command) {
+    @PostMapping("")
+    public PaymentCO createPayment(@RequestBody CreatePaymentCommand command) {
         return paymentAppService.createPayment(command);
     }
 
     @Override
-    public PaymentCO getPayment(String paymentId) {
+    @GetMapping("/{paymentId}")
+    public PaymentCO getPayment(@PathVariable("paymentId") String paymentId) {
         return paymentAppService.getPayment(new GetPaymentQuery(paymentId));
     }
 }

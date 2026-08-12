@@ -27,7 +27,7 @@
 
 ```
 REST 请求（PlaceOrderCommand）
-  → adapter/facade/OrderServiceImpl
+  → adapter/web/OrderController
     → application/order/OrderAppService
       → application/order/handler/PlaceOrderHandler（复杂用例，跨 2 个聚合）
         → domain/product/repository/ProductRepository.findById()     ← 查询商品
@@ -144,9 +144,9 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| contract | `api/OrderService.java` | RPC 接口 + JAX-RS 路径映射 |
+| contract | `api/OrderService.java` | 用例契约接口 |
 | contract | `dto/PlaceOrderCommand.java` | 下单命令（含订单项列表） |
-| adapter | `facade/OrderServiceImpl.java` | 协议适配（透传） |
+| adapter | `web/OrderController.java` | 协议适配（透传） |
 | application | `handler/PlaceOrderHandler.java` | 跨聚合编排 |
 | domain | `shared/service/InventoryDomainService.java` | 跨聚合库存协调 |
 | domain | `order/model/Order.java` | 订单聚合根（place 行为） |

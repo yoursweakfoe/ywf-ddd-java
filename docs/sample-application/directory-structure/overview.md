@@ -17,17 +17,18 @@ sample-service/
 ```
 contract/
 └── {aggregate}/                     # 顶层按聚合分包
-    ├── api/                         # Dubbo Service 接口
+    ├── api/                         # Service 接口（内部用例契约，Controller 实现）
     ├── co/                          # Contract Object（契约输出对象）
     ├── dto/                         # Command + Query（CQE 请求对象）
     │   └── event/                   # Integration Event（集成事件）
     └── enums/                       # 契约共享枚举
 
+# 另：src/main/proto/                  东西向 gRPC 契约（proto-first，protobuf-maven-plugin 生成 stub）
 ```
 
 | 目录 | 职责 |
 |------|------|
-| `{aggregate}/api/` | Dubbo Service 接口定义 |
+| `{aggregate}/api/` | Service 接口定义（方法签名单一事实源） |
 | `{aggregate}/co/` | Contract Object（对内部 DTO 进行字段清洗后的外部安全视图） |
 | `{aggregate}/dto/` | CQE 请求对象（Command / Query） |
 | `{aggregate}/dto/event/` | Integration Event（跨服务集成事件） |
@@ -40,10 +41,10 @@ contract/
 ```
 server/
 ├── adapter/                         # 入站适配器（driving adapter）
-│   ├── {aggregate}/
-│   │   ├── facade/                    # @DubboService 实现（纯透传）
-│   │   ├── consumer/                  # MQ 消费入口（Integration Event 入站）【按需】
-│   │   └── scheduler/                 # 定时任务入口【按需】
+│   ├── web/                           # REST 面：@RestController 实现 contract 接口（纯透传）
+│   ├── grpc/                          # gRPC 面：@GrpcService 实现 proto stub（纯透传）
+│   ├── consumer/                      # MQ 消费入口（Integration Event 入站）【按需】
+│   ├── scheduler/                     # 定时任务入口【按需】
 │   └── shared/                        # 跨聚合/系统级入口【按需】
 │
 ├── application/                     # 用例编排

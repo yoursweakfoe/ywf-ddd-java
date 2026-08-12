@@ -27,7 +27,7 @@ ywf-ddd-java/
 
 ## 技术栈
 
-Java 21 / Spring Boot 3.5 / Dubbo 3.3 (Triple) / MyBatis-Plus 3.5 / PostgreSQL / Nacos 3.x / Seata 2.6 / Higress
+Java 21 / Spring Boot 4.1 / Spring MVC（REST）+ Boot 原生 gRPC（东西向）/ MyBatis-Plus 3.5 / PostgreSQL / Nacos 客户端（预留）/ Seata 2.6 / Higress
 
 ## 模块设计原则
 

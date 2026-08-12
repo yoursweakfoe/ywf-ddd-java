@@ -7,9 +7,9 @@
 
 | 文档 | 内容 | 适合场景 |
 |------|------|--------|
-| [write-path.md](write-path.md) | 写路径全链路：Command → Facade → AppService → Handler → Domain → Repository → PO | 新增写操作用例 |
-| [read-path.md](read-path.md) | 读路径全链路：Query → Facade → AppService → QueryHandler → Repository 投影 DTO | 新增查询用例 |
-| [cross-aggregate.md](cross-aggregate.md) | 跨聚合协调：Domain Service + Bean 注册 + 复杂 Handler + Contract JAX-RS 注解 | 多聚合协作场景 |
+| [write-path.md](write-path.md) | 写路径全链路：Command → Controller → AppService → Handler → Domain → Repository → PO | 新增写操作用例 |
+| [read-path.md](read-path.md) | 读路径全链路：Query → Controller → AppService → QueryHandler → Repository 投影 DTO | 新增查询用例 |
+| [cross-aggregate.md](cross-aggregate.md) | 跨聚合协调：Domain Service + Bean 注册 + 复杂 Handler + Contract 接口 | 多聚合协作场景 |
 | [event-flow.md](event-flow.md) | 事件全链路：DomainEvent → registerEvent → EventHandler → Publisher → IntegrationEvent | 新增领域事件 |
 | [policy-pattern.md](policy-pattern.md) | 领域策略模式：Before/After 对比 + 三种组合形态（互斥/叠加/路由） | 抽离可插拔业务规则 |
 | [gateway.md](gateway.md) | Gateway（Portal 实现）：Domain 接口 + Infra ACL 翻译 | 对接外部系统 |

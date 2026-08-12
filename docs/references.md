@@ -81,7 +81,7 @@
 |------|--------|
 | Anti-Corruption Layer (Evans DDD) | Gateway 实现内部将外部 SDK 模型翻译为领域语言，防止外部概念污染 Domain |
 | Strategy Pattern (GoF) | Domain Policy——isApplicable + 业务方法；三种形态（互斥 / 叠加 / 精准路由）；OCP |
-| Facade Pattern (GoF) | adapter/facade 纯透传 AppService，不含业务逻辑、不含转换 |
+| Facade Pattern (GoF) | adapter/web 与 adapter/grpc 纯透传 AppService，不含业务逻辑、不含转换 |
 | Presenter / ViewModel (MVP 变体) | Handler 返回 DTO（内部视图），AppService 通过 Presenter 呈现为 CO（外部安全视图） |
 | Contract-First / API-First | contract 模块纯类型定义、零实现；消费方仅依赖 contract jar |
 
@@ -102,12 +102,12 @@
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| 服务熔断/降级 (Sentinel / Resilience4j) | Spring Cloud Alibaba、Netflix OSS | 当前服务规模小，Dubbo 自身超时重试已够用；引入 Sentinel 增加部署复杂度 |
+| 服务熔断/降级 (Sentinel / Resilience4j) | Spring Cloud Alibaba、Netflix OSS | 当前服务规模小，gRPC deadline/重试已够用；引入 Sentinel 增加部署复杂度 |
 | 服务网格 / Sidecar (Istio / Linkerd) | CNCF 生态 | 当前部署规模不需要 Mesh；Higress 网关已提供流量治理能力 |
-| 灰度发布 / 流量染色 SDK | Spring Cloud Alibaba、Dubbo Mesh | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
+| 灰度发布 / 流量染色 SDK | Spring Cloud Alibaba | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
 | 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装 |
 | 链路追踪 SDK (SkyWalking / Zipkin) | Spring Cloud Sleuth、SkyWalking | 由 OTel Java Agent 零侵入方式覆盖，不在代码中引入 SDK |
-| API 版本管理框架 | Spring Boot、API 网关插件 | Dubbo Triple REST 通过 URL path 天然支持版本（`/v1/orders`），无需框架级抽象 |
+| API 版本管理框架 | Spring Boot、API 网关插件 | REST 路径由 Spring MVC 显式声明，天然支持版本（`/v1/orders`），无需框架级抽象 |
 | 幂等性框架 | 各类幂等 starter、分布式锁方案 | 幂等逻辑与业务强相关（唯一键、状态机、Token），通用抽象反而增加理解成本 |
 | 多租户 | MyBatis-Plus TenantLineInnerInterceptor | 当前业务无多租户需求；可按需在业务项目中自行开启 |
 
@@ -118,7 +118,7 @@
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
 | JWT 验签 / Token 刷新 | Spring Security OAuth2、Keycloak | 验签由 Higress 网关 jwt-auth 插件统一处理；微服务不持有密钥 |
-| Spring Security FilterChain | Spring Security 官方 | Dubbo Triple REST 运行在 Netty 层，Servlet FilterChain 不可达 |
+| URL 级鉴权 FilterChain | Spring Security 官方 | 鉴权决策收口在网关；服务层仅提供 permit-all 边界链（common-security），方法级用 `@PreAuthorize` |
 | RBAC 权限模型（数据库存储） | Spring Security、Apache Shiro | 角色/权限管理属于业务域，各服务按需实现；本框架只提供 Header→Context 桥接 |
 | OAuth2 / SSO 登录流程 | Spring Authorization Server、Keycloak | 登录由独立认证服务 + 网关处理，业务微服务不参与登录流程 |
 | 数据权限（行级过滤） | MyBatis-Plus DataPermissionInterceptor | 数据权限与业务模型强耦合，由业务层 SQL 条件自行实现 |
@@ -130,7 +130,7 @@
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
 | Testcontainers | Spring Boot 官方推荐 | 各服务数据库/中间件组合不同，由业务项目自行引入 |
-| 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 服务间通过 Dubbo 接口（强类型）通信，编译期即可发现契约不兼容 |
+| 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 东西向通过 proto 契约（强类型，编译期生成 stub）通信，编译期即可发现契约不兼容 |
 | 测试数据工厂 (Fixture Builder) | Test Data Builder 模式、Instancio | 领域对象构造与业务强相关，通用工厂反而增加维护成本 |
 | 性能/压力测试工具 | JMeter、k6、Gatling | 属于 CI/CD 流水线职责，不纳入代码仓库依赖 |
 
@@ -142,9 +142,10 @@
 |------|--------|
 | RFC 9457 Problem Details | REST 错误响应贴靠标准（type/title/status/detail/instance + `application/problem+json`），外部消费方可程序化处理 |
 | JDK 21 虚拟线程 | `spring.threads.virtual.enabled: true`；Tomcat/Spring 异步/定时任务均用虚拟线程；禁止 synchronized（pinning） |
-| RPC 异常不透传内部堆栈 | GlobalRpcExceptionFilter 统一包装为 BusinessException，Consumer 仅收到类型安全的 messageKey + params |
+| RPC 异常不透传内部堆栈 | GrpcExceptionServerInterceptor 映射为 Status + Trailers，客户端拦截器还原 BusinessException，Consumer 仅收到 messageKey + params |
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
+| springdoc-openapi | REST 面 OpenAPI 3.0 文档（`/v3/api-docs` + Swagger UI），配合 Apifox 导入同步 |
 
 **未采纳：**
 
@@ -155,7 +156,6 @@
 | Spring Modulith | Spring 官方 | 模块化单体框架，本项目已是微服务架构，无需模块级事件/验证 |
 | MapStruct（代码生成映射） | 多数 CRUD 脚手架 | 已彻底移除：AI 辅助开发下手写模板代码成本归零，而生成器的认知负担（注解处理链、生成代码不可见、Lombok 桥接、@MapperScan 误扫）仍在；Converter/Assembler/Presenter 统一纯手写显式映射，富领域模型走 reconstitute，完整性由往返测试守护 |
 | Lombok @Data 用于领域模型 | 多数业务项目 | 充血模型禁止暴露 setter；@Data 生成 equals/hashCode 与 Entity ID 判等冲突 |
-| Swagger/Knife4j 服务端集成 | SpringDoc、Knife4j | Dubbo Triple REST 自带 OpenAPI 生成（dubbo-rest-openapi），无需额外集成 |
 
 ### 书籍与文章
 

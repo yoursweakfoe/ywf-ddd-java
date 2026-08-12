@@ -66,14 +66,15 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 6. 依赖（按需选择）：
    - `common-ddd`（必选，DDD 构建块 + MyBatis-Plus）
-   - `common-cloud`（必选，Dubbo Triple + Nacos）
+   - `common-cloud`（必选，Boot 原生 gRPC + springdoc + Seata）
+   - `spring-boot-starter-webmvc`（必选，REST 面 + 内嵌 Tomcat）
    - `common-observability`（推荐，Actuator + 日志）
    - `common-pg`（使用 PostgreSQL 时）
    - `common-security`（需要身份上下文时）
    - `common-test`（test scope）
 7. 创建分层包结构：
    ```
-   adapter/{agg}/facade/
+   adapter/web/（Controller）+ adapter/grpc/（gRPC service，如有东西向接口）
    application/{agg}/handler/ + assembler/ + presenter/ + dto/
    domain/{agg}/model/ + repository/ + portal/
    domain/shared/service/
@@ -81,13 +82,13 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
    infrastructure/gateway/
    infrastructure/config/
    ```
-8. 创建 `Application.java`（@SpringBootApplication + @EnableDubbo）
+8. 创建 `Application.java`（@SpringBootApplication）
 
 ### Phase 4: 配置文件
 
-9. `application.yml`（主配置：端口 / 数据源 / Dubbo / MyBatis-Plus / Actuator）
-10. `application-dev.yml`（开发环境：本机 Nacos）
-11. `application-prod.yml`（生产环境：内网 Nacos + 管理端口收紧）
+9. `application.yml`（主配置：REST 端口 / gRPC 端口 / 数据源 / MyBatis-Plus / Actuator）
+10. `application-dev.yml`（开发环境：gRPC 客户端通道地址）
+11. `application-prod.yml`（生产环境：springdoc 禁用 + 管理端口收紧）
 
 ### Phase 5: 部署
 

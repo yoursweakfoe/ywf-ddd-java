@@ -48,7 +48,7 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 
 ### Phase 5: adapter 层
 
-20. `adapter/{agg}/facade/{Agg}ServiceImpl.java` — Facade（@DubboService）
+20. `adapter/web/{Agg}Controller.java` — REST 入口（@RestController 实现 contract 接口）
 
 ## 验证
 

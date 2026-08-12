@@ -12,7 +12,7 @@
 
 1. 用户尝试支付一个非 PENDING 状态的订单 → 状态机校验失败
 2. 领域层显式抛出 `BusinessException`（携带 i18n 位点）
-3. 异常沿调用栈向上传播，由 `GlobalRestExceptionHandler`（Dubbo SPI）自动翻译为 HTTP 响应
+3. 异常沿调用栈向上传播，由 `GlobalRestExceptionHandler`（`@RestControllerAdvice`）自动翻译为 HTTP 响应
 4. 前端收到 RFC 9457 格式的 JSON 错误体，用 `t(messageKey, params)` 渲染本地化文案
 
 ## 异常传播链路
@@ -27,11 +27,11 @@ PayOrderHandler.handle(command)
 OrderAppService.payOrder(command)
   → payOrderHandler.handle(command)  // 继续传播
 
-OrderServiceImpl.payOrder(orderId)
+OrderController.payOrder(orderId)
   → orderAppService.payOrder(command)  // 继续传播
 
-Dubbo Triple REST 管线
-  → GlobalRestExceptionHandler.handle(exception)  // SPI 自动拦截
+Spring MVC 异常解析管线
+  → GlobalRestExceptionHandler.handleBusiness(exception)  // @RestControllerAdvice 自动拦截
     → HTTP 422 + RFC 9457 JSON
 ```
 
@@ -83,7 +83,7 @@ public void deductStock(int quantity) {
 
 ```java
 // common-exception 模块（框架代码，业务服务无需编写）
-// GlobalRestExceptionHandler 通过 Dubbo SPI 自动注册，引入 common-cloud 即生效
+// GlobalRestExceptionHandler 通过 ExceptionAutoConfiguration 自动注册，引入 common-cloud 即生效
 ```
 
 ### 异常类型 → HTTP 状态码映射

@@ -12,7 +12,7 @@
 
 1. 每天凌晨 2 点扫描所有 SHIPPED 状态超过 15 天的订单
 2. 自动将其标记为 DELIVERED（视为买家已签收）
-3. 定时任务是 adapter 层的另一种入口（与 Facade 并列），透传 AppService
+3. 定时任务是 adapter 层的另一种入口（与 web/grpc 并列），透传 AppService
 
 ## 调用链路
 
@@ -112,7 +112,6 @@ public class AutoDeliverExpiredOrdersHandler {
 ```java
 // Application.java（启动类）
 @SpringBootApplication
-@EnableDubbo
 @EnableScheduling  // ← 启用 @Scheduled 支持
 public class Application {
     public static void main(String[] args) {

@@ -21,7 +21,7 @@
 
 ```
 REST 请求
-  → adapter/facade/OrderServiceImpl（参数包装）
+  → adapter/web/OrderController（参数包装）
     → application/order/OrderAppService（委托 + 呈现）
       → application/order/handler/GetOrderHandler（查询编排）
         → domain/order/repository/OrderRepository（读优化方法）
@@ -66,17 +66,19 @@ public record GetOrderPageQuery(
 - `PageableQuery` 继承 `Query`，带 pageNum/pageSize 约束
 - record 天然不可变，适合简单 Query
 
-## 2. Adapter — Facade（参数包装）
+## 2. Adapter — Controller（参数包装）
 
 ```java
-// adapter/order/facade/OrderServiceImpl.java（节选）
-@DubboService
-public class OrderServiceImpl implements OrderService {
+// adapter/web/OrderController.java（节选）
+@RestController
+@RequestMapping("/orders")
+public class OrderController implements OrderService {
 
     private final OrderAppService orderAppService;
 
     @Override
-    public OrderCO getOrder(String orderId) {
+    @GetMapping("/{orderId}")
+    public OrderCO getOrder(@PathVariable("orderId") String orderId) {
         // REST 路径参数 → Query 包装 → 透传
         return orderAppService.getOrder(new GetOrderQuery(orderId));
     }
@@ -246,7 +248,7 @@ public class OrderRepositoryImpl
 | contract | `dto/GetOrderQuery.java` | 单条查询 |
 | contract | `dto/GetOrderPageQuery.java` | 分页查询 |
 | contract | `co/OrderCO.java` | 契约输出 |
-| adapter | `facade/OrderServiceImpl.java` | 协议适配 |
+| adapter | `web/OrderController.java` | 协议适配 |
 | application | `OrderAppService.java` | 聚合入口 |
 | application | `handler/GetOrderHandler.java` | 单条查询编排 |
 | application | `handler/GetOrderPageHandler.java` | 分页查询编排 |

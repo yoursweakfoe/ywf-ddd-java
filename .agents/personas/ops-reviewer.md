@@ -20,7 +20,7 @@
 - Actuator /actuator/health 是否可达（端口 + context-path）？
 - server.shutdown=graceful 是否配置？
 - spring.lifecycle.timeout-per-shutdown-phase 是否 ≤ Docker stop_grace_period？
-- Dubbo shutwait 是否 ≤ 优雅停机窗口？
+- gRPC server 是否随 Boot lifecycle 优雅停机（spring.grpc.server.* 与 shutdown 配置）？
 
 ### 3. 可观测性
 
