@@ -1,0 +1,31 @@
+package com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.OffsetDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/** 商品 DTO（内部视图）。 */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductDTO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /** 商品 ID */
+    private Long id;
+    /** 商品名称 */
+    private String name;
+    /** 库存数量 */
+    private int stock;
+    /** 创建时间 */
+    private OffsetDateTime createAt;
+    /** 更新时间 */
+    private OffsetDateTime updateAt;
+    /** 乐观锁版本 */
+    private Integer version;
+}

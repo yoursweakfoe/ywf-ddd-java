@@ -1,0 +1,90 @@
+# ============================================================================
+# 主配置（profile 无关，所有环境共享）
+#
+# 与分环境配置的权责边界：
+#   - 本文件：服务端口 / 应用名 / gRPC 端口 / MyBatis-Plus / Actuator 端点暴露
+#   - application-{profile}.yml：gRPC 客户端通道地址 / 安全策略 / 管理端口绑定
+#   - 环境变量 / K8s ConfigMap：敏感凭证（DB 密码等）
+# ============================================================================
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  # 优雅停机：收到 SIGTERM 后停止接受新请求，等待 in-flight 请求完成
+  shutdown: graceful
+
+spring:
+  application:
+    name: service
+  profiles:
+    # 激活 profile：优先读环境变量，未设置则默认 dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  threads:
+    # JDK 21 虚拟线程：Tomcat 请求处理、Spring 异步任务、定时任务均使用虚拟线程
+    # 无 synchronized 块（零 pinning），SecurityContextHolder / gRPC 回调的 ThreadLocal 均已有 finally 清理
+    virtual:
+      enabled: true
+  lifecycle:
+    # 优雅停机等待窗口（REST in-flight 请求 + gRPC server shutdown）
+    timeout-per-shutdown-phase: 30s
+
+  # ----------------------------------------------------------------------------
+  # gRPC 服务端（Boot 4.1 原生自动配置，Netty 传输）
+  # 东西向内部通道，与 REST 面（server.port）双端口分离
+  # ----------------------------------------------------------------------------
+  grpc:
+    server:
+      port: 50051
+
+  # ----------------------------------------------------------------------------
+  # 多数据源（dynamic-datasource + HikariCP）
+  # 切换方式：业务代码标注 @DS("second") 即可切换到第二数据源
+  # 敏感凭证生产环境由环境变量 / K8s Secret 注入
+  # ----------------------------------------------------------------------------
+  datasource:
+    dynamic:
+      primary: master                    # 默认数据源（未标注 @DS 时走此源）
+      strict: false                      # false=未匹配时回落 primary；true=抛异常
+      datasource:
+        master:
+          driver-class-name: org.postgresql.Driver
+          url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/app_master}
+          username: ${DB_MASTER_USER:postgres}
+          password: ${DB_MASTER_PASSWORD:postgres}
+        second:
+          driver-class-name: org.postgresql.Driver
+          url: ${DB_SECOND_URL:jdbc:postgresql://localhost:5432/app_second}
+          username: ${DB_SECOND_USER:postgres}
+          password: ${DB_SECOND_PASSWORD:postgres}
+
+# ----------------------------------------------------------------------------
+# MyBatis-Plus（显式声明全部配置，框架 Customizer 仅作兜底）
+# ----------------------------------------------------------------------------
+mybatis-plus:
+  # PO 实体别名扫描包
+  type-aliases-package: com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master
+  # 自定义 TypeHandler（UUID/JSONB/数组等）由 common-pg 的 PgTypeHandlerAutoConfiguration 自动注册，无需手动配置
+  global-config:
+    db-config:
+      # 逻辑删除约定
+      logic-delete-field: isDelete
+      logic-delete-value: true
+      logic-not-delete-value: false
+  configuration:
+    # 下划线列名自动映射驼峰属性（user_name -> userName）
+    map-underscore-to-camel-case: true
+    # SQL 日志统一走 SLF4J → Logback（保证 trace_id / 级别控制一致）
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# ----------------------------------------------------------------------------
+# Actuator 可观测性端点
+# ----------------------------------------------------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

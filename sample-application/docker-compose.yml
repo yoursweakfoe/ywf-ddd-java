@@ -1,0 +1,75 @@
+name: ywf-application
+
+services:
+  # ==========================================================================
+  # 基础设施（待启用）
+  # 当前开发环境 PG/Nacos 由本机 IDE 或外部 infra 提供，
+  # 待需要完全容器化开发时取消以下注释即可实现 `docker compose up` 开箱即用。
+  # ==========================================================================
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: postgres
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: app_master
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pg_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # nacos:
+  #   image: nacos/nacos-server:v2.5.1
+  #   container_name: nacos
+  #   environment:
+  #     MODE: standalone
+  #     JVM_XMS: 256m
+  #     JVM_XMX: 256m
+  #   ports:
+  #     - "8848:8848"
+  #     - "9848:9848"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -sf http://localhost:8848/nacos/v1/console/health/readiness || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+
+  # ---------- 业务服务 ----------
+  service:
+    build:
+      context: ./sample-service/sample-service-server
+      dockerfile: Dockerfile
+    container_name: service
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - OTEL_SERVICE_NAME=service
+      # 不对接 ARMS 快速启动（取消注释即可）：
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      # 对接 ARMS 时替换为：
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=https://<region>-arms.aliyuncs.com:8090
+      # 启用容器内 PG 时取消注释：
+      # - DB_MASTER_URL=jdbc:postgresql://postgres:5432/app_master
+      # - DB_MASTER_USER=postgres
+      # - DB_MASTER_PASSWORD=postgres
+    ports:
+      - "8080:8080"    # REST 面（经 Higress 网关入口）
+      - "50051:50051"  # gRPC 东西向通道（仅集群内部，不得直暴公网）
+    # 启用容器内基础设施时取消注释：
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   nacos:
+    #     condition: service_healthy
+    restart: always
+    # 优雅停机窗口：docker stop 发送 SIGTERM 后等待的最大时长（需 ≥ spring.lifecycle.timeout-per-shutdown-phase）
+    stop_grace_period: 40s
+
+# 启用容器内 PG 时取消注释：
+# volumes:
+#   pg_data:

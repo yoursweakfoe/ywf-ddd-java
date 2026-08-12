@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe</groupId>
+        <artifactId>sample-application</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.yoursweakfoe.application</groupId>
+    <artifactId>sample-service</artifactId>
+    <packaging>pom</packaging>
+    <name>sample-service</name>
+    <description>示例服务（聚合）—— 下辖 contract（公开契约）和 server（服务实现）</description>
+
+    <modules>
+        <module>sample-service-contract</module>
+        <module>sample-service-server</module>
+    </modules>
+
+</project>

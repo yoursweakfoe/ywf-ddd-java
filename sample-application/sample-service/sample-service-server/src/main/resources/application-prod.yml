@@ -1,0 +1,29 @@
+# ============================================================================
+# 生产环境配置（profile: prod）
+#
+# 激活方式：SPRING_PROFILES_ACTIVE=prod（Dockerfile 默认 / K8s 环境变量）
+# 与 dev 的差异：
+#   - OpenAPI 文档：生产禁用
+#   - Actuator：独立管理端口 + 仅 loopback 监听
+# ============================================================================
+
+# 生产环境禁用 OpenAPI 文档生成（springdoc）
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# gRPC 客户端命名通道（东西向调用目标，一期静态地址直连，地址由环境变量注入）
+# spring:
+#   grpc:
+#     client:
+#       channels:
+#         product-internal:
+#           address: ${PRODUCT_INTERNAL_ADDRESS}
+
+# Actuator 生产收紧：独立端口 + 仅 loopback
+management:
+  server:
+    port: 12569
+    address: 127.0.0.1

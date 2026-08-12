@@ -1,0 +1,38 @@
+package com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler;
+
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.CreateProductCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
+import com.yoursweakfoe.common.ddd.application.cqrs.command.CommandHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+/** 创建商品。 */
+@Component
+public class CreateProductHandler implements CommandHandler<CreateProductCommand, ProductDTO> {
+
+    // region 依赖注入
+    private final ProductRepository productRepository;
+    private final ProductAssembler productAssembler;
+
+    public CreateProductHandler(ProductRepository productRepository,
+                                ProductAssembler productAssembler) {
+        this.productRepository = productRepository;
+        this.productAssembler = productAssembler;
+    }
+    // endregion
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductDTO handle(CreateProductCommand command) {
+        Product product = new Product(null, command.getName(), command.getStock());
+        productRepository.save(product);
+
+        // 自增 ID 回填在 PO 上，重新查询获取完整实体
+        Product saved = productRepository.findByName(command.getName())
+                .orElseThrow(() -> new IllegalStateException("Product save failed"));
+        return productAssembler.toDTO(saved);
+    }
+}

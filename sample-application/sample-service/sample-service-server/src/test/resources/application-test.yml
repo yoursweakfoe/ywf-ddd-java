@@ -1,0 +1,42 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  threads:
+    virtual:
+      enabled: true
+  # gRPC 测试通道：随机端口，测试经 GrpcServerStartedEvent 发现实际端口
+  grpc:
+    server:
+      port: 0
+  datasource:
+    dynamic:
+      primary: master
+      datasource:
+        master:
+          driver-class-name: org.h2.Driver
+          url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'classpath:schema.sql'
+          username: sa
+          password:
+        second:
+          driver-class-name: org.h2.Driver
+          url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+          username: sa
+          password:
+      hikari:
+        maximum-pool-size: 200
+        minimum-idle: 5
+
+# 禁用 Seata 分布式事务（H2 不支持 AT 模式；且 TC 不可达时 Seata 启动 fail-fast）
+seata:
+  enabled: false
+
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 安全策略（测试环境关闭鉴权）
+security:
+  enabled: false

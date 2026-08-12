@@ -1,0 +1,53 @@
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# ===== AI 工具专属配置（开发者本地管理，不入库） =====
+.qoder/
+.trae/
+.cursor/
+.claude/
+.kilo/
+.opencode/
+.pi/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Java 构建产物 =====
+target/
+*.class
+*.jar
+!**/src/**/lib/*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# ===== 日志 =====
+*.log
+/logs/
+
+# ===== 环境 / 敏感配置 =====
+.env
+!.env.example
+
+# ===== 打包文件 =====
+*.tar
+*.tar.gz
+*.zip
+
+# Agent 生成状态（dotagents 约定）
+.agents/logs/
+.agents/memory/
+
+# 保留通用 AI 上下文（工具中立，入库）
+!.agents/
+!AGENTS.md

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe</groupId>
+        <artifactId>ywf-ddd-common</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>common-observability</artifactId>
+    <description>运维可观测性 - 结构化日志格式（logback-spring.xml）+ Actuator 健康检查/指标暴露 + Prometheus 抓取端点（opt-in）</description>
+
+    <!--
+        关于链路追踪（OpenTelemetry）：
+        OTel 采用 JVM Agent 零侵入方式接入，不是 Maven 依赖。
+        部署时通过 -javaagent:/path/to/opentelemetry-javaagent.jar 挂载，
+        配置走环境变量（OTEL_SERVICE_NAME、OTEL_TRACES_EXPORTER 等），无需在此声明依赖。
+    -->
+
+    <dependencies>
+        <!-- Actuator：健康检查 / info / metrics 端点 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Micrometer Prometheus：将 metrics 暴露为 Prometheus 可抓取格式 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

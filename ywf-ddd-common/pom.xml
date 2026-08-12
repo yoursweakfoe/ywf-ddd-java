@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>ywf-ddd-common</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>common-contract</module>
+        <module>common-ddd</module>
+        <module>common-pg</module>
+        <module>common-security</module>
+        <module>common-test</module>
+        <module>common-observability</module>
+        <module>common-cloud</module>
+        <module>common-exception</module>
+    </modules>
+
+    <properties>
+        <!-- ========== Java / 编译器 ========== -->
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- ========== 微服务基础设施（common-cloud） ========== -->
+        <!-- gRPC 版本（grpc-java / spring-grpc-core / protobuf-maven-plugin）由 Boot 4.1 dependency management 统一托管，
+             starter 构件：spring-boot-starter-grpc-server / spring-boot-starter-grpc-client，无需声明版本 -->
+        <nacos-client.version>3.2.3</nacos-client.version>
+        <seata.version>2.6.0</seata.version>
+        <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
+
+        <!-- ========== 持久化层（common-ddd / common-pg） ========== -->
+        <mybatis-plus-spring-boot4-starter.version>3.5.17</mybatis-plus-spring-boot4-starter.version>
+        <mybatis-plus-jsqlparser.version>3.5.17</mybatis-plus-jsqlparser.version>
+        <dynamic-datasource-spring-boot4-starter.version>4.5.0</dynamic-datasource-spring-boot4-starter.version>
+        <postgresql.version>42.7.13</postgresql.version>
+
+        <!-- ========== 代码生成 / 注解处理器 ========== -->
+        <lombok.version>1.18.46</lombok.version>
+
+        <!-- ========== 测试（common-test） ========== -->
+        <archunit-junit5.version>1.4.2</archunit-junit5.version>
+
+        <!-- ========== 构建插件 ========== -->
+        <dependency-check-maven.version>12.2.2</dependency-check-maven.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- ==================== 内部模块（业务服务通过 BOM import 统一版本） ==================== -->
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-contract</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-ddd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-pg</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-observability</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-cloud</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-exception</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- ==================== 微服务基础设施（精确声明，不引入整包 BOM） ==================== -->
+            <!-- gRPC：starter 与核心库版本由 Boot 4.1 dependency management 托管（spring-grpc 1.1.0 / grpc-java 1.80.0），
+                 此处仅管理 Boot 未托管的构件 -->
+            <!-- Nacos 客户端：版本独立管理，为二期 gRPC NameResolver 与配置中心恢复预留 -->
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-client</artifactId>
+                <version>${nacos-client.version}</version>
+            </dependency>
+
+            <!-- ==================== 分布式事务（common-cloud 消费） ==================== -->
+            <!-- Apache Seata：独立 starter，不依赖 Spring Cloud Alibaba -->
+            <dependency>
+                <groupId>org.apache.seata</groupId>
+                <artifactId>seata-spring-boot-starter</artifactId>
+                <version>${seata.version}</version>
+            </dependency>
+            <!-- Seata gRPC XID 透传 interceptor（ServerTransactionInterceptor / ClientTransactionInterceptor） -->
+            <dependency>
+                <groupId>org.apache.seata</groupId>
+                <artifactId>seata-grpc</artifactId>
+                <version>${seata.version}</version>
+            </dependency>
+
+            <!-- ==================== REST API 文档（common-cloud 消费） ==================== -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc-openapi.version}</version>
+            </dependency>
+
+            <!-- ==================== 持久化层（common-ddd 消费） ==================== -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+                <version>${mybatis-plus-spring-boot4-starter.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-jsqlparser</artifactId>
+                <version>${mybatis-plus-jsqlparser.version}</version>
+            </dependency>
+            <!-- 多数据源路由（@DS 注解切换，底层 HikariCP） -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
+                <version>${dynamic-datasource-spring-boot4-starter.version}</version>
+            </dependency>
+            <!-- PostgreSQL JDBC 驱动（common-pg 编译期需要 PGobject） -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <!-- ==================== 代码生成 / 注解处理器 ==================== -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+
+            <!-- ==================== 测试（common-test 消费） ==================== -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit-junit5.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 所有子模块共享的依赖 -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+
+                <!-- OWASP 依赖漏洞扫描：仅生成报告，不绑定 phase、不阻止构建
+                     手动触发：mvn org.owasp:dependency-check-maven:aggregate
+                     报告输出：target/dependency-check-report.html
+                     完全本地化：禁用一切会上传依赖信息到第三方的 analyzer -->
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${dependency-check-maven.version}</version>
+                    <configuration>
+                        <!-- CVSS 阈值设为 11（实际最高 10），等同于永不 fail -->
+                        <failBuildOnCVSS>11</failBuildOnCVSS>
+                        <format>HTML</format>
+                        <skipProvidedScope>true</skipProvidedScope>
+                        <skipSystemScope>true</skipSystemScope>
+                        <skipTestScope>true</skipTestScope>
+                        <!-- 关闭所有会上传依赖信息到第三方的 analyzer -->
+                        <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+                        <centralAnalyzerEnabled>false</centralAnalyzerEnabled>
+                        <nexusAnalyzerEnabled>false</nexusAnalyzerEnabled>
+                        <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+                        <!-- NVD API Key：申请地址 https://nvd.nist.gov/developers/request-an-api-key
+                             不配置仍可运行（有速率限制），配置后加速 CVE 数据下载 -->
+                        <!-- <nvdApiKey>YOUR_API_KEY</nvdApiKey> -->
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        
+        <plugins>
+            <plugin>
+                <!-- JavaDoc 文档生成插件 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <!-- 编码设置 -->
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <charset>UTF-8</charset>
+
+                    <!-- 输出目录：项目根目录下的 docs 文件夹 -->
+                    <outputDirectory>${project.basedir}/docs</outputDirectory>
+
+                    <!-- 只包含 common 相关的包（递归包含子包） -->
+                    <subpackages>com.yoursweakfoe.common</subpackages>
+
+                    <!-- 排除测试代码 -->
+                    <excludePackageNames>*.test.*</excludePackageNames>
+
+                    <!-- 文档标题 -->
+                    <windowtitle>Common API</windowtitle>
+                    <doctitle>Common API Documentation</doctitle>
+
+                    <!-- 显示级别：protected 及以上 -->
+                    <show>protected</show>
+
+                    <!-- 不生成帮助链接 -->
+                    <nohelp>true</nohelp>
+
+                    <!-- 链接到 JDK 文档 -->
+                    <detectJavaApiLink>true</detectJavaApiLink>
+
+                    <!-- 失败时不中断构建（避免注释格式问题导致构建失败） -->
+                    <failOnError>false</failOnError>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
