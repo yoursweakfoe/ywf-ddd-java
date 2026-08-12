@@ -25,8 +25,7 @@ AI审核使用 **Qoder** 作为开发工具，选择 **Ultimate** 模型
 > 目前项目的测试代码全量 AI 生成，并未经过真实生产测试。真实的运行环境和示例场景仍在构建中。
 
 ```bash
-# 克隆（含 submodule）
-git clone --recurse-submodules git@github.com:yoursweakfoe/ywf-ddd-java.git
+git clone git@github.com:yoursweakfoe/ywf-ddd-java.git
 
 # 一键构建全项目（根聚合 pom 统一构建顺序）
 mvn clean install
@@ -70,19 +69,16 @@ graph TB
 
 ```
 ywf-ddd-java/
-├── ywf-ddd-common/        # 公共基础框架（submodule → ywf-ddd-java-ywf-ddd-common）
-├── sample-application/    # 示例业务服务（submodule → ywf-ddd-java-sample-application）
+├── ywf-ddd-common/        # 公共基础框架
+├── sample-application/    # 示例业务服务
 ├── docs/                  # 项目级文档（架构理论 + 应用架构设计）
 ├── .agents/               # AI 辅助开发规范（dotagents 约定，工具中立）
 └── AGENTS.md              # AI 代理入口文件（厂商中立标准）
 ```
 
-> 两个子项目均为 git submodule：
-> - `ywf-ddd-common/` → [ywf-ddd-java-ywf-ddd-common](https://github.com/yoursweakfoe/ywf-ddd-java-ywf-ddd-common)
-> - `sample-application/` → [ywf-ddd-java-sample-application](https://github.com/yoursweakfoe/ywf-ddd-java-sample-application)
->
-> 克隆本仓库时使用 `git clone --recurse-submodules` 以获取完整代码。
-> 外部项目可将 `ywf-ddd-java-ywf-ddd-common` 以 submodule 引入，供 AI 直接阅读框架源码。
+> `ywf-ddd-common/` 与 `sample-application/` 为本仓库的普通目录（原为 git submodule，2026-08 并入）。
+> 并入前的历史记录保留于原仓库 [ywf-ddd-java-ywf-ddd-common](https://github.com/yoursweakfoe/ywf-ddd-java-ywf-ddd-common) / [ywf-ddd-java-sample-application](https://github.com/yoursweakfoe/ywf-ddd-java-sample-application)，此后以本仓库为唯一事实源。
+> 外部项目仍可将 `ywf-ddd-java-ywf-ddd-common` 以 submodule 引入，供 AI 直接阅读框架源码（注意其内容停留在并入前）。
 
 ## AI 辅助开发
 
