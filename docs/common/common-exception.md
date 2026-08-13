@@ -84,10 +84,11 @@ public class Order extends AggregateRoot<UUID> {
 
 ```
 common-exception → spring-boot-autoconfigure（AutoConfiguration）
-                 → spring-boot-starter-validation（ConstraintViolationException）
-                 → spring-webmvc（@RestControllerAdvice / ResponseEntity）
-                 → tools.jackson.core:jackson-databind（Jackson 3：params 编解码）
+                 → spring-boot-starter-validation（ConstraintViolationException + Hibernate Validator，compile 传递）
+                 → spring-web（optional：@RestControllerAdvice / ResponseEntity）
                  → jakarta.servlet-api（provided：请求 URI 读取）
+                 → tools.jackson.core:jackson-databind（test：MockMvc 消息转换）
+                 → spring-webmvc（test：MockMvc standalone 验证）
 ```
 
 ## 5. 设计原则

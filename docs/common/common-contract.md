@@ -62,8 +62,10 @@ public record GetOrderQuery(UUID orderId) implements Query {}
 
 ```
 common-contract（独立，无内部模块依赖）
-└── jakarta.validation-api（契约层参数约束声明，运行时由服务端 Handler 层执行校验）
+└── jakarta.validation-api（纯 API，仅约束声明，无实现）
 ```
+
+> **声明与执行分离**：本包只声明校验约束（注解），不执行校验。`jakarta.validation-api` 是纯 API jar（无实现）。校验实现（Hibernate Validator）由服务端提供：通常经 `common-exception` → `spring-boot-starter-validation`（compile 传递）自动获得；若服务仅引入本包，则需自行引入 `spring-boot-starter-validation`。校验在 Handler 层经 `@Valid` 触发。
 
 ## 5. 设计原则
 
@@ -110,4 +112,4 @@ common-contract（独立，无内部模块依赖）
 | 项 | 说明 |
 |---|---|
 | 边界：CQE 基类 / 抽象类 | 标记接口足够；基类强制继承关系，与 record 不兼容 |
-| 边界：序列化 / 校验注解 | 各服务序列化策略不同；校验由 spring-boot-starter-validation 在 Handler 层处理 |
+| 边界：校验执行 | 契约层只声明约束（纯 API）；Hibernate Validator 实现由服务端提供（经 common-exception 传递或显式引入），在 Handler 层经 @Valid 触发 |
