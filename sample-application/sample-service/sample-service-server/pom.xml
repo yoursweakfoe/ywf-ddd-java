@@ -34,10 +34,15 @@
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-observability</artifactId>
         </dependency>
-        <!-- 微服务治理（springdoc + Nacos 预留 + Seata） -->
+        <!-- 微服务治理（Nacos 预留 + Seata） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-cloud</artifactId>
+        </dependency>
+        <!-- REST API 文档（springdoc OpenAPI + Swagger UI，Controller 挂注解） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-doc</artifactId>
         </dependency>
         <!-- REST 面：Spring MVC + 内嵌 Tomcat（对外端点经 Higress 网关入口） -->
         <dependency>

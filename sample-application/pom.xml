@@ -26,6 +26,9 @@
         <!-- ywf-ddd-common 版本（BOM import 统一子模块版本） -->
         <common.version>0.0.1-SNAPSHOT</common.version>
 
+        <!-- Spring Cloud 版本（与 ywf-ddd-common 主 POM 保持一致；BOM 不传递故需自行声明） -->
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
+
         <!-- 注解处理器版本（maven-compiler-plugin annotationProcessorPaths 不走 dependencyManagement，需显式指定） -->
         <lombok.version>1.18.46</lombok.version>
     </properties>
@@ -37,6 +40,14 @@
                 <groupId>com.yoursweakfoe</groupId>
                 <artifactId>ywf-ddd-common</artifactId>
                 <version>${common.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring Cloud BOM：统一 common-cloud 传递的 SC 组件版本（Feign / LB / CircuitBreaker） -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

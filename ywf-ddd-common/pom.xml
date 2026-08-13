@@ -23,6 +23,7 @@
         <module>common-test</module>
         <module>common-observability</module>
         <module>common-cloud</module>
+        <module>common-doc</module>
         <module>common-exception</module>
     </modules>
 
@@ -36,6 +37,12 @@
         <!-- ========== 微服务基础设施（common-cloud） ========== -->
         <nacos-client.version>3.2.3</nacos-client.version>
         <seata.version>2.6.0</seata.version>
+
+        <!-- ========== Spring Cloud 官方（common-cloud 消费） ========== -->
+        <!-- 2025.1.x Oakwood：兼容 Spring Boot 4.0.x / 4.1.x（2025.1.2 起支持 4.1.0） -->
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
+
+        <!-- ========== REST API 文档（common-doc） ========== -->
         <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
 
         <!-- ========== 持久化层（common-ddd / common-pg） ========== -->
@@ -57,6 +64,16 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <!-- Spring Cloud 官方 BOM（Feign / LoadBalancer / CircuitBreaker 版本统一管理；
+                 不引入 Spring Cloud Alibaba；BOM 不传递，消费方需自行 import） -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <!-- ==================== 内部模块（业务服务通过 BOM import 统一版本） ==================== -->
             <dependency>
@@ -91,6 +108,11 @@
             </dependency>
             <dependency>
                 <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-doc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
                 <artifactId>common-exception</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -116,7 +138,7 @@
                 <artifactId>seata-spring-boot-starter</artifactId>
                 <version>${seata.version}</version>
             </dependency>
-            <!-- ==================== REST API 文档（common-cloud 消费） ==================== -->
+            <!-- ==================== REST API 文档（common-doc 消费） ==================== -->
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

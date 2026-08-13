@@ -10,49 +10,44 @@
     </parent>
 
     <artifactId>common-cloud</artifactId>
-    <description>微服务治理聚合包 - springdoc OpenAPI + Nacos 客户端（预留）+ Seata 分布式事务（opt-in，纯聚合无自有代码）</description>
+    <description>微服务治理聚合包（Nacos + Seata + Spring Cloud Feign/LoadBalancer/CircuitBreaker）</description>
 
     <dependencies>
-        <!-- 统一异常体系（BusinessException + REST 全局异常处理） -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-exception</artifactId>
-        </dependency>
-
-        <!-- REST API 文档（springdoc-openapi；Swagger 注解挂 Controller） -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
-
-        <!-- Nacos 客户端（版本独立管理；一期不启用注册发现/配置中心，
-             为二期服务注册发现与配置中心恢复预留） -->
+        <!-- 服务注册发现 / 配置中心 -->
         <dependency>
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
         </dependency>
 
-        <!-- Seata 分布式事务（AT/TCC 模式，跨服务最终一致性） -->
+        <!-- 分布式事务（AT/TCC） -->
         <dependency>
             <groupId>org.apache.seata</groupId>
             <artifactId>seata-spring-boot-starter</artifactId>
             <exclusions>
-                <!-- 项目已用 fastjson2，排除已停止维护的 1.x -->
+                <!-- 不走 Dubbo RPC -->
                 <exclusion>
-                    <groupId>com.alibaba</groupId>
-                    <artifactId>fastjson</artifactId>
-                </exclusion>
-                <!-- 项目使用 HikariCP，不需要 Druid -->
-                <exclusion>
-                    <groupId>com.alibaba</groupId>
-                    <artifactId>druid</artifactId>
-                </exclusion>
-                <!-- 1.x 已被 commons-pool2 取代，Seata 2.x 仅使用 pool2 -->
-                <exclusion>
-                    <groupId>commons-pool</groupId>
-                    <artifactId>commons-pool</artifactId>
+                    <groupId>org.apache.dubbo.extensions</groupId>
+                    <artifactId>dubbo-filter-seata</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- 声明式 HTTP 客户端 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <!-- 客户端负载均衡 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+
+        <!-- 熔断 / 降级（Resilience4J） -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
     </dependencies>
 

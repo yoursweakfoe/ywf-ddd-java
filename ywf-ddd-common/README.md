@@ -13,7 +13,8 @@ ywf-ddd-common/
 ├── common-exception/      # 统一异常体系（BusinessException + REST 全局异常处理）
 ├── common-pg/             # PostgreSQL TypeHandler 扩展（UUID / JSONB / 数组）
 ├── common-security/       # 身份上下文（REST 边界 Header 解析 → SecurityContext）
-├── common-cloud/          # 微服务治理（springdoc + Nacos 预留 + Seata）
+├── common-cloud/          # 微服务治理（Nacos 预留 + Seata + SC 官方 Feign/LB/CircuitBreaker）
+├── common-doc/            # REST API 文档（springdoc OpenAPI 3.0 + Swagger UI）
 ├── common-observability/  # 可观测性（结构化日志 + Actuator + Prometheus）
 └── common-test/           # 测试基础设施（ArchUnit 架构守护 + Spring Boot Test）
 ```
@@ -29,7 +30,9 @@ common-ddd → common-contract + common-exception
      ↑
 common-pg → common-ddd（TypeHandler 依赖 MyBatis 基础设施）
 
-common-cloud → common-exception（聚合异常处理 + 微服务组件）
+common-cloud（微服务治理：Nacos 预留 + Seata + SC 官方 Feign/LoadBalancer/CircuitBreaker，
+             不传播异常体系；SC 版本由 spring-cloud-dependencies BOM 管理）
+common-doc（REST API 文档，独立）
 common-security（独立）
 common-observability（独立）
 
