@@ -39,7 +39,7 @@
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-cloud</artifactId>
         </dependency>
-        <!-- REST API 文档（springdoc OpenAPI + Swagger UI，Controller 挂注解） -->
+        <!-- REST API 文档标注（Swagger/OpenAPI 注解，供 Apifox IDE 插件识别） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-doc</artifactId>

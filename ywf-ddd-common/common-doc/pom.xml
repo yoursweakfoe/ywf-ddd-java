@@ -10,13 +10,14 @@
     </parent>
 
     <artifactId>common-doc</artifactId>
-    <description>REST API 文档聚合包 - springdoc OpenAPI 3.0 + Swagger UI（纯聚合无自有代码）</description>
+    <description>REST API 文档标注包 - Swagger/OpenAPI 注解（纯注解零运行时，供 Apifox IDE 插件识别）</description>
 
     <dependencies>
-        <!-- REST API 文档（springdoc-openapi；Swagger 注解挂 Controller） -->
+        <!-- Swagger/OpenAPI 注解（@Operation / @Tag / @Schema / @Parameter）；
+             纯注解 jar：无运行时端点、无 Swagger UI，不暴露任何运行时结果到公网 -->
         <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
         </dependency>
     </dependencies>
 

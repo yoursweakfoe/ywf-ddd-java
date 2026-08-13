@@ -45,8 +45,8 @@
         <!-- ========== Spring Cloud Alibaba（common-cloud 消费 Nacos 集成） ========== -->
         <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
 
-        <!-- ========== REST API 文档（common-doc） ========== -->
-        <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
+        <!-- ========== REST API 文档标注（common-doc） ========== -->
+        <swagger-annotations.version>2.2.53</swagger-annotations.version>
 
         <!-- ========== 持久化层（common-ddd / common-pg） ========== -->
         <mybatis-plus-spring-boot4-starter.version>3.5.17</mybatis-plus-spring-boot4-starter.version>
@@ -151,11 +151,11 @@
                 <artifactId>seata-spring-boot-starter</artifactId>
                 <version>${seata.version}</version>
             </dependency>
-            <!-- ==================== REST API 文档（common-doc 消费） ==================== -->
+            <!-- ==================== REST API 文档标注（common-doc 消费） ==================== -->
             <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>${springdoc-openapi.version}</version>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
             </dependency>
 
             <!-- ==================== 持久化层（common-ddd 消费） ==================== -->
