@@ -109,7 +109,9 @@ common-cloud → spring-cloud-starter-alibaba-nacos-discovery
 
 **决策**：选 HTTP。内部接口量少，REST 端点可复用，简化契约与安全模型。
 
-**后果**：失去 gRPC 强类型与二进制性能；Feign 接口即契约。
+**后果**： 
+- 好：统一协议可以显著减少适配代码（约1000行）。
+- 坏：失去 gRPC 强类型与二进制性能；Feign 接口即契约。
 
 **确认**：`common-cloud/pom.xml` 引入 openfeign 且无 grpc 构件。
 
@@ -119,13 +121,20 @@ common-cloud → spring-cloud-starter-alibaba-nacos-discovery
 
 **背景**：客户端熔断降级需求；引入 SCA 后存在 Sentinel（SCA 体系）与 Resilience4J（SC 官方）两个选项。
 
+**决策驱动因素**：
+- 功能边界：Sentinel 的不可替代能力（系统自适应保护 / 热点参数限流 / 集群流控 / 流量整形 / Dashboard）面向大流量治理场景；本项目仅需东西向客户端熔断，入口限流已由 Higress 承担、监控已由 common-observability 覆盖
+- 代码侵入：Sentinel 需资源定义 + blockHandler/fallback 双处理；Resilience4J 一套 fallback、可纯配置驱动（零注解也可）
+- 维护状态：Sentinel v1.8.8（2024-06）后近两年无实质更新、2.0 仍 alpha、Boot 4 适配靠 SCA 补丁；Resilience4J 随 SC 2025.1.x 同步发布、活跃维护
+
 **选项**：
-- Sentinel（SCA）：SCA 绑定 1.8.9，官方停更、社区 fork 续命
-- Resilience4J（SC 官方）：国际主流、随 SC 同步发布
+- Sentinel（SCA）：SCA 绑定 1.8.9，流量治理平台定位
+- Resilience4J（SC 官方）：轻量容错库定位
 
 **决策**：选 Resilience4J（经 SC CircuitBreaker 抽象）。即便引入 SCA，也不启用 Sentinel。
 
-**后果**：入口限流由 Higress 网关承担，应用层仅覆盖东西向客户端防护。
+**后果**：
+- 好：侵入性低、活跃维护、Boot 4 原生适配
+- 坏：失去 Sentinel 的系统保护 / 热点流控 / Dashboard（本项目不需要）
 
 **确认**：pom 引入 `spring-cloud-starter-circuitbreaker-resilience4j`，无 sentinel 构件。
 
