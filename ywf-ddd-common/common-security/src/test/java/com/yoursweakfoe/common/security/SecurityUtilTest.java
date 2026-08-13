@@ -2,18 +2,19 @@ package com.yoursweakfoe.common.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Collection;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-@DisplayName("SecurityUtil — 安全工具类测试")
+@DisplayName("SecurityUtil — 按名字读取任意 claim（不预定义字段）")
 class SecurityUtilTest {
 
     @BeforeEach
@@ -26,81 +27,80 @@ class SecurityUtilTest {
         SecurityContextHolder.clearContext();
     }
 
-    private void setAuthentication(String principal, Object details, Collection<? extends GrantedAuthority> authorities) {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(principal, "credentials", authorities);
-        if (details != null) {
-            auth.setDetails(details);
-        }
-        SecurityContextHolder.getContext().setAuthentication(auth);
+    private static Jwt jwt() {
+        return Jwt.withTokenValue("token")
+                .header("alg", "HS256")
+                .subject("123456")
+                .claim("uid", 123456L)                 // 数值 userId
+                .claim("department", "研发部")          // 任意字段
+                .claim("roles", List.of("ADMIN"))
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .build();
     }
 
-    // ==================== getCurrentUserId ====================
-
-    @Test
-    void getCurrentUserId_withAuth_returnsId() {
-        setAuthentication("user-123", null, List.of());
-        assertThat(SecurityUtil.getCurrentUserId()).isEqualTo("user-123");
-    }
-
-    @Test
-    void getCurrentUserId_noAuth_returnsNull() {
-        assertThat(SecurityUtil.getCurrentUserId()).isNull();
-    }
-
-    // ==================== getUsername ====================
-
-    @Test
-    void getUsername_withIdentityDetails_returnsUsername() {
-        setAuthentication("user-123", new IdentityDetails("john.doe", IdentitySource.EDGE), List.of());
-        assertThat(SecurityUtil.getUsername()).isEqualTo("john.doe");
+    private static void setJwt() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new JwtAuthenticationToken(jwt(), List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
     }
 
     @Test
-    void getUsername_withPlainStringDetails_returnsToString() {
-        // 兼容非本框架建立的 Authentication（裸字符串 details）
-        setAuthentication("user-123", "john.doe", List.of());
-        assertThat(SecurityUtil.getUsername()).isEqualTo("john.doe");
+    void getJwt_returnsRawJwt() {
+        setJwt();
+        assertThat(SecurityUtil.getJwt()).isNotNull();
+        assertThat(SecurityUtil.getJwt().getSubject()).isEqualTo("123456");
     }
 
     @Test
-    void getUsername_noAuth_returnsNull() {
-        assertThat(SecurityUtil.getUsername()).isNull();
-    }
-
-    // ==================== getIdentitySource ====================
-
-    @Test
-    void getIdentitySource_edge_returnsEdge() {
-        setAuthentication("u1", new IdentityDetails("john", IdentitySource.EDGE), List.of());
-        assertThat(SecurityUtil.getIdentitySource()).isEqualTo(IdentitySource.EDGE);
+    void getString_numericClaim_normalizedToString() {
+        setJwt();
+        assertThat(SecurityUtil.getString("uid")).isEqualTo("123456");
     }
 
     @Test
-    void getIdentitySource_foreignDetails_returnsNull() {
-        setAuthentication("u1", "plain-details", List.of());
-        assertThat(SecurityUtil.getIdentitySource()).isNull();
+    void getString_anyField_readsByName() {
+        setJwt();
+        assertThat(SecurityUtil.getString("department")).isEqualTo("研发部");
     }
 
     @Test
-    void getIdentitySource_noAuth_returnsNull() {
-        assertThat(SecurityUtil.getIdentitySource()).isNull();
-    }
-
-    // ==================== getRoles ====================
-
-    @Test
-    void getRoles_withAuthorities_stripsRolePrefix() {
-        List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_ADMIN"),
-                new SimpleGrantedAuthority("ROLE_USER"),
-                new SimpleGrantedAuthority("READ_ONLY"));
-        setAuthentication("user-123", null, authorities);
-        assertThat(SecurityUtil.getRoles()).containsExactly("ADMIN", "USER", "READ_ONLY");
+    void getString_missingClaim_returnsNull() {
+        setJwt();
+        assertThat(SecurityUtil.getString("uname")).isNull();   // token 里没有用户名
     }
 
     @Test
-    void getRoles_noAuth_returnsEmptyList() {
-        assertThat(SecurityUtil.getRoles()).isEmpty();
+    void getStringList_arrayClaim() {
+        setJwt();
+        assertThat(SecurityUtil.getStringList("roles")).containsExactly("ADMIN");
+    }
+
+    @Test
+    void getStringList_commaSeparatedString() {
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(
+                Jwt.withTokenValue("t")
+                        .header("alg", "HS256")
+                        .claim("roles", "A,B")
+                        .issuedAt(Instant.now())
+                        .expiresAt(Instant.now().plusSeconds(300))
+                        .build(),
+                List.of()));
+        assertThat(SecurityUtil.getStringList("roles")).containsExactly("A", "B");
+    }
+
+    @Test
+    void getStringList_missingClaim_returnsEmpty() {
+        setJwt();
+        assertThat(SecurityUtil.getStringList("permissions")).isEmpty();
+    }
+
+    @Test
+    void anonymous_returnsNull() {
+        SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken(
+                "key", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+
+        assertThat(SecurityUtil.getJwt()).isNull();
+        assertThat(SecurityUtil.getString("uid")).isNull();
+        assertThat(SecurityUtil.getStringList("roles")).isEmpty();
     }
 }

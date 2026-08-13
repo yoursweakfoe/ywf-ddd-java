@@ -1,6 +1,6 @@
 # common-security
 
-零信任身份 —— JWT 资源服务器（服务自验 JWT、身份不传播、验签可插拔、claim 可配置）。
+零信任身份 —— JWT 资源服务器（服务自验 JWT、身份不传播、验签可插拔、字段不写死）。
 
 > 本文分两段：§1–4 面向使用者（怎么用），§5–7 面向设计者（为什么这么设计）。
 
@@ -8,7 +8,7 @@
 
 在零信任 / 防御纵深架构下，为微服务提供 JWT 身份验签与解析能力。每个服务作为 OAuth2 资源服务器（resource server），自行验签 JWT，**不信任网络里的任何身份 Header**。
 
-> 本模块抽象「机制」，把「字段 / 密钥方案」做成可插拔：验签（`JwtDecoder` 可换、可分发）、身份字段（claim 名可配置）、角色映射（claim 可配置）。不把公司的混乱现状（非标 claim、多密钥方案）焊死进框架。
+> 本模块抽象「机制」，把「密钥方案」「字段命名/数量」做成可插拔 / 按需读取：验签（`JwtDecoder` 可换、可分发）、身份字段（不投影成固定结构，按名字自取）。不把公司的混乱现状（非标 claim、多密钥方案、字段数量不定）焊死进框架。
 
 ## 2. 核心能力
 
@@ -17,22 +17,24 @@
 ```
 客户端 → 认证服务（签发 JWT）
        → Higress 网关（PEP：转发 JWT，不注入身份 Header）
-       → 服务（BearerTokenAuthenticationFilter + JwtDecoder 自验签 → CurrentUser）
+       → 服务（BearerTokenAuthenticationFilter + JwtDecoder 自验签 → Jwt）
        └ 东西向 → Feign（RequestInterceptor 透传同一 JWT）→ 下游服务自验签
 ```
 
-### 身份模型
+### 身份模型：不投影，原生 Jwt
 
-验签后，`CurrentUserJwtAuthenticationConverter` 把 JWT 映射为类型化身份 `CurrentUser`：
+principal 是 Spring Security 原生 `Jwt`——**它本身就是 claims 全量映射表**（`getClaims()` 返回 `Map<String,Object>`），字段名 / 数量随意，不做任何固定结构投影。
 
-| 字段 | 类型 | 来源 claim（可配置） |
-|------|------|--------------------|
-| `userId` | String | `sub`（默认，标准） |
-| `username` | String | `uname`（默认，公司现状） |
-| `roles` | List\<String\> | `roles`（默认） |
+`SecurityUtil` 提供按名字读取的泛型方法，字段由各服务自取：
 
-- claim 名经 `SecurityProperties` 配置（见 §3），字段类型统一归一——数值型 `uid`、非标 `uname` 都收敛为字符串 / 列表。
-- principal 是 `CurrentUser`（`@AuthenticationPrincipal CurrentUser` 直接注入）；原始 `Jwt` 保留在 credentials（`SecurityUtil.getJwt()` 取出，供东西向透传）。
+```java
+String uid        = SecurityUtil.getString("uid");            // 数值自动归一为字符串
+String dept       = SecurityUtil.getString("department");     // 任意字段，缺失返回 null
+List<String> role = SecurityUtil.getStringList("roles");      // 数组或逗号串，缺失返回空列表
+Jwt jwt           = SecurityUtil.getJwt();                    // 原始 Jwt，全量 claims 逃生舱
+```
+
+没有用户名、只有 userId？——`getString("uname")` 返回 null，不炸；多了部门分部？——`getString("department")` 照读。
 
 ### 多验签方案（不同来源不同算法）
 
@@ -50,13 +52,12 @@ JwtDecoder jwtDecoder() {
 
 ### SecurityUtil
 
-| 方法 | 未登录时返回 |
-|------|------------|
-| `getCurrentUser()` | `null` |
-| `getCurrentUserId()` | `null` |
-| `getCurrentUsername()` | `null` |
-| `getCurrentRoles()` | 空 List |
-| `getJwt()` | `null` |
+| 方法 | 说明 | 缺失 / 匿名时 |
+|------|------|-------------|
+| `getJwt()` | 原始已验签 JWT（全量 claims） | `null` |
+| `getClaim(name)` | 任意字段原值 | `null` |
+| `getString(name)` | 任意字段字符串（数值归一） | `null` |
+| `getStringList(name)` | 任意字段列表（数组/逗号串） | 空 List |
 
 ### 自动装配
 
@@ -64,7 +65,7 @@ JwtDecoder jwtDecoder() {
 
 | Bean | 条件 | 说明 |
 |------|------|------|
-| `CurrentUserJwtAuthenticationConverter` | 无条件 | JWT → `CurrentUser` + `ROLE_*` 权限（claim 名可配置） |
+| `JwtAuthenticationConverter` | 无条件 | 角色 claim（名可配置）→ `ROLE_*` 权限，principal 保持原生 `Jwt` |
 | 资源服务器 `SecurityFilterChain` | Servlet Web 应用 + 无自定义链 | `oauth2ResourceServer().jwt()` + CSRF 关闭 + 无状态 + permit-all |
 | `@EnableMethodSecurity` | 无条件 | 启用 `@PreAuthorize` / `@Secured` |
 
@@ -98,28 +99,28 @@ JwtDecoder jwtDecoder() {
   ```
 - **多方案**：见 §2 的 `DelegatingJwtDecoder`。
 
-### 配置：claim 名（可选，默认对齐公司现状）
+### 配置：角色 claim 名（可选，唯一字段缝）
 
 ```yaml
 ywf:
   security:
-    user-id-claim: uid      # 默认 sub；公司数值 uid 场景改 uid
-    username-claim: uname   # 默认 uname
-    roles-claim: roles      # 默认 roles
+    roles-claim: roles   # 角色列表所在的 claim 名，默认 roles
 ```
 
-### 场景 1：获取当前用户身份
+其余身份字段不配置、不写死——各服务按名字自取。
+
+### 场景 1：获取当前用户身份（字段自取）
 
 ```java
-// Controller：注入类型化身份
+// Controller：注入原生 Jwt
 @GetMapping("/orders/{id}")
-OrderCO get(@AuthenticationPrincipal CurrentUser user, @PathVariable String id) {
-    return orderAppService.getOrder(id, user == null ? null : user.userId());
+OrderCO get(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
+    return orderAppService.getOrder(id, jwt == null ? null : jwt.getSubject());
 }
 
-// Application / Adapter 层：SecurityUtil 静态访问
-String userId = SecurityUtil.getCurrentUserId();   // 字符串，数值 uid 已归一
-Order order = new Order(command, userId);          // 审计字段、数据归属
+// Application / Adapter 层：SecurityUtil 按名字自取
+String userId = SecurityUtil.getString("uid");   // 或 "sub" / "user_id" / 任意你们的名字
+Order order = new Order(command, userId);        // 审计字段、数据归属
 ```
 
 ### 场景 2：方法级鉴权
@@ -129,8 +130,8 @@ Order order = new Order(command, userId);          // 审计字段、数据归�
 public void approve(OrderCommand command) { ... }
 
 // 数据归属判断（域数据依赖，无法上浮网关）
-boolean isOwner = order.getCustomerId().equals(SecurityUtil.getCurrentUserId());
-boolean isAdmin = SecurityUtil.getCurrentRoles().contains("ADMIN");
+boolean isOwner = order.getCustomerId().equals(SecurityUtil.getString("uid"));
+boolean isAdmin = SecurityUtil.getStringList("roles").contains("ADMIN");
 ```
 
 ### 场景 3：自定义安全链
@@ -140,7 +141,7 @@ boolean isAdmin = SecurityUtil.getCurrentRoles().contains("ADMIN");
 @EnableWebSecurity
 class SecurityConfig {
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, CurrentUserJwtAuthenticationConverter converter) {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationConverter converter) {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
@@ -164,8 +165,8 @@ common-security → spring-boot-starter-security
 ## 5. 设计原则
 
 - **零信任 / 防御纵深**：服务自验 JWT，不信任网络身份 Header；网关只是 PEP，转发 JWT 而非身份断言
-- **机制与字段分离**：框架抽象「验签 / 建身份 / 无状态链 / 方法级鉴权」；「字段命名 / 密钥方案」做成可配置、可插拔，不焊死公司现状
-- **身份即 CurrentUser，JWT 留底**：principal 是类型化 `CurrentUser`，原始 `Jwt` 存 credentials 供东西向透传
+- **机制与字段分离**：框架抽象「验签 / 建身份 / 无状态链 / 方法级鉴权」；「密钥方案 / 字段命名 / 字段数量」全部可插拔、按需读取
+- **身份即 Jwt，不投影**：principal 是原生 `Jwt`（claims 全量映射表），不投影成固定 record——字段数量不定就投影不了
 - **fail-closed**：坏 token → 401，绝不静默放行（对比旧框架的 `catch (Exception ignored)`）
 - **边界 permit-all + 方法级鉴权**：路由级在网关，服务用 `@PreAuthorize` 做细粒度鉴权
 
@@ -175,55 +176,41 @@ common-security → spring-boot-starter-security
 
 - 状态：superseded by ADR-0005
 
-**原决策**：验签由网关完成，服务只信任网关透传的 Header（`X-User-Id` 等）。
-
-**废弃原因**：企业推动零信任，该模式违反「不信任网络、每跳验证」，Header 可伪造。
-
-### ADR-0002 身份来源标记（EDGE）
-
-- 状态：superseded by ADR-0005
-
-**原决策**：`IdentitySource` 标记身份来源。**废弃原因**：零信任下身份一律来自自验 JWT，「来源」恒为 JWT。
+**废弃原因**：零信任下违反「不信任网络、每跳验证」，Header 可伪造。
 
 ### ADR-0003 边界 permit-all SecurityFilterChain
 
 - 状态：accepted
 
-**决策**：路由级鉴权在网关；服务层提供 permit-all + 无状态链，可被服务自定义链覆盖；细粒度鉴权用 `@PreAuthorize`。
-
-### ADR-0004 预认证 + 链内注册（Header 解析过滤器）
-
-- 状态：superseded by ADR-0005
-
-**废弃原因**：Header 透传本身在零信任下废弃。
+**决策**：路由级鉴权在网关；服务层提供 permit-all + 无状态链，可被覆盖；细粒度鉴权用 `@PreAuthorize`。
 
 ### ADR-0005 零信任：服务自验 JWT（资源服务器）
 
 - 状态：accepted
 
-**决策**：服务下沉为 OAuth2 资源服务器，自行验签 JWT。网关降为 PEP，转发 JWT 本身、不注入身份 Header。
+**决策**：服务下沉为 OAuth2 资源服务器，自行验签 JWT；网关降为 PEP。
 
-### ADR-0006 claim 可配置（不硬编码字段）
+### ADR-0006 身份不投影：原生 Jwt + 按名字自取
 
 - 状态：accepted
 
-**背景**：公司 JWT 的 claim 命名无规范（`uid`/`uname` 非标准）、字段随版本变化。
+**背景**：公司 JWT 字段命名无规范（`uid`/`uname`）、字段数量不定（可能只有 userId、可能带部门分部、可能无用户名）。若框架投影成固定 record（如 `CurrentUser(userId, username, roles)`），字段一多一少就失配。
 
-**决策**：claim 名经 `SecurityProperties` 配置（默认 `sub`/`uname`/`roles`），字段类型由转换器统一归一为字符串 / 列表。原始 `Jwt` 始终经 `getJwt()` 可取。
+**决策**：不投影固定结构。principal 保持原生 `Jwt`（claims 全量映射表），`SecurityUtil` 提供 `getClaim` / `getString` / `getStringList` 按名字读取（缺失返回 null/空）。唯一的字段缝是「角色 → 权限」（`@PreAuthorize` 需要），角色 claim 名经 `ywf.security.roles-claim` 配置。
 
 ### ADR-0007 验签可插拔：JwtDecoder 抽象 + 多方案分发
 
 - 状态：accepted
 
-**背景**：不同来源的 JWT 使用不同签名算法（HS256 / RS256 …），密钥方案未统一。
+**背景**：不同来源 JWT 使用不同签名算法（HS256 / RS256 …），密钥方案未统一。
 
-**决策**：`JwtDecoder` 接口即抽象（框架只认 `decode(token)`）；`DelegatingJwtDecoder` 按 JOSE 头 `alg` 分发到各方案 decoder。可选工具类，不自动装配，谁需要谁 `new`。
+**决策**：`JwtDecoder` 接口即抽象；`DelegatingJwtDecoder` 按 JOSE 头 `alg` 分发到各方案 decoder。可选工具类，谁需要谁 `new`。
 
 ## 7. 职责边界与技术债
 
 | 项 | 说明 |
 |---|---|
-| 边界：JWT 签发 / 刷新 / 登出 | 由独立认证服务（IdP）处理，**服务侧不提供签发能力**（旧框架的 `generateToken` 下发到服务是反例） |
+| 边界：JWT 签发 / 刷新 / 登出 | 由独立认证服务（IdP）处理，**服务侧不提供签发能力**（旧框架 `generateToken` 下发到服务是反例） |
 | 边界：路由级鉴权 | 由网关（PEP）处理 |
 | 边界：RBAC 权限模型 | 角色/权限管理属于业务域，各服务按需实现 |
 | 边界：数据权限（行级过滤） | 与业务模型强耦合，由业务层 SQL 条件自行实现 |

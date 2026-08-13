@@ -10,10 +10,10 @@
     </parent>
 
     <artifactId>common-security</artifactId>
-    <description>身份上下文模块 - REST 边界解析网关 Header，构建带来源标记的 SecurityContext（opt-in）</description>
+    <description>零信任身份模块 - JWT 资源服务器（服务自验 JWT，身份不传播）（opt-in）</description>
 
     <dependencies>
-        <!-- Spring Security（core + config + web：SecurityContext + SecurityFilterChain + @PreAuthorize）
+        <!-- Spring Security（core + config + web：SecurityFilterChain + @EnableMethodSecurity + @PreAuthorize）
              spring-security-web 必须保留：Boot 4 的 ServletWebSecurityAutoConfiguration
              在 servlet web 应用下会内省 WebSecurityConfiguration，缺失 SecurityFilterChain 类将导致启动失败 -->
         <dependency>
@@ -21,24 +21,16 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- Boot 自动装配（@AutoConfiguration / 条件注解 / Filter Bean 注册） -->
+        <!-- OAuth2 资源服务器：JwtDecoder（JWKS 验签）+ BearerTokenAuthenticationFilter + JwtAuthenticationConverter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <!-- Boot 自动装配（@AutoConfiguration / 条件注解） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-
-        <!-- spring-web（OncePerRequestFilter；optional：非 Web 服务无需） -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Jakarta Servlet API（Filter 编译期签名，运行时由 Web 容器提供） -->
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- ========== 测试 ========== -->

@@ -146,10 +146,10 @@ public void cancelOrder(CancelOrderCommand command) {
 
 ## SecurityUtil 使用层归属
 
-- `SecurityUtil.getCurrentUser()` / `getCurrentUserId()` / `getCurrentUsername()` / `getCurrentRoles()` 仅允许在 **Application 层**（Handler）和 **Adapter 层** 调用
-- Controller 层优先使用 `@AuthenticationPrincipal CurrentUser` 注入类型化身份
+- `SecurityUtil.getJwt()` / `getClaim()` / `getString()` / `getStringList()` 仅允许在 **Application 层**（Handler）和 **Adapter 层** 调用；身份字段不预定义，按名字自取（公司 JWT 字段命名 / 数量无规范）
+- Controller 层优先使用 `@AuthenticationPrincipal Jwt` 注入已验签的 JWT
 - **Domain 层禁止**调用 SecurityUtil（领域模型不感知认证上下文）
-- 角色/权限判断优先使用 `@PreAuthorize("hasRole('xxx')")` 方法级注解（claim 名经 `ywf.security.user-id-claim` / `username-claim` / `roles-claim` 配置）
+- 角色/权限判断优先使用 `@PreAuthorize("hasRole('xxx')")` 方法级注解（角色 claim 名经 `ywf.security.roles-claim` 配置）
 
 ## 虚拟线程
 

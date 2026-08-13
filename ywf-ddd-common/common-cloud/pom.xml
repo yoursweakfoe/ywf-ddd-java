@@ -54,6 +54,12 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- 零信任身份（东西向 JWT 传播：Feign RequestInterceptor 读取已验签 Jwt 透传） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-security</artifactId>
+        </dependency>
+
         <!-- 客户端负载均衡 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -64,6 +70,13 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+
+        <!-- ========== 测试 ========== -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
