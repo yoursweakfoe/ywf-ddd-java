@@ -141,14 +141,15 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Adapter（REST）
 
 - Adapter 层 web 入口为 `@RestController`（实现 contract 接口），REST 路径通过 spring-web 注解标注（`@RequestMapping` / `@PostMapping` / `@GetMapping`），位于 Controller 上
-- 东西向服务间调用复用同一契约接口，消费方经 RestClient 调用提供方 REST 端点（HTTP 直连，一期静态地址）
+- 东西向服务间调用复用同一契约接口，消费方经 Feign 调用提供方 REST 端点（JWT 由 common-cloud 的 RequestInterceptor 自动透传，下游自验签）
 - web 入口纯透传 AppService，禁止业务判断、禁止修改 Command/Query 内容
 
 ## SecurityUtil 使用层归属
 
-- `SecurityUtil.getCurrentUserId()` / `getCurrentUsername()` / `getCurrentRoles()` 仅允许在 **Application 层**（Handler）和 **Adapter 层** 调用
+- `SecurityUtil.getCurrentUser()` / `getCurrentUserId()` / `getCurrentUsername()` / `getCurrentRoles()` 仅允许在 **Application 层**（Handler）和 **Adapter 层** 调用
+- Controller 层优先使用 `@AuthenticationPrincipal CurrentUser` 注入类型化身份
 - **Domain 层禁止**调用 SecurityUtil（领域模型不感知认证上下文）
-- 角色/权限判断优先使用 `@PreAuthorize("hasRole('xxx')")` 方法级注解
+- 角色/权限判断优先使用 `@PreAuthorize("hasRole('xxx')")` 方法级注解（claim 名经 `ywf.security.user-id-claim` / `username-claim` / `roles-claim` 配置）
 
 ## 虚拟线程
 
@@ -156,7 +157,7 @@ public void cancelOrder(CancelOrderCommand command) {
 - Tomcat 请求处理、Spring 异步任务、定时任务均运行在虚拟线程上
 - **禁止引入 `synchronized` 块**（会导致虚拟线程 pinning，载体线程被钉住）
 - 需要互斥时使用 `java.util.concurrent.locks.ReentrantLock` 替代
-- ThreadLocal 在虚拟线程下正常工作，但必须在 finally 中清理（已有模式：SecurityWebFilter）
+- ThreadLocal 在虚拟线程下正常工作；身份上下文的 ThreadLocal 由 Spring Security 链内 `SecurityContextHolderFilter` 统一管理，业务代码无需手工清理
 
 ## Lombok 使用约定
 

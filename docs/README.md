@@ -38,7 +38,7 @@ docs/
 
 本目录（`docs/`）面向**人类开发者**，提供完整的设计原理和代码走查。
 
-[`.agents/`](../.agents/) 目录面向 **AI 编码代理**，提供精炼的指令式规则和任务技能（遵循 [dotagents](https://github.com/bgreenwell/dotagents) 约定）。
+[`.agents/`](../.agents/) 目录面向 **AI 编码代理**，提供精炼的指令式规则和任务技能（借鉴 [dotagents](https://github.com/bgreenwell/dotagents) 命名、按需自定义，组织决策见 [.agents/README.md](../.agents/README.md) 的「设计原则」）。
 `.agents/` 中的规则从本目录的文档中提炼而来，并通过路径引用本目录获取详细原理。
 
 | | `docs/`（本目录） | `.agents/` |

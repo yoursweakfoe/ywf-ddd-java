@@ -6,7 +6,7 @@
 
 ## 1. 定位与边界
 
-纯聚合 pom（无自有代码），引入即获得服务注册发现、配置中心、分布式事务、声明式 HTTP 调用、客户端负载均衡、熔断降级能力。面向使用分布式事务与东西向 HTTP 调用的微服务。
+聚合 pom + 东西向 JWT 身份传播（内置 Feign RequestInterceptor），引入即获得服务注册发现、配置中心、分布式事务、声明式 HTTP 调用（含 JWT 透传）、客户端负载均衡、熔断降级能力。面向使用分布式事务与东西向 HTTP 调用的微服务。
 
 > 统一异常体系（common-exception）不在本包分发，由业务服务按需显式引入。
 
@@ -17,6 +17,7 @@
 | Nacos（SCA discovery + config starter） | 服务注册发现 / 配置中心（Spring Cloud 自动装配） |
 | Seata | AT/TCC 分布式事务（跨服务最终一致性） |
 | Feign | 声明式 HTTP 客户端（东西向服务调用） |
+| JWT 身份传播 | Feign RequestInterceptor 把当前已验签 JWT 透传下游（零信任东西向） |
 | LoadBalancer | 客户端负载均衡（实例来源：Nacos 注册发现） |
 | CircuitBreaker (Resilience4J) | 客户端熔断 / 降级 |
 
@@ -38,6 +39,7 @@
 | Nacos | Nacos Server 地址（注册发现 + 配置中心） |
 | Seata | Seata Server 地址 + 事务分组（TC 不可达时启动 fail-fast；测试环境 `seata.enabled: false`） |
 | Feign | 启动类标注 `@EnableFeignClients` |
+| JWT 身份传播 | 引入 common-cloud 即生效（自动装配 `JwtPropagationRequestInterceptor`），无需额外配置 |
 | LoadBalancer | 服务端多实例（单实例直连时无需） |
 | CircuitBreaker | 无（默认装配；规则经 `resilience4j.*` 配置） |
 
@@ -84,6 +86,7 @@ common-cloud → spring-cloud-starter-alibaba-nacos-discovery
              → spring-cloud-starter-openfeign
              → spring-cloud-starter-loadbalancer
              → spring-cloud-starter-circuitbreaker-resilience4j
+             → common-security（JWT 身份传播）
 ```
 
 > 依赖树以 `mvn dependency:tree` 为准，本清单可能滞后。
@@ -93,7 +96,8 @@ common-cloud → spring-cloud-starter-alibaba-nacos-discovery
 
 - **引入即生效**：Seata / Feign / Nacos / CircuitBreaker 经 starter 自动装配
 - **聚合不封装**：直接传递官方 starter，业务服务直接使用原生 API
-- **统一 HTTP**：对外 REST 经 Higress 网关，东西向 Feign / RestClient 直连
+- **统一 HTTP**：对外 REST 经 Higress 网关，东西向 Feign 直连
+- **零信任东西向**：服务间调用透传已验签 JWT，下游自验签，不靠内网可信
 
 ## 6. 设计决策
 
@@ -187,6 +191,24 @@ common-cloud → spring-cloud-starter-alibaba-nacos-discovery
 **后果**：业务方需按配方自行接入；框架保持薄。
 
 **确认**：common-cloud 无 XID 透传代码；配方见 sample-application cookbook distributed-transaction.md。
+
+### ADR-0006 东西向身份传播：透传已验签 JWT（零信任）
+
+- 状态：accepted
+
+**背景**：零信任下东西向（服务间）调用不能靠内网可信，也不能靠网关注入身份 Header。
+
+**选项**：
+- mTLS / SPIFFE：传输层双向认证，需服务网格或证书体系，重
+- JWT 透传：把当前线程已验签的 JWT 原样带上 `Authorization: Bearer` 透传，下游作为资源服务器自验签
+
+**决策**：选 JWT 透传。Feign `RequestInterceptor` 读取 SecurityContext 里的 `Jwt`，注入 `Authorization: Bearer`；下游用 common-security 自验签。无需服务网格，契合现有 Feign 栈。
+
+**后果**：
+- 好：零额外基础设施；用户身份跨服务连续可审计；下游自验不信任网络
+- 坏：机器身份（定时任务 / MQ 无用户上下文）需另行走 client-credentials；长链透传同一 token，受众 / scope 限制留待演进
+
+**确认**：`common-cloud` 内置 `JwtPropagationRequestInterceptor` + `FeignJwtPropagationAutoConfiguration`。
 
 ## 7. 职责边界与技术债
 
