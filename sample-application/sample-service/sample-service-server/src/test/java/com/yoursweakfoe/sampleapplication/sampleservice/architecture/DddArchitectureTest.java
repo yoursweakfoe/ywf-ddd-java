@@ -1,7 +1,5 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.architecture;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -16,7 +14,7 @@ import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
  * 所有规则均可有效校验。
  *
  * <p>R1 覆写：新增 Configuration 层（{@code DddAutoConfiguration} 等根包类）以允许框架
- * 自动配置类跨层引用基础设施组件；R5b 覆写以处理框架包不含 RepositoryImpl 的空集情况。
+ * 自动配置类跨层引用基础设施组件。
  */
 @AnalyzeClasses(
         packages = "com.yoursweakfoe.common.ddd",
@@ -40,7 +38,7 @@ class DddArchitectureTest {
             .as("R1 DDD 三层依赖方向 + Configuration 层");
 
     @ArchTest
-    static final ArchRule r2 = DddArchitectureRules.CONTROLLER_ONLY_DEPENDS_ON_APPLICATION;
+    static final ArchRule r2 = DddArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
 
     @ArchTest
     static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
@@ -51,16 +49,6 @@ class DddArchitectureTest {
     @ArchTest
     static final ArchRule r5a = DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
 
-    /**
-     * R5b 本地覆写：框架包不含 *RepositoryImpl 类，原始规则对空集默认失败，
-     * 此处添加 {@code allowEmptyShould(true)} 使规则在无匹配时仍能通过。
-     */
     @ArchTest
-    static final ArchRule r5b = classes()
-            .that()
-            .haveSimpleNameEndingWith("RepositoryImpl")
-            .should()
-            .resideInAPackage("..infrastructure.persistence..repository..")
-            .allowEmptyShould(true)
-            .as("R5b 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下");
+    static final ArchRule r5b = DddArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
 }

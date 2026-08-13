@@ -10,13 +10,25 @@
     </parent>
 
     <artifactId>common-test</artifactId>
-    <description>测试基础设施 - JUnit 5 + Mockito + AssertJ + ArchUnit 架构守护（业务服务以 test scope 引入）</description>
+    <description>测试基础设施 - JUnit 5 + Mockito + AssertJ + MockMvc + ArchUnit 架构守护（业务服务以 test scope 引入）</description>
 
+    <!--
+        Spring Boot 4 模块化拆分说明：
+        spring-boot-starter-test 仅含 JUnit 5 + Mockito + AssertJ + Spring Test 核心，
+        @SpringBootTest 不再自动提供 MockMvc，需按技术引入对应 -test starter。
+        业务服务统一从本模块传递获取，无需各自补齐。
+    -->
     <dependencies>
-        <!-- Spring Boot 测试全套（JUnit 5 + Mockito + AssertJ + Spring Test） -->
+        <!-- Spring Boot 测试核心（JUnit 5 + Mockito + AssertJ + Spring Test） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+
+        <!-- Spring MVC 测试（MockMvc / @AutoConfigureMockMvc），SB4 起从 starter-test 拆分 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
         </dependency>
 
         <!-- ArchUnit 架构守护 -->

@@ -42,8 +42,13 @@
 
 - 禁止任何实现类（纯接口 + 数据载体）
 - 禁止业务逻辑
-- 禁止依赖 Spring / MyBatis
 - 禁止依赖 server 模块
+- 禁止依赖 Spring / MyBatis **运行时基础设施**（DI / Bean / AutoConfiguration / 持久化）
+- 允许（且应当）承载 HTTP 映射 + 文档 + 校验注解（重契约，见 docs/common/common-contract.md ADR-0003）：
+  - `@RequestMapping` / `@GetMapping` 等（spring-web）
+  - `@Tag` / `@Operation` / `@Schema`（swagger-annotations）
+  - `@NotNull` / `@Valid` 等（jakarta.validation-api）
+  均为注解级依赖；HTTP 映射声明在契约接口、经 adapter 实现类继承（契约 = 完整 REST 定义）
 
 ## 通用禁止
 
