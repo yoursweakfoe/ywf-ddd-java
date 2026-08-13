@@ -7,10 +7,10 @@
 
 ## 设计原则
 
-- web 入口**纯透传**：协议参数 → Command/Query 包装 → 调用 AppService → 直接返回 CO
+- rest 入口**纯透传**：协议参数 → Command/Query 包装 → 调用 AppService → 直接返回 CO
 - 入口调用 **AppService**（聚合入口），不直接调用 Handler
 - Controller 实现 `contract` 模块的接口（REST 契约单一事实源：路径、语义、签名均在接口声明），Controller 仅标记 `@RestController` 并透传
-- Consumer / Scheduler 与 web 同构——纯入口，透传 AppService
+- Consumer / Scheduler 与 rest 同构——纯入口，透传 AppService
 - 东西向端点的运行时访问保障（网关过滤 / 服务间认证 / 一包两部署）见 [contract.md §契约访问边界](contract.md#契约访问边界运行时保障)
 
 ## 包结构
@@ -23,7 +23,7 @@
 
 | 组件 | 命名规范 | 职责 |
 |------|---------|------|
-| Controller | `XxxController` | 实现 contract 接口（路径/语义/签名在接口声明），`@RestController` 标记协议，纯透传 AppService |
+| Controller | `XxxControllerImpl` | 实现 contract 的 Controller 契约接口（路径/语义/签名在接口声明），`@RestController` 标记协议，纯透传 AppService |
 | Consumer | `XxxEventConsumer` | 接收外部 MQ Integration Event → 反序列化 → 透传 AppService |
 | Scheduler | `XxxScheduler` | 定时任务入口 → 透传 AppService |
 
@@ -32,7 +32,7 @@
 ## 协作关系
 
 ```
-调用方 ──REST──→ adapter/web ──→ AppService ──→ Handler
+调用方 ──REST──→ adapter/rest ──→ AppService ──→ Handler
                      │                │            │
                      │                │  ←── DTO ──┘
                      │        ←── CO ─┘

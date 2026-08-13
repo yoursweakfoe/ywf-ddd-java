@@ -1,27 +1,31 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command;
 
 import com.yoursweakfoe.common.contract.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 支付订单命令。 */
+/** 取消订单命令。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PayOrderCommand implements Command, Serializable {
+public class CancelOrderCommand implements Command, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     /** 订单 ID */
-    @NotNull
+    @NotBlank
     @Schema(description = "订单 ID")
-    private UUID orderId;
+    private String orderId;
+
+    /** 取消原因 */
+    @NotBlank
+    @Schema(description = "取消原因")
+    private String reason;
 }

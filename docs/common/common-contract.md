@@ -6,7 +6,7 @@ CQRS 契约标记接口（Command / Query / PageableQuery / Event）—— 供 c
 
 ## 1. 定位与边界
 
-契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / Event 对象即可被基础设施层统一识别与拦截，Service 接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
+契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / Event 对象即可被基础设施层统一识别与拦截，契约接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
 
 > 契约 = 完整 REST 定义（HTTP 映射 + 文档注解 + 类型一体），但零运行时：注解均为纯元数据，由服务端 Spring MVC 与消费方各自解释。
 
@@ -138,7 +138,7 @@ common-contract（独立，无内部模块依赖）
 
 - 状态：accepted
 
-**背景**：contract 模块的 Service 接口是否承载 HTTP 映射注解（`@GetMapping`/`@PostMapping`）与文档注解（`@Operation`/`@Schema`），即契约是否绑定 HTTP 协议。
+**背景**：contract 模块的契约接口是否承载 HTTP 映射注解（`@GetMapping`/`@PostMapping`）与文档注解（`@Operation`/`@Schema`），即契约是否绑定 HTTP 协议。
 
 **选项**：
 - 重契约：接口承载 HTTP 映射 + 文档注解，契约 = 完整 REST 定义
@@ -152,7 +152,7 @@ common-contract（独立，无内部模块依赖）
 
 **后果**：契约 jar 依赖 spring-web。若未来引入第二协议（如 gRPC 内部调用），以该协议自身的契约表述（protobuf 定义，内部包化）做独立重契约，与 HTTP 契约并存、互不影响——换协议是新增协议契约，而非迁移现有契约。
 
-**确认**：`common-contract` 引入 `swagger-annotations` + `spring-web`；Service 接口承载 `@Tag`/`@RequestMapping`/`@Operation`/`@GetMapping`。
+**确认**：`common-contract` 引入 `swagger-annotations` + `spring-web`；契约接口承载 `@Tag`/`@RequestMapping`/`@Operation`/`@GetMapping`。
 
 ## 7. 职责边界与技术债
 

@@ -22,7 +22,7 @@
 
 ```
 REST 请求
-  → adapter/web/OrderController（@RestController，参数包装）
+  → adapter/rest/OrderControllerImpl（@RestController，参数包装）
     → application/order/OrderAppService（委托 Handler + Presenter 呈现）
       → application/order/handler/PayOrderHandler（编排领域逻辑）
         → domain/order/model/Order.pay()（业务规则 + 状态变迁）
@@ -56,24 +56,31 @@ public class OrderCO implements Serializable {
 }
 ```
 
-## 2. Adapter — Controller（纯透传）
+## 2. Adapter — Controller 契约接口 + 实现（纯透传）
 
 ```java
-@RestController
-@RequestMapping("/orders")
+// contract/order/controller/OrderController.java（契约接口，承载 HTTP 映射 + 文档注解）
 @Tag(name = "订单服务", description = "订单生命周期管理")
-public class OrderController implements OrderService {
+@RequestMapping("/orders")
+public interface OrderController {
+
+    @Operation(summary = "支付订单", description = "将 PENDING 订单标记为已支付")
+    @PutMapping("/{orderId}/pay")
+    OrderCO payOrder(@PathVariable("orderId") UUID orderId);
+}
+
+// adapter/rest/OrderControllerImpl.java（实现，仅标记协议 + 透传）
+@RestController
+public class OrderControllerImpl implements OrderController {
 
     private final OrderAppService orderAppService;
 
-    public OrderController(OrderAppService orderAppService) {
+    public OrderControllerImpl(OrderAppService orderAppService) {
         this.orderAppService = orderAppService;
     }
 
     @Override
-    @PutMapping("/{orderId}/pay")
-    @Operation(summary = "支付订单", description = "将 PENDING 订单标记为已支付")
-    public OrderCO payOrder(@PathVariable("orderId") UUID orderId) {
+    public OrderCO payOrder(UUID orderId) {
         return orderAppService.payOrder(new PayOrderCommand(orderId));
     }
 }
@@ -298,10 +305,10 @@ public class OrderRepositoryImpl
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| contract | `dto/PayOrderCommand.java` | 写操作意图 |
-| contract | `co/OrderCO.java` | 契约输出 |
-| contract | `api/OrderService.java` | 用例契约接口 |
-| adapter | `web/OrderController.java` | 协议适配（透传） |
+| contract | `dto/command/PayOrderCommand.java` | 写操作意图 |
+| contract | `dto/co/OrderCO.java` | 契约输出 |
+| contract | `rest/OrderController.java` | Controller 契约接口 |
+| adapter | `rest/OrderControllerImpl.java` | 协议适配（透传） |
 | application | `OrderAppService.java` | 聚合入口 |
 | application | `handler/PayOrderHandler.java` | 用例编排 |
 | application | `assembler/OrderAssembler.java` | Domain → DTO |

@@ -130,4 +130,4 @@ public void onPaymentSucceeded(String messageBody) {
 | adapter | `consumer/PaymentEventConsumer.java` | MQ 消费入口 |
 | application | `OrderAppService.java` | 委托 Handler（复用） |
 | application | `handler/PayOrderHandler.java` | 已有写路径（复用） |
-| contract | `dto/PayOrderCommand.java` | 命令对象（复用） |
+| contract | `dto/command/PayOrderCommand.java` | 命令对象（复用） |

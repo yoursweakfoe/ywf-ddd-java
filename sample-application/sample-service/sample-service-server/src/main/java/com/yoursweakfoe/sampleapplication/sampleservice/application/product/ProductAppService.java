@@ -3,9 +3,9 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.CreateProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.GetProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.presenter.ProductPresenter;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.co.ProductCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.CreateProductCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.GetProductQuery;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
 import org.springframework.stereotype.Service;
 
 /**

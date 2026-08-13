@@ -3,9 +3,9 @@ package com.yoursweakfoe.sampleapplication.sampleservice.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.Application;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PlaceOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.co.ProductCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.CreateProductCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;

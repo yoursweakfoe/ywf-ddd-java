@@ -2,7 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handl
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;

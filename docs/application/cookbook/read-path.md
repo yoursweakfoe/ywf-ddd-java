@@ -21,7 +21,7 @@
 
 ```
 REST 请求
-  → adapter/web/OrderController（参数包装）
+  → adapter/rest/OrderControllerImpl（参数包装）
     → application/order/OrderAppService（委托 + 呈现）
       → application/order/handler/GetOrderHandler（查询编排）
         → domain/order/repository/OrderRepository（读优化方法）
@@ -35,7 +35,7 @@ REST 请求
 ### 单条查询
 
 ```java
-// contract/order/dto/GetOrderQuery.java
+// contract/order/dto/query/GetOrderQuery.java
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -51,7 +51,7 @@ public class GetOrderQuery implements Query, Serializable {
 ### 分页查询（record 实现）
 
 ```java
-// contract/order/dto/GetOrderPageQuery.java
+// contract/order/dto/query/GetOrderPageQuery.java
 public record GetOrderPageQuery(
         String status,       // 订单状态过滤（可选）
         String customerId,   // 客户 ID 过滤（可选）
@@ -66,19 +66,26 @@ public record GetOrderPageQuery(
 - `PageableQuery` 继承 `Query`，带 pageNum/pageSize 约束
 - record 天然不可变，适合简单 Query
 
-## 2. Adapter — Controller（参数包装）
+## 2. Adapter — Controller 契约接口 + 实现（纯透传）
 
 ```java
-// adapter/web/OrderController.java（节选）
-@RestController
+// contract/order/controller/OrderController.java（契约接口，承载 HTTP 映射）
 @RequestMapping("/orders")
-public class OrderController implements OrderService {
+public interface OrderController {
+
+    @Operation(summary = "查询订单详情", description = "根据 ID 获取订单完整信息")
+    @GetMapping("/{orderId}")
+    OrderCO getOrder(@PathVariable("orderId") String orderId);
+}
+
+// adapter/rest/OrderControllerImpl.java（实现，仅标记协议 + 透传）
+@RestController
+public class OrderControllerImpl implements OrderController {
 
     private final OrderAppService orderAppService;
 
     @Override
-    @GetMapping("/{orderId}")
-    public OrderCO getOrder(@PathVariable("orderId") String orderId) {
+    public OrderCO getOrder(String orderId) {
         // REST 路径参数 → Query 包装 → 透传
         return orderAppService.getOrder(new GetOrderQuery(orderId));
     }
@@ -245,10 +252,10 @@ public class OrderRepositoryImpl
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| contract | `dto/GetOrderQuery.java` | 单条查询 |
-| contract | `dto/GetOrderPageQuery.java` | 分页查询 |
-| contract | `co/OrderCO.java` | 契约输出 |
-| adapter | `web/OrderController.java` | 协议适配 |
+| contract | `dto/query/GetOrderQuery.java` | 单条查询 |
+| contract | `dto/query/GetOrderPageQuery.java` | 分页查询 |
+| contract | `dto/co/OrderCO.java` | 契约输出 |
+| adapter | `rest/OrderControllerImpl.java` | 协议适配 |
 | application | `OrderAppService.java` | 聚合入口 |
 | application | `handler/GetOrderHandler.java` | 单条查询编排 |
 | application | `handler/GetOrderPageHandler.java` | 分页查询编排 |

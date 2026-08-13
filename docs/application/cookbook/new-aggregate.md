@@ -23,15 +23,15 @@
 sample-service/
 ├── sample-service-contract/src/main/java/.../contract/
 │   └── payment/
-│       ├── api/PaymentService.java              ← ① 用例契约接口
-│       ├── co/PaymentCO.java                    ← ② 契约输出
-│       ├── dto/CreatePaymentCommand.java        ← ③ Command
-│       ├── dto/GetPaymentQuery.java             ← ④ Query
+│       ├── controller/PaymentController.java     ← ① Controller 契约接口
+│       ├── dto/co/PaymentCO.java                    ← ② 契约输出
+│       ├── dto/command/CreatePaymentCommand.java        ← ③ Command
+│       ├── dto/query/GetPaymentQuery.java             ← ④ Query
 │       └── dto/event/PaymentCreatedIntegrationEvent.java  ← ⑤ 集成事件（可选）
 │
 └── sample-service-server/src/main/java/.../
-    ├── adapter/web/
-    │   └── PaymentController.java               ← ⑥ Controller（REST 入口）
+    ├── adapter/rest/
+    │   └── PaymentControllerImpl.java           ← ⑥ Controller 实现（REST 入口）
     ├── application/payment/
     │   ├── PaymentAppService.java               ← ⑦ AppService
     │   ├── dto/PaymentDTO.java                  ← ⑧ 内部 DTO
@@ -52,20 +52,26 @@ sample-service/
         └── repository/PaymentRepositoryImpl.java← ⑳ RepositoryImpl
 ```
 
-## ① Contract — 用例契约接口
+## ① Contract — Controller 契约接口
 
 ```java
-package ...contract.payment.api;
+package ...contract.payment.rest;
 
-public interface PaymentService {
+@Tag(name = "支付服务", description = "支付创建与查询")
+@RequestMapping("/payments")
+public interface PaymentController {
 
-    PaymentCO createPayment(CreatePaymentCommand command);
+    @Operation(summary = "创建支付", description = "创建支付记录")
+    @PostMapping("")
+    PaymentCO createPayment(@Valid @RequestBody CreatePaymentCommand command);
 
-    PaymentCO getPayment(String paymentId);
+    @Operation(summary = "查询支付详情", description = "根据 ID 获取支付信息")
+    @GetMapping("/{paymentId}")
+    PaymentCO getPayment(@PathVariable("paymentId") String paymentId);
 }
 ```
 
-> REST 路径由服务端 Controller 以 spring-web 注解显式声明（见 ⑥）；
+> HTTP 映射 + 文档注解在契约接口声明；服务端 ControllerImpl 仅标记 `@RestController` 并透传（见 ⑥）；
 > 东西向调用复用同一契约接口（HTTP 直连），无需额外定义。
 
 ## ②③④ Contract — 数据类（CO / Command / Query）
@@ -109,28 +115,26 @@ public class PaymentCreatedIntegrationEvent implements Event, Serializable {
 }
 ```
 
-## ⑥ Adapter — Controller
+## ⑥ Adapter — Controller 实现
 
 ```java
+// adapter/rest/PaymentControllerImpl.java（实现，仅标记协议 + 透传）
 @RestController
-@RequestMapping("/payments")
-public class PaymentController implements PaymentService {
+public class PaymentControllerImpl implements PaymentController {
 
     private final PaymentAppService paymentAppService;
 
-    public PaymentController(PaymentAppService paymentAppService) {
+    public PaymentControllerImpl(PaymentAppService paymentAppService) {
         this.paymentAppService = paymentAppService;
     }
 
     @Override
-    @PostMapping("")
-    public PaymentCO createPayment(@RequestBody CreatePaymentCommand command) {
+    public PaymentCO createPayment(CreatePaymentCommand command) {
         return paymentAppService.createPayment(command);
     }
 
     @Override
-    @GetMapping("/{paymentId}")
-    public PaymentCO getPayment(@PathVariable("paymentId") String paymentId) {
+    public PaymentCO getPayment(String paymentId) {
         return paymentAppService.getPayment(new GetPaymentQuery(paymentId));
     }
 }

@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CancelOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.common.ddd.application.cqrs.command.CommandHandler;

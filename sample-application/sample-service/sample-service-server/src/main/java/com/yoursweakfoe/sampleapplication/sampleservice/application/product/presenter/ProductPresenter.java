@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.presenter;
 
 import com.yoursweakfoe.common.ddd.application.presenter.BasicPresenter;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.co.ProductCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import org.springframework.stereotype.Component;
 

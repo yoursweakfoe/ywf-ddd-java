@@ -9,15 +9,15 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handle
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.PlaceOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.ShipOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderPresenter;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co.OrderCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CancelOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CompleteOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.ConfirmOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.DeliverOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.GetOrderQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PayOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PlaceOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.ShipOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CompleteOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.DeliverOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
 import org.springframework.stereotype.Service;
 
 /**

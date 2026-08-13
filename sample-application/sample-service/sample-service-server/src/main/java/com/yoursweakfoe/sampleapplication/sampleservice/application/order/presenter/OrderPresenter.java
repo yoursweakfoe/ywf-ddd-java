@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter;
 
 import com.yoursweakfoe.common.ddd.application.presenter.BasicPresenter;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import java.util.List;
 import org.springframework.stereotype.Component;

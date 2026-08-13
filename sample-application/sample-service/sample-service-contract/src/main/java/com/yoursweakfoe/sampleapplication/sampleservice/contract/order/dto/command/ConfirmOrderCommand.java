@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command;
 
 import com.yoursweakfoe.common.contract.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,11 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 完成订单命令。 */
+/** 确认订单命令。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompleteOrderCommand implements Command, Serializable {
+public class ConfirmOrderCommand implements Command, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

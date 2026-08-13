@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.co;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;

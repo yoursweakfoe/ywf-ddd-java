@@ -165,7 +165,7 @@ public class OrderEventPublisher {
 
 | 维度 | DomainEvent | IntegrationEvent |
 |------|-------------|------------------|
-| 位置 | `domain/{agg}/model/event/` | `contract/{agg}/dto/event/` |
+| 位置 | `domain/{agg}/model/event/` | `contract/{agg}/event/` |
 | 基类 | `extends DomainEvent`（common-ddd） | `implements Event`（common-contract） |
 | 受众 | 服务内部（@EventListener） | 外部服务（MQ 订阅） |
 | 内容 | 丰富（领域细节） | 精简（仅外部需要的字段） |

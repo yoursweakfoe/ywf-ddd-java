@@ -2,7 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product.han
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.GetProductQuery;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.ddd.application.cqrs.query.QueryHandler;

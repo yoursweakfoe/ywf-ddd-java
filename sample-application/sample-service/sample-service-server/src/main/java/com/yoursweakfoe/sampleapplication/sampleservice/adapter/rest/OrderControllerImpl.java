@@ -1,31 +1,31 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.adapter.web;
+package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.OrderAppService;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.api.OrderService;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co.OrderCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CancelOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CompleteOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.ConfirmOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.DeliverOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.GetOrderQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PayOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PlaceOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.ShipOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CompleteOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.DeliverOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.controller.OrderController;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 订单 REST 端点 —— 纯透传到 {@link OrderAppService}。
  *
- * <p>HTTP 映射与文档注解声明在 {@link OrderService} 契约接口上（映射经接口继承），
- * 本 Controller 仅以 {@code @RestController} 标记协议并透传。
+ * <p>HTTP 映射与文档注解声明在 {@link OrderController} 契约接口上（映射经接口继承），
+ * 本实现类仅以 {@code @RestController} 标记协议并透传。
  */
 @RestController
-public class OrderController implements OrderService {
+public class OrderControllerImpl implements OrderController {
 
     private final OrderAppService orderAppService;
 
-    public OrderController(OrderAppService orderAppService) {
+    public OrderControllerImpl(OrderAppService orderAppService) {
         this.orderAppService = orderAppService;
     }
 

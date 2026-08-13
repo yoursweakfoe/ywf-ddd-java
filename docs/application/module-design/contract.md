@@ -3,7 +3,7 @@
 ## 职责
 
 定义服务的公开契约，是消费方（其他微服务）的**唯一依赖**。
-涵盖服务接口（用例契约，东西向复用）、CQRS 输入（Command/Query）、契约输出对象（CO）、集成事件（Integration Event）。
+涵盖 REST 端点契约接口（Controller，东西向复用）、CQRS 输入（Command/Query）、契约输出对象（CO）、集成事件（Integration Event）。
 
 ## 设计原则
 
@@ -12,7 +12,7 @@
 - **按聚合分包**：顶层以聚合名划分，内部结构一致
 - **单通道复用**：对外 REST 与东西向复用同一契约接口；REST 路径在契约接口上声明（`@RequestMapping` + `@GetMapping`），东西向由消费方经 RestClient 调用提供方 REST 端点（HTTP 直连）
 - **契约 = 类型 + 语义**：契约包含方法签名（类型）与能力/字段语义（文档注解）。语义是消费方理解接口的必要部分，应随契约分发，而非留在服务端实现里
-- **契约承载 HTTP 映射 + 文档注解**：`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping`（含路径）声明在 Service 接口，`@Schema` 声明在 CO / CQE 字段；Controller 仅标记 `@RestController` 并透传，不重复声明路径与语义
+- **契约承载 HTTP 映射 + 文档注解**：`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping`（含路径）声明在 Controller 契约接口，`@Schema` 声明在 CO / CQE 字段；ControllerImpl 仅标记 `@RestController` 并透传，不重复声明路径与语义
 
 ## 包结构
 
@@ -24,10 +24,10 @@
 
 | 组件 | 位置 | 职责 |
 |------|------|------|
-| Service 接口 | `{aggregate}/api/` | 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源），`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping` 声明；服务端 Controller 实现 |
-| Command / Query | `{aggregate}/dto/` | CQRS 请求对象，实现 `common-contract` 标记接口 |
-| PageableQuery | `{aggregate}/dto/` | 分页查询对象，实现 `PageableQuery` 接口（带 pageNum/pageSize + @Min/@Max） |
-| CO | `{aggregate}/co/` | Contract Object，对内部 DTO 清洗后的外部安全视图，`@Schema` 声明字段语义 |
+| Controller 契约接口 | `{aggregate}/controller/` | 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源），`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping` 声明；服务端 ControllerImpl 实现 |
+| Command | `{aggregate}/dto/command/` | 写操作命令，实现 `Command` 标记接口 |
+| Query / PageableQuery | `{aggregate}/dto/query/` | 读操作查询，实现 `Query` / `PageableQuery` 标记接口（分页带 pageNum/pageSize + @Min/@Max） |
+| CO | `{aggregate}/dto/co/` | Contract Object，对内部 DTO 清洗后的外部安全视图，`@Schema` 声明字段语义 |
 | Integration Event | `{aggregate}/dto/event/` | 跨服务集成事件（MQ 载荷） |
 | 枚举 | `{aggregate}/enums/` | 契约共享枚举 |
 
@@ -37,14 +37,14 @@
 
 | 注解 | 声明位置 | 描述对象 |
 |------|---------|---------|
-| `@Tag` | Service 接口类 | 能力分组（如「订单服务」） |
-| `@RequestMapping` | Service 接口类 | 基路径（如 `/orders`） |
-| `@Operation` | Service 接口方法 | 能力语义（summary / description） |
-| `@GetMapping` 等 | Service 接口方法 | HTTP 映射（方法 + 路径，契约的一部分） |
+| `@Tag` | Controller 契约接口类 | 能力分组（如「订单服务」） |
+| `@RequestMapping` | Controller 契约接口类 | 基路径（如 `/orders`） |
+| `@Operation` | Controller 契约接口方法 | 能力语义（summary / description） |
+| `@GetMapping` 等 | Controller 契约接口方法 | HTTP 映射（方法 + 路径，契约的一部分） |
 | `@Schema` | CO / CQE 字段 | 字段语义 |
-| `@Parameter` | Service 接口方法参数 | 参数语义（跟随 `@PathVariable` / `@RequestParam`） |
+| `@Parameter` | Controller 契约接口方法参数 | 参数语义（跟随 `@PathVariable` / `@RequestParam`） |
 
-**分工边界**：Service 接口承载「能力语义 + HTTP 映射」（`@Operation` + `@GetMapping` + 路径一体，契约 = 完整 REST 定义），CO / CQE 承载「字段语义」（`@Schema`）；Controller 实现接口，仅补充「协议标记」（`@RestController`）并透传，不重复声明路径与语义。
+**分工边界**：Controller 契约接口承载「能力语义 + HTTP 映射」（`@Operation` + `@GetMapping` + 路径一体，契约 = 完整 REST 定义），CO / CQE 承载「字段语义」（`@Schema`）；ControllerImpl 实现接口，仅补充「协议标记」（`@RestController`）并透传，不重复声明路径与语义。
 
 > 注解来源 `swagger-annotations`（纯注解 jar，零运行时、零端点），与 `jakarta.validation-api` 同类，不引入框架依赖。
 
@@ -61,7 +61,7 @@ contract jar 本质是**东西向**产物（内部 Java 服务间类型契约）
 
 **触发分包的信号**：出现「对内想改、但对外不能改」的张力（对外需稳定兼容、对内需快速演进）时才拆：
 
-- adapter 分 `web/`（南北向，经网关）与 `internal/`（东西向，内网直连）
+- adapter 分 `rest/`（南北向，经网关）与 `internal/`（东西向，内网直连）
 - contract 分 `external/` 与 `internal/`
 
 **代码分包 ≠ 访问隔离**：包划分是编译期语义边界，运行期网络访问看不到它。访问隔离是正交维度（见下）。
@@ -90,11 +90,11 @@ contract jar 本质是**东西向**产物（内部 Java 服务间类型契约）
 ```
 contract（本模块）                             server
 ─────────────                             ──────
-api/{Aggregate}Service.java               ←──  adapter/web/（Controller 实现接口，纯透传 AppService）
-{aggregate}/dto/XxxCommand / XxxQuery     ←──  application/handler/（接收 CQE 执行用例）
-{aggregate}/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
-{aggregate}/dto/event/XxxIntegrationEvent ←──  application/publisher/（翻译并发布到 MQ）
-{aggregate}/dto/event/XxxIntegrationEvent ──→  adapter/consumer/（接收 MQ 并透传 AppService）
+controller/{Aggregate}Controller.java           ←──  adapter/rest/（ControllerImpl 实现接口，纯透传 AppService）
+{aggregate}/dto/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/（接收 CQE 执行用例）
+{aggregate}/dto/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
+{aggregate}/dto/dto/event/XxxIntegrationEvent ←──  application/publisher/（翻译并发布到 MQ）
+{aggregate}/dto/dto/event/XxxIntegrationEvent ──→  adapter/consumer/（接收 MQ 并透传 AppService）
 ```
 
 ### 消费方使用

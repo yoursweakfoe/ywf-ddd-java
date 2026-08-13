@@ -1,8 +1,8 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.api;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.controller;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co.OrderCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CancelOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * 订单服务接口 —— 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源）。
+ * 订单 REST 端点契约 —— 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源）。
  *
  * <p>本接口承载 HTTP 映射（路径、方法、参数绑定）与文档注解（{@code @Operation} / {@code @Tag}），
- * 契约 = 完整 REST 定义。服务端 {@code adapter.web.OrderController} 仅以 {@code @RestController}
+ * 契约 = 完整 REST 定义。服务端 {@code adapter.rest.OrderControllerImpl} 仅以 {@code @RestController}
  * 标记并实现本接口（映射经接口继承，不重复声明）；东西向服务间调用同样经 HTTP 消费本契约
  * （消费方 RestClient 直连服务端 REST 端点）。
  */
 @Tag(name = "订单服务", description = "订单生命周期管理：下单、支付、发货、签收、完成、取消")
 @RequestMapping("/orders")
-public interface OrderService {
+public interface OrderController {
 
     /**
      * 下单。

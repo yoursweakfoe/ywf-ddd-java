@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CompleteOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CompleteOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;

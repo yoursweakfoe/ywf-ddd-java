@@ -119,7 +119,7 @@ application/order/handler/PlaceOrderHandler.java
 归属判断原则：**谁发起用例、谁承担一致性责任，编排逻辑就归谁。**
 
 **微服务拆分后**：Handler 零迁移——仍在 order-service 的 `application/order/handler/`，
-只是原来直接调 `ProductRepository` 变为通过 `ProductService`（RPC）调 product-service。
+只是原来直接调 `ProductRepository` 变为通过 product-service 的 REST 契约接口（RestClient 直连）调 product-service。
 
 **无主长流程（Saga）**：引入独立的 Saga/Process Manager 服务，不在某个业务服务的 application 层内塞入跨服务编排。
 

@@ -1,26 +1,27 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command;
 
-import com.yoursweakfoe.common.contract.Query;
+import com.yoursweakfoe.common.contract.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 查询订单详情。 */
+/** 支付订单命令。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetOrderQuery implements Query, Serializable {
+public class PayOrderCommand implements Command, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     /** 订单 ID */
-    @NotBlank
+    @NotNull
     @Schema(description = "订单 ID")
-    private String orderId;
+    private UUID orderId;
 }

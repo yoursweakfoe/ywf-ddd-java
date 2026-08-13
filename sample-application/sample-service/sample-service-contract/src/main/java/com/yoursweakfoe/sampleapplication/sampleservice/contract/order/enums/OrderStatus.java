@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 
 /**
  * 订单状态枚举（契约共享）。

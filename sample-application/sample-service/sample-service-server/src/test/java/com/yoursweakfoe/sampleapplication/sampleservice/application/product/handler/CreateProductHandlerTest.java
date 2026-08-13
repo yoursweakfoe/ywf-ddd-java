@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.CreateProductCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import java.util.Optional;

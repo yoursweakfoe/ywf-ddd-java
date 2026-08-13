@@ -167,7 +167,7 @@ TM（Transaction Manager）—— @GlobalTransactional 标注的方法
 | 层 | 文件 | 职责 |
 |----|------|------|
 | application | `handler/PlaceOrderHandler.java` | @GlobalTransactional 入口 |
-| contract | `product/dto/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） |
+| contract | `product/dto/command/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） |
 | infrastructure | `config/SeataXidClientInterceptor.java` | 出站：RootContext.getXID() 写入 TX_XID header |
 | infrastructure | `config/SeataXidBindFilter.java` | 入站：读取 header 并 bind/unbind RootContext |
 | infrastructure | Seata 自动代理 DataSource | 无需手写代码 |

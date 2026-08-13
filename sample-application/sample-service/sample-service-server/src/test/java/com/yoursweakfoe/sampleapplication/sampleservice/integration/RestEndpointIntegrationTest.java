@@ -3,11 +3,11 @@ package com.yoursweakfoe.sampleapplication.sampleservice.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.Application;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co.OrderCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.CancelOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PlaceOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.co.ProductCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.CreateProductCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.MethodOrderer;

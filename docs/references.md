@@ -81,9 +81,9 @@
 |------|--------|
 | Anti-Corruption Layer (Evans DDD) | Gateway 实现内部将外部 SDK 模型翻译为领域语言，防止外部概念污染 Domain |
 | Strategy Pattern (GoF) | Domain Policy——isApplicable + 业务方法；三种形态（互斥 / 叠加 / 精准路由）；OCP |
-| Facade Pattern (GoF) | adapter/web 纯透传 AppService，不含业务逻辑、不含转换 |
+| Facade Pattern (GoF) | adapter/rest 纯透传 AppService，不含业务逻辑、不含转换 |
 | Presenter / ViewModel (MVP 变体) | Handler 返回 DTO（内部视图），AppService 通过 Presenter 呈现为 CO（外部安全视图） |
-| Contract-First / API-First | contract 模块定义完整 REST 契约（Service 接口 + CQE + CO + IntegrationEvent + HTTP 映射注解 + 文档注解）、零实现；消费方仅依赖 contract jar |
+| Contract-First / API-First | contract 模块定义完整 REST 契约（Controller 契约接口 + CQE + CO + IntegrationEvent + HTTP 映射注解 + 文档注解）、零实现；消费方仅依赖 contract jar |
 
 ### SOLID 与工程原则
 

@@ -1,8 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command;
 
 import com.yoursweakfoe.common.contract.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
@@ -12,11 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 发货命令。 */
+/** 完成订单命令。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShipOrderCommand implements Command, Serializable {
+public class CompleteOrderCommand implements Command, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -25,9 +24,4 @@ public class ShipOrderCommand implements Command, Serializable {
     @NotNull
     @Schema(description = "订单 ID")
     private UUID orderId;
-
-    /** 物流单号 */
-    @NotBlank
-    @Schema(description = "物流单号")
-    private String trackingNumber;
 }

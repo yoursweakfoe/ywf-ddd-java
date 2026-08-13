@@ -17,18 +17,21 @@ sample-service/
 ```
 contract/
 └── {aggregate}/                     # 顶层按聚合分包
-    ├── api/                         # Service 接口（内部用例契约，Controller 实现）
-    ├── co/                          # Contract Object（契约输出对象）
-    ├── dto/                         # Command + Query（CQE 请求对象）
+    ├── controller/                  # Controller 契约接口（REST 端点契约，ControllerImpl 实现）
+    ├── dto/                         # 数据传输对象（CQE / CO / 集成事件）
+    │   ├── command/                 # Command（写操作意图）
+    │   ├── query/                   # Query（读操作请求）
+    │   ├── co/                      # Contract Object（契约输出对象）
     │   └── event/                   # Integration Event（集成事件）
     └── enums/                       # 契约共享枚举
 ```
 
 | 目录 | 职责 |
 |------|------|
-| `{aggregate}/api/` | Service 接口定义（方法签名单一事实源） |
-| `{aggregate}/co/` | Contract Object（对内部 DTO 进行字段清洗后的外部安全视图） |
-| `{aggregate}/dto/` | CQE 请求对象（Command / Query） |
+| `{aggregate}/controller/` | Controller 契约接口定义（方法签名 + HTTP 映射 + 文档注解的单一事实源） |
+| `{aggregate}/dto/co/` | Contract Object（对内部 DTO 进行字段清洗后的外部安全视图） |
+| `{aggregate}/dto/command/` | Command（写操作意图） |
+| `{aggregate}/dto/query/` | Query（读操作请求） |
 | `{aggregate}/dto/event/` | Integration Event（跨服务集成事件） |
 | `{aggregate}/enums/` | 契约共享枚举 |
 
@@ -39,7 +42,7 @@ contract/
 ```
 server/
 ├── adapter/                         # 入站适配器（driving adapter）
-│   ├── web/                           # REST 面：@RestController 实现 contract 接口（纯透传）
+│   ├── rest/                          # REST 面：@RestController 实现 contract 的 Controller 契约接口（纯透传）
 │   ├── consumer/                      # MQ 消费入口（Integration Event 入站）【按需】
 │   ├── scheduler/                     # 定时任务入口【按需】
 │   └── shared/                        # 跨聚合/系统级入口【按需】
@@ -93,7 +96,7 @@ adapter ──→ application ──→ domain ←── infrastructure
       contract
 ```
 
-- **adapter** 依赖 application（透传用例调用）+ contract（实现 Service 接口、使用 CO / CQE）
+- **adapter** 依赖 application（透传用例调用）+ contract（实现 Controller 契约接口、使用 CO / CQE）
 - **application** 依赖 domain（编排领域对象）+ contract（使用 CO / CQE）
 - **infrastructure** 依赖 domain（实现 Repository / Portal 接口）
 - **domain** 零外部依赖（纯 Java + common-ddd 构建块）
