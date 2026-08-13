@@ -1,36 +1,28 @@
 # common-cloud
 
-微服务治理基础 —— Nacos 客户端预留 + Seata 分布式事务 + Spring Cloud 官方（Feign / LoadBalancer / CircuitBreaker）。
+微服务治理聚合包 —— Nacos + Seata + Spring Cloud 官方（Feign / LoadBalancer / CircuitBreaker）。
 
-## 定位
+> 本文分两段：§1–4 面向使用者（怎么用），§5–7 面向设计者（为什么这么设计）。
 
-一站式微服务治理聚合包，引入即获得分布式事务、声明式调用、负载均衡、熔断降级能力。
-面向使用分布式事务与东西向 HTTP 调用的微服务。
-本模块为纯聚合 pom（无自有 Java 代码），能力通过依赖传递组装各官方组件。
+## 1. 定位与边界
 
-> 统一异常体系（BusinessException + REST 全局处理）不在本包分发：按 opt-in 原则，
-> 由业务服务显式引入 `common-exception`（或随 `common-ddd` 获得）。
-> REST API 文档（springdoc）同样不在本包分发：由业务服务按需引入 `common-doc`。
+纯聚合 pom（无自有代码），引入即获得服务注册发现、配置中心、分布式事务、声明式 HTTP 调用、客户端负载均衡、熔断降级能力。面向使用分布式事务与东西向 HTTP 调用的微服务。
 
-## 设计原则
+> 统一异常体系（common-exception）与 REST API 文档（common-doc）不在本包分发，由业务服务按需显式引入。
 
-- **引入即生效**：Seata / Feign / CircuitBreaker 经 starter 自动装配
-- **聚合不封装**：直接传递官方 starter，不做二次包装，业务服务可直接使用原生 API
-- **不引入 Spring Cloud Alibaba**：SCA 版本更新滞后；Nacos / Seata 以独立构件引入，熔断/限流用 Spring Cloud 官方 CircuitBreaker（Resilience4J）替代 Sentinel
-- **统一 HTTP**：对外 REST 经 Higress 网关，东西向服务间 RestClient / Feign 直连（一期静态地址）
-- **版本精确声明**：Boot 未托管的第三方版本（nacos-client / seata）独立声明；SC 组件版本由 spring-cloud-dependencies BOM 统一管理（2025.1.x Oakwood，兼容 Boot 4.1）
-
-## 核心功能
+## 2. 核心能力
 
 | 组件 | 职责 |
 |------|------|
+| Nacos（SCA discovery + config starter） | 服务注册发现 / 配置中心（Spring Cloud 自动装配） |
 | Seata | AT/TCC 分布式事务（跨服务最终一致性） |
-| nacos-client | 版本独立管理；一期不启用注册发现/配置中心，为二期服务注册发现与配置中心恢复预留 |
-| Feign | 声明式 HTTP 客户端（东西向服务调用；`@FeignClient` 接口 + CQE/CO 契约） |
-| LoadBalancer | 客户端负载均衡（实例来源：静态配置或二期 Nacos 注册发现） |
-| CircuitBreaker (Resilience4J) | 客户端熔断/降级（替代停更且无 Boot 4 适配的 Sentinel；国际主流方案） |
+| Feign | 声明式 HTTP 客户端（东西向服务调用） |
+| LoadBalancer | 客户端负载均衡（实例来源：Nacos 注册发现） |
+| CircuitBreaker (Resilience4J) | 客户端熔断 / 降级 |
 
-## 使用方式
+## 3. 使用方式
+
+引入依赖即生效：
 
 ```xml
 <dependency>
@@ -39,25 +31,30 @@
 </dependency>
 ```
 
-引入即生效。无需额外代码配置。
+### 3.1 启用前提
 
-### 启用前提
+| 组件 | 前提 |
+|------|------|
+| Nacos | Nacos Server 地址（注册发现 + 配置中心） |
+| Seata | Seata Server 地址 + 事务分组（TC 不可达时启动 fail-fast；测试环境 `seata.enabled: false`） |
+| Feign | 启动类标注 `@EnableFeignClients` |
+| LoadBalancer | 服务端多实例（单实例直连时无需） |
+| CircuitBreaker | 无（默认装配；规则经 `resilience4j.*` 配置） |
 
-| 组件 | 前提 | 配置位置 |
-|------|------|------|
-| Seata | Seata Server 地址 + 事务分组（TC 不可达时启动 fail-fast；测试环境 `seata.enabled: false`） | `seata.*` 配置项 |
-| Nacos | 一期不启用（二期恢复） | — |
-| Feign | 启动类标注 `@EnableFeignClients`；调用方声明 `@FeignClient` 接口 | 代码 |
-| LoadBalancer | 服务端多实例：静态实例列表或二期 Nacos；单实例直连时无需 | `spring.cloud.discovery.*` 或二期 Nacos |
-| CircuitBreaker | 无（默认 Resilience4J 自动装配；规则经 `resilience4j.*` 或 `spring.cloud.circuitbreaker.*` 配置） | 配置项 |
-
-### 最小配置样例
+### 3.2 最小配置样例
 
 ```yaml
-# application.yml
 spring:
   application:
     name: order-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+  config:
+    import: nacos:order-service.yaml?group=DEFAULT_GROUP
 
 seata:
   enabled: true
@@ -69,7 +66,6 @@ seata:
     grouplist:
       default: ${SEATA_SERVER:127.0.0.1:8091}
 
-# Resilience4J 熔断默认规则（可选，不配则走框架默认）
 resilience4j:
   circuitbreaker:
     configs:
@@ -79,33 +75,115 @@ resilience4j:
         sliding-window-size: 20
 ```
 
-## 设计决策与未实现功能
-
-| 决策 | 理由 |
-|------|------|
-| 聚合 pom，无自有装配代码 | 业务服务直接使用 Boot/Seata/SC 原生 API，无学习成本 |
-| 引入 Spring Cloud 官方而非 SCA | SCA 版本滞后于 Boot 4 生态；仅取官方有良好维护的 Feign / LB / CircuitBreaker |
-| 用 CircuitBreaker (Resilience4J) 替代 Sentinel | Sentinel 官方停更（最后版本 1.8.10）且无 Spring 7 适配；Resilience4J 为国际主流、随 SC 同步发布 |
-| Nacos / Seata 独立构件引入 | 避免 SCA 全家桶抽象；nacos-client / seata-spring-boot-starter 均为独立维护 |
-| 移除 gRPC，东西向统一 HTTP | 简化封装代码；东西向经 RestClient / Feign 直连提供方 REST 端点；gRPC 支持待架构稳定后再评估 |
-| Seata 跨服务 XID 透传不内置 | HTTP 统一后透传为出站 RestClient interceptor + 入站 Filter（TX_XID header），配方见 sample-application cookbook distributed-transaction.md；模式稳定后再考虑内置 |
-| Nacos Client 保留但不启用 | 去注册中心一期目标；保留客户端为二期服务注册发现与配置中心恢复铺路 |
-| **未实现** 服务注册发现 | 一期东西向静态地址直连；二期基于 nacos-client 恢复（届时 LoadBalancer 实例来源就位） |
-| **未实现** 限流（Sentinel） | 入口流量治理由 Higress 网关承担；应用层 CircuitBreaker 覆盖东西向客户端防护 |
-| **未实现** 配置中心封装（Nacos Config） | 二期随注册发现一并恢复 |
-| **未实现** 链路追踪 SDK | 由 common-observability 通过 OTel Agent 零侵入方式覆盖 |
-| **未实现** 灰度发布/流量染色 | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
-
-## 依赖关系
+## 4. 依赖关系
 
 ```
-common-cloud → nacos-client
+common-cloud → spring-cloud-starter-alibaba-nacos-discovery
+             → spring-cloud-starter-alibaba-nacos-config
              → seata-spring-boot-starter
              → spring-cloud-starter-openfeign
-             → spring-cloud-loadbalancer
+             → spring-cloud-starter-loadbalancer
              → spring-cloud-starter-circuitbreaker-resilience4j
 ```
 
-> 统一异常体系（common-exception）由业务服务按需显式引入（REST 全局异常处理），见定位一节。
-> REST API 文档（common-doc）由需要对外暴露 REST 端点的服务按需引入。
-> Spring Cloud 组件版本由 spring-cloud-dependencies BOM 管理；**BOM 不传递**，消费方如需版本对齐须自行 import（见 ywf-ddd-common 主 POM 与 sample-application 根 POM）。
+> 依赖树以 `mvn dependency:tree` 为准，本清单可能滞后。
+> Spring Cloud 组件版本由 spring-cloud-dependencies BOM 管理；SCA 组件版本由 spring-cloud-alibaba-dependencies BOM 管理；nacos-client / seata 版本独立声明覆盖 SCA BOM。**BOM 不传递**，消费方需自行 import 对齐版本。
+
+## 5. 设计原则
+
+- **引入即生效**：Seata / Feign / Nacos / CircuitBreaker 经 starter 自动装配
+- **聚合不封装**：直接传递官方 starter，业务服务直接使用原生 API
+- **统一 HTTP**：对外 REST 经 Higress 网关，东西向 Feign / RestClient 直连
+
+## 6. 设计决策
+
+### ADR-0001 东西向通信统一 HTTP（移除 gRPC）
+
+- 状态：accepted
+
+**背景**：迁移计划原定移除 Dubbo 后东西向走 Spring gRPC，后全仓移除 gRPC、统一 HTTP。
+
+**选项**：
+- gRPC：强类型编译期绑定，但内部接口量少、收益有限
+- HTTP（Feign / RestClient）：契约简单、REST 端点复用
+
+**决策**：选 HTTP。内部接口量少，REST 端点可复用，简化契约与安全模型。
+
+**后果**：失去 gRPC 强类型与二进制性能；Feign 接口即契约。
+
+**确认**：`common-cloud/pom.xml` 引入 openfeign 且无 grpc 构件。
+
+### ADR-0002 熔断降级用 Resilience4J 而非 Sentinel
+
+- 状态：accepted
+
+**背景**：客户端熔断降级需求；引入 SCA 后存在 Sentinel（SCA 体系）与 Resilience4J（SC 官方）两个选项。
+
+**选项**：
+- Sentinel（SCA）：SCA 绑定 1.8.9，官方停更、社区 fork 续命
+- Resilience4J（SC 官方）：国际主流、随 SC 同步发布
+
+**决策**：选 Resilience4J（经 SC CircuitBreaker 抽象）。即便引入 SCA，也不启用 Sentinel。
+
+**后果**：入口限流由 Higress 网关承担，应用层仅覆盖东西向客户端防护。
+
+**确认**：pom 引入 `spring-cloud-starter-circuitbreaker-resilience4j`，无 sentinel 构件。
+
+### ADR-0003 Nacos 经 SCA starter 引入，client 版本独立管理
+
+- 状态：accepted
+
+**背景**：需要 Nacos 服务注册发现 + 配置中心的 Spring Cloud 自动装配。裸 nacos-client 仅 SDK 无自动装配。
+
+**选项**：
+- 裸 nacos-client：编程式 SDK，需自写 DiscoveryClient / 配置注入
+- SCA nacos-discovery + nacos-config starter：开箱即用（DiscoveryClient + spring.config.import）
+
+**决策**：选 SCA starter（仅 discovery + config 两个构件），nacos-client 版本独立管理（3.2.3 覆盖 SCA BOM 的 3.1.1）。
+
+**后果**：
+- 好：LoadBalancer 自动从 Nacos 取实例；spring.config.import 声明式配置
+- 坏：引入 SCA 构件（但仅 Nacos 集成，不带 Sentinel / 全家桶）
+
+**确认**：pom 引入 nacos-discovery + nacos-config；父 DM 声明 nacos-client 3.2.3。
+
+### ADR-0004 Seata 独立构件 + 版本独立管理
+
+- 状态：accepted
+
+**背景**：分布式事务需求。SCA 绑定 seata 2.5.0，落后于官方 2.6.0。
+
+**选项**：
+- 经 SCA 引入：版本绑 SCA 发布节奏
+- 独立引入 seata-spring-boot-starter：版本独立管理
+
+**决策**：选独立引入，版本独立管理 2.6.0（覆盖 SCA BOM 的 2.5.0）。
+
+**后果**：Seata 升级不受 SCA 发布节奏约束。
+
+**确认**：pom 引入 `org.apache.seata:seata-spring-boot-starter`；父 DM 声明 2.6.0。
+
+### ADR-0005 Seata XID 透传不内置
+
+- 状态：accepted
+
+**背景**：分布式事务需 XID 跨服务透传。
+
+**选项**：
+- 内置到 common-cloud
+- 不内置，配方沉淀到 cookbook
+
+**决策**：选不内置。HTTP 统一后透传为出站 interceptor + 入站 Filter（TX_XID header），模式未稳定，先以配方形式沉淀。
+
+**后果**：业务方需按配方自行接入；框架保持薄。
+
+**确认**：common-cloud 无 XID 透传代码；配方见 sample-application cookbook distributed-transaction.md。
+
+## 7. 职责边界与技术债
+
+| 项 | 说明 |
+|---|---|
+| 边界：入口限流 | 由 Higress 网关承担 |
+| 边界：链路追踪 | 由 common-observability 经 OTel Agent 覆盖 |
+| 边界：灰度发布 / 流量染色 | 由 Higress 网关层路由规则实现 |
+| 技术债：netty-all 体积 | seata-all 传递引入全量 netty 模块（mqtt/redis/http3 等）。**不可排除**：seata TM 客户端（NettyClientBootstrap）直接引用 `io.netty.*`，排除后运行时 NoClassDefFoundError，TM 无法注册 TC |

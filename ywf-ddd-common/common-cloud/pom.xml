@@ -13,10 +13,16 @@
     <description>微服务治理聚合包（Nacos + Seata + Spring Cloud Feign/LoadBalancer/CircuitBreaker）</description>
 
     <dependencies>
-        <!-- 服务注册发现 / 配置中心 -->
+        <!-- 服务注册发现（提供 DiscoveryClient，供 LoadBalancer 取实例） -->
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
-            <artifactId>nacos-client</artifactId>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
+        <!-- 配置中心（spring.config.import=nacos: 声明式接入） -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
         <!-- 分布式事务（AT/TCC） -->
@@ -24,6 +30,16 @@
             <groupId>org.apache.seata</groupId>
             <artifactId>seata-spring-boot-starter</artifactId>
             <exclusions>
+                <!-- 项目不需要 fastjson（SCA BOM 激活了 seata-all 的该依赖） -->
+                <exclusion>
+                    <groupId>com.alibaba</groupId>
+                    <artifactId>fastjson</artifactId>
+                </exclusion>
+                <!-- 项目用 HikariCP，排除 druid -->
+                <exclusion>
+                    <groupId>com.alibaba</groupId>
+                    <artifactId>druid</artifactId>
+                </exclusion>
                 <!-- 不走 Dubbo RPC -->
                 <exclusion>
                     <groupId>org.apache.dubbo.extensions</groupId>
@@ -44,7 +60,7 @@
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
 
-        <!-- 熔断 / 降级（Resilience4J） -->
+        <!-- 熔断 / 降级（Resilience4J，不用 Sentinel） -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>

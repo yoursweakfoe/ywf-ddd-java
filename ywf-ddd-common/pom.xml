@@ -42,6 +42,9 @@
         <!-- 2025.1.x Oakwood：兼容 Spring Boot 4.0.x / 4.1.x（2025.1.2 起支持 4.1.0） -->
         <spring-cloud.version>2025.1.2</spring-cloud.version>
 
+        <!-- ========== Spring Cloud Alibaba（common-cloud 消费 Nacos 集成） ========== -->
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
+
         <!-- ========== REST API 文档（common-doc） ========== -->
         <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
 
@@ -66,11 +69,21 @@
         <dependencies>
 
             <!-- Spring Cloud 官方 BOM（Feign / LoadBalancer / CircuitBreaker 版本统一管理；
-                 不引入 Spring Cloud Alibaba；BOM 不传递，消费方需自行 import） -->
+                 BOM 不传递，消费方需自行 import） -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud Alibaba BOM（仅取 Nacos 注册发现/配置中心集成；
+                 nacos-client / seata 版本由下方显式声明覆盖，不随 SCA 引入 Sentinel） -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -124,7 +137,7 @@
             </dependency>
 
             <!-- ==================== 微服务基础设施（精确声明，不引入整包 BOM） ==================== -->
-            <!-- Nacos 客户端：版本独立管理，为二期服务注册发现与配置中心恢复预留 -->
+            <!-- Nacos 客户端：版本独立管理（覆盖 SCA BOM 的 3.1.1） -->
             <dependency>
                 <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-client</artifactId>
@@ -132,7 +145,7 @@
             </dependency>
 
             <!-- ==================== 分布式事务（common-cloud 消费） ==================== -->
-            <!-- Apache Seata：独立 starter，不依赖 Spring Cloud Alibaba -->
+            <!-- Apache Seata：独立 starter + 版本独立管理（覆盖 SCA BOM 的 2.5.0） -->
             <dependency>
                 <groupId>org.apache.seata</groupId>
                 <artifactId>seata-spring-boot-starter</artifactId>
