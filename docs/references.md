@@ -83,7 +83,7 @@
 | Strategy Pattern (GoF) | Domain Policy——isApplicable + 业务方法；三种形态（互斥 / 叠加 / 精准路由）；OCP |
 | Facade Pattern (GoF) | adapter/web 纯透传 AppService，不含业务逻辑、不含转换 |
 | Presenter / ViewModel (MVP 变体) | Handler 返回 DTO（内部视图），AppService 通过 Presenter 呈现为 CO（外部安全视图） |
-| Contract-First / API-First | contract 模块纯 Java 类型定义（Service 接口 + CQE + CO + IntegrationEvent）、零实现；消费方仅依赖 contract jar |
+| Contract-First / API-First | contract 模块定义完整 REST 契约（Service 接口 + CQE + CO + IntegrationEvent + HTTP 映射注解 + 文档注解）、零实现；消费方仅依赖 contract jar |
 
 ### SOLID 与工程原则
 
@@ -145,7 +145,7 @@
 | 异常不透传内部堆栈 | REST 通道 GlobalRestExceptionHandler（@RestControllerAdvice）将 BusinessException 统一映射为 HTTP 422 + RFC 9457 Problem Details，Consumer 仅收到 messageKey + params |
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
-| springdoc-openapi | REST 面 OpenAPI 3.0 文档（`/v3/api-docs` + Swagger UI），配合 Apifox 导入同步 |
+| swagger-annotations | REST 面文档注解（`@Operation` / `@Tag` / `@Schema` 纯注解 jar，零运行时零端点），契约层声明语义，配合 Apifox IDE 插件识别 |
 
 **未采纳：**
 

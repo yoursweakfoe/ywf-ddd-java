@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.Command;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -25,10 +26,12 @@ public class PlaceOrderCommand implements Command, Serializable {
 
     /** 客户 ID */
     @NotBlank
+    @Schema(description = "客户 ID")
     private String customerId;
 
     /** 订单项列表 */
     @NotEmpty
+    @Schema(description = "订单项列表")
     private List<@Valid OrderItemDTO> items;
 
     /** 订单项 DTO（命令内嵌）。 */
@@ -42,10 +45,12 @@ public class PlaceOrderCommand implements Command, Serializable {
 
         /** 商品 ID */
         @NotNull
+        @Schema(description = "商品 ID")
         private Long productId;
 
         /** 购买数量 */
         @Min(1)
+        @Schema(description = "购买数量")
         private int quantity;
     }
 }

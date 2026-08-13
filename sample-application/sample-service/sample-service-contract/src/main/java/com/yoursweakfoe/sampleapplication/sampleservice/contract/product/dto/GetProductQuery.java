@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto;
 
 import com.yoursweakfoe.common.contract.Query;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
@@ -20,5 +21,6 @@ public class GetProductQuery implements Query, Serializable {
 
     /** 商品 ID */
     @NotNull
+    @Schema(description = "商品 ID")
     private Long productId;
 }

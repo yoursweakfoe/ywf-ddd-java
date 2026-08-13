@@ -39,11 +39,6 @@
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-cloud</artifactId>
         </dependency>
-        <!-- REST API 文档标注（Swagger/OpenAPI 注解，供 Apifox IDE 插件识别） -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-doc</artifactId>
-        </dependency>
         <!-- REST 面：Spring MVC + 内嵌 Tomcat（对外端点经 Higress 网关入口） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

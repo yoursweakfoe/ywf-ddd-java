@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto;
 
 import com.yoursweakfoe.common.contract.Command;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
@@ -21,9 +22,11 @@ public class CreateProductCommand implements Command, Serializable {
 
     /** 商品名称 */
     @NotBlank
+    @Schema(description = "商品名称")
     private String name;
 
     /** 初始库存 */
     @Min(0)
+    @Schema(description = "初始库存")
     private int stock;
 }

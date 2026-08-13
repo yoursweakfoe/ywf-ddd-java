@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.Query;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 import java.io.Serial;
@@ -20,5 +21,6 @@ public class GetOrderQuery implements Query, Serializable {
 
     /** 订单 ID */
     @NotBlank
+    @Schema(description = "订单 ID")
     private String orderId;
 }

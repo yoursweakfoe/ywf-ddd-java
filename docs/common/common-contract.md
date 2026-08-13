@@ -6,9 +6,9 @@ CQRS 契约标记接口（Command / Query / PageableQuery / Event）—— 供 c
 
 ## 1. 定位与边界
 
-最轻量的公共契约层，仅含纯标记接口 + `jakarta.validation-api` 校验注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / Event 对象即可被基础设施层统一识别与拦截。任何需要定义 CQRS 请求对象的模块都应引入。
+契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / Event 对象即可被基础设施层统一识别与拦截，Service 接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
 
-> 不含 REST/RPC 注解、不含序列化策略：契约 jar 保持纯类型，由服务端与消费方各自决定呈现形式。
+> 契约 = 完整 REST 定义（HTTP 映射 + 文档注解 + 类型一体），但零运行时：注解均为纯元数据，由服务端 Spring MVC 与消费方各自解释。
 
 ## 2. 核心能力
 
@@ -87,7 +87,9 @@ public record GetOrderPageQuery(
 
 ```
 common-contract（独立，无内部模块依赖）
-└── jakarta.validation-api（纯 API，仅约束声明，无实现）
+├── jakarta.validation-api（纯 API，仅约束声明，无实现）
+├── swagger-annotations（文档注解，纯注解 jar，零运行时零端点）
+└── spring-web（HTTP 映射注解，@GetMapping/@RequestMapping 等）
 ```
 
 > **声明与执行分离**：本包只声明校验约束（注解），不执行校验。`jakarta.validation-api` 是纯 API jar（无实现）。校验实现（Hibernate Validator）由服务端提供：通常经 `common-exception` → `spring-boot-starter-validation`（compile 传递）自动获得；若服务仅引入本包，则需自行引入 `spring-boot-starter-validation`。校验在 Controller 层经 `@Valid` 触发。
@@ -96,7 +98,7 @@ common-contract（独立，无内部模块依赖）
 
 - **纯标记接口**：不含泛型、不含基类、不含任何实现逻辑
 - **record 友好**：标记接口可被 record 实现，不强制继承关系
-- **零运行时负担**：所有依赖均为纯注解 jar，不引入任何实现代码
+- **零运行时负担**：本模块不引入任何实现逻辑；依赖均为注解（jakarta.validation-api / swagger-annotations 为纯注解，spring-web 为 HTTP 映射注解来源）
 
 ## 6. 设计决策
 
@@ -118,7 +120,7 @@ common-contract（独立，无内部模块依赖）
 
 ### ADR-0002 不含 REST/RPC 注解
 
-- 状态：accepted
+- 状态：superseded（被 ADR-0003 取代）
 
 **背景**：契约对象是否需要携带 REST/RPC 呈现注解。
 
@@ -131,6 +133,26 @@ common-contract（独立，无内部模块依赖）
 **后果**：契约 jar 与具体通信协议解耦，可复用于 HTTP/RPC/事件多种通道。
 
 **确认**：`common-contract` 无任何 spring-web / jax-rs / swagger 注解。
+
+### ADR-0003 契约承载 HTTP 映射 + 文档注解（重契约）
+
+- 状态：accepted
+
+**背景**：contract 模块的 Service 接口是否承载 HTTP 映射注解（`@GetMapping`/`@PostMapping`）与文档注解（`@Operation`/`@Schema`），即契约是否绑定 HTTP 协议。
+
+**选项**：
+- 重契约：接口承载 HTTP 映射 + 文档注解，契约 = 完整 REST 定义
+- 轻契约：接口纯类型，HTTP 映射留 Controller（原 ADR-0002）
+
+**决策**：选重契约。契约本就该承载协议的完整定义——每个协议都需要自己的契约表述（HTTP 用映射注解，gRPC 用 protobuf），「协议无关的轻契约」是伪命题。
+
+**Pro**：契约完整（类型+语义+路径一体）；路径归属天然解决（消费方从接口看到路径）；`@Operation` 有 `@GetMapping` 锚点；契约优先、集中一处。
+
+**Con**：contract 依赖 spring-web（引入 HTTP 注解依赖）；动摇「零框架依赖」约束。
+
+**后果**：契约 jar 依赖 spring-web。若未来引入第二协议（如 gRPC 内部调用），以该协议自身的契约表述（protobuf 定义，内部包化）做独立重契约，与 HTTP 契约并存、互不影响——换协议是新增协议契约，而非迁移现有契约。
+
+**确认**：`common-contract` 引入 `swagger-annotations` + `spring-web`；Service 接口承载 `@Tag`/`@RequestMapping`/`@Operation`/`@GetMapping`。
 
 ## 7. 职责边界与技术债
 

@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.PageableQuery;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -13,9 +14,9 @@ import jakarta.validation.constraints.Min;
  * @param pageSize   每页大小（默认 20，最大 1000）
  */
 public record GetOrderPageQuery(
-        String status,
-        String customerId,
-        @Min(1) int pageNum,
-        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) int pageSize
+        @Schema(description = "订单状态过滤（可选）") String status,
+        @Schema(description = "客户 ID 过滤（可选）") String customerId,
+        @Min(1) @Schema(description = "页码（从 1 开始，默认 1）") int pageNum,
+        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) @Schema(description = "每页大小（默认 20，最大 1000）") int pageSize
 ) implements PageableQuery {
 }

@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.Command;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -22,9 +23,11 @@ public class ShipOrderCommand implements Command, Serializable {
 
     /** 订单 ID */
     @NotNull
+    @Schema(description = "订单 ID")
     private UUID orderId;
 
     /** 物流单号 */
     @NotBlank
+    @Schema(description = "物流单号")
     private String trackingNumber;
 }

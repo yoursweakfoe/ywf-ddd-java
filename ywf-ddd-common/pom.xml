@@ -23,7 +23,6 @@
         <module>common-test</module>
         <module>common-observability</module>
         <module>common-cloud</module>
-        <module>common-doc</module>
         <module>common-exception</module>
     </modules>
 
@@ -45,7 +44,7 @@
         <!-- ========== Spring Cloud Alibaba（common-cloud 消费 Nacos 集成） ========== -->
         <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
 
-        <!-- ========== REST API 文档标注（common-doc） ========== -->
+        <!-- ========== REST API 文档标注（common-contract 消费） ========== -->
         <swagger-annotations.version>2.2.53</swagger-annotations.version>
 
         <!-- ========== 持久化层（common-ddd / common-pg） ========== -->
@@ -121,11 +120,6 @@
             </dependency>
             <dependency>
                 <groupId>com.yoursweakfoe</groupId>
-                <artifactId>common-doc</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yoursweakfoe</groupId>
                 <artifactId>common-exception</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -151,7 +145,7 @@
                 <artifactId>seata-spring-boot-starter</artifactId>
                 <version>${seata.version}</version>
             </dependency>
-            <!-- ==================== REST API 文档标注（common-doc 消费） ==================== -->
+            <!-- ==================== REST API 文档标注（common-contract 消费） ==================== -->
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>

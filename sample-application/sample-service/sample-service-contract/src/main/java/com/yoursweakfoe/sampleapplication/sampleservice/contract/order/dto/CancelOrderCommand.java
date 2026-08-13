@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.Command;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 import java.io.Serial;
@@ -20,9 +21,11 @@ public class CancelOrderCommand implements Command, Serializable {
 
     /** 订单 ID */
     @NotBlank
+    @Schema(description = "订单 ID")
     private String orderId;
 
     /** 取消原因 */
     @NotBlank
+    @Schema(description = "取消原因")
     private String reason;
 }

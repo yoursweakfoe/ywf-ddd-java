@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.Command;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
@@ -21,5 +22,6 @@ public class DeliverOrderCommand implements Command, Serializable {
 
     /** 订单 ID */
     @NotNull
+    @Schema(description = "订单 ID")
     private UUID orderId;
 }

@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.co;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -9,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 璁㈠崟 CO锛堝绾﹁緭鍑哄璞★級銆?*/
+/** 订单 CO（契约输出对象）。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,43 +19,53 @@ public class OrderCO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 璁㈠崟 ID */
+    /** 订单 ID */
+    @Schema(description = "订单 ID")
     private String id;
 
-    /** 璁㈠崟鐘舵€?*/
+    /** 订单状态 */
+    @Schema(description = "订单状态")
     private String status;
 
-    /** 璁㈠崟椤瑰垪琛?*/
+    /** 订单项列表 */
+    @Schema(description = "订单项列表")
     private List<OrderItemCO> items;
 
-    /** 璁㈠崟鎬婚噾棰?*/
+    /** 订单总金额 */
+    @Schema(description = "订单总金额")
     private BigDecimal totalAmount;
 
-    /** 瀹㈡埛 ID */
+    /** 客户 ID */
+    @Schema(description = "客户 ID")
     private String customerId;
 
-    /** 鐗╂祦鍗曞彿锛堝彂璐у悗濉厖锛?*/
+    /** 物流单号（发货后填充） */
+    @Schema(description = "物流单号（发货后填充）")
     private String trackingNumber;
 
-    /** 鍙栨秷鍘熷洜锛堝彇娑堝悗濉厖锛?*/
+    /** 取消原因（取消后填充） */
+    @Schema(description = "取消原因（取消后填充）")
     private String cancelReason;
 
-    /** 璁㈠崟椤?CO銆?*/
+    /** 订单项 CO。 */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class OrderItemCO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+        @Serial
+        private static final long serialVersionUID = 1L;
 
-        /** 鍟嗗搧 ID */
+        /** 商品 ID */
+        @Schema(description = "商品 ID")
         private Long productId;
 
-        /** 璐拱鏁伴噺 */
+        /** 购买数量 */
+        @Schema(description = "购买数量")
         private int quantity;
 
-        /** 鍗曚环 */
+        /** 单价 */
+        @Schema(description = "单价")
         private BigDecimal unitPrice;
     }
 }

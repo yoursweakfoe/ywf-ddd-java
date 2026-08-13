@@ -14,10 +14,20 @@
     <description>CQRS 契约标记接口（Command / Query / Event）—— 供 contract jar 与服务端共享</description>
 
     <dependencies>
-        <!-- Jakarta Validation 注解（纯注解 jar，用于契约层参数约束声明，运行时由服务端 Handler 层执行校验） -->
+        <!-- Jakarta Validation 注解（纯注解 jar，用于契约层参数约束声明，运行时由服务端执行校验） -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <!-- Swagger/OpenAPI 文档注解（@Operation / @Tag / @Schema，纯注解 jar，零运行时零端点） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+        <!-- Spring Web 注解（@GetMapping / @RequestMapping / @RequestBody，HTTP 映射，契约 = 完整 REST 定义） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
         </dependency>
     </dependencies>
 
