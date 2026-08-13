@@ -270,7 +270,7 @@
                     <charset>UTF-8</charset>
 
                     <!-- 输出目录：项目根目录下的 docs 文件夹 -->
-                    <outputDirectory>${project.basedir}/docs</outputDirectory>
+                    <outputDirectory>../common/docs</outputDirectory>
 
                     <!-- 只包含 common 相关的包（递归包含子包） -->
                     <subpackages>com.yoursweakfoe.common</subpackages>

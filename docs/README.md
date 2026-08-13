@@ -27,9 +27,9 @@ docs/
         └── new-aggregate.md
 ```
 
-- 想了解**每层怎么设计** → [sample-application/module-design/](sample-application/module-design/)
-- 想了解**包怎么组织** → [sample-application/directory-structure/](sample-application/directory-structure/)
-- 想了解**具体怎么写** → [sample-application/cookbook/](sample-application/cookbook/)
+- 想了解**每层怎么设计** → [sample-application/module-design/](application/module-design/)
+- 想了解**包怎么组织** → [sample-application/directory-structure/](application/directory-structure/)
+- 想了解**具体怎么写** → [sample-application/cookbook/](application/cookbook/)
 - 想了解**为什么这么选** → [references.md](references.md)
 
 - 想了解**术语定义** → [glossary.md](glossary.md)
