@@ -2,37 +2,17 @@
 
 网关协同安全 —— Higress JWT 验签透传模式下的身份解析（REST 边界）。
 
-## 定位
+> 本文分两段：§1–4 面向使用者（怎么用），§5–7 面向设计者（为什么这么设计）。
 
-在 Higress 网关验签透传模式下，为微服务提供用户身份解析能力。
-面向所有需要获取当前用户身份的业务服务。
-REST 入站运行在 Servlet 过滤器链（Spring MVC 边界）。
+## 1. 定位与边界
 
-## 设计原则
+在 Higress 网关验签透传模式下，为微服务提供用户身份解析能力。面向所有需要获取当前用户身份的业务服务。REST 入站运行在 Servlet 过滤器链（Spring MVC 边界）。
 
-- **网关验签，服务信任**：微服务不持有密钥，不做验签；只解析网关透传的 Header
-- **身份来源标记**：SecurityContext 中的身份携带来源标记（`EDGE` = REST 边界一手身份）；东西向 HTTP 身份传播为未来设计，届时再扩展来源标记
-- **边界 permit-all**：鉴权决策收口在网关，服务层提供 permit-all + 无状态的 SecurityFilterChain（可被服务自定义链覆盖）
+> 本模块不做验签、不做鉴权、不做 RBAC：安全责任统一收口在网关，服务层只解析网关透传的 Header 并建立身份上下文。
 
-## 包结构
+## 2. 核心能力
 
-```
-com.yoursweakfoe.common.security/
-├── AuthConstants.java                          ← Header / 角色前缀常量（单一定义处）
-├── IdentitySource.java                         ← 身份来源枚举（EDGE）
-├── IdentityDetails.java                        ← Authentication details 载荷（username + source）
-├── SecurityUtil.java                           ← 从 SecurityContext 获取当前用户身份与来源
-├── SecurityContextSupport.java                 ← REST 入站使用的角色解析 + Context 建立/清理
-├── SecurityAutoConfiguration.java              ← Spring Boot 自动装配（AutoConfiguration.imports 注册）
-└── web/
-    └── SecurityWebFilter.java                  ← **REST 入站**：OncePerRequestFilter，Header → SecurityContext（source=EDGE）
-```
-
-身份可信源只在网关进入系统一次。
-
-## 核心功能
-
-### 南北向（网关 → 服务）
+### 身份流转（南北向：网关 → 服务）
 
 ```
 客户端 → Higress 网关（jwt-auth 插件验签 + claims_to_headers 透传）
@@ -49,18 +29,27 @@ com.yoursweakfoe.common.security/
 | `HDR_USERNAME` | `X-Username` | `username` | 用户名 |
 | `HDR_ROLES` | `X-Roles` | `roles` | 角色列表（逗号分隔） |
 
-另有 `ROLE_PREFIX`（`ROLE_`）：Spring Security 角色前缀；传播载荷中的角色不含前缀，写入 `GrantedAuthority` 时补上、读出时剥离。
+另有 `ROLE_PREFIX`（`ROLE_`）：Spring Security 角色前缀，写入 `GrantedAuthority` 时补上、读出时剥离。
+
+### SecurityUtil 未登录行为
+
+| 方法 | 未登录时返回 |
+|------|------------|
+| `getCurrentUserId()` | `null` |
+| `getUsername()` | `null` |
+| `getIdentitySource()` | `null` |
+| `getRoles()` | 空 List |
 
 ### 自动装配
 
-`SecurityAutoConfiguration` 经 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册：
+`SecurityAutoConfiguration` 注册：
 
 | Bean | 条件 | 说明 |
 |------|------|------|
 | `SecurityWebFilter` | Servlet Web 应用 | Boot 自动注册进 Servlet 过滤器链 |
 | permit-all `SecurityFilterChain` | Servlet Web 应用 + 无自定义链 | CSRF 关闭 + 无状态 + 全放行；`beforeName` 先于 Boot 默认安全链注册使其退避 |
 
-## 使用方式
+## 3. 使用方式
 
 ```xml
 <dependency>
@@ -69,92 +58,88 @@ com.yoursweakfoe.common.security/
 </dependency>
 ```
 
-引入即生效。Filter 由自动装配注册，业务代码通过 `SecurityUtil` 获取身份。
-
 ### 安全前提条件（必须满足）
 
-1. 网关必须配置 jwt-auth 插件（Higress / Kong / APISIX），在转发前完成 JWT 验签并注入 X-User-* Header
+1. 网关必须配置 jwt-auth 插件，在转发前完成 JWT 验签并注入 `X-User-*` Header
 2. 服务端口不得直接暴露到公网（必须经网关转发，否则 Header 可被伪造）
-3. 若网关配置缺失或被绕过，本模块不会拒绝请求（无 Header 时建立匿名上下文）——这是设计取舍：安全责任统一收口在网关
-
-### SecurityUtil 未登录行为
-
-| 方法 | 未登录时返回 | 说明 |
-|------|------------|------|
-| `getCurrentUserId()` | `null` | SecurityContext 为空或 principal 为 null |
-| `getUsername()` | `null` | details 未设置 |
-| `getIdentitySource()` | `null` | 非本框架建立的身份亦返回 null |
-| `getRoles()` | 空 List | authorities 为空时返回 `List.of()` |
-
-> 业务代码应自行判断 null/空（如 `if (userId == null) throw new BusinessException("auth:err.notLoggedIn")`）。
+3. 若网关配置缺失或被绕过，本模块不会拒绝请求（无 Header 时建立匿名上下文）
 
 ### 场景 1：获取当前用户身份
 
 ```java
-@Service
-public class OrderAppService {
-
-    public OrderCO placeOrder(PlaceOrderCommand command) {
-        // 在任意业务代码中获取当前登录用户
-        String userId = SecurityUtil.getCurrentUserId();
-        String username = SecurityUtil.getUsername();
-        // 用于审计字段填充、数据归属等
-        Order order = new Order(command, userId);
-        // ...
-    }
-}
+String userId = SecurityUtil.getCurrentUserId();
+String username = SecurityUtil.getUsername();
+Order order = new Order(command, userId);  // 审计字段、数据归属
 ```
 
 ### 场景 2：角色判断
 
 ```java
-@Component
-public class CancelOrderHandler implements CommandHandler<CancelOrderCommand, OrderDTO> {
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public OrderDTO handle(CancelOrderCommand command) {
-        Order order = orderRepository.findById(command.getOrderId())
-                .orElseThrow(() -> new BusinessException("order:err.notFound"));
-
-        // 非本人且非管理员不允许取消
-        String currentUserId = SecurityUtil.getCurrentUserId();
-        List<String> roles = SecurityUtil.getRoles();
-        boolean isOwner = order.getCustomerId().equals(currentUserId);
-        boolean isAdmin = roles.contains("ADMIN");
-        if (!isOwner && !isAdmin) {
-            throw new BusinessException("order:err.forbidden");
-        }
-
-        order.cancel(command.getReason());
-        orderRepository.update(order);
-        return orderAssembler.toDTO();
-    }
+String currentUserId = SecurityUtil.getCurrentUserId();
+List<String> roles = SecurityUtil.getRoles();
+boolean isOwner = order.getCustomerId().equals(currentUserId);
+boolean isAdmin = roles.contains("ADMIN");
+if (!isOwner && !isAdmin) {
+    throw new BusinessException("order:err.forbidden");
 }
 ```
 
-## 设计决策与未实现功能
-
-| 决策 | 理由 |
-|------|------|
-| 网关验签 + 服务信任 Header | 微服务不持有密钥，职责单一；密钥管理集中在网关 |
-| 身份来源标记（EDGE） | 标记网关边界一手身份，安全审计与边界策略可据此决策 |
-| 边界 permit-all SecurityFilterChain | 鉴权在网关；服务层重复验签无收益。服务可声明自己的 SecurityFilterChain 覆盖 |
-| **未实现** 东西向 HTTP 身份传播 | 未来设计；当前身份仅在网关边界解析，架构稳定后再扩展 |
-| **未实现** JWT 验签 / Token 刷新 | 验签由 Higress 网关 jwt-auth 插件统一处理 |
-| **未实现** RBAC 权限模型 | 角色/权限管理属于业务域，各服务按需实现；本模块只提供 Header→Context 桥接 |
-| **未实现** OAuth2 / SSO 登录流程 | 登录由独立认证服务 + 网关处理，业务微服务不参与 |
-| **未实现** URL 级权限控制 | URL 鉴权由网关处理；服务内方法级鉴权可用 `@PreAuthorize` |
-| **未实现** 数据权限（行级过滤） | 数据权限与业务模型强耦合，由业务层 SQL 条件自行实现 |
-
-## 依赖关系
+## 4. 依赖关系
 
 ```
-common-security → spring-boot-starter-security (compile，含 spring-security-web)
-                → spring-boot-autoconfigure (compile)
-                → spring-web (optional：OncePerRequestFilter)
-                → jakarta.servlet-api (provided)
+common-security → spring-boot-starter-security（含 spring-security-web）
+                → spring-boot-autoconfigure
+                → spring-web（optional：OncePerRequestFilter）
+                → jakarta.servlet-api（provided）
 ```
 
-> `spring-security-web` 必须保留：Boot 4 的 `ServletWebSecurityAutoConfiguration` 在 servlet web
-> 应用下会内省 `WebSecurityConfiguration`，缺失 `SecurityFilterChain` 类将导致启动失败。
+## 5. 设计原则
+
+- **网关验签，服务信任**：微服务不持有密钥，不做验签；只解析网关透传的 Header
+- **身份来源标记**：SecurityContext 中的身份携带来源标记（`EDGE` = REST 边界一手身份）
+- **边界 permit-all**：鉴权决策收口在网关，服务层提供 permit-all + 无状态 SecurityFilterChain（可被服务自定义链覆盖）
+
+## 6. 设计决策
+
+### ADR-0001 网关验签 + 服务信任 Header
+
+- 状态：accepted
+
+**背景**：JWT 验签放在网关还是服务。
+
+**决策**：验签由网关完成，服务只信任网关透传的 Header。微服务不持有密钥，职责单一；密钥管理集中在网关。
+
+**后果**：服务端口必须不直暴公网，否则 Header 可伪造（见 §3 安全前提）。
+
+**确认**：`SecurityWebFilter` 只解析 Header，不含任何验签逻辑。
+
+### ADR-0002 身份来源标记（EDGE）
+
+- 状态：accepted
+
+**背景**：是否需要区分身份的来源（网关边界 vs 东西向传播）。
+
+**决策**：引入 `IdentitySource` 标记，当前仅 `EDGE`（REST 边界一手身份）。安全审计与边界策略可据此决策。
+
+**确认**：`IdentityDetails` 携带 `source` 字段，`SecurityUtil.getIdentitySource()` 返回来源。
+
+### ADR-0003 边界 permit-all SecurityFilterChain
+
+- 状态：accepted
+
+**背景**：服务层是否重复鉴权。
+
+**决策**：不重复鉴权。鉴权在网关，服务层提供 permit-all + 无状态链（CSRF 关闭），可被服务自定义链覆盖。
+
+**确认**：`SecurityAutoConfiguration` 提供 `@ConditionalOnMissingBean` 的 permit-all 链。
+
+## 7. 职责边界与技术债
+
+| 项 | 说明 |
+|---|---|
+| 边界：东西向 HTTP 身份传播 | 未来设计；当前身份仅在网关边界解析，架构稳定后再扩展 |
+| 边界：JWT 验签 / Token 刷新 | 由 Higress 网关 jwt-auth 插件统一处理 |
+| 边界：RBAC 权限模型 | 角色/权限管理属于业务域，各服务按需实现 |
+| 边界：OAuth2 / SSO 登录流程 | 由独立认证服务 + 网关处理 |
+| 边界：URL 级权限控制 | 由网关处理；服务内方法级鉴权可用 `@PreAuthorize` |
+| 边界：数据权限（行级过滤） | 与业务模型强耦合，由业务层 SQL 条件自行实现 |
