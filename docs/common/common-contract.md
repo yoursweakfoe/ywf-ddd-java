@@ -49,12 +49,37 @@ CQRS 契约标记接口（Command / Query / PageableQuery / Event）—— 供 c
 </dependency>
 ```
 
-引入即生效。业务 CQE 对象实现对应标记接口即可：
+引入即生效。业务 CQE 对象实现对应标记接口，并在字段上声明校验约束：
 
 ```java
-public record PlaceOrderCommand(UUID productId, int quantity) implements Command {}
-public record GetOrderQuery(UUID orderId) implements Query {}
+public record PlaceOrderCommand(
+        @NotBlank String customerId,
+        @NotEmpty List<@Valid OrderItemDTO> items
+) implements Command {}
+
+public record GetOrderPageQuery(
+        String status,
+        @Min(1) int pageNum,
+        @Min(1) @Max(1000) int pageSize
+) implements PageableQuery {}
 ```
+
+### 3.1 参数校验规范
+
+契约层声明约束、服务端执行校验，三层协作：
+
+| 层 | 职责 | 做法 |
+|---|---|---|
+| contract（声明约束） | 在 CQE 字段上声明校验注解 | `@NotNull` / `@NotBlank` / `@NotEmpty` / `@Min` / `@Max` / `@Size` |
+| adapter（触发校验） | Controller 用 `@Valid` 触发 | `@Valid @RequestBody XxxCommand` |
+| 全局异常处理 | 统一翻译校验失败 | `MethodArgumentNotValidException` → 400 + fieldErrors（common-exception 已提供） |
+
+要点：
+
+- **嵌套校验**：容器元素用类型参数注解 `List<@Valid Xxx>`；不要在 `List` 字段上加 `@Valid`（Hibernate Validator 已弃用该用法）
+- **record 分页字段**：`PageableQuery` 接口的 `@Min/@Max` 是 default 方法，record 组件**不继承**，实现类须在组件上显式声明
+- **字符串 ID 用 `@NotBlank`，对象 ID 用 `@NotNull`，集合用 `@NotEmpty`**
+- **业务规则校验不在此列**：库存够不够、状态对不对属 Domain 层 `validate()` + 显式 if-throw，不用 Bean Validation
 
 无运行时配置：本模块为纯接口 + 注解 jar，无 SPI、无 AutoConfiguration、无 Spring Bean。
 
@@ -65,7 +90,7 @@ common-contract（独立，无内部模块依赖）
 └── jakarta.validation-api（纯 API，仅约束声明，无实现）
 ```
 
-> **声明与执行分离**：本包只声明校验约束（注解），不执行校验。`jakarta.validation-api` 是纯 API jar（无实现）。校验实现（Hibernate Validator）由服务端提供：通常经 `common-exception` → `spring-boot-starter-validation`（compile 传递）自动获得；若服务仅引入本包，则需自行引入 `spring-boot-starter-validation`。校验在 Handler 层经 `@Valid` 触发。
+> **声明与执行分离**：本包只声明校验约束（注解），不执行校验。`jakarta.validation-api` 是纯 API jar（无实现）。校验实现（Hibernate Validator）由服务端提供：通常经 `common-exception` → `spring-boot-starter-validation`（compile 传递）自动获得；若服务仅引入本包，则需自行引入 `spring-boot-starter-validation`。校验在 Controller 层经 `@Valid` 触发。
 
 ## 5. 设计原则
 

@@ -14,6 +14,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.ShipO
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,7 +47,7 @@ public class OrderController implements OrderService {
     @Override
     @PostMapping("")
     @Operation(summary = "下单", description = "创建新订单，初始状态为 PENDING")
-    public OrderCO placeOrder(@RequestBody PlaceOrderCommand command) {
+    public OrderCO placeOrder(@Valid @RequestBody PlaceOrderCommand command) {
         return orderAppService.placeOrder(command);
     }
 
@@ -96,7 +97,7 @@ public class OrderController implements OrderService {
     @Operation(summary = "取消订单", description = "取消未支付/未发货订单")
     public void cancelOrder(
             @PathVariable("orderId") @Parameter(description = "订单 ID") UUID orderId,
-            @RequestBody CancelOrderCommand command) {
+            @Valid @RequestBody CancelOrderCommand command) {
         orderAppService.cancelOrder(command);
     }
 

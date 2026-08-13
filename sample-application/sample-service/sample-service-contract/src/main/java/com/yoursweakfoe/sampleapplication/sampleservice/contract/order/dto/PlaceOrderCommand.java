@@ -1,6 +1,11 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto;
 
 import com.yoursweakfoe.common.contract.Command;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,7 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 涓嬪崟鍛戒护銆?*/
+/** 下单命令。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,25 +23,29 @@ public class PlaceOrderCommand implements Command, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 瀹㈡埛 ID */
+    /** 客户 ID */
+    @NotBlank
     private String customerId;
 
-    /** 璁㈠崟椤瑰垪琛?*/
-    private List<OrderItemDTO> items;
+    /** 订单项列表 */
+    @NotEmpty
+    private List<@Valid OrderItemDTO> items;
 
-    /** 璁㈠崟椤?DTO锛堝懡浠ゅ唴宓岋級銆?*/
+    /** 订单项 DTO（命令内嵌）。 */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class OrderItemDTO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+        @Serial
+        private static final long serialVersionUID = 1L;
 
-        /** 鍟嗗搧 ID */
+        /** 商品 ID */
+        @NotNull
         private Long productId;
 
-        /** 璐拱鏁伴噺 */
+        /** 购买数量 */
+        @Min(1)
         private int quantity;
     }
 }
