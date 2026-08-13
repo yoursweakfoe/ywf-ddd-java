@@ -14,14 +14,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class ProductRepository extends MybatisRepositorySupport<ProductMapper, ProductPO, Product>
+public class ProductRepository extends MybatisRepositorySupport<ProductMapper, ProductPO, Product, Long>
         implements Repository<Product, Long> {
 
     private final ProductConverter converter;
 
-    public ProductRepository(ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+    public ProductRepository(ProductMapper mapper,
+                             ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
                              ProductConverter converter) {
-        super(domainEventPublisherProvider);
+        super(mapper, domainEventPublisherProvider);
         this.converter = converter;
     }
 

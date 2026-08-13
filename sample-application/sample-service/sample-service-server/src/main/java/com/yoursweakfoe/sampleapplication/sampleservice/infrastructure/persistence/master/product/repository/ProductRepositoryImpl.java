@@ -19,15 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 public class ProductRepositoryImpl
-        extends MybatisRepositorySupport<ProductMapper, ProductPO, Product>
+        extends MybatisRepositorySupport<ProductMapper, ProductPO, Product, Long>
         implements ProductRepository {
 
     // region 依赖注入
     private final ProductConverter converter;
 
-    public ProductRepositoryImpl(ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+    public ProductRepositoryImpl(ProductMapper mapper,
+                                 ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
                                  ProductConverter converter) {
-        super(domainEventPublisherProvider);
+        super(mapper, domainEventPublisherProvider);
         this.converter = converter;
     }
     // endregion

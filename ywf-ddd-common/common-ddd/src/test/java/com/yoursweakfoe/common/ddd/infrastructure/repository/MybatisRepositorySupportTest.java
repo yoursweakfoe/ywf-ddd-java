@@ -317,7 +317,7 @@ class MybatisRepositorySupportTest {
 
     @Test
     void removeDomainById_notExists_throwsIllegalState() {
-        assertThatThrownBy(() -> orderRepository.removeDomainById("non-existent-id"))
+        assertThatThrownBy(() -> orderRepository.removeDomainById(UUID.randomUUID()))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -328,7 +328,7 @@ class MybatisRepositorySupportTest {
         orderRepository.save(o1);
         orderRepository.save(o2);
 
-        orderRepository.removeDomainByIds(List.of(o1.getId().toString(), o2.getId().toString()));
+        orderRepository.removeDomainByIds(List.of(o1.getId(), o2.getId()));
 
         assertThat(orderRepository.findById(o1.getId())).isEmpty();
         assertThat(orderRepository.findById(o2.getId())).isEmpty();
@@ -340,8 +340,8 @@ class MybatisRepositorySupportTest {
         orderRepository.save(order);
         eventCapture.captured.clear();
 
-        orderRepository.removeDomainById(order.getId().toString(),
-                id -> new OrderCancelledEvent(UUID.fromString(id), "deleted"));
+        orderRepository.removeDomainById(order.getId(),
+                id -> new OrderCancelledEvent(id, "deleted"));
 
         assertThat(orderRepository.findById(order.getId())).isEmpty();
         assertThat(eventCapture.captured)
@@ -354,8 +354,8 @@ class MybatisRepositorySupportTest {
 
     @Test
     void removeDomainById_withEventFactory_deleteFails_noEventPublished() {
-        assertThatThrownBy(() -> orderRepository.removeDomainById("non-existent-id",
-                id -> new OrderCancelledEvent(UUID.randomUUID(), "deleted")))
+        assertThatThrownBy(() -> orderRepository.removeDomainById(UUID.randomUUID(),
+                id -> new OrderCancelledEvent(id, "deleted")))
                 .isInstanceOf(IllegalStateException.class);
 
         assertThat(eventCapture.captured).isEmpty();
@@ -370,8 +370,8 @@ class MybatisRepositorySupportTest {
         eventCapture.captured.clear();
 
         orderRepository.removeDomainByIds(
-                List.of(o1.getId().toString(), o2.getId().toString()),
-                id -> new OrderCancelledEvent(UUID.fromString(id), "deleted"));
+                List.of(o1.getId(), o2.getId()),
+                id -> new OrderCancelledEvent(id, "deleted"));
 
         assertThat(orderRepository.findById(o1.getId())).isEmpty();
         assertThat(orderRepository.findById(o2.getId())).isEmpty();
@@ -458,7 +458,7 @@ class MybatisRepositorySupportTest {
         orderRepository.save(o2);
 
         List<Order> results = orderRepository.findDomainsByIds(
-                List.of(o1.getId().toString(), o2.getId().toString()));
+                List.of(o1.getId(), o2.getId()));
 
         assertThat(results).hasSize(2);
     }
@@ -487,6 +487,18 @@ class MybatisRepositorySupportTest {
         wrapper.eq(OrderPO::getId, "non-existent");
 
         assertThat(orderRepository.findDomainOneByCondition(wrapper)).isEmpty();
+    }
+
+    @Test
+    void findDomainOneByCondition_multipleMatches_throwsIllegalState() {
+        orderRepository.save(OrderFixtures.createOrderWithStatus(OrderStatus.PENDING));
+        orderRepository.save(OrderFixtures.createOrderWithStatus(OrderStatus.PENDING));
+
+        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderPO::getStatus, OrderStatus.PENDING.name());
+
+        assertThatThrownBy(() -> orderRepository.findDomainOneByCondition(wrapper))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     // ==================== countByCondition ====================

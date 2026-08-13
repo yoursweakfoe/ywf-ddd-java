@@ -8,6 +8,7 @@ import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.repository.MybatisRepositorySupport;
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
@@ -15,14 +16,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class OrderRepository extends MybatisRepositorySupport<OrderMapper, OrderPO, Order>
+public class OrderRepository extends MybatisRepositorySupport<OrderMapper, OrderPO, Order, UUID>
         implements Repository<Order, UUID> {
 
     private final OrderConverter converter;
 
-    public OrderRepository(ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+    public OrderRepository(OrderMapper mapper,
+                           ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
                            OrderConverter converter) {
-        super(domainEventPublisherProvider);
+        super(mapper, domainEventPublisherProvider);
         this.converter = converter;
     }
 
@@ -31,9 +33,15 @@ public class OrderRepository extends MybatisRepositorySupport<OrderMapper, Order
         return converter;
     }
 
+    /** 领域 ID（UUID）→ PO 主键（String） */
+    @Override
+    protected Serializable toPersistenceId(UUID id) {
+        return id.toString();
+    }
+
     @Override
     public Optional<Order> findById(UUID id) {
-        return findDomainById(id.toString());
+        return findDomainById(id);
     }
 
     @Override
@@ -50,11 +58,11 @@ public class OrderRepository extends MybatisRepositorySupport<OrderMapper, Order
 
     @Override
     public boolean exists(UUID id) {
-        return existsDomainById(id.toString());
+        return existsDomainById(id);
     }
 
     @Override
     public void deleteById(UUID id) {
-        removeDomainById(id.toString());
+        removeDomainById(id);
     }
 }

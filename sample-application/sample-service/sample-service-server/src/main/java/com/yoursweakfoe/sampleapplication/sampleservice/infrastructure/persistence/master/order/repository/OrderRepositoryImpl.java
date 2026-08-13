@@ -8,6 +8,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.repository.MybatisRepositorySupport;
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
@@ -19,15 +20,16 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 public class OrderRepositoryImpl
-        extends MybatisRepositorySupport<OrderMapper, OrderPO, Order>
+        extends MybatisRepositorySupport<OrderMapper, OrderPO, Order, UUID>
         implements OrderRepository {
 
     // region 依赖注入
     private final OrderConverter converter;
 
-    public OrderRepositoryImpl(ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+    public OrderRepositoryImpl(OrderMapper mapper,
+                               ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
                                OrderConverter converter) {
-        super(domainEventPublisherProvider);
+        super(mapper, domainEventPublisherProvider);
         this.converter = converter;
     }
     // endregion
@@ -37,9 +39,15 @@ public class OrderRepositoryImpl
         return converter;
     }
 
+    /** 领域 ID（UUID）→ PO 主键（String） */
+    @Override
+    protected Serializable toPersistenceId(UUID id) {
+        return id.toString();
+    }
+
     @Override
     public Optional<Order> findById(UUID id) {
-        return findDomainById(id.toString());
+        return findDomainById(id);
     }
 
     @Override
@@ -56,11 +64,11 @@ public class OrderRepositoryImpl
 
     @Override
     public boolean exists(UUID id) {
-        return existsDomainById(id.toString());
+        return existsDomainById(id);
     }
 
     @Override
     public void deleteById(UUID id) {
-        removeDomainById(id.toString());
+        removeDomainById(id);
     }
 }

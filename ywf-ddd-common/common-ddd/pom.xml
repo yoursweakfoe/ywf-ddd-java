@@ -37,10 +37,13 @@
             <artifactId>mybatis-plus-jsqlparser</artifactId>
         </dependency>
 
-        <!-- 多数据源（@DS 注解切换，底层 HikariCP） -->
+        <!-- 多数据源（@DS 注解切换，底层 HikariCP）：
+             框架源码不直接使用，仅测试环境验证 MybatisRepositorySupport 在多数据源下的兼容性。
+             消费方需多数据源时自行引入（依赖最小化，见 .agents/rules/04-forbidden-patterns.md） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- ========== 测试 ========== -->
