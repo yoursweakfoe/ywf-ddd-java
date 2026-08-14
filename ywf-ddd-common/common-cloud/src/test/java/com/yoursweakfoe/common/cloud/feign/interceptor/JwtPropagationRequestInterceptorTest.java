@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.cloud.feign;
+package com.yoursweakfoe.common.cloud.feign.interceptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

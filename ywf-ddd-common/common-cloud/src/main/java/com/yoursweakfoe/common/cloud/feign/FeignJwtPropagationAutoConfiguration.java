@@ -1,5 +1,6 @@
 package com.yoursweakfoe.common.cloud.feign;
 
+import com.yoursweakfoe.common.cloud.feign.interceptor.JwtPropagationRequestInterceptor;
 import feign.RequestInterceptor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
