@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.security;
+package com.yoursweakfoe.common.security.context;
 
 import java.util.Arrays;
 import java.util.List;

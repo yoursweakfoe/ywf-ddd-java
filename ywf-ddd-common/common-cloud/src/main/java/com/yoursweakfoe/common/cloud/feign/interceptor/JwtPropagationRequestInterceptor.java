@@ -1,6 +1,6 @@
 package com.yoursweakfoe.common.cloud.feign.interceptor;
 
-import com.yoursweakfoe.common.security.SecurityUtil;
+import com.yoursweakfoe.common.security.context.SecurityUtil;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;

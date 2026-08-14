@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.security;
+package com.yoursweakfoe.common.security.context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

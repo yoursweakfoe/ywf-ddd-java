@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.security;
+package com.yoursweakfoe.common.security.jwt;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
