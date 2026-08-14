@@ -32,13 +32,13 @@ public class PlaceOrderCommand implements Command, Serializable {
     /** 订单项列表 */
     @NotEmpty
     @Schema(description = "订单项列表")
-    private List<@Valid OrderItemDTO> items;
+    private List<@Valid OrderItemView> items;
 
     /** 订单项 DTO（命令内嵌）。 */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class OrderItemDTO implements Serializable {
+    public static class OrderItemView implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 1L;

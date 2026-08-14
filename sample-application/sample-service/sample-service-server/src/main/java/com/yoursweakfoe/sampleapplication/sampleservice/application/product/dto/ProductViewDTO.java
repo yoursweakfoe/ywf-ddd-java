@@ -7,11 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 商品 DTO（内部视图）。 */
+/** 商品内部视图 —— 领域模型 → 外部的投影，含内部审计字段。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDTO implements Serializable {
+public class ProductViewDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

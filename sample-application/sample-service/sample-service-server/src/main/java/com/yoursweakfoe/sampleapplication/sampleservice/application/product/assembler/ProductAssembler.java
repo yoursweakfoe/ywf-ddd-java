@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler;
 import org.springframework.stereotype.Component;
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
  * 仅 toDTO 方向有效。字段增删时必须同步修改本类。
  */
 @Component
-public class ProductAssembler implements BasicAssembler<Product, ProductDTO> {
+public class ProductAssembler implements BasicAssembler<Product, ProductViewDTO> {
 
     @Override
-    public ProductDTO toDTO(Product product) {
-        ProductDTO dto = new ProductDTO();
+    public ProductViewDTO toDTO(Product product) {
+        ProductViewDTO dto = new ProductViewDTO();
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setStock(product.getStock());
@@ -28,19 +28,19 @@ public class ProductAssembler implements BasicAssembler<Product, ProductDTO> {
 
     /** 富领域模型不支持 DTO → Domain 映射，使用 Product.reconstitute() 替代。 */
     @Override
-    public Product toDomain(ProductDTO dto) {
+    public Product toDomain(ProductViewDTO dto) {
         throw new UnsupportedOperationException("Rich domain model: use Product.reconstitute() instead");
     }
 
     /** 富领域模型不使用增量更新。 */
     @Override
-    public void updateDomain(ProductDTO dto, Product domain) {
+    public void updateDomain(ProductViewDTO dto, Product domain) {
         throw new UnsupportedOperationException("Rich domain model: use reconstitute instead");
     }
 
     /** 富领域模型不使用增量更新。 */
     @Override
-    public void updateDTO(Product domain, ProductDTO dto) {
+    public void updateDTO(Product domain, ProductViewDTO dto) {
         throw new UnsupportedOperationException("Rich domain model: use toDTO instead");
     }
 }

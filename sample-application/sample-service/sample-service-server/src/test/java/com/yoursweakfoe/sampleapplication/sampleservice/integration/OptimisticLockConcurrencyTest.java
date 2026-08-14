@@ -77,7 +77,7 @@ class OptimisticLockConcurrencyTest {
                     startGate.await(10, TimeUnit.SECONDS);
 
                     var cmd = new PlaceOrderCommand("stress-customer-" + idx,
-                            List.of(new PlaceOrderCommand.OrderItemDTO(productId, 1)));
+                            List.of(new PlaceOrderCommand.OrderItemView(productId, 1)));
 
                     int status = postForStatus("/orders", cmd);
 

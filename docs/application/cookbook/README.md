@@ -19,6 +19,7 @@
 | [scheduled-task.md](scheduled-task.md) | 定时任务：adapter 层 Scheduler 入口 + 分布式锁提示 | 定时/周期性任务 |
 | [mq-consumer.md](mq-consumer.md) | MQ 消费者：adapter 层 Consumer 入口 + 幂等性 + 死信处理 | 消息驱动场景 |
 | [distributed-transaction.md](distributed-transaction.md) | 分布式事务：Seata AT 模式 + @GlobalTransactional + 边界选择 | 跨服务数据一致性 |
+| [application-layer-objects.md](application-layer-objects.md) | 应用层内部数据对象：ViewDTO / Params / Record 三种 pattern + 适用场景 | 设计内部数据结构 |
 | [optimistic-lock-retry.md](optimistic-lock-retry.md) | 乐观锁冲突与重试：冲突识别 + ExponentialBackoff + Handler 模板 | 并发冲突处理 |
 
 ## 与 module-design 的关系

@@ -2,7 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product.pre
 
 import com.yoursweakfoe.common.ddd.application.presenter.BasicPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
  * 不映射即不暴露。presentList 由 {@code BasicPresenter} default 实现提供。
  */
 @Component
-public class ProductPresenter implements BasicPresenter<ProductDTO, ProductCO> {
+public class ProductPresenter implements BasicPresenter<ProductViewDTO, ProductCO> {
 
     @Override
-    public ProductCO present(ProductDTO dto) {
+    public ProductCO present(ProductViewDTO dto) {
         ProductCO co = new ProductCO();
         co.setId(dto.getId());
         co.setName(dto.getName());

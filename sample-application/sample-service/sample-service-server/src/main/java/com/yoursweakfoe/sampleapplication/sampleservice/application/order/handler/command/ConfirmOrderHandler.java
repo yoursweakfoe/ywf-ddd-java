@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** 确认订单。 */
 @Component
-public class ConfirmOrderHandler implements CommandHandler<ConfirmOrderCommand, OrderDTO> {
+public class ConfirmOrderHandler implements CommandHandler<ConfirmOrderCommand, OrderViewDTO> {
 
     // region 依赖注入
     private final OrderRepository orderRepository;
@@ -26,7 +26,7 @@ public class ConfirmOrderHandler implements CommandHandler<ConfirmOrderCommand, 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderDTO handle(ConfirmOrderCommand command) {
+    public OrderViewDTO handle(ConfirmOrderCommand command) {
         Order order = orderRepository.findById(command.getOrderId())
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         order.confirm();

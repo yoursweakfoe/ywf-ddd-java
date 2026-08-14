@@ -1,5 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.yoursweakfoe.common.ddd.domain.model.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter.OrderConverter;
@@ -70,5 +72,10 @@ public class OrderRepositoryImpl
     @Override
     public void deleteById(UUID id) {
         removeDomainById(id);
+    }
+
+    @Override
+    public PageResult<Order> findPage(int pageNum, int pageSize) {
+        return findDomainPage(new LambdaQueryWrapper<OrderPO>(), pageNum, pageSize);
     }
 }

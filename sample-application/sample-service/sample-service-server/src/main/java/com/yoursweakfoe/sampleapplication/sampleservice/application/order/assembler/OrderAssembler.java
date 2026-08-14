@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler;
 import org.springframework.stereotype.Component;
@@ -12,15 +12,15 @@ import org.springframework.stereotype.Component;
  * 仅 toDTO 方向有效。字段增删时必须同步修改本类。
  */
 @Component
-public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
+public class OrderAssembler implements BasicAssembler<Order, OrderViewDTO> {
 
     @Override
-    public OrderDTO toDTO(Order order) {
-        OrderDTO dto = new OrderDTO();
+    public OrderViewDTO toDTO(Order order) {
+        OrderViewDTO dto = new OrderViewDTO();
         dto.setId(order.getId().toString());
         dto.setStatus(order.getStatus().name());
         dto.setItems(order.getItems().stream()
-                .map(item -> new OrderDTO.OrderItemDTO(
+                .map(item -> new OrderViewDTO.OrderItemViewDTO(
                         item.productId(), item.quantity(), item.unitPrice()))
                 .toList());
         dto.setTotalAmount(order.getTotalAmount());
@@ -35,19 +35,19 @@ public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
 
     /** 富领域模型不支持 DTO → Domain 映射，使用 Order.reconstitute() 替代。 */
     @Override
-    public Order toDomain(OrderDTO dto) {
+    public Order toDomain(OrderViewDTO dto) {
         throw new UnsupportedOperationException("Rich domain model: use Order.reconstitute() instead");
     }
 
     /** 富领域模型不使用增量更新。 */
     @Override
-    public void updateDomain(OrderDTO dto, Order domain) {
+    public void updateDomain(OrderViewDTO dto, Order domain) {
         throw new UnsupportedOperationException("Rich domain model: use reconstitute instead");
     }
 
     /** 富领域模型不使用增量更新。 */
     @Override
-    public void updateDTO(Order domain, OrderDTO dto) {
+    public void updateDTO(Order domain, OrderViewDTO dto) {
         throw new UnsupportedOperationException("Rich domain model: use toDTO instead");
     }
 }

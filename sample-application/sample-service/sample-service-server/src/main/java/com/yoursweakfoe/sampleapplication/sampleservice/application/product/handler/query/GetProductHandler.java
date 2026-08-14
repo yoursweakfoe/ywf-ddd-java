@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.query;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 /** 查询商品详情。 */
 @Component
-public class GetProductHandler implements QueryHandler<GetProductQuery, ProductDTO> {
+public class GetProductHandler implements QueryHandler<GetProductQuery, ProductViewDTO> {
 
     // region 依赖注入
     private final ProductRepository productRepository;
@@ -25,7 +25,7 @@ public class GetProductHandler implements QueryHandler<GetProductQuery, ProductD
     // endregion
 
     @Override
-    public ProductDTO handle(GetProductQuery query) {
+    public ProductViewDTO handle(GetProductQuery query) {
         Product product = productRepository.findById(query.getProductId())
                 .orElseThrow(() -> new BusinessException("product:err.notFound"));
         return productAssembler.toDTO(product);

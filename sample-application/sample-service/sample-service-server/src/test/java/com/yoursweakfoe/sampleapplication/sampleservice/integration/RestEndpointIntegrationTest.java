@@ -108,7 +108,7 @@ class RestEndpointIntegrationTest {
     void placeOrder_success_returns200() {
         assertThat(createdProductId).isNotNull();
         var command = new PlaceOrderCommand("customer-001",
-                List.of(new PlaceOrderCommand.OrderItemDTO(createdProductId, 2)));
+                List.of(new PlaceOrderCommand.OrderItemView(createdProductId, 2)));
 
         OrderCO dto = client().post().uri("/orders")
                 .body(command)
@@ -127,7 +127,7 @@ class RestEndpointIntegrationTest {
     void placeOrder_insufficientStock_returns422() {
         assertThat(createdProductId).isNotNull();
         var command = new PlaceOrderCommand("customer-002",
-                List.of(new PlaceOrderCommand.OrderItemDTO(createdProductId, 99999)));
+                List.of(new PlaceOrderCommand.OrderItemView(createdProductId, 99999)));
 
         Map<String, Object> body = client().post().uri("/orders")
                 .body(command)
@@ -144,7 +144,7 @@ class RestEndpointIntegrationTest {
     @Order(6)
     void placeOrder_productNotFound_returns422() {
         var command = new PlaceOrderCommand("customer-003",
-                List.of(new PlaceOrderCommand.OrderItemDTO(99999L, 1)));
+                List.of(new PlaceOrderCommand.OrderItemView(99999L, 1)));
 
         Map<String, Object> body = client().post().uri("/orders")
                 .body(command)
@@ -245,7 +245,7 @@ class RestEndpointIntegrationTest {
     void lifecycle_placeAndPay_success() {
         assertThat(createdProductId).isNotNull();
         var command = new PlaceOrderCommand("lifecycle-customer",
-                List.of(new PlaceOrderCommand.OrderItemDTO(createdProductId, 1)));
+                List.of(new PlaceOrderCommand.OrderItemView(createdProductId, 1)));
 
         OrderCO placed = client().post().uri("/orders")
                 .body(command)

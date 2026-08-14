@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 依赖 5 个组件、跨 2 个聚合、含事件编排，适合独立为 Handler。
  */
 @Component
-public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
+public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderViewDTO> {
 
     // region 依赖注入
     private final ProductRepository productRepository;
@@ -45,7 +45,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderDTO handle(PlaceOrderCommand command) {
+    public OrderViewDTO handle(PlaceOrderCommand command) {
         // 1. 构建订单项（查询商品单价）
         List<OrderItem> items = command.getItems().stream()
                 .map(dto -> {

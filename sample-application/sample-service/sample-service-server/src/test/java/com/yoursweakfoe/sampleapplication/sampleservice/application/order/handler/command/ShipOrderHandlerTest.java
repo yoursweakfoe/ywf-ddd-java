@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
@@ -45,9 +45,9 @@ class ShipOrderHandlerTest {
     void handle_shouldTransitionToShipped() {
         Order order = createConfirmedOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderDTO());
+        when(orderAssembler.toDTO(any())).thenReturn(new OrderViewDTO());
 
-        OrderDTO result = handler.handle(new ShipOrderCommand(order.getId(), "TRACK-001"));
+        OrderViewDTO result = handler.handle(new ShipOrderCommand(order.getId(), "TRACK-001"));
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.SHIPPED);
         assertThat(order.getTrackingNumber()).isEqualTo("TRACK-001");

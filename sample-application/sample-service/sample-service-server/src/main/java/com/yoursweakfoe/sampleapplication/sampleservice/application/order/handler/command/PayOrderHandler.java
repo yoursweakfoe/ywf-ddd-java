@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** 支付订单。 */
 @Component
-public class PayOrderHandler implements CommandHandler<PayOrderCommand, OrderDTO> {
+public class PayOrderHandler implements CommandHandler<PayOrderCommand, OrderViewDTO> {
 
     // region 依赖注入
     private final OrderRepository orderRepository;
@@ -26,7 +26,7 @@ public class PayOrderHandler implements CommandHandler<PayOrderCommand, OrderDTO
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderDTO handle(PayOrderCommand command) {
+    public OrderViewDTO handle(PayOrderCommand command) {
         Order order = orderRepository.findById(command.getOrderId())
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         order.pay();

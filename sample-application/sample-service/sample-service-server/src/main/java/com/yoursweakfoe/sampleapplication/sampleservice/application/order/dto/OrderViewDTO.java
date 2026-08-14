@@ -9,11 +9,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** 订单 DTO（内部视图）。 */
+/** 订单内部视图 —— 领域模型 → 外部的投影，含内部审计字段。 */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderDTO implements Serializable {
+public class OrderViewDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -23,7 +23,7 @@ public class OrderDTO implements Serializable {
     /** 订单状态 */
     private String status;
     /** 订单项列表 */
-    private List<OrderItemDTO> items;
+    private List<OrderItemViewDTO> items;
     /** 订单总金额 */
     private BigDecimal totalAmount;
     /** 客户 ID */
@@ -39,11 +39,11 @@ public class OrderDTO implements Serializable {
     /** 乐观锁版本 */
     private Integer version;
 
-    /** 订单项 DTO。 */
+    /** 订单项视图。 */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class OrderItemDTO implements Serializable {
+    public static class OrderItemViewDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

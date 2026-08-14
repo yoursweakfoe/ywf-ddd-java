@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.query;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 /** 查询订单详情。 */
 @Component
-public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderDTO> {
+public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderViewDTO> {
 
     // region 依赖注入
     private final OrderRepository orderRepository;
@@ -25,7 +25,7 @@ public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderDTO> {
     // endregion
 
     @Override
-    public OrderDTO handle(GetOrderQuery query) {
+    public OrderViewDTO handle(GetOrderQuery query) {
         Order order = orderRepository.findById(UUID.fromString(query.getOrderId()))
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         return orderAssembler.toDTO(order);

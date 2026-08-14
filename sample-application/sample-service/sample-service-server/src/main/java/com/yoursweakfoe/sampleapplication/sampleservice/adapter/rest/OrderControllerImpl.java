@@ -2,15 +2,18 @@ package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.OrderAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CompleteOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.DeliverOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.controller.OrderController;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -67,5 +70,10 @@ public class OrderControllerImpl implements OrderController {
     @Override
     public OrderCO getOrder(String orderId) {
         return orderAppService.getOrder(new GetOrderQuery(orderId));
+    }
+
+    @Override
+    public List<OrderSummaryCO> getOrderPage(GetOrderPageQuery query) {
+        return orderAppService.getOrderPage(query).records();
     }
 }
