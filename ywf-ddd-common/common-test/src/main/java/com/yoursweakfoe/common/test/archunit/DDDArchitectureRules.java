@@ -23,25 +23,25 @@ import com.tngtech.archunit.library.Architectures;
  * public class ArchitectureTest {
  *
  *     @ArchTest
- *     static final ArchRule r1 = DddArchitectureRules.LAYERED_ARCHITECTURE;
+ *     static final ArchRule r1 = DDDArchitectureRules.LAYERED_ARCHITECTURE;
  *
  *     @ArchTest
- *     static final ArchRule r2 = DddArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
+ *     static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
  *
  *     @ArchTest
- *     static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+ *     static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
  *
  *     @ArchTest
- *     static final ArchRule r4 = DddArchitectureRules.DOMAIN_MODEL_IS_PURE;
+ *     static final ArchRule r4 = DDDArchitectureRules.DOMAIN_MODEL_IS_PURE;
  *
  *     @ArchTest
- *     static final ArchRule r5a = DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
+ *     static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
  *
  *     @ArchTest
- *     static final ArchRule r5b = DddArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+ *     static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
  *
  *     @ArchTest
- *     static final ArchRule c1 = DddArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
+ *     static final ArchRule c1 = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
  * }
  * }</pre>
  *
@@ -56,9 +56,9 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 的 adapter/application/domain/infrastructure</li>
  * </ul>
  */
-public final class DddArchitectureRules {
+public final class DDDArchitectureRules {
 
-    private DddArchitectureRules() {}
+    private DDDArchitectureRules() {}
 
     /**
      * R1 —— DDD 四层依赖方向（依赖倒置）：
