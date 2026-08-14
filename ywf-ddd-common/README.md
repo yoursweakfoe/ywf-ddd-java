@@ -20,23 +20,23 @@ ywf-ddd-common/
 ## 模块依赖拓扑
 
 ```
-common-contract（独立，纯标记接口）
-     ↑
-common-exception（独立，REST 异常处理）
-     ↑
-common-ddd → common-contract + common-exception
-     ↑
-common-pg → common-ddd（TypeHandler 依赖 MyBatis 基础设施）
+── 独立模块（无 common 模块 compile 依赖） ──
 
-common-cloud（微服务治理：Nacos + Seata + SC 官方 Feign/LoadBalancer/CircuitBreaker + JWT 身份传播，
-             不传播异常体系；SC 版本由 spring-cloud-dependencies BOM 管理）
-     ↑
-common-security（零信任身份：JWT 资源服务器）
-common-observability（独立）
+common-contract     纯标记接口 + 注解（swagger / spring-web / jakarta-validation）
+common-exception    统一异常体系（BusinessException + REST 全局异常处理）
+common-security     零信任身份（JWT 资源服务器）
+common-observability 可观测性（结构化日志 + Actuator + Prometheus）
 
-common-test（独立，test scope）
-     ↑ test scope
-common-ddd / common-exception / common-security / common-cloud（框架模块自测）
+── 编译依赖链 ──
+
+common-ddd  →  common-contract + common-exception    DDD 框架
+common-pg   →  common-ddd                            PG TypeHandler 扩展
+common-cloud → common-security                       微服务治理（东西向 JWT 透传）
+
+── 测试依赖（test scope） ──
+
+common-test  ←  common-ddd / common-exception / common-security /
+                common-cloud / common-pg
 ```
 
 ## 快速开始
