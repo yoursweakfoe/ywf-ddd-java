@@ -1,5 +1,6 @@
 package com.yoursweakfoe.common.pg.handler;
 
+import com.yoursweakfoe.common.pg.type.PgArrayType;
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;

@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.pg.handler;
+package com.yoursweakfoe.common.pg;
 
 import com.baomidou.mybatisplus.autoconfigure.ConfigurationCustomizer;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;

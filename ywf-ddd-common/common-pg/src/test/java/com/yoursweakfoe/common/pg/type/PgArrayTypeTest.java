@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.pg.handler;
+package com.yoursweakfoe.common.pg.type;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

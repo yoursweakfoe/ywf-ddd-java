@@ -1,5 +1,6 @@
 package com.yoursweakfoe.common.pg.handler;
 
+import com.yoursweakfoe.common.pg.type.PgArrayType;
 import java.util.UUID;
 import org.apache.ibatis.type.MappedTypes;
 
