@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co;
 
 
+import com.yoursweakfoe.common.contract.dto.CO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductCO implements Serializable {
+public class ProductCO implements CO, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

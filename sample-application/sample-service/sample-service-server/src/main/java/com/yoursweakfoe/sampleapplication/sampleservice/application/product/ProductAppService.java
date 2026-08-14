@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.CreateProductHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.GetProductHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.command.CreateProductHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.query.GetProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.presenter.ProductPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;

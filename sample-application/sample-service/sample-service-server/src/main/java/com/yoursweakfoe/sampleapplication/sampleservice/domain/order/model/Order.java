@@ -8,7 +8,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderShippedEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;
 
 import java.math.BigDecimal;

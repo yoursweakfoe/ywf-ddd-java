@@ -10,7 +10,7 @@ import com.yoursweakfoe.common.ddd.fixtures.model.OrderItem;
 import com.yoursweakfoe.common.ddd.fixtures.model.OrderStatus;
 import com.yoursweakfoe.common.ddd.fixtures.model.Product;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;

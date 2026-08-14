@@ -1,13 +1,13 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.CancelOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.CompleteOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.ConfirmOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.DeliverOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.GetOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.PayOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.PlaceOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.ShipOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.CancelOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.CompleteOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.ConfirmOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.DeliverOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.query.GetOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.PayOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.PlaceOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.ShipOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;

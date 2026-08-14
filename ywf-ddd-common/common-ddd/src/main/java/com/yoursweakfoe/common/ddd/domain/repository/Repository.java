@@ -12,7 +12,7 @@ import java.util.Optional;
  * 则实现层会自动附加不变量校验和领域事件发布。
  *
  * <p>业务 Repository 接口应继承本接口，业务 Repository 实现类通过组合
- * {@code MybatisRepositorySupport} 获得具体能力，而非继承框架实现类。
+ * {@code MybatisPersistence} 获得具体能力，而非继承框架实现类。
  *
  * <h3>设计原则</h3>
  * <ul>

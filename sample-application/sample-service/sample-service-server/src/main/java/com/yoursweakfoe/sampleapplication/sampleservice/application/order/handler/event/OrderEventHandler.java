@@ -12,7 +12,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.eve
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;

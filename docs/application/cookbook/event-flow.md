@@ -89,7 +89,7 @@ public void cancel(String reason) {
 ## 2. Infrastructure — 仓储触发发布
 
 ```java
-// MybatisRepositorySupport 内部逻辑（common-ddd 框架代码）
+// MybatisPersistence 内部逻辑（common-ddd 框架代码）
 public void updateDomain(Domain domain) {
     validateIfAggregate(domain);                // ① 不变量校验
     PO po = getConverter().toPO(domain);

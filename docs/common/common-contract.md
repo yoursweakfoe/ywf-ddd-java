@@ -10,6 +10,21 @@ CQRS 契约标记接口（Command / Query / PageableQuery / Event）—— 供 c
 
 > 契约 = 完整 REST 定义（HTTP 映射 + 文档注解 + 类型一体），但零运行时：注解均为纯元数据，由服务端 Spring MVC 与消费方各自解释。
 
+### 包结构
+
+标记接口按 CQE 类型分各自子包，不再平铺于 `contract` 根包：
+
+```
+com.yoursweakfoe.common.contract
+├── command/
+│   └── Command.java
+├── query/
+│   ├── Query.java
+│   └── PageableQuery.java
+└── event/
+    └── Event.java
+```
+
 ## 2. 核心能力
 
 ### 标记接口语义

@@ -27,7 +27,7 @@ src/test/resources/
 | Topic | 包 | 注解 | 测什么 |
 |-------|---|------|--------|
 | A | `application/service/` | `@ApplicationLayerTest` | AppService 编排逻辑：Mock 掉 Repository/DomainService，验证调用顺序、参数传递、异常转换 |
-| B | `architecture/` | `@AnalyzeClasses` + `DddArchitectureRules` | ArchUnit 分层守护：四层依赖方向、Domain 纯净性、Repository 接口约束 |
+| B | `architecture/` | `@AnalyzeClasses` + `DDDArchitectureRules` | ArchUnit 分层守护：四层依赖方向、Domain 纯净性、Repository 接口约束 |
 | C | `domain/model/entity/` | `@DomainLayerTest` | 领域模型业务规则：实体创建校验、状态流转、值对象不可变性、身份判等 |
 | D | `fixtures/` | 无（工具类） | 测试数据工厂：提供构建 Entity/Command/DTO 的静态方法，减少各测试重复 setup |
 | E | `infrastructure/repository/impl/` | `@InfrastructureLayerTest` | 仓储集成测试：真实数据库 CRUD、乐观锁、快照脏检查、Converter 映射 |
@@ -52,9 +52,9 @@ class XxxAppServiceTest {
     packages = "com.yoursweakfoe.application.service",
     importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
-    @ArchTest static final ArchRule r1 = DddArchitectureRules.LAYERED_ARCHITECTURE;
-    @ArchTest static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
-    @ArchTest static final ArchRule r4 = DddArchitectureRules.DOMAIN_MODEL_IS_PURE;
+    @ArchTest static final ArchRule r1 = DDDArchitectureRules.LAYERED_ARCHITECTURE;
+    @ArchTest static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    @ArchTest static final ArchRule r4 = DDDArchitectureRules.DOMAIN_MODEL_IS_PURE;
 }
 
 // Topic C 示例

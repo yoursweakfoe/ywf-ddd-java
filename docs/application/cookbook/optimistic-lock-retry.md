@@ -19,7 +19,7 @@
 
 ```
 order.pay() → repository.update(order)
-  → MybatisRepositorySupport.updateDomain()
+  → MybatisPersistence.updateDomain()
     → updateById(po)  // MyBatis-Plus OptimisticLockerInnerInterceptor
       → UPDATE ... SET version=version+1 WHERE id=? AND version=?
       → 影响行数 = 0（version 不匹配）
@@ -42,7 +42,7 @@ order.pay() → repository.update(order)
 框架已内置完整的乐观锁冲突处理链：
 
 ```java
-// MybatisRepositorySupport.updateDomain() 内部
+// MybatisPersistence.updateDomain() 内部
 boolean success = updateById(po);
 if (!success) {
     throw new IllegalStateException(
@@ -132,5 +132,5 @@ public class RetryablePayOrderHandler {
 |----|------|------|
 | application | `handler/RetryablePayOrderHandler.java` | 重试包装（可选，系统间调用时使用） |
 | application | `handler/PayOrderHandler.java` | 标准写路径（复用） |
-| infrastructure | `MybatisRepositorySupport.updateDomain()` | 冲突检测 + 抛异常（框架内置） |
+| infrastructure | `MybatisPersistence.updateDomain()` | 冲突检测 + 抛异常（框架内置） |
 | common-exception | `GlobalRestExceptionHandler` | 409 响应翻译（框架内置） |

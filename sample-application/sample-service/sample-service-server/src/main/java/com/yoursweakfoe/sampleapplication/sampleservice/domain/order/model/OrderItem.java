@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
 import com.yoursweakfoe.common.ddd.domain.model.ValueObject;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 
 /**

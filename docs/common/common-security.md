@@ -12,6 +12,20 @@
 
 ## 2. 核心能力
 
+### 包结构
+
+模块根包 `com.yoursweakfoe.common.security` 只放自动装配（与其它 common 模块约定一致），其余内容按话题分文件夹：
+
+```
+com.yoursweakfoe.common.security
+├── SecurityAutoConfiguration   # 自动装配（@AutoConfiguration，零信任资源服务器链）
+├── SecurityProperties          # 配置属性（ywf.security.roles-claim）
+├── context/                    # 安全上下文
+│   └── SecurityUtil            # 按名字读取当前 JWT claim
+└── jwt/                        # 验签可插拔
+    └── DelegatingJwtDecoder    # 按 JOSE 头 alg 分发验签
+```
+
 ### 身份流转（南北向 + 东西向）
 
 ```

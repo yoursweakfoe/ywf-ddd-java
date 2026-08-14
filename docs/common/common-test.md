@@ -14,7 +14,7 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DddArchitectureRules` 类：
+公开常量位于 `DDDArchitectureRules` 类：
 
 | 常量名 | 守护内容 |
 |------|---------|
@@ -49,11 +49,11 @@ JUnit 5 + Mockito + AssertJ + Spring Test，版本由 Spring Boot BOM 管理。
         importOptions = ImportOption.DoNotIncludeTests.class)
 public class ArchitectureTest {
     @ArchTest
-    static final ArchRule r1 = DddArchitectureRules.LAYERED_ARCHITECTURE;
+    static final ArchRule r1 = DDDArchitectureRules.LAYERED_ARCHITECTURE;
     @ArchTest
-    static final ArchRule r2 = DddArchitectureRules.CONTROLLER_ONLY_DEPENDS_ON_APPLICATION;
+    static final ArchRule r2 = DDDArchitectureRules.CONTROLLER_ONLY_DEPENDS_ON_APPLICATION;
     @ArchTest
-    static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
     // ... 其余规则同式引用
 }
 ```
@@ -135,7 +135,7 @@ common-test（独立，test scope 使用）
 
 **决策**：选 ArchUnit 自动化。规则编码为测试，CI 自动执行，不依赖人的纪律性。
 
-**确认**：`DddArchitectureRules` 提供静态常量规则集。
+**确认**：`DDDArchitectureRules` 提供静态常量规则集。
 
 ### ADR-0002 规则集为静态常量
 
@@ -143,9 +143,9 @@ common-test（独立，test scope 使用）
 
 **背景**：规则如何暴露给业务服务。
 
-**决策**：公开静态常量。业务服务直接引用 `DddArchitectureRules.XXX`，无需重复定义。
+**决策**：公开静态常量。业务服务直接引用 `DDDArchitectureRules.XXX`，无需重复定义。
 
-**确认**：`DddArchitectureRules` 类公开 `ArchRule` 静态字段。
+**确认**：`DDDArchitectureRules` 类公开 `ArchRule` 静态字段。
 
 ## 7. 职责边界与技术债
 

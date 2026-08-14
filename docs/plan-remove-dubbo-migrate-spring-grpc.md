@@ -149,7 +149,7 @@
 ### 5.4 common-contract / common-ddd / common-pg
 
 - `common-contract`：删除 `javax.ws.rs-api`；`Command`/`Query`/`Event`/`PageableQuery` 标记接口不变；swagger-annotations 保留与否随 D9 落地决定（迁往 REST 层则删）
-- `common-ddd`：MP starter 构件切换（D7）；`DddArchitectureRules`（ArchUnit）核对是否引用 dubbo 包路径，有则同步调整
+- `common-ddd`：MP starter 构件切换（D7）；`DDDArchitectureRules`（ArchUnit）核对是否引用 dubbo 包路径，有则同步调整
 - `common-pg`：与 RPC 无关，仅随 Boot 4 基线回归测试
 - 根 POM：parent `spring-boot-starter-parent` 3.5.16 → 4.1.x（spike 确认的最新补丁；D2 回退线 4.0.7）；删除全部 dubbo properties 与 dependencyManagement 条目；protobuf-maven-plugin 版本由 Boot 4.1 dependency management 托管，仅按需声明插件
 

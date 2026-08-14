@@ -29,9 +29,9 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 | PO | `XxxPO`，标注 `@TableName("schema.table")` | 纯数据载体，无业务逻辑 |
 | Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） |
 | Mapper | `XxxMapper extends BaseMapper<XxxPO>` | 简单 CRUD 用 MP 内置方法，复杂 SQL 写 XML |
-| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisRepositorySupport`，标注 `@Component` |
+| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` |
 
-`MybatisRepositorySupport` 提供 `findDomainPage(wrapper, pageNum, pageSize)` 分页查询，
+`MybatisPersistence` 提供 `findDomainPage(wrapper, pageNum, pageSize)` 分页查询，
 内部使用 MyBatis-Plus `Page` 执行，出口翻译为 `PageResult<Domain>`，调用方无需依赖 MP 分页类型。
 
 `@TableName` 必须写死 schema 前缀（如 `@TableName("order_db.order")`），因为多数据源按聚合分包后，

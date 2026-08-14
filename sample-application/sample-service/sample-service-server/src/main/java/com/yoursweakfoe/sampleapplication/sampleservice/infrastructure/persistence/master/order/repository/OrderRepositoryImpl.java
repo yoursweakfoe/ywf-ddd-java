@@ -7,7 +7,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.repository.MybatisRepositorySupport;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 public class OrderRepositoryImpl
-        extends MybatisRepositorySupport<OrderMapper, OrderPO, Order, UUID>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
         implements OrderRepository {
 
     // region 依赖注入

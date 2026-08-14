@@ -25,14 +25,14 @@
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
 | PageResult | — | 框架级分页容器（record），定义在 domain 层，隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |
-| MybatisRepositorySupport | — | common-ddd 提供的仓储支撑基类，封装持久化 + 领域事件发布 + 乐观锁 + validate 自动调用 |
+| MybatisPersistence | — | common-ddd 提供的仓储支撑基类，封装持久化 + 领域事件发布 + 乐观锁 + validate 自动调用 |
 | BasicAutoFillHandler | — | MyBatis-Plus 自动填充处理器，INSERT 填 createAt + updateAt，UPDATE 填 updateAt |
 | DomainServiceConfig | — | Infrastructure 层配置类，负责 Domain Service 的 Bean 注册（保持 Domain 层零框架依赖） |
 | Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
 | Consumer | — | Adapter 层组件，MQ 消息消费入口，反序列化后透传 AppService |
 | opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |
 | PgArrayType | — | common-pg 枚举，定义 Java 数组类型与 PG 数组类型名的映射（如 INTEGER → `integer[]`） |
-| DddArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 6 条 DDD 分层守护规则 |
+| DDDArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 6 条 DDD 分层守护规则 |
 | RFC 9457 | Problem Details for HTTP APIs | HTTP 错误响应标准（原 RFC 7807），定义 type/title/status/detail/instance 字段 + `application/problem+json` 媒体类型 |
 
 ## 命名映射规范

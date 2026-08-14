@@ -4,7 +4,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.ddd.domain.service.DomainService;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.List;
 
 /**

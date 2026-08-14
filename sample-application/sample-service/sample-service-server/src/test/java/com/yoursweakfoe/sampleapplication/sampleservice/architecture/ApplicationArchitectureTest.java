@@ -7,12 +7,12 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
+import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
 /**
  * 应用架构守护测试 —— 对 {@code com.yoursweakfoe.sampleapplication.sampleservice} 执行架构合规性校验。
  *
- * <p>复用 {@link DddArchitectureRules} 通用规则
+ * <p>复用 {@link DDDArchitectureRules} 通用规则
  * （R1 分层方向 / R3 Domain 不依赖外层 / R4 模型纯净 / R5a Repository 接口 / C1 Contract 纯契约），
  * 并补充本应用特有规则：
  * <ul>
@@ -26,27 +26,27 @@ import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
         importOptions = ImportOption.DoNotIncludeTests.class)
 class ApplicationArchitectureTest {
 
-    // ── 复用 DddArchitectureRules 通用规则 ─────────────────────────────
+    // ── 复用 DDDArchitectureRules 通用规则 ─────────────────────────────
 
     /** R1 —— DDD 四层依赖方向（依赖倒置）。 */
     @ArchTest
-    static final ArchRule r1_layered_dependency = DddArchitectureRules.LAYERED_ARCHITECTURE;
+    static final ArchRule r1_layered_dependency = DDDArchitectureRules.LAYERED_ARCHITECTURE;
 
     /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。 */
     @ArchTest
-    static final ArchRule r3_domain_no_outer = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    static final ArchRule r3_domain_no_outer = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
 
     /** R4 —— Domain 模型保持纯净。 */
     @ArchTest
-    static final ArchRule r4_domain_model_pure = DddArchitectureRules.DOMAIN_MODEL_IS_PURE;
+    static final ArchRule r4_domain_model_pure = DDDArchitectureRules.DOMAIN_MODEL_IS_PURE;
 
     /** R5a —— Domain Repository 必须是 interface。 */
     @ArchTest
-    static final ArchRule r5a_repository_interfaces = DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
+    static final ArchRule r5a_repository_interfaces = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
 
     /** C1 —— Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施。 */
     @ArchTest
-    static final ArchRule c1_contract_pure = DddArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
+    static final ArchRule c1_contract_pure = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
 
     // ── 应用特有规则 ───────────────────────────────────────────────────
 

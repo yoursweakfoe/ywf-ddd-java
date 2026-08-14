@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockDeductedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockRestoredEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;

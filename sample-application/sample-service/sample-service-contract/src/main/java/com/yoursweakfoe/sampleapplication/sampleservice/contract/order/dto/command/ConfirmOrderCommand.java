@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command;
 
-import com.yoursweakfoe.common.contract.Command;
+import com.yoursweakfoe.common.contract.dto.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 

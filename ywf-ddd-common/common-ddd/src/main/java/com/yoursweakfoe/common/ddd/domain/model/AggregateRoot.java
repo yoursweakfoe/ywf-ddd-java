@@ -1,7 +1,7 @@
 package com.yoursweakfoe.common.ddd.domain.model;
 
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

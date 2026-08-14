@@ -3,7 +3,7 @@ package com.yoursweakfoe.common.ddd.fixtures.model;
 import com.yoursweakfoe.common.ddd.fixtures.event.OrderCancelledEvent;
 import com.yoursweakfoe.common.ddd.fixtures.event.OrderPlacedEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;

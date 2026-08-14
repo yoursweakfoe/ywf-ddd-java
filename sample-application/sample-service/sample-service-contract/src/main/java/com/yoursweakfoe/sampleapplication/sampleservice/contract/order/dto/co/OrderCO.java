@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co;
 
 
+import com.yoursweakfoe.common.contract.dto.CO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCO implements Serializable {
+public class OrderCO implements CO, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

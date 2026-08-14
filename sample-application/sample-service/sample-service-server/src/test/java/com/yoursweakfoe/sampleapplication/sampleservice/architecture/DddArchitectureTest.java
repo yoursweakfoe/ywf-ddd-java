@@ -5,7 +5,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
-import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
+import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
 /**
  * DDD 分层架构守护测试 —— 对 common-ddd 框架包执行 R1-R5b 规则校验。
@@ -38,17 +38,17 @@ class DddArchitectureTest {
             .as("R1 DDD 三层依赖方向 + Configuration 层");
 
     @ArchTest
-    static final ArchRule r2 = DddArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
+    static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
 
     @ArchTest
-    static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
 
     @ArchTest
-    static final ArchRule r4 = DddArchitectureRules.DOMAIN_MODEL_IS_PURE;
+    static final ArchRule r4 = DDDArchitectureRules.DOMAIN_MODEL_IS_PURE;
 
     @ArchTest
-    static final ArchRule r5a = DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
+    static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
 
     @ArchTest
-    static final ArchRule r5b = DddArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+    static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
 }

@@ -46,7 +46,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 
 三者均为普通 `@Component` 类、逐字段显式赋值（不使用代码生成器）。富领域模型的 `toDomain` 走 `reconstitute()` 静态工厂，不适用的 update 方法抛 `UnsupportedOperationException`。List/Set 集合方法由接口 default 实现提供。
 
-### 仓储支撑（MybatisRepositorySupport）
+### 仓储支撑（MybatisPersistence）
 
 继承 MyBatis-Plus `ServiceImpl`，封装：
 
@@ -141,7 +141,7 @@ public class Order extends AggregateRoot<UUID> {
 ```java
 @Component
 public class OrderRepositoryImpl
-        extends MybatisRepositorySupport<OrderMapper, OrderPO, Order>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order>
         implements OrderRepository {
 
     private final OrderConverter converter;
@@ -268,7 +268,7 @@ common-ddd → common-contract（Command / Query / Event 标记接口）
 
 **后果**：跨服务通信仍走 Seata + HTTP 显式调用；未来可靠化走 Outbox 只需替换 publisher 实现，契约不变。
 
-**确认**：`SpringDomainEventPublisher` + `MybatisRepositorySupport` 自动发布。
+**确认**：`SpringDomainEventPublisher` + `MybatisPersistence` 自动发布。
 
 ### ADR-0004 对象转换纯手写，不用 MapStruct
 

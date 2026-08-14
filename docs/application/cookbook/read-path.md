@@ -194,7 +194,7 @@ public interface OrderRepository extends Repository<Order, UUID> {
 // infrastructure/persistence/master/order/repository/OrderRepositoryImpl.java（节选）
 @Component
 public class OrderRepositoryImpl
-        extends MybatisRepositorySupport<OrderMapper, OrderPO, Order>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order>
         implements OrderRepository {
 
     @Override
@@ -212,7 +212,7 @@ public class OrderRepositoryImpl
                 .eq(query.customerId() != null, OrderPO::getCustomerId, query.customerId())
                 .orderByDesc(OrderPO::getCreateAt);
 
-        // 使用 MybatisRepositorySupport 的 findDomainPage 分页能力
+        // 使用 MybatisPersistence 的 findDomainPage 分页能力
         PageResult<Order> domainPage = findDomainPage(wrapper, query.pageNum(), query.pageSize());
         // 或直接 Mapper 投影（性能更优）：
         // Page<OrderPO> mpPage = page(new Page<>(query.pageNum(), query.pageSize()), wrapper);

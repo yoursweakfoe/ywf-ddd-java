@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;

@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.yoursweakfoe.common.exception.BusinessException;
+import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;

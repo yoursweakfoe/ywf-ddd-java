@@ -36,7 +36,7 @@ description: 测试工程师视角审查代码变更（覆盖率、边界情况�
 
 ### 4. ArchUnit 合规
 
-- 新增类是否通过 DddArchitectureRules 检查？
+- 新增类是否通过 DDDArchitectureRules 检查？
 - 包路径是否符合 ArchUnit 规则中的模式匹配？
 - 是否有新增的层间依赖违反（如 Domain import Infrastructure）？
 

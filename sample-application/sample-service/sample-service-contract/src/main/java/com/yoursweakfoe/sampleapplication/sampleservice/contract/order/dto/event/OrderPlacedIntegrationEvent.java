@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event;
 
-import com.yoursweakfoe.common.contract.Event;
+import com.yoursweakfoe.common.contract.dto.Event;
 
 import java.io.Serial;
 import java.io.Serializable;

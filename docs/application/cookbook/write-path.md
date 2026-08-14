@@ -280,7 +280,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
 
 @Component
 public class OrderRepositoryImpl
-        extends MybatisRepositorySupport<OrderMapper, OrderPO, Order>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order>
         implements OrderRepository {
 
     private final OrderConverter converter;
