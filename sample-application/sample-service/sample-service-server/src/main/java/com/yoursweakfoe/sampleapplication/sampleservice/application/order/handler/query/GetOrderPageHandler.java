@@ -1,35 +1,32 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.query;
 
 import com.yoursweakfoe.common.ddd.application.handler.QueryHandler;
-import com.yoursweakfoe.common.ddd.domain.model.PageResult;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
+import com.yoursweakfoe.common.ddd.application.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import org.springframework.stereotype.Component;
 
 /**
- * 订单分页查询 —— 出路径多视图演示：同一 View → Presenter 裁剪为不同 CO。
+ * 订单分页查询 —— 读侧绕过 domain，PO → DTO 直接投影。
  *
- * <p>Handler 产出 OrderViewDTO（全量内部视图），AppService 经 Presenter 裁剪为
+ * <p>Handler 产出 {@link OrderViewDTO}（读 DTO），AppService 经读侧 Presenter 裁剪为
  * {@link com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO}（列表），
  * 区别于 {@link com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO}（详情）。
  */
 @Component
 public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, PageResult<OrderViewDTO>> {
 
-    private final OrderRepository orderRepository;
-    private final OrderAssembler orderAssembler;
+    private final OrderQueryRepository orderQueryRepository;
 
-    public GetOrderPageHandler(OrderRepository orderRepository, OrderAssembler orderAssembler) {
-        this.orderRepository = orderRepository;
-        this.orderAssembler = orderAssembler;
+    public GetOrderPageHandler(OrderQueryRepository orderQueryRepository) {
+        this.orderQueryRepository = orderQueryRepository;
     }
 
     @Override
     public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
-        // 读侧绕过聚合根：分页投影读模型，不 reconstitute 聚合
-        return orderRepository.findReadViewPage(query.getPageNum(), query.getPageSize())
-                .map(orderAssembler::toDTO);
+        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 分页投影，不 reconstitute 聚合
+        return orderQueryRepository.findPage(
+                query.status(), query.customerId(), query.pageNum(), query.pageSize());
     }
 }

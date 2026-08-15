@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository.domain;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
@@ -12,10 +12,11 @@ import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPer
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 商品仓储实现 —— 基于 MyBatis-Plus。
+ *
+ * <p>事务边界由应用层 Handler 控制（本类不声明 {@code @Transactional}）。
  */
 @Component
 public class ProductRepositoryImpl
@@ -44,13 +45,11 @@ public class ProductRepositoryImpl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void save(Product domain) {
         saveDomain(domain);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void update(Product domain) {
         // 领域对象携带读取时的 version（reconstitute 回填），直接走基类：
         // validate() + 乐观锁 UPDATE + 领域事件发布，与 OrderRepositoryImpl 路径一致
@@ -63,7 +62,6 @@ public class ProductRepositoryImpl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void deleteById(Long id) {
         removeDomainById(id);
     }

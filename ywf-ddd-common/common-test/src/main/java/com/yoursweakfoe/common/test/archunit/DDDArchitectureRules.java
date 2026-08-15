@@ -53,6 +53,7 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R4 —— domain.model 不得依赖 MyBatis-Plus / Spring Stereotype / JPA</li>
  *   <li>R5a —— domain Repository 必须是 interface</li>
  *   <li>R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下</li>
+ *   <li>R6 —— domain 不依赖 common-security（领域模型不感知认证上下文）</li>
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 的 adapter/application/domain/infrastructure</li>
  * </ul>
  */
@@ -66,6 +67,11 @@ public final class DDDArchitectureRules {
      *
      * <p>与经典分层不同，infrastructure 通过实现 domain 的 Repository / Portal 接口
      * 「倒置」接入，任何外层都不得直接依赖 infrastructure（DI 装配由 infrastructure.config 完成）。
+     *
+     * <p><strong>读侧例外</strong>：CQRS 读侧绕过 domain（PO → DTO 直接投影），读端口
+     * （XxxQueryRepository）定义在 application 层、基础设施层实现之（XxxQueryRepositoryImpl），
+     * 构成「写侧 infrastructure → domain」的读侧镜像「infrastructure → application」。
+     * 故 Application 额外允许被 Infrastructure 访问（仅限读查询场景）。
      */
     public static final ArchRule LAYERED_ARCHITECTURE =
             Architectures.layeredArchitecture()
@@ -81,13 +87,14 @@ public final class DDDArchitectureRules {
                     .whereLayer("Adapter")
                     .mayNotBeAccessedByAnyLayer()
                     .whereLayer("Application")
-                    .mayOnlyBeAccessedByLayers("Adapter")
+                    .mayOnlyBeAccessedByLayers("Adapter", "Infrastructure")
                     .whereLayer("Domain")
                     .mayOnlyBeAccessedByLayers("Application", "Infrastructure")
                     .whereLayer("Infrastructure")
                     .mayNotBeAccessedByAnyLayer()
                     .as("R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；"
-                            + "外层不得直接依赖 infrastructure，domain 不得反向依赖任何层");
+                            + "外层不得直接依赖 infrastructure，domain 不得反向依赖任何层；"
+                            + "读侧例外：infrastructure 读查询实现可访问 application 读端口");
 
     /**
      * R2 —— adapter 层（REST / MQ / 定时任务入口）只依赖 application 与 contract，
@@ -183,4 +190,19 @@ public final class DDDArchitectureRules {
                             "org.springframework.beans..",
                             "com.baomidou.mybatisplus..")
                     .as("C1 Contract 纯契约：不得依赖 server 四层及 Spring/MyBatis 运行时基础设施");
+
+    /**
+     * R6 —— Domain 层不得依赖 common-security（领域模型不感知认证上下文）。
+     *
+     * <p>{@code SecurityUtil} 仅允许在 Application / Adapter 层调用（见 .agents/rules/03），
+     * 领域模型不感知认证上下文，故 domain 不得依赖 common-security 的任何类。
+     */
+    public static final ArchRule DOMAIN_DOES_NOT_DEPEND_ON_SECURITY =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("com.yoursweakfoe.common.security..")
+                    .as("R6 Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）");
 }

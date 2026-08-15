@@ -5,13 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderReadView;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.common.exception.type.BusinessException;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -21,25 +18,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * GetOrderHandler 单元测试 —— 读侧投影链路。
+ * GetOrderHandler 单元测试 —— 读侧绕过 domain，PO → DTO 直接投影链路。
  */
 @ExtendWith(MockitoExtension.class)
 class GetOrderHandlerTest {
 
     @Mock
-    private OrderRepository orderRepository;
-    @Mock
-    private OrderAssembler orderAssembler;
+    private OrderQueryRepository orderQueryRepository;
     @InjectMocks
     private GetOrderHandler handler;
 
     @Test
-    void handle_shouldProjectReadViewToDto() {
+    void handle_shouldProjectReadDto() {
         // Given
-        OrderReadView view = new OrderReadView(
-                "order-id", "PENDING", List.of(), null, "cust-1", null, null, null, null);
-        when(orderRepository.findReadView(any())).thenReturn(Optional.of(view));
-        when(orderAssembler.toDTO(view)).thenReturn(new OrderViewDTO());
+        when(orderQueryRepository.findById(any())).thenReturn(Optional.of(new OrderViewDTO()));
 
         // When
         OrderViewDTO result = handler.handle(new GetOrderQuery(UUID.randomUUID().toString()));
@@ -51,7 +43,7 @@ class GetOrderHandlerTest {
     @Test
     void handle_shouldThrowWhenNotFound() {
         // Given
-        when(orderRepository.findReadView(any())).thenReturn(Optional.empty());
+        when(orderQueryRepository.findById(any())).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> handler.handle(new GetOrderQuery(UUID.randomUUID().toString())))

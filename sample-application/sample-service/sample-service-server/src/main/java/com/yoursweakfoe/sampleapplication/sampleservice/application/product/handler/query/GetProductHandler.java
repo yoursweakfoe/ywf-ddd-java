@@ -1,33 +1,26 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.query;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.ProductQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.ddd.application.handler.QueryHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import org.springframework.stereotype.Component;
 
-/** 查询商品详情。 */
+/** 查询商品详情 —— 读侧绕过 domain，PO → DTO 直接投影。 */
 @Component
 public class GetProductHandler implements QueryHandler<GetProductQuery, ProductViewDTO> {
 
-    // region 依赖注入
-    private final ProductRepository productRepository;
-    private final ProductAssembler productAssembler;
+    private final ProductQueryRepository productQueryRepository;
 
-    public GetProductHandler(ProductRepository productRepository,
-                             ProductAssembler productAssembler) {
-        this.productRepository = productRepository;
-        this.productAssembler = productAssembler;
+    public GetProductHandler(ProductQueryRepository productQueryRepository) {
+        this.productQueryRepository = productQueryRepository;
     }
-    // endregion
 
     @Override
     public ProductViewDTO handle(GetProductQuery query) {
-        Product product = productRepository.findById(query.getProductId())
+        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 投影，不 reconstitute 聚合根
+        return productQueryRepository.findById(query.getProductId())
                 .orElseThrow(() -> new BusinessException("product:err.notFound"));
-        return productAssembler.toDTO(product);
     }
 }

@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.DeliverOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
@@ -46,9 +46,9 @@ class DeliverOrderHandlerTest {
     void handle_shouldTransitionToDelivered() {
         Order order = createShippedOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderViewDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
-        OrderViewDTO result = handler.handle(new DeliverOrderCommand(order.getId()));
+        OrderDTO result = handler.handle(new DeliverOrderCommand(order.getId()));
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
         verify(orderRepository).update(order);

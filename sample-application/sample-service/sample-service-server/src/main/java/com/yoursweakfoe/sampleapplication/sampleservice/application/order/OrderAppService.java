@@ -10,9 +10,10 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handle
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.PlaceOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.ShipOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderPresenter;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderViewPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
-import com.yoursweakfoe.common.ddd.domain.model.PageResult;
+import com.yoursweakfoe.common.ddd.application.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CompleteOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;
@@ -35,6 +36,7 @@ public class OrderAppService {
 
     // region 依赖注入
     private final OrderPresenter orderPresenter;
+    private final OrderViewPresenter orderViewPresenter;
     private final PlaceOrderHandler placeOrderHandler;
     private final PayOrderHandler payOrderHandler;
     private final ConfirmOrderHandler confirmOrderHandler;
@@ -46,6 +48,7 @@ public class OrderAppService {
     private final GetOrderPageHandler getOrderPageHandler;
 
     public OrderAppService(OrderPresenter orderPresenter,
+                           OrderViewPresenter orderViewPresenter,
                            PlaceOrderHandler placeOrderHandler,
                            PayOrderHandler payOrderHandler,
                            ConfirmOrderHandler confirmOrderHandler,
@@ -56,6 +59,7 @@ public class OrderAppService {
                            GetOrderHandler getOrderHandler,
                            GetOrderPageHandler getOrderPageHandler) {
         this.orderPresenter = orderPresenter;
+        this.orderViewPresenter = orderViewPresenter;
         this.placeOrderHandler = placeOrderHandler;
         this.payOrderHandler = payOrderHandler;
         this.confirmOrderHandler = confirmOrderHandler;
@@ -100,18 +104,18 @@ public class OrderAppService {
 
     // region 读操作用例
     public OrderCO getOrder(GetOrderQuery query) {
-        return orderPresenter.present(getOrderHandler.handle(query));
+        return orderViewPresenter.present(getOrderHandler.handle(query));
     }
 
     /**
      * 分页查询订单 —— 出路径多视图演示。
      *
-     * <p>Handler 返回 {@code PageResult<OrderViewDTO>}，Presenter 裁剪为 {@link OrderSummaryCO}。
+     * <p>Handler 返回 {@code PageResult<OrderViewDTO>}，读侧 Presenter 裁剪为 {@link OrderSummaryCO}。
      * 同一 View 可呈现为不同 CO（详情 {@link OrderCO} / 概览 {@link OrderSummaryCO}），
      * 视调用方场景而定。
      */
     public PageResult<OrderSummaryCO> getOrderPage(GetOrderPageQuery query) {
-        return getOrderPageHandler.handle(query).map(orderPresenter::presentSummary);
+        return getOrderPageHandler.handle(query).map(orderViewPresenter::presentSummary);
     }
     // endregion
 }

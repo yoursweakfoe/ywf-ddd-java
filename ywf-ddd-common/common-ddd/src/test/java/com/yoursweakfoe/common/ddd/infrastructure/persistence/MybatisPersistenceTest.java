@@ -21,7 +21,6 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.OrderRepository;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
-import com.yoursweakfoe.common.ddd.domain.model.PageResult;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
@@ -167,21 +166,6 @@ class MybatisPersistenceTest {
         assertThat(orderRepository.exists(UUID.randomUUID())).isFalse();
     }
 
-    @Test
-    void findDomainsByCondition_returnsFiltered() {
-        Order pending = OrderFixtures.createOrderWithStatus(OrderStatus.PENDING);
-        Order confirmed = OrderFixtures.createOrderWithStatus(OrderStatus.CONFIRMED);
-        orderRepository.save(pending);
-        orderRepository.save(confirmed);
-
-        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OrderPO::getStatus, OrderStatus.PENDING.name());
-
-        List<Order> results = orderRepository.findDomainsByCondition(wrapper);
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getStatus()).isEqualTo(OrderStatus.PENDING);
-    }
-
     // ==================== update ====================
 
     @Test
@@ -273,7 +257,7 @@ class MybatisPersistenceTest {
     }
 
     @Test
-    void saveDomainBatch_partialFail_rollbackAll() {
+    void saveDomainBatch_partialFail_validPersistedInvalidThrows() {
         Order valid = OrderFixtures.createOrder();
         Order invalid = new Order(UUID.randomUUID(), OrderStatus.PENDING,
                 List.of(), BigDecimal.ZERO, "CUST-001");
@@ -281,8 +265,10 @@ class MybatisPersistenceTest {
         assertThatThrownBy(() -> orderRepository.saveDomainBatch(List.of(valid, invalid)))
                 .isInstanceOf(BusinessException.class);
 
-        // Both should be rolled back
-        assertThat(orderRepository.findById(valid.getId())).isEmpty();
+        // 事务边界已上收至应用层：本方法不声明 @Transactional，逐条 INSERT 各自提交，
+        // 中途失败不回滚已插入记录（valid 保留；invalid 校验失败，未插入）。
+        // 批量原子性由调用方（Handler）在入口方法标注 @Transactional 保证。
+        assertThat(orderRepository.findById(valid.getId())).isPresent();
         assertThat(orderRepository.findById(invalid.getId())).isEmpty();
     }
 
@@ -406,17 +392,18 @@ class MybatisPersistenceTest {
     void removeDomains_publishesRegisteredEventsPerAggregate() {
         productRepository.save(ProductFixtures.createProduct(100));
         productRepository.save(ProductFixtures.createProduct(200));
-        List<Product> savedList = productRepository.findDomainsByCondition(
-                new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"));
+        // 通过 mapper 取回自增 ID，再用 findDomainsByIds 加载（读侧已 PO → DTO 直投，不再提供按条件加载领域列表）
+        List<Long> ids = productMapper.selectList(
+                        new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"))
+                .stream().map(ProductPO::getId).toList();
+        List<Product> savedList = productRepository.findDomainsByIds(ids);
         assertThat(savedList).hasSize(2);
         eventCapture.captured.clear();
 
         savedList.forEach(p -> p.deductStock(10)); // each registers StockDeductedEvent
         productRepository.removeDomains(savedList);
 
-        assertThat(productRepository.findDomainsByCondition(
-                new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product")))
-                .isEmpty();
+        assertThat(productRepository.findDomainsByIds(ids)).isEmpty();
         assertThat(eventCapture.captured)
                 .hasSize(2)
                 .allMatch(StockDeductedEvent.class::isInstance);
@@ -501,51 +488,4 @@ class MybatisPersistenceTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    // ==================== countByCondition ====================
-
-    @Test
-    void countByCondition_returnsCount() {
-        orderRepository.save(OrderFixtures.createOrderWithStatus(OrderStatus.PENDING));
-        orderRepository.save(OrderFixtures.createOrderWithStatus(OrderStatus.PENDING));
-        orderRepository.save(OrderFixtures.createOrderWithStatus(OrderStatus.CONFIRMED));
-
-        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OrderPO::getStatus, OrderStatus.PENDING.name());
-
-        assertThat(orderRepository.countByCondition(wrapper)).isEqualTo(2);
-    }
-
-    // ==================== findDomainPage ====================
-
-    @Test
-    void findDomainPage_returnsPagedResult() {
-        for (int i = 0; i < 5; i++) {
-            orderRepository.save(OrderFixtures.createOrder());
-        }
-
-        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<>();
-        PageResult<Order> page = orderRepository.findDomainPage(wrapper, 1, 2);
-
-        assertThat(page.records()).hasSize(2);
-        assertThat(page.total()).isEqualTo(5);
-        assertThat(page.pageNum()).isEqualTo(1);
-        assertThat(page.pageSize()).isEqualTo(2);
-        assertThat(page.totalPages()).isEqualTo(3);
-        assertThat(page.hasNext()).isTrue();
-        assertThat(page.hasPrevious()).isFalse();
-    }
-
-    @Test
-    void findDomainPage_lastPage() {
-        for (int i = 0; i < 5; i++) {
-            orderRepository.save(OrderFixtures.createOrder());
-        }
-
-        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<>();
-        PageResult<Order> page = orderRepository.findDomainPage(wrapper, 3, 2);
-
-        assertThat(page.records()).hasSize(1);
-        assertThat(page.hasNext()).isFalse();
-        assertThat(page.hasPrevious()).isTrue();
-    }
 }

@@ -34,7 +34,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
 | `Event` | `EventHandler<E>` | 这件事发生了 | **void** |
 
-`PageResult<T>` 是框架级分页容器（record），定义在 `domain/model` 层，隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。**对偶原则**：业务在 domain 层用它（Repository 读优化方法返回 `PageResult<读模型>`），故框架支撑类也放在 `domain` 包内，与业务分层对齐。
+`PageResult<T>` 是框架级分页容器（record），定义在 `application` 层，隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。**对偶原则**：业务在 application 层用它（读端口 / Handler / AppService 用 `PageResult<读 DTO>`），故框架支撑类也放在 `application` 包内，与业务分层对齐。
 
 ### 对象转换
 
@@ -230,7 +230,7 @@ common-ddd → common-contract（Command / Query / Event 标记接口）
 
 ## 5. 设计原则
 
-- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`PageResult`、`AggregateRoot`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`）→ 放 `common-ddd/application`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`）→ 放 `common-ddd/domain`；业务在 application 层用（`PageResult`、`QueryHandler`、`BasicAssembler`）→ 放 `common-ddd/application`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新

@@ -7,34 +7,80 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.library.Architectures;
+import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
 /**
  * 应用架构守护测试 —— 对 {@code com.yoursweakfoe.sampleapplication.sampleservice} 执行架构合规性校验。
  *
- * <p>复用 {@link DDDArchitectureRules} 通用规则
- * （R1 分层方向 / R3 Domain 不依赖外层 / R4 模型纯净 / R5a Repository 接口 / C1 Contract 纯契约），
- * 并补充本应用特有规则：
- * <ul>
- *   <li>A2 —— Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus</li>
- *   <li>A3 —— Repository 接口必须在 domain..repository.. 包下</li>
- *   <li>A4 —— AppService 必须在 application.. 包下</li>
- * </ul>
+ * <p>R1 / R3 / R6 / A2 使用<b>精确包前缀</b>（{@code com.yoursweakfoe.sampleapplication.sampleservice.}）
+ * 而非通用 {@code ..domain..} 段匹配——因为 infra 层存在 {@code repository.domain} /
+ * {@code repository.application} 子包（按"实现哪个层的接口"命名），若用段匹配会把它们误判成
+ * domain/application 层。其余规则（R4 / R5a / C1 / A3 / A4）不涉及该碰撞，沿用通用规则。
  */
 @AnalyzeClasses(
         packages = "com.yoursweakfoe.sampleapplication.sampleservice",
         importOptions = ImportOption.DoNotIncludeTests.class)
 class ApplicationArchitectureTest {
 
-    // ── 复用 DDDArchitectureRules 通用规则 ─────────────────────────────
+    /** 本应用根包前缀（用于精确匹配顶层分层，避免误伤 infra 下的 repository.domain/application 子包） */
+    private static final String BASE = "com.yoursweakfoe.sampleapplication.sampleservice.";
+
+    // ── 精确包前缀规则（因 repository.domain / repository.application 子包命名） ──
 
     /** R1 —— DDD 四层依赖方向（依赖倒置）。 */
     @ArchTest
-    static final ArchRule r1_layered_dependency = DDDArchitectureRules.LAYERED_ARCHITECTURE;
+    static final ArchRule r1_layered_dependency = Architectures.layeredArchitecture()
+            .consideringAllDependencies()
+            .layer("Adapter").definedBy(BASE + "adapter..")
+            .layer("Application").definedBy(BASE + "application..")
+            .layer("Domain").definedBy(BASE + "domain..")
+            .layer("Infrastructure").definedBy(BASE + "infrastructure..")
+            .whereLayer("Adapter").mayNotBeAccessedByAnyLayer()
+            .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter", "Infrastructure")
+            .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure")
+            .whereLayer("Infrastructure").mayNotBeAccessedByAnyLayer()
+            .as("R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；"
+                    + "读侧例外：infrastructure 读实现可访问 application 读端口");
 
     /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。 */
     @ArchTest
-    static final ArchRule r3_domain_no_outer = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    static final ArchRule r3_domain_no_outer = noClasses()
+            .that()
+            .resideInAPackage(BASE + "domain..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    BASE + "application..",
+                    BASE + "infrastructure..",
+                    BASE + "adapter..",
+                    BASE + "contract..")
+            .as("R3 Domain 不依赖 application/infrastructure/adapter/contract");
+
+    /** R6 —— Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）。 */
+    @ArchTest
+    static final ArchRule r6_domain_no_security = noClasses()
+            .that()
+            .resideInAPackage(BASE + "domain..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("com.yoursweakfoe.common.security..")
+            .as("R6 Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）");
+
+    /** A2 —— Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus。 */
+    @ArchTest
+    static final ArchRule a2_domain_zero_framework_dependency = noClasses()
+            .that()
+            .resideInAPackage(BASE + "domain..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    "org.springframework..",
+                    "com.baomidou.mybatisplus..")
+            .as("A2 Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus");
+
+    // ── 复用 DDDArchitectureRules 通用规则（不涉及 repository.domain/application 碰撞） ──
 
     /** R4 —— Domain 模型保持纯净。 */
     @ArchTest
@@ -50,28 +96,16 @@ class ApplicationArchitectureTest {
 
     // ── 应用特有规则 ───────────────────────────────────────────────────
 
-    /** A2 —— Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus。 */
-    @ArchTest
-    static final ArchRule a2_domain_zero_framework_dependency = noClasses()
-            .that()
-            .resideInAPackage("..domain..")
-            .should()
-            .dependOnClassesThat()
-            .resideInAnyPackage(
-                    "org.springframework..",
-                    "com.baomidou.mybatisplus..")
-            .as("A2 Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus");
-
-    /** A3 —— Repository 接口必须在 domain..repository.. 包下。 */
+    /** A3 —— 领域 Repository 接口（继承框架 Repository）必须在 domain..repository.. 包下（读端口 QueryRepository 除外）。 */
     @ArchTest
     static final ArchRule a3_repository_interface_in_domain = classes()
             .that()
-            .haveSimpleNameEndingWith("Repository")
-            .and().areInterfaces()
+            .areInterfaces()
+            .and().areAssignableTo(Repository.class)
             .should()
             .resideInAPackage("..domain..repository..")
             .allowEmptyShould(true)
-            .as("A3 Repository 接口必须在 domain..repository.. 包下");
+            .as("A3 领域 Repository 接口必须在 domain..repository.. 包下");
 
     /** A4 —— AppService 必须在 application.. 包下。 */
     @ArchTest

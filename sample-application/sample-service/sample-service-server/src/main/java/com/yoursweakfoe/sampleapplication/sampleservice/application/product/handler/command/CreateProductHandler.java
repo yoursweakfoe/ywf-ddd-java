@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.command;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** 创建商品。 */
 @Component
-public class CreateProductHandler implements CommandHandler<CreateProductCommand, ProductViewDTO> {
+public class CreateProductHandler implements CommandHandler<CreateProductCommand, ProductDTO> {
 
     // region 依赖注入
     private final ProductRepository productRepository;
@@ -26,7 +26,7 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ProductViewDTO handle(CreateProductCommand command) {
+    public ProductDTO handle(CreateProductCommand command) {
         Product product = new Product(null, command.getName(), command.getStock());
         productRepository.save(product);
 

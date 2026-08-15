@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
@@ -28,13 +28,13 @@ class CreateProductHandlerTest {
     void handle_shouldCreateAndReturnProduct() {
         Product saved = new Product(1L, "Widget", 50);
         when(productRepository.findByName("Widget")).thenReturn(Optional.of(saved));
-        when(productAssembler.toDTO(any())).thenReturn(new ProductViewDTO());
+        when(productAssembler.toDTO(any())).thenReturn(new ProductDTO());
 
         CreateProductCommand command = new CreateProductCommand();
         command.setName("Widget");
         command.setStock(50);
 
-        ProductViewDTO result = handler.handle(command);
+        ProductDTO result = handler.handle(command);
 
         verify(productRepository).save(any(Product.class));
         assertThat(result).isNotNull();

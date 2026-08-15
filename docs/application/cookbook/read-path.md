@@ -23,9 +23,9 @@ CQRS 读写分离：写侧需要聚合根是因为要调用行为方法（`order
 REST 请求
   → adapter/rest/OrderControllerImpl（参数包装）
     → application/order/OrderAppService（委托 + 呈现）
-      → application/order/handler/GetOrderHandler（查询编排）
-        → application/order/query/OrderQueryRepository（读端口）
-          → infrastructure/.../query/OrderQueryRepositoryImpl（PO → 读 DTO 直接投影）
+  → application/order/handler/GetOrderHandler（查询编排）
+    → application/order/repository/OrderQueryRepository（读端口）
+      → infrastructure/.../repository/query/OrderQueryRepositoryImpl（PO → 读 DTO 直接投影）
       → application/order/presenter/OrderViewPresenter（DTO → CO）
   ← OrderCO
 ```
@@ -171,7 +171,7 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 ## 5. Application — 读端口（Query Port）
 
 ```java
-// application/order/query/OrderQueryRepository.java
+// application/order/repository/OrderQueryRepository.java
 public interface OrderQueryRepository {
 
     /** 按 ID 投影订单读 DTO（不存在返回 empty）。 */
@@ -184,7 +184,7 @@ public interface OrderQueryRepository {
 
 要点：
 - 读端口定义在 **application 层**（不是 domain 层），返回**读 DTO**（应用层类型），不返回领域类型
-- `PageResult<T>` 是框架级分页容器（common-ddd），业务在 application/infrastructure 用它，框架支撑类放在 `common-ddd/domain/model`（对偶原则：框架构建块按层级归类）
+- `PageResult<T>` 是框架级分页容器（common-ddd），业务在 application/infrastructure 用它，框架支撑类放在 `common-ddd/application`（对偶原则：框架构建块按业务使用层级归类）
 - 写侧 `OrderRepository`（domain 层）只保留聚合生命周期，读侧完全不经过它
 
 ### 读侧业务判断放哪？
@@ -201,7 +201,7 @@ public interface OrderQueryRepository {
 ## 6. Infrastructure — 读实现（PO → DTO 直接投影）
 
 ```java
-// infrastructure/persistence/master/order/query/OrderQueryRepositoryImpl.java
+// infrastructure/persistence/master/order/repository/query/OrderQueryRepositoryImpl.java
 @Component
 public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 
@@ -276,6 +276,6 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 | application | `OrderAppService.java` | 聚合入口 |
 | application | `handler/GetOrderHandler.java` | 单条查询编排 |
 | application | `handler/GetOrderPageHandler.java` | 分页查询编排 |
-| application | `query/OrderQueryRepository.java` | 读端口（返回读 DTO） |
+| application | `repository/OrderQueryRepository.java` | 读端口（返回读 DTO） |
 | application | `presenter/OrderViewPresenter.java` | 读 DTO → CO |
-| infrastructure | `query/OrderQueryRepositoryImpl.java` | 读实现（PO → 读 DTO 投影） |
+| infrastructure | `repository/query/OrderQueryRepositoryImpl.java` | 读实现（PO → 读 DTO 投影） |

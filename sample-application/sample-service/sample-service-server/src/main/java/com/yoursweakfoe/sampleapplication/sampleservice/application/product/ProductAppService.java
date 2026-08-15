@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.command.CreateProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.query.GetProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.presenter.ProductPresenter;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.presenter.ProductViewPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
@@ -18,13 +19,16 @@ public class ProductAppService {
 
     // region 依赖注入
     private final ProductPresenter productPresenter;
+    private final ProductViewPresenter productViewPresenter;
     private final CreateProductHandler createProductHandler;
     private final GetProductHandler getProductHandler;
 
     public ProductAppService(ProductPresenter productPresenter,
+                             ProductViewPresenter productViewPresenter,
                              CreateProductHandler createProductHandler,
                              GetProductHandler getProductHandler) {
         this.productPresenter = productPresenter;
+        this.productViewPresenter = productViewPresenter;
         this.createProductHandler = createProductHandler;
         this.getProductHandler = getProductHandler;
     }
@@ -35,6 +39,6 @@ public class ProductAppService {
     }
 
     public ProductCO getProduct(GetProductQuery query) {
-        return productPresenter.present(getProductHandler.handle(query));
+        return productViewPresenter.present(getProductHandler.handle(query));
     }
 }

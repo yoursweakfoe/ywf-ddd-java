@@ -24,8 +24,8 @@ import jakarta.validation.constraints.Min;
  * 校验由服务端 Handler 层执行（{@code @Validated} 或手动触发），契约层仅声明约束。
  *
  * <p><strong>防御性说明</strong>：{@code @Min/@Max} 注解依赖调用点 {@code @Valid} 触发，
- * 未校验时不生效。框架层 {@code findDomainPage} 仅防御非法下限（pageNum ≥ 1，pageSize ≥ 1），
- * 不截断上限——上限由本接口 {@code @Max} 约束或实现类自行决定。
+ * 未校验时不生效。读侧查询实现（{@code XxxQueryRepositoryImpl}）仅防御非法下限
+ * （pageNum ≥ 1，pageSize ≥ 1），不截断上限——上限由本接口 {@code @Max} 约束或实现类自行决定。
  * 实现类可覆写 {@code getPageSize()} 去掉 {@code @Max} 以突破默认上限（如批量导出场景）。
  *
  * @see Query

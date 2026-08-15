@@ -1,17 +1,18 @@
-package com.yoursweakfoe.common.ddd.domain.model;
+package com.yoursweakfoe.common.ddd.application;
 
 import java.util.List;
 
 /**
  * 分页结果 —— 框架级分页响应容器，隔离基础设施分页实现（如 MyBatis-Plus Page）。
  *
- * <p>本类型定义在 domain 层（与 ValueObject 同包），使得 application 和 infrastructure
- * 均可依赖，保持依赖方向干净：
+ * <p>本类型定义在 application 层（读侧 CQRS 查询的分页结果容器）。读侧绕过 domain
+ * （PO → 读 DTO 直接投影），分页容器是应用层读模型的载体：
  *
  * <pre>
- * infrastructure → PageResult（domain）    ✓ 构造返回值
- * application    → PageResult（domain）    ✓ Handler/AppService 使用
- * 任何层         → Page（MyBatis-Plus）    ✗ 框架泄漏
+ * application    → PageResult（application）    ✓ 读端口 / Handler / AppService 使用
+ * infrastructure → PageResult（application）    ✓ 读实现构造返回值（读侧例外）
+ * domain         → PageResult                    ✗ 读侧绕过 domain，domain 不使用分页
+ * 任何层         → Page（MyBatis-Plus）          ✗ 框架泄漏
  * </pre>
  *
  * <p>本类是不可变容器（record），对内部元素的清洗/转换由 Presenter 负责（逐条 map），
@@ -20,14 +21,14 @@ import java.util.List;
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * // QueryHandler 返回分页结果
- * public PageResult<OrderDTO> handle(GetOrderPageQuery query) {
- *     return orderRepository.findDomainPage(wrapper, query.getPageNum(), query.getPageSize())
- *             .map(orderAssembler::toDTO);
+ * // QueryHandler 返回分页结果（读侧绕过 domain，PO → 读 DTO 直接投影）
+ * public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
+ *     return orderQueryRepository.findPage(
+ *             query.status(), query.customerId(), query.pageNum(), query.pageSize());
  * }
  *
  * // AppService 呈现为 CO
- * PageResult<OrderCO> result = handler.handle(query).map(orderPresenter::present);
+ * PageResult<OrderCO> result = handler.handle(query).map(orderViewPresenter::present);
  * }</pre>
  *
  * @param records  当前页数据

@@ -1,10 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository.domain;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.yoursweakfoe.common.ddd.domain.model.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderReadView;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter.OrderConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mapper.OrderMapper;
@@ -17,10 +13,14 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 订单仓储实现 —— 基于 MyBatis-Plus。
+ * 订单仓储实现 —— 基于 MyBatis-Plus，仅承载聚合生命周期（写侧）。
+ *
+ * <p>读侧已独立为 {@code OrderQueryRepository}（application 查询端口 + infra 实现），
+ * 读路径绕过 domain（PO → DTO 直接投影），不经过本类。
+ *
+ * <p>事务边界由应用层 Handler 控制（本类不声明 {@code @Transactional}）。
  */
 @Component
 public class OrderRepositoryImpl
@@ -55,13 +55,11 @@ public class OrderRepositoryImpl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void save(Order domain) {
         saveDomain(domain);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void update(Order domain) {
         updateDomain(domain);
     }
@@ -72,42 +70,7 @@ public class OrderRepositoryImpl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void deleteById(UUID id) {
         removeDomainById(id);
-    }
-
-    @Override
-    public Optional<OrderReadView> findReadView(UUID id) {
-        OrderPO po = baseMapper.selectById(id.toString());
-        if (po == null) {
-            return Optional.empty();
-        }
-        return Optional.of(projectReadView(po));
-    }
-
-    @Override
-    public PageResult<OrderReadView> findReadViewPage(int pageNum, int pageSize) {
-        Page<OrderPO> page = baseMapper.selectPage(
-                new Page<>(pageNum, pageSize), new LambdaQueryWrapper<OrderPO>());
-        return new PageResult<>(
-                page.getRecords().stream().map(this::projectReadView).toList(),
-                page.getTotal(),
-                pageNum,
-                pageSize);
-    }
-
-    /** PO → 读模型投影（读侧专用，不经过 Converter.toDomain()，不 reconstitute 聚合根）。 */
-    private OrderReadView projectReadView(OrderPO po) {
-        return new OrderReadView(
-                po.getId(),
-                po.getStatus(),
-                converter.deserializeItems(po.getItems()),
-                po.getTotalAmount(),
-                po.getCustomerId(),
-                po.getTrackingNumber(),
-                po.getCancelReason(),
-                po.getCreateAt(),
-                po.getUpdateAt());
     }
 }
