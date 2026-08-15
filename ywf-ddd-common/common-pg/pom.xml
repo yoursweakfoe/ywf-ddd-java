@@ -14,10 +14,10 @@
     <description>PostgreSQL TypeHandler 扩展 - UUID/JSONB/数组类型处理器（opt-in，使用 PG 时引入）</description>
 
     <dependencies>
-        <!-- MyBatis 基础（TypeHandler 继承 BaseMapper 相关类） -->
+        <!-- MyBatis-Plus 基础设施（TypeHandler 继承 BaseTypeHandler；ConfigurationCustomizer / MybatisConfiguration 来自 MyBatis-Plus 自动装配） -->
         <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-ddd</artifactId>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
         </dependency>
 
         <!-- PostgreSQL 驱动（编译期需访问 PGobject） -->
@@ -27,9 +27,9 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- Jackson（JsonNodeTypeHandler 需要） -->
+        <!-- Jackson 3（JsonNodeTypeHandler 需要；统一到 Spring Boot 4 基线，剔除 Jackson 2） -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
 

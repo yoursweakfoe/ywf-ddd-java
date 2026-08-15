@@ -1,8 +1,5 @@
 package com.yoursweakfoe.common.pg.handler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +9,9 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 import org.postgresql.util.PGobject;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * JsonNode 类型处理器 —— 用于 MyBatis 与 PostgreSQL JSONB 类型的互转（Jackson JsonNode 映射）。
@@ -38,7 +38,7 @@ import org.postgresql.util.PGobject;
 @MappedJdbcTypes(JdbcType.OTHER)
 public class JsonNodeTypeHandler extends BaseTypeHandler<JsonNode> {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final JsonMapper OBJECT_MAPPER = new JsonMapper();
 
     /** 序列化 JsonNode 并通过 PGobject 写入 jsonb */
     @Override
@@ -75,7 +75,7 @@ public class JsonNodeTypeHandler extends BaseTypeHandler<JsonNode> {
         }
         try {
             return OBJECT_MAPPER.readTree(json);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new SQLException("Failed to parse JSON string to JsonNode", e);
         }
     }
