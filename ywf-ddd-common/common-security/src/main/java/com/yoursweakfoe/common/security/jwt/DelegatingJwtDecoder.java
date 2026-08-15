@@ -35,7 +35,7 @@ public class DelegatingJwtDecoder implements JwtDecoder {
         String alg = headerAlgorithm(token);
         JwtDecoder decoder = delegates.get(alg);
         if (decoder == null) {
-            throw new BadJwtException("不支持的签名算法: " + alg);
+            throw new BadJwtException("Unsupported signature algorithm: " + alg);
         }
         return decoder.decode(token);
     }
@@ -45,18 +45,18 @@ public class DelegatingJwtDecoder implements JwtDecoder {
         try {
             String[] parts = token.split("\\.");
             if (parts.length < 2) {
-                throw new BadJwtException("JWT 格式非法：缺少签名段");
+                throw new BadJwtException("Malformed JWT: missing signature segment");
             }
             JWSHeader header = JWSHeader.parse(new Base64URL(parts[0]));
             JWSAlgorithm alg = header.getAlgorithm();
             if (alg == null) {
-                throw new BadJwtException("JWT 头缺少 alg");
+                throw new BadJwtException("JWT header missing alg");
             }
             return alg.getName();
         } catch (BadJwtException e) {
             throw e;
         } catch (Exception e) {
-            throw new BadJwtException("无法解析 JWT 头", e);
+            throw new BadJwtException("Failed to parse JWT header", e);
         }
     }
 }
