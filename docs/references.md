@@ -48,7 +48,7 @@
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略，MyBatis-Plus 场景下脏检查收益极低且增加复杂度 |
-| 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 已实现 `findDomainPage` + `PageResult<Domain>`，但不在 Domain 层 Repository 接口暴露（分页属于读侧 CQRS Query） |
+| 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
 | 领域事件异步/跨进程发布 | Axon Framework、EventStoreDB、Kafka + Outbox | 当前为进程内 Spring Event；跨服务通过 Seata + HTTP 显式调用，不引入 MQ 耦合 |
 
 ### CQRS 与事件架构

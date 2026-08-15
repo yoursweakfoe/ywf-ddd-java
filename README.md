@@ -115,7 +115,7 @@ ywf-ddd-common/
 ```
 docs/
 ├── references.md                        # 架构理论参考（采纳 / 未采纳及原因）
-└── sample-application/
+└── application/
     ├── module-design/                   # 应用架构设计（分层职责、组件、规则）
     │   ├── contract.md
     │   ├── adapter.md

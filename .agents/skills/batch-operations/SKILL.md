@@ -7,7 +7,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 
 ## 前置阅读
 
-- `docs/sample-application/cookbook/batch-operations.md`（批量 Handler + 事务边界 + 三种失败策略）
+- `docs/application/cookbook/batch-operations.md`（批量 Handler + 事务边界 + 三种失败策略）
 - `.agents/rules/03-coding-conventions.md`（写侧固定模式）
 
 ## 步骤

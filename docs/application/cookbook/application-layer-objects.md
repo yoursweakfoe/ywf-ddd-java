@@ -10,32 +10,49 @@ Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数
 
 | 场景 | 后缀 | 方向 | 示例 |
 |------|------|------|------|
-| 出路径投影 | **`ViewDTO`** | Domain → Contract | `OrderViewDTO` |
+| 写侧投影（Command 结果） | **`DTO`** | Domain → Contract | `OrderDTO`（含 version） |
+| 读侧投影（Query 结果） | **`ViewDTO`** | PO → Contract | `OrderViewDTO`（不含 version） |
 | 入路径富化 | **`ParamsDTO`** | Command → Domain | `OrderCreationParamsDTO` |
 | 防腐层中间数据 | **`RecordDTO`** | External → Domain | `PaymentCallbackRecordDTO` |
 
 ---
 
-## 出路径投影：ViewDTO
+## 写/读投影：DTO vs ViewDTO
 
-**场景**：Handler 从领域模型投影数据，经 Presenter 裁剪为不同 CO。
+写侧与读侧 DTO **解耦**（避免"一个肥 DTO 贯穿所有层"的耦合）：
+
+| DTO | 承载 | Presenter | 说明 |
+|-----|------|-----------|------|
+| 写侧 `DTO` | 含乐观锁 version | `OrderPresenter` | Command 执行后的聚合状态投影 |
+| 读侧 `ViewDTO` | 不含 version | `OrderViewPresenter` | Query 的 PO 直接投影（绕过 domain） |
 
 **代码示例**（示例应用已实现）：
 
 ```java
-// application/order/dto/OrderViewDTO.java —— 全量内部视图
+// 写侧 DTO —— Command 执行后的聚合状态投影（含 version）
+// application/order/dto/OrderDTO.java
+@Data
+public class OrderDTO implements Serializable {
+    private String id, status, customerId, trackingNumber, cancelReason;
+    private BigDecimal totalAmount;
+    private List<OrderItemDTO> items;
+    private OffsetDateTime createAt, updateAt;  // 内部审计字段
+    private Integer version;                     // 写侧关注点，不暴露给外部
+}
+
+// 读侧 DTO —— Query 的 PO 直接投影（不含 version，绕过 domain）
+// application/order/dto/OrderViewDTO.java
 @Data
 public class OrderViewDTO implements Serializable {
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
     private List<OrderItemViewDTO> items;
-    private OffsetDateTime createAt, updateAt;  // 内部审计字段
-    private Integer version;                     // 不暴露给外部
+    private OffsetDateTime createAt, updateAt;
 }
 
-// Presenter 按场景裁剪
+// 读侧 Presenter 按场景裁剪
 @Component
-public class OrderPresenter implements BasicPresenter<OrderViewDTO, OrderCO> {
+public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO> {
     // 详情：全字段
     public OrderCO present(OrderViewDTO view) { ... }
     // 列表：精简字段
@@ -43,7 +60,7 @@ public class OrderPresenter implements BasicPresenter<OrderViewDTO, OrderCO> {
 }
 ```
 
-**关键点**：同一 `ViewDTO` → 多个 CO，Presenter 做裁剪，不用为每个视图写单独的 Handler。
+**关键点**：同一读侧 `ViewDTO` → 多个 CO，Presenter 做裁剪；写侧 `DTO` 与读侧 `ViewDTO` 分离，各自独立演进，不互相复用。
 
 ---
 

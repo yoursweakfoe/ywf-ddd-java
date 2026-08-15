@@ -7,7 +7,7 @@ description: 为已有聚合新增 MQ 消费者入口（adapter 层 Consumer）�
 
 ## 前置阅读
 
-- `docs/sample-application/cookbook/mq-consumer.md`（完整模板 + 幂等策略 + 死信处理）
+- `docs/application/cookbook/mq-consumer.md`（完整模板 + 幂等策略 + 死信处理）
 - `.agents/rules/03-coding-conventions.md`（Adapter 层纯透传约定）
 
 ## 步骤

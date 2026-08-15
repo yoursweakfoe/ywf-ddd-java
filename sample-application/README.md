@@ -41,7 +41,7 @@
 | ArchUnit 测试 | common-test 架构守护 |
 | 并发下单压测 | OptimisticLockerInnerInterceptor 防超卖 |
 
-> 真实业务项目引入本框架时，应删除整个 `sample-application/` 目录，以 `docs/sample-application/cookbook/` 为模板从零搭建。
+> 真实业务项目引入本框架时，应删除整个 `sample-application/` 目录，以 `docs/application/cookbook/` 为模板从零搭建。
 
 ## 构建与运行
 

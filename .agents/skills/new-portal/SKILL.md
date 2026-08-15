@@ -7,7 +7,7 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 
 ## 前置阅读
 
-1. `docs/sample-application/cookbook/gateway.md`（完整代码走查）
+1. `docs/application/cookbook/gateway.md`（完整代码走查）
 2. `.agents/rules/03-coding-conventions.md`（Portal / Gateway 节）
 3. `.agents/rules/04-forbidden-patterns.md`（Infrastructure 层禁止 + ACL 翻译）
 
@@ -84,5 +84,5 @@ public class AlipayPaymentGateway implements PaymentPortal {
 
 ## 文档同步
 
-- 更新 `docs/sample-application/cookbook/gateway.md`（如引入了新的容错模式）
+- 更新 `docs/application/cookbook/gateway.md`（如引入了新的容错模式）
 - 如新增了通用 Gateway 基础设施（如统一 HTTP Client），更新对应 common 模块文档

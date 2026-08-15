@@ -41,9 +41,9 @@ Java 21 / Spring Boot 4.1 / Spring MVC REST（对外经 Higress 网关；东西�
 
 | 需要了解 | 去哪里看 |
 |---------|----------|
-| 每层怎么设计（规则） | `docs/sample-application/module-design/` |
-| 具体怎么写（代码） | `docs/sample-application/cookbook/` |
-| 包怎么组织 | `docs/sample-application/directory-structure/` |
+| 每层怎么设计（规则） | `docs/application/module-design/` |
+| 具体怎么写（代码） | `docs/application/cookbook/` |
+| 包怎么组织 | `docs/application/directory-structure/` |
 | 为什么这么选 | `docs/references.md` |
 | common 模块怎么用 | `ywf-ddd-common/docs/common-*.md` |
 | 示例场景选型理由 | `sample-application/README.md` |

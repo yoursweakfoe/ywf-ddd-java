@@ -39,12 +39,12 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 |---|---|---|
 | 返回类型 | DTO（不是 CO） | DTO 或 PageResult&lt;DTO&gt;（不是 CO） |
 | 事务 | `@Transactional` | 可省略（只读） |
-| 依赖 | Repository、DomainService、Assembler | Repository（读优化方法 / 分页方法） |
-| 路径 | load 聚合 → 调用行为 → save → Assembler.toDTO() | Repository.findDomainPage() → .map(assembler::toDTO)（不加载聚合） |
+| 依赖 | Repository、DomainService、Assembler | XxxQueryRepository（读端口） |
+| 路径 | load 聚合 → 调用行为 → save → Assembler.toDTO() | XxxQueryRepository.findPage() → PO 直接投影读 DTO（绕过 domain） |
 | 拆分标准 | 每个 Command 对应一个 Handler（1:1） | 每个 Query 对应一个 Handler（1:1） |
 
 - **写侧**（经过 Domain）：load 聚合 → 调用行为 → save → Assembler.toDTO()
-- **读侧**（绕过聚合根）：Repository.findDtoXxx() → 直接投影 DTO，不加载聚合
+- **读侧**（绕过 domain）：XxxQueryRepository（application 读端口）→ infra 实现 PO 直接投影读 DTO，不加载聚合
 
 → 完整代码见 [cookbook/write-path.md](../cookbook/write-path.md)#5-application--commandhandler用例执行 | [cookbook/read-path.md](../cookbook/read-path.md)#4-application--queryhandler
 
@@ -75,7 +75,7 @@ adapter/facade ──→ AppService ──→ CommandHandler ──→ Domain（
                        │                  │
                        │                  └── Assembler（Domain → DTO）
                        │
-                       ├──→ QueryHandler ──→ Repository.findDtoXxx()（绕过聚合根，直接投影 DTO）
+                        ├──→ QueryHandler ──→ XxxQueryRepository（读端口，绕过 domain，PO → 读 DTO 直接投影）
                        │
                        └── Presenter（DTO → CO）──→ 返回调用方
 ```

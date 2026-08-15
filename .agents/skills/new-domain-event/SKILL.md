@@ -7,7 +7,7 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 ## 前置阅读
 
-1. `docs/sample-application/cookbook/event-flow.md`（事件全链路代码）
+1. `docs/application/cookbook/event-flow.md`（事件全链路代码）
 2. `.agents/rules/03-coding-conventions.md`（领域事件节）
 
 ## 步骤
@@ -59,5 +59,5 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 ## 文档同步
 
-- 更新 `docs/sample-application/cookbook/event-flow.md` 文件清单
+- 更新 `docs/application/cookbook/event-flow.md` 文件清单
 - 如新增了事件类型对比，更新 module-design/domain.md 事件边界节

@@ -23,12 +23,11 @@ CommandHandler.handle(command):
 
 ```
 QueryHandler.handle(query):
-  1. repository.findDtoXxx(query) → 直接投影 DTO（绕过聚合根）
-  2. 分页：repository.findDomainPage(wrapper, pageNum, pageSize)
-  3. 返回 DTO 或 PageResult<DTO>
+  1. orderQueryRepository.findPage(...) → PO 直接投影读 DTO（绕过 domain）
+  2. 返回 DTO 或 PageResult<DTO>
 ```
 
-- 读侧不加载完整聚合根（无行为可调用）
+- 读侧**完全绕过 domain**：读端口（application 层 `XxxQueryRepository`）+ infra 实现直接 PO → 读 DTO 投影，不 reconstitute 聚合根、不建领域读模型
 - 可省略 `@Transactional`（只读）
 
 ## AppService 模式
@@ -134,8 +133,8 @@ public void cancelOrder(CancelOrderCommand command) {
 - 页码从 **1** 开始（与 MyBatis-Plus Page 一致）
 - 默认每页 20，上限 1000（`MAX_PAGE_SIZE`）
 - 契约层通过 `@Min(1)` / `@Max(MAX_PAGE_SIZE)` 声明约束，Handler 层 `@Validated` 触发校验
-- 框架层 `findDomainPage` 内置防御性 clamp（pageNum≥1，1≤pageSize≤1000），未校验参数不会产生非法分页
-- Repository 使用 `findDomainPage(wrapper, pageNum, pageSize)` → 返回 `PageResult<Domain>`
+- 读侧查询实现（`XxxQueryRepositoryImpl`）内置防御性 clamp（pageNum≥1，1≤pageSize≤1000），未校验参数不会产生非法分页
+- 读侧 Repository（application 层 `XxxQueryRepository`）返回 `PageResult<读 DTO>`（PO → DTO 直接投影）
 - Handler 返回 `PageResult<DTO>`，AppService 返回 `PageResult<CO>`
 
 ## Adapter（REST）
@@ -171,4 +170,4 @@ public void cancelOrder(CancelOrderCommand command) {
 > 1. `equals()/hashCode()` 基于所有字段 —— 聚合根相等性必须基于 ID
 > 2. setter 破坏领域不变量（绕过状态机 / 业务校验）
 
-→ 详见 `docs/sample-application/cookbook/`
+→ 详见 `docs/application/cookbook/`

@@ -7,8 +7,8 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 ## 前置阅读
 
-- 写操作：`docs/sample-application/cookbook/write-path.md`
-- 读操作：`docs/sample-application/cookbook/read-path.md`
+- 写操作：`docs/application/cookbook/write-path.md`
+- 读操作：`docs/application/cookbook/read-path.md`
 - `.agents/rules/03-coding-conventions.md`（写侧/读侧固定模式）
 
 ## 步骤（写操作）
@@ -58,7 +58,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 协调多个 Repository，修改多个聚合
 2. Bean 注册在 `infrastructure/config/DomainServiceConfig.java`
 3. Handler 调用 Domain Service（而非直接操作多个 Repository）
-- 详见 `docs/sample-application/cookbook/cross-aggregate.md`
+- 详见 `docs/application/cookbook/cross-aggregate.md`
 
 ## 变体：批量 Handler
 
@@ -68,9 +68,9 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 2. Handler 返回 `List<DTO>`，标注 `@Transactional`
 3. 模式：批量 load → 逐个领域行为 → `updateDomainBatch` → 批量 toDTO
 4. AppService 使用 `Presenter.presentList()`
-- 详见 `docs/sample-application/cookbook/batch-operations.md`，或使用 `batch-operations` skill
+- 详见 `docs/application/cookbook/batch-operations.md`，或使用 `batch-operations` skill
 
 ## 文档同步
 
-- 如新增了 Repository 读优化方法，更新 `docs/sample-application/cookbook/read-path.md`
-- 如新增了领域行为，更新 `docs/sample-application/cookbook/write-path.md`
+- 如新增了 Repository 读优化方法，更新 `docs/application/cookbook/read-path.md`
+- 如新增了领域行为，更新 `docs/application/cookbook/write-path.md`

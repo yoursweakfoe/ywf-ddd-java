@@ -34,7 +34,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
 | `Event` | `EventHandler<E>` | 这件事发生了 | **void** |
 
-`PageResult<T>` 是框架级分页容器（record），定义在 domain/model 层，隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。
+`PageResult<T>` 是框架级分页容器（record），定义在 `domain/model` 层，隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。**对偶原则**：业务在 domain 层用它（Repository 读优化方法返回 `PageResult<读模型>`），故框架支撑类也放在 `domain` 包内，与业务分层对齐。
 
 ### 对象转换
 
@@ -48,15 +48,14 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 
 ### 仓储支撑（MybatisPersistence）
 
-继承 MyBatis-Plus `ServiceImpl`，封装：
+组合持有 `BaseMapper`（不继承 ServiceImpl，避免 `save(PO)`/`updateById(PO)` 等底层 PO 直操方法泄漏为公开 API），封装：
 
 - `saveDomain` / `updateDomain` — 持久化前自动 `validate()`，持久化后发布领域事件
 - `removeDomain` / `removeDomains` — 删除成功后发布聚合已注册事件
 - `removeDomainById` / `removeDomainByIds` — 纯技术删除不发事件；**事件工厂重载**在删除成功后按 ID 构造并发布事件（适配"只查 ID 不加载 Domain"路径）
-- `findDomainById` / `findDomainsByCondition` — 查询并转换为领域对象
+- `findDomainById` / `findDomainsByIds` / `findDomainOneByCondition` — 写侧加载聚合（load → 行为 → save 链路）
 - 乐观锁冲突 → `IllegalStateException`（HTTP 409）
-- `findDomainPage(wrapper, pageNum, pageSize)` 内置防御性下限
-- **事务约定**：`saveDomain()/updateDomain()` 不声明 `@Transactional`（自调用不生效），子类 `save()/update()` 覆写必须自行标注；批量方法由基类声明事务
+- **事务边界上收**：本类不声明 `@Transactional`，事务由应用层 Handler 控制（批量原子性由调用方包裹事务保证）
 
 ### 领域事件
 
@@ -180,20 +179,28 @@ repository.removeDomain(order);   // 删除成功 → 自动发布事件
 repository.removeDomainById(orderId, id -> new OrderDeletedEvent(id));
 ```
 
-### 场景 4：PageResult 分页链路
+### 场景 4：PageResult 分页链路（读侧，绕过 domain）
 
 ```java
-@Component
-public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, PageResult<OrderDTO>> {
-    private final OrderRepository orderRepository;
-    private final OrderAssembler orderAssembler;
+// application 层：读端口返回读 DTO（PO → DTO 直接投影，不经过 domain）
+public interface OrderQueryRepository {
+    PageResult<OrderViewDTO> findPage(String status, String customerId, int pageNum, int pageSize);
+}
 
+// application 层：Handler 直接取读 DTO
+@Component
+public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, PageResult<OrderViewDTO>> {
     @Override
-    public PageResult<OrderDTO> handle(GetOrderPageQuery query) {
-        return orderRepository.findDomainPage(query).map(orderAssembler::toDTO);
+    public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
+        return orderQueryRepository.findPage(
+                query.status(), query.customerId(), query.pageNum(), query.pageSize());
     }
 }
 ```
+
+> 读侧完全绕过 domain 层（不 reconstitute 聚合根、不建领域读模型），基础设施层实现读端口
+> （infrastructure → application，写侧依赖倒置的读侧镜像），直接从 PO 投影读 DTO。
+> 读侧无业务判断，派生值在写侧计算并物化到 PO 列。详见 `docs/application/cookbook/read-path.md`。
 
 ### 场景 5：DomainEvent 监听
 
@@ -208,7 +215,7 @@ public class OrderEventHandler {
 }
 ```
 
-完整示例见 `docs/sample-application/cookbook/write-path.md`。
+完整示例见 `docs/application/cookbook/write-path.md`。
 
 ## 4. 依赖关系
 
@@ -223,6 +230,7 @@ common-ddd → common-contract（Command / Query / Event 标记接口）
 
 ## 5. 设计原则
 
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`PageResult`、`AggregateRoot`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`）→ 放 `common-ddd/application`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新

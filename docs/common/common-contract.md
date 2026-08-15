@@ -45,7 +45,7 @@ com.yoursweakfoe.common.contract
 | `getPageNum()` | `default int` → 1 | 当前页码（从 1 开始），`@Min(1)` |
 | `getPageSize()` | `default int` → 20 | 每页大小，`@Min(1) @Max(1000)` |
 
-> `@Min/@Max` 依赖调用点 `@Valid` 触发；框架层 `findDomainPage` 已内置防御性 clamp，未经校验的参数也不会产生非法分页。
+> `@Min/@Max` 依赖调用点 `@Valid` 触发；读侧查询实现（`XxxQueryRepositoryImpl`）已内置防御性 clamp，未经校验的参数也不会产生非法分页。
 
 ### Event vs DomainEvent
 

@@ -31,8 +31,9 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 | Mapper | `XxxMapper extends BaseMapper<XxxPO>` | 简单 CRUD 用 MP 内置方法，复杂 SQL 写 XML |
 | Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` |
 
-`MybatisPersistence` 提供 `findDomainPage(wrapper, pageNum, pageSize)` 分页查询，
-内部使用 MyBatis-Plus `Page` 执行，出口翻译为 `PageResult<Domain>`，调用方无需依赖 MP 分页类型。
+`MybatisPersistence` 仅承载写侧聚合生命周期（load → 行为 → save）；读侧由独立的
+`XxxQueryRepositoryImpl`（infra 读实现）直接用 Mapper 从 PO 投影读 DTO（PO → DTO 直接投影，
+`PageResult<读 DTO>` 隔离 MyBatis-Plus `Page`），不经过 domain。
 
 `@TableName` 必须写死 schema 前缀（如 `@TableName("order_db.order")`），因为多数据源按聚合分包后，
 同一数据源内不同聚合可能对应不同 schema，不能依赖连接默认 search_path。

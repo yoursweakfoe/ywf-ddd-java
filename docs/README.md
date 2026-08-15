@@ -6,7 +6,7 @@
 docs/
 ├── glossary.md                          # 项目术语表
 ├── references.md                        # 架构理论参考（采纳 / 未采纳及原因）
-└── sample-application/
+└── application/
     ├── module-design/                   # 应用架构设计（分层职责、组件、规则）
     │   ├── contract.md
     │   ├── adapter.md
@@ -27,9 +27,9 @@ docs/
         └── new-aggregate.md
 ```
 
-- 想了解**每层怎么设计** → [sample-application/module-design/](application/module-design/)
-- 想了解**包怎么组织** → [sample-application/directory-structure/](application/directory-structure/)
-- 想了解**具体怎么写** → [sample-application/cookbook/](application/cookbook/)
+- 想了解**每层怎么设计** → [application/module-design/](application/module-design/)
+- 想了解**包怎么组织** → [application/directory-structure/](application/directory-structure/)
+- 想了解**具体怎么写** → [application/cookbook/](application/cookbook/)
 - 想了解**为什么这么选** → [references.md](references.md)
 
 - 想了解**术语定义** → [glossary.md](glossary.md)

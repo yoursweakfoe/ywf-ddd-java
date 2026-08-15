@@ -17,8 +17,8 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 - **完成编码后自查：** USE `.agents/skills/ddd-review/SKILL.md`（架构合规）
 - **生产就绪 / 部署前审查：** USE `.agents/skills/ops-review/SKILL.md`
 - **测试充分性审查：** USE `.agents/skills/test-review/SKILL.md`
-- **需要设计原理时：** CONSULT `docs/sample-application/module-design/`
-- **需要完整代码模板时：** CONSULT `docs/sample-application/cookbook/`
+- **需要设计原理时：** CONSULT `docs/application/module-design/`
+- **需要完整代码模板时：** CONSULT `docs/application/cookbook/`
 
 ## Core constraints (quick reference)
 

@@ -49,4 +49,4 @@ adapter/order/         → web/（Controller）
 contract/order/        → api/ + dto/ + co/ + enums/
 ```
 
-→ 详见 `docs/sample-application/module-design/{layer}.md`
+→ 详见 `docs/application/module-design/{layer}.md`

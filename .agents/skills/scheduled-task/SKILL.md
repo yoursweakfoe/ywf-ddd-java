@@ -7,7 +7,7 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 
 ## 前置阅读
 
-- `docs/sample-application/cookbook/scheduled-task.md`（完整模板 + 分布式锁提示）
+- `docs/application/cookbook/scheduled-task.md`（完整模板 + 分布式锁提示）
 - `.agents/rules/03-coding-conventions.md`（Adapter 层纯透传约定）
 
 ## 步骤

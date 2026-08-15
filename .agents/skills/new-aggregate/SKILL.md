@@ -7,7 +7,7 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 
 ## 前置阅读
 
-1. `docs/sample-application/cookbook/new-aggregate.md`（完整 20 文件模板）
+1. `docs/application/cookbook/new-aggregate.md`（完整 20 文件模板）
 2. `.agents/rules/02-architecture.md`（分层 + 包结构）
 3. `.agents/rules/03-coding-conventions.md`（命名 + 泛型）
 
@@ -62,5 +62,5 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 
 ## 文档同步
 
-- 更新 `docs/sample-application/directory-structure/overview.md`（新增聚合目录）
+- 更新 `docs/application/directory-structure/overview.md`（新增聚合目录）
 - 如引入了新模式，更新对应 cookbook 文档

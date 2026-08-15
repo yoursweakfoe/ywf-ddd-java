@@ -54,7 +54,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 ### 6. 关联文档更新
 
-- 如修改了 common-ddd 的核心类，检查 `docs/sample-application/cookbook/` 中的代码示例是否需同步
+- 如修改了 common-ddd 的核心类，检查 `docs/application/cookbook/` 中的代码示例是否需同步
 - 如修改了标记接口（Command/Query/Event），检查 `docs/glossary.md`
 
 ## 验证
@@ -69,4 +69,4 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 ## 文档同步
 
 - 必须更新：`ywf-ddd-common/docs/common-{module}.md`
-- 视情况更新：`docs/sample-application/cookbook/`、`docs/glossary.md`、`ywf-ddd-common/README.md`
+- 视情况更新：`docs/application/cookbook/`、`docs/glossary.md`、`ywf-ddd-common/README.md`
