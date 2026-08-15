@@ -217,7 +217,8 @@ common-ddd → common-contract（Command / Query / Event 标记接口）
            → common-exception（BusinessException）
            → mybatis-plus-spring-boot4-starter
            → mybatis-plus-jsqlparser
-           → dynamic-datasource-spring-boot4-starter
+           → dynamic-datasource-spring-boot4-starter（test scope，多数据源兼容性验证）
+           → jackson-databind（test scope，测试 fixtures）
 ```
 
 ## 5. 设计原则

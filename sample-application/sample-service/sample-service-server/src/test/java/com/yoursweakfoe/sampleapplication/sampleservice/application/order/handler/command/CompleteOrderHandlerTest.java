@@ -47,7 +47,7 @@ class CompleteOrderHandlerTest {
     void handle_shouldTransitionToCompleted() {
         Order order = createDeliveredOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderViewDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderViewDTO());
 
         OrderViewDTO result = handler.handle(new CompleteOrderCommand(order.getId()));
 

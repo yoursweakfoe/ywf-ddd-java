@@ -30,7 +30,7 @@ import tools.jackson.databind.json.JsonMapper;
  * private JsonNode config;
  * </pre>
  *
- * @see com.fasterxml.jackson.databind.JsonNode
+ * @see tools.jackson.databind.JsonNode
  * @see org.apache.ibatis.type.BaseTypeHandler
  * @see JsonbTypeHandler
  */

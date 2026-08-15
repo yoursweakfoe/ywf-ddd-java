@@ -1,8 +1,10 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yoursweakfoe.common.ddd.domain.model.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderReadView;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter.OrderConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mapper.OrderMapper;
@@ -70,12 +72,42 @@ public class OrderRepositoryImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(UUID id) {
         removeDomainById(id);
     }
 
     @Override
-    public PageResult<Order> findPage(int pageNum, int pageSize) {
-        return findDomainPage(new LambdaQueryWrapper<OrderPO>(), pageNum, pageSize);
+    public Optional<OrderReadView> findReadView(UUID id) {
+        OrderPO po = baseMapper.selectById(id.toString());
+        if (po == null) {
+            return Optional.empty();
+        }
+        return Optional.of(projectReadView(po));
+    }
+
+    @Override
+    public PageResult<OrderReadView> findReadViewPage(int pageNum, int pageSize) {
+        Page<OrderPO> page = baseMapper.selectPage(
+                new Page<>(pageNum, pageSize), new LambdaQueryWrapper<OrderPO>());
+        return new PageResult<>(
+                page.getRecords().stream().map(this::projectReadView).toList(),
+                page.getTotal(),
+                pageNum,
+                pageSize);
+    }
+
+    /** PO → 读模型投影（读侧专用，不经过 Converter.toDomain()，不 reconstitute 聚合根）。 */
+    private OrderReadView projectReadView(OrderPO po) {
+        return new OrderReadView(
+                po.getId(),
+                po.getStatus(),
+                converter.deserializeItems(po.getItems()),
+                po.getTotalAmount(),
+                po.getCustomerId(),
+                po.getTrackingNumber(),
+                po.getCancelReason(),
+                po.getCreateAt(),
+                po.getUpdateAt());
     }
 }

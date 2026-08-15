@@ -46,7 +46,7 @@ class DeliverOrderHandlerTest {
     void handle_shouldTransitionToDelivered() {
         Order order = createShippedOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderViewDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderViewDTO());
 
         OrderViewDTO result = handler.handle(new DeliverOrderCommand(order.getId()));
 

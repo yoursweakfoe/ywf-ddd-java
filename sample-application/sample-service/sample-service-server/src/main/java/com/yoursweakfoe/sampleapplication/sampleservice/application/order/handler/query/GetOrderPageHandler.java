@@ -28,7 +28,8 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 
     @Override
     public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
-        return orderRepository.findPage(query.getPageNum(), query.getPageSize())
+        // 读侧绕过聚合根：分页投影读模型，不 reconstitute 聚合
+        return orderRepository.findReadViewPage(query.getPageNum(), query.getPageSize())
                 .map(orderAssembler::toDTO);
     }
 }

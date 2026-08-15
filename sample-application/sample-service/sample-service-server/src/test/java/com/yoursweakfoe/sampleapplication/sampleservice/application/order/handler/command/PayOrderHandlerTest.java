@@ -48,7 +48,7 @@ class PayOrderHandlerTest {
         // Given
         Order order = createPendingOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderViewDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderViewDTO());
 
         // When
         OrderViewDTO result = handler.handle(new PayOrderCommand(order.getId()));

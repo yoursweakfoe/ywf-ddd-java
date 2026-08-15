@@ -61,7 +61,7 @@ public class Product extends AggregateRoot<Long> {
      * 扣减库存。
      *
      * @param quantity 扣减数量
-     * @throws com.yoursweakfoe.common.exception.BusinessException 库存不足时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 库存不足时
      */
     public void deductStock(int quantity) {
         if (quantity <= 0) {
@@ -73,18 +73,6 @@ public class Product extends AggregateRoot<Long> {
         }
         this.stock -= quantity;
         registerEvent(new StockDeductedEvent(id, quantity));
-    }
-
-    /**
-     * 回补库存（取消订单时调用，不注册事件）。
-     *
-     * @param quantity 回补数量
-     */
-    public void replenishStock(int quantity) {
-        if (quantity <= 0) {
-            throw new BusinessException("product:err.quantityMustBePositive");
-        }
-        this.stock += quantity;
     }
 
     /**

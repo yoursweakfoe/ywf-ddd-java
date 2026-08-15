@@ -36,7 +36,7 @@ class PlaceOrderHandlerTest {
     void handle_shouldCreatePendingOrder() {
         Product product = new Product(1L, "Widget", 100);
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderViewDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderViewDTO());
 
         PlaceOrderCommand command = new PlaceOrderCommand();
         command.setCustomerId("customer-1");

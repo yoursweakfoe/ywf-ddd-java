@@ -98,9 +98,9 @@ private UUID[] relatedIds;      // uuid[]，自动 UUIDArrayTypeHandler
 ## 4. 依赖关系
 
 ```
-common-pg → common-ddd（MyBatis 基础设施）
+common-pg → mybatis-plus-spring-boot4-starter（TypeHandler 基类 + 自动装配）
           → postgresql（编译期，PGobject）
-          → jackson-databind（Jackson 2，JsonNodeTypeHandler）
+          → jackson-databind（Jackson 3，JsonNodeTypeHandler）
 ```
 
 ## 5. 设计原则

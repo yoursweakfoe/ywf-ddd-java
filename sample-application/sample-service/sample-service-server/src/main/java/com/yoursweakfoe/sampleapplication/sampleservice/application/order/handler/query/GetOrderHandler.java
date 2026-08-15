@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handl
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderReadView;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.common.ddd.application.handler.QueryHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
@@ -26,8 +26,9 @@ public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderViewDTO
 
     @Override
     public OrderViewDTO handle(GetOrderQuery query) {
-        Order order = orderRepository.findById(UUID.fromString(query.getOrderId()))
+        // 读侧绕过聚合根：Repository 读优化方法直接投影读模型，不 reconstitute 聚合
+        OrderReadView view = orderRepository.findReadView(UUID.fromString(query.getOrderId()))
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
-        return orderAssembler.toDTO(order);
+        return orderAssembler.toDTO(view);
     }
 }

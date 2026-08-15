@@ -1,8 +1,5 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
@@ -11,6 +8,9 @@ import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * 订单 Converter —— 纯手写显式映射（富领域模型）。
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderConverter implements BasicConverter<Order, OrderPO> {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonMapper MAPPER = new JsonMapper();
 
     @Override
     public Order toDomain(OrderPO po) {
@@ -80,15 +80,24 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
     private String serializeItems(List<OrderItem> items) {
         try {
             return MAPPER.writeValueAsString(items);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to serialize order items", e);
         }
     }
 
-    private List<OrderItem> deserializeItems(String json) {
+    /**
+     * 反序列化订单项 JSON（写侧 reconstitute 与读侧投影共用）。
+     *
+     * @param json JSON 字符串，可为 null / 空
+     * @return 订单项列表，null / 空输入返回空列表
+     */
+    public List<OrderItem> deserializeItems(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
         try {
             return MAPPER.readValue(json, new TypeReference<List<OrderItem>>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to deserialize order items", e);
         }
     }

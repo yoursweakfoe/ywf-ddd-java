@@ -63,6 +63,7 @@ public class ProductRepositoryImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(Long id) {
         removeDomainById(id);
     }

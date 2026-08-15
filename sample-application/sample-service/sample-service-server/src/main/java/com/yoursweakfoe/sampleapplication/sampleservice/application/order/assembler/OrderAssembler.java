@@ -2,6 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.assem
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderReadView;
 import com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,29 @@ public class OrderAssembler implements BasicAssembler<Order, OrderViewDTO> {
         dto.setCreateAt(order.getCreateAt());
         dto.setUpdateAt(order.getUpdateAt());
         dto.setVersion(order.getVersion());
+        return dto;
+    }
+
+    /**
+     * 读模型 → DTO（读侧投影，绕过聚合根）。
+     *
+     * <p>读侧不 reconstitute 聚合根，故由读模型 {@link OrderReadView} 直接映射。
+     * 乐观锁版本为写侧字段，读模型不承载，此处不填充。
+     */
+    public OrderViewDTO toDTO(OrderReadView view) {
+        OrderViewDTO dto = new OrderViewDTO();
+        dto.setId(view.id());
+        dto.setStatus(view.status());
+        dto.setItems(view.items().stream()
+                .map(item -> new OrderViewDTO.OrderItemViewDTO(
+                        item.productId(), item.quantity(), item.unitPrice()))
+                .toList());
+        dto.setTotalAmount(view.totalAmount());
+        dto.setCustomerId(view.customerId());
+        dto.setTrackingNumber(view.trackingNumber());
+        dto.setCancelReason(view.cancelReason());
+        dto.setCreateAt(view.createAt());
+        dto.setUpdateAt(view.updateAt());
         return dto;
     }
 

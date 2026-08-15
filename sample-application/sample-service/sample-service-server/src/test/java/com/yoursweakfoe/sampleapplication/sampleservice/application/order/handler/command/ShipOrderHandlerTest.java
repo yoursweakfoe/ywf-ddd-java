@@ -45,7 +45,7 @@ class ShipOrderHandlerTest {
     void handle_shouldTransitionToShipped() {
         Order order = createConfirmedOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderViewDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderViewDTO());
 
         OrderViewDTO result = handler.handle(new ShipOrderCommand(order.getId(), "TRACK-001"));
 

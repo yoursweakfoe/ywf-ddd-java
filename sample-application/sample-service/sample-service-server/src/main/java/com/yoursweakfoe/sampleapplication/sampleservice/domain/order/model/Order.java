@@ -93,7 +93,7 @@ public class Order extends AggregateRoot<UUID> {
     /**
      * 支付订单。
      *
-     * @throws com.yoursweakfoe.common.exception.BusinessException 状态不是 PENDING 时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 PENDING 时
      */
     public void pay() {
         requireStatus("order:err.status.pending", OrderStatus.PENDING);
@@ -104,7 +104,7 @@ public class Order extends AggregateRoot<UUID> {
     /**
      * 商家确认订单。
      *
-     * @throws com.yoursweakfoe.common.exception.BusinessException 状态不是 PAID 时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 PAID 时
      */
     public void confirm() {
         requireStatus("order:err.status.paid", OrderStatus.PAID);
@@ -116,7 +116,7 @@ public class Order extends AggregateRoot<UUID> {
      * 发货。
      *
      * @param trackingNumber 快递单号
-     * @throws com.yoursweakfoe.common.exception.BusinessException 状态不是 CONFIRMED 时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 CONFIRMED 时
      */
     public void ship(String trackingNumber) {
         requireStatus("order:err.status.confirmed", OrderStatus.CONFIRMED);
@@ -128,7 +128,7 @@ public class Order extends AggregateRoot<UUID> {
     /**
      * 签收。
      *
-     * @throws com.yoursweakfoe.common.exception.BusinessException 状态不是 SHIPPED 时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 SHIPPED 时
      */
     public void deliver() {
         requireStatus("order:err.status.shipped", OrderStatus.SHIPPED);
@@ -139,7 +139,7 @@ public class Order extends AggregateRoot<UUID> {
     /**
      * 完成订单。
      *
-     * @throws com.yoursweakfoe.common.exception.BusinessException 状态不是 DELIVERED 时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 DELIVERED 时
      */
     public void complete() {
         requireStatus("order:err.status.delivered", OrderStatus.DELIVERED);
@@ -151,7 +151,7 @@ public class Order extends AggregateRoot<UUID> {
      * 取消订单（仅允许从 PENDING 或 PAID 状态取消）。
      *
      * @param reason 取消原因
-     * @throws com.yoursweakfoe.common.exception.BusinessException 状态不允许取消时
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不允许取消时
      */
     public void cancel(String reason) {
         requireStatus("order:err.status.cancellable", OrderStatus.PENDING, OrderStatus.PAID);
