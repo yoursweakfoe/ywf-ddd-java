@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;
 import java.time.OffsetDateTime;
 import lombok.Data;
@@ -30,7 +31,7 @@ class BasicAutoFillHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new BasicAutoFillHandler();
+        handler = new BasicAutoFillHandler(new AuditProperties());
     }
 
     private MetaObject metaObject(Object object) {

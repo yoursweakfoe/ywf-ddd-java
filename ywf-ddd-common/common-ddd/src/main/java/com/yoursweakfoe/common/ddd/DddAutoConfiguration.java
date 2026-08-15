@@ -3,10 +3,12 @@ package com.yoursweakfoe.common.ddd;
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.yoursweakfoe.common.ddd.infrastructure.event.SpringDomainEventPublisher;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.MybatisPlusPluginConfiguration;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -26,6 +28,7 @@ import org.springframework.context.annotation.Import;
  */
 @AutoConfiguration(after = MybatisPlusAutoConfiguration.class)
 @ConditionalOnClass(BaseMapper.class)
+@EnableConfigurationProperties(AuditProperties.class)
 @Import({
     SpringDomainEventPublisher.class,
     BasicAutoFillHandler.class,

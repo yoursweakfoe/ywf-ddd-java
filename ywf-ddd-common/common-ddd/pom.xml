@@ -52,9 +52,9 @@
             <artifactId>common-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Jackson（测试 fixtures 中 JSON 序列化用） -->
+        <!-- Jackson 3（测试 fixtures 中 JSON 序列化用；统一到 Spring Boot 4 基线） -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <scope>test</scope>
         </dependency>

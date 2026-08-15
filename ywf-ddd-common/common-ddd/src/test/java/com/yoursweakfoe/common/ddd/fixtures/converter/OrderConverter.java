@@ -1,8 +1,5 @@
 package com.yoursweakfoe.common.ddd.fixtures.converter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yoursweakfoe.common.ddd.fixtures.model.Order;
 import com.yoursweakfoe.common.ddd.fixtures.model.OrderItem;
 import com.yoursweakfoe.common.ddd.fixtures.model.OrderStatus;
@@ -10,11 +7,14 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import java.util.List;
 import java.util.UUID;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 /** 订单 Converter 测试夹具 —— 纯手写显式映射（订单项以 JSON 存储）。 */
 public class OrderConverter implements BasicConverter<Order, OrderPO> {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonMapper MAPPER = new JsonMapper();
 
     @Override
     public Order toDomain(OrderPO po) {
@@ -64,7 +64,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         }
         try {
             return MAPPER.writeValueAsString(items);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to serialize order items", e);
         }
     }
@@ -75,7 +75,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         }
         try {
             return MAPPER.readValue(json, new TypeReference<List<OrderItem>>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to deserialize order items", e);
         }
     }

@@ -1,6 +1,7 @@
 package com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
 import java.time.OffsetDateTime;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
@@ -19,12 +20,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class BasicAutoFillHandler implements MetaObjectHandler {
 
-    /** 插入时自动填充 createAt + updateAt */
+    private final AuditProperties auditProperties;
+
+    public BasicAutoFillHandler(AuditProperties auditProperties) {
+        this.auditProperties = auditProperties;
+    }
+
+    /** 插入时自动填充创建时间 + 更新时间字段（字段名经 ywf.ddd.audit.* 可配置） */
     @Override
     public void insertFill(MetaObject metaObject) {
         OffsetDateTime now = OffsetDateTime.now();
-        this.strictInsertFill(metaObject, "createAt", OffsetDateTime.class, now);
-        this.strictInsertFill(metaObject, "updateAt", OffsetDateTime.class, now);
+        this.strictInsertFill(metaObject, auditProperties.getCreateField(), OffsetDateTime.class, now);
+        this.strictInsertFill(metaObject, auditProperties.getUpdateField(), OffsetDateTime.class, now);
     }
 
     /**
@@ -37,6 +44,6 @@ public class BasicAutoFillHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         OffsetDateTime now = OffsetDateTime.now();
-        setFieldValByName("updateAt", now, metaObject);
+        setFieldValByName(auditProperties.getUpdateField(), now, metaObject);
     }
 }

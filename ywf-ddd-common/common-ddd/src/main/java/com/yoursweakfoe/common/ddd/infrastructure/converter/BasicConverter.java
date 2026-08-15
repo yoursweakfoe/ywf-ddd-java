@@ -58,20 +58,44 @@ public interface BasicConverter<Domain, PO> {
     /**
      * 将 PO 中的属性合并到已有领域对象上（不创建新实例）。
      *
-     * <p>富领域模型通常抛出 {@code UnsupportedOperationException}，由 reconstitute 替代。
+     * <p>富领域模型（聚合根无 setter）通常不支持增量更新，保持默认抛
+     * {@link UnsupportedOperationException}（重建走 {@code reconstitute()}）。
+     * 贫血模型需要时覆写本方法，参考实现思路：
+     * <pre>{@code
+     * @Override
+     * public void updateDomain(XxxPO po, XxxDomain domain) {
+     *     domain.setName(po.getName());
+     *     // ... 逐字段显式赋值
+     * }
+     * }</pre>
      *
      * @param po 持久化对象
      * @param domain 待更新的领域对象
      */
-    void updateDomain(PO po, Domain domain);
+    default void updateDomain(PO po, Domain domain) {
+        throw new UnsupportedOperationException(
+                "updateDomain not supported for rich domain model; use reconstitute() instead");
+    }
 
     /**
      * 将领域对象中的属性合并到已有 PO 上（不创建新实例）。
      *
+     * <p>默认抛 {@link UnsupportedOperationException}，需要时覆写：
+     * <pre>{@code
+     * @Override
+     * public void updatePO(XxxDomain domain, XxxPO po) {
+     *     po.setName(domain.getName());
+     *     // ... 逐字段显式赋值
+     * }
+     * }</pre>
+     *
      * @param domain 领域对象
      * @param po 待更新的持久化对象
      */
-    void updatePO(Domain domain, PO po);
+    default void updatePO(Domain domain, PO po) {
+        throw new UnsupportedOperationException(
+                "updatePO not supported for rich domain model");
+    }
 
     // ==================== List 转换（default 委托单体方法） ====================
 

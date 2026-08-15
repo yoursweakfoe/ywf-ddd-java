@@ -1,7 +1,6 @@
 package com.yoursweakfoe.common.ddd.domain.model;
 
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
-import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +47,9 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
      */
     protected void registerEvent(DomainEvent event) {
         if (event == null) {
-            throw new BusinessException("domain:err.eventNotNull");
+            // 框架契约违反（编程错误），非业务规则违反——用 IllegalArgumentException 而非 BusinessException，
+            // 使 domain 层彻底不依赖 common-exception（BusinessException 终点是 web 层 i18n）。
+            throw new IllegalArgumentException("Domain event must not be null");
         }
         this.domainEvents.add(event);
     }

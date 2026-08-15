@@ -47,20 +47,47 @@ public interface BasicAssembler<Domain, DTO> {
     // ==================== 增量更新 ====================
 
     /**
-     * 将 DTO 中的属性合并到已有领域对象上（不创建新实例）
+     * 将 DTO 中的属性合并到已有领域对象上（不创建新实例）。
+     *
+     * <p>富领域模型（聚合根无 setter）通常不支持增量更新，保持默认抛
+     * {@link UnsupportedOperationException}（重建走 {@code reconstitute()}）。
+     * 贫血模型需要时覆写本方法，参考实现思路：
+     * <pre>{@code
+     * @Override
+     * public void updateDomain(XxxDTO dto, XxxDomain domain) {
+     *     domain.setName(dto.getName());
+     *     domain.setQuantity(dto.getQuantity());
+     *     // ... 逐字段显式赋值
+     * }
+     * }</pre>
      *
      * @param dto DTO 对象
      * @param domain 待更新的领域对象
      */
-    void updateDomain(DTO dto, Domain domain);
+    default void updateDomain(DTO dto, Domain domain) {
+        throw new UnsupportedOperationException(
+                "updateDomain not supported for rich domain model; use reconstitute() instead");
+    }
 
     /**
-     * 将领域对象中的属性合并到已有 DTO 上（不创建新实例）
+     * 将领域对象中的属性合并到已有 DTO 上（不创建新实例）。
+     *
+     * <p>默认抛 {@link UnsupportedOperationException}，需要时覆写：
+     * <pre>{@code
+     * @Override
+     * public void updateDTO(XxxDomain domain, XxxDTO dto) {
+     *     dto.setName(domain.getName());
+     *     // ... 逐字段显式赋值
+     * }
+     * }</pre>
      *
      * @param domain 领域对象
      * @param dto 待更新的 DTO
      */
-    void updateDTO(Domain domain, DTO dto);
+    default void updateDTO(Domain domain, DTO dto) {
+        throw new UnsupportedOperationException(
+                "updateDTO not supported for rich domain model");
+    }
 
     // ==================== List 转换（default 委托单体方法） ====================
 
