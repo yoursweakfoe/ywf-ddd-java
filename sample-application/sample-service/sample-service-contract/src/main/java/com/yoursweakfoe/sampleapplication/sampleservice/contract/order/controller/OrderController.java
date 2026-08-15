@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.controller;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.controller;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;

@@ -9,9 +9,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 璁㈠崟宸蹭笅鍗曢泦鎴愪簨浠讹紙璺ㄦ湇鍔￠€氱煡锛夈€? *
- * <p>鐢?Application 灞傜洃鍚?Domain Event锛圤rderPlacedEvent锛夊悗杞崲骞跺彂甯冨埌 MQ銆? * 娑堣垂鏂癸紙鍏朵粬寰湇鍔★級閫氳繃璁㈤槄 MQ Topic 鎺ユ敹姝や簨浠躲€? *
- * <p>娉ㄦ剰锛氳繖鏄?Integration Event锛堝澶栧绾︼級锛屼笉鏄?Domain Event锛堥鍩熷唴閮級銆? * Domain Event 瀹氫箟鍦?{@code domain/order/event/OrderPlacedEvent}锛屽寘鍚洿涓板瘜鐨勯鍩熺粏鑺傘€? */
+ * 订单已下单集成事件（跨服务通知）。
+ *
+ * <p>由 Application 层监听 Domain Event（OrderPlacedEvent）后转换并发布到 MQ。
+ * 消费方（其他微服务）通过订阅 MQ Topic 接收此事件。
+ *
+ * <p>注意：这是 Integration Event（对外契约），不是 Domain Event（领域内部）。
+ * Domain Event 定义在 {@code domain/order/event/OrderPlacedEvent}，包含更丰富的领域细节。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,9 +25,9 @@ public class OrderPlacedIntegrationEvent implements Event, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 璁㈠崟 ID */
+    /** 订单 ID */
     private String orderId;
 
-    /** 瀹㈡埛 ID */
+    /** 客户 ID */
     private String customerId;
 }
