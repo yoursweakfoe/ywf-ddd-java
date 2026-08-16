@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.event;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.listener;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher.OrderEventPublisher;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderCancelledEvent;
@@ -22,11 +23,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class OrderEventHandlerTest {
+class OrderDomainEventListenerTest {
 
     @Mock private OrderRepository orderRepository;
     @Mock private InventoryDomainService inventoryDomainService;
-    @InjectMocks private OrderEventHandler handler;
+    @Mock private OrderEventPublisher orderEventPublisher;
+    @InjectMocks private OrderDomainEventListener listener;
 
     @Test
     void onOrderCancelled_shouldReplenishStock() {
@@ -34,7 +36,7 @@ class OrderEventHandlerTest {
         Order order = new Order(orderId, List.of(new OrderItem(1L, 2, BigDecimal.TEN)), "c1");
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        handler.onOrderCancelled(new OrderCancelledEvent(orderId, "changed mind"));
+        listener.onOrderCancelled(new OrderCancelledEvent(orderId, "changed mind"));
 
         verify(inventoryDomainService).replenishStock(order.getItems());
     }
@@ -47,7 +49,7 @@ class OrderEventHandlerTest {
         doThrow(new RuntimeException("DB down")).when(inventoryDomainService).replenishStock(any());
 
         // 不应抛异常（AFTER_COMMIT 语义：补偿失败仅记日志）
-        handler.onOrderCancelled(new OrderCancelledEvent(orderId, "reason"));
+        listener.onOrderCancelled(new OrderCancelledEvent(orderId, "reason"));
 
         verify(inventoryDomainService).replenishStock(any());
     }
@@ -58,7 +60,7 @@ class OrderEventHandlerTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
         // 不应抛异常（catch 兜底）
-        handler.onOrderCancelled(new OrderCancelledEvent(orderId, "reason"));
+        listener.onOrderCancelled(new OrderCancelledEvent(orderId, "reason"));
 
         verify(inventoryDomainService, never()).replenishStock(any());
     }

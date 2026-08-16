@@ -1,6 +1,6 @@
 package com.yoursweakfoe.common.ddd.application.handler;
 
-import com.yoursweakfoe.common.contract.dto.Query;
+import com.yoursweakfoe.common.contract.dto.query.Query;
 
 /**
  * 查询处理器契约 —— 接收一个 Query 并返回读操作结果。

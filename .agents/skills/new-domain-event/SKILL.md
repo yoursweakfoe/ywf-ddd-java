@@ -24,22 +24,23 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 - 在聚合根行为方法末尾调用 `registerEvent(new {Agg}{Action}Event(...))`
 - 事件注册在状态变迁**之后**
 
-### 3. 创建 EventHandler（域内反应）
+### 3. 创建 DomainEventListener（域内反应）
 
-- 位置：`application/{agg}/handler/event/{Agg}EventHandler.java`
+- 位置：`application/{agg}/event/listener/{Agg}DomainEventListener.java`
 - 标注 `@Component`
 - 方法标注 `@EventListener`（同事务）或 `@TransactionalEventListener(phase = AFTER_COMMIT)`（尽力而为）
 - 方法签名：`public void on{Agg}{Action}({Agg}{Action}Event event)`
+- 薄编排：接事件 → 加载聚合 → 委托 DomainService（不含 if-else 业务判断）
 
 ### 4.（可选）创建 Publisher + 集成事件
 
 仅当需要通知外部服务时：
 
-- 集成事件：`contract/{agg}/dto/event/{Agg}{Action}IntegrationEvent.java`
-  - 实现 `Event` 标记接口
-- Publisher：`application/{agg}/publisher/{Agg}EventPublisher.java`
+- 集成事件：`contract/{agg}/dto/event/integration/{Agg}{Action}IntegrationEvent.java`
+  - 实现 `IntegrationEvent` 标记接口
+- Publisher：`application/{agg}/event/publisher/{Agg}EventPublisher.java`
   - 翻译领域事件 → 集成事件 → 投递 MQ
-  - 被 EventHandler 或 Handler 显式调用
+  - 被 DomainEventListener 或 CommandHandler 显式调用
 
 ### 5.（可选）外部消费方
 
@@ -50,12 +51,12 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 - [ ] DomainEvent 所有字段 final（不可变）
 - [ ] 事件注册在状态变迁之后
-- [ ] EventHandler 事务注解选择正确：
+- [ ] DomainEventListener 事务注解选择正确：
   - 同生共死 → `@EventListener`
   - 尽力而为 → `@TransactionalEventListener(AFTER_COMMIT)`
   - 完全异步 → `@Async @EventListener`
 - [ ] 集成事件在 contract 模块（不在 server）
-- [ ] Publisher 不被 AppService 直接调用（由 Handler/EventHandler 调用）
+- [ ] Publisher 不被 AppService 直接调用（由 CommandHandler/DomainEventListener 调用）
 
 ## 文档同步
 

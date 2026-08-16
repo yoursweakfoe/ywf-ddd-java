@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query;
 
-import com.yoursweakfoe.common.contract.dto.Query;
+import com.yoursweakfoe.common.contract.dto.query.Query;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 

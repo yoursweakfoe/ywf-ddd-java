@@ -1,5 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.event;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.listener;
 
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher.OrderEventPublisher;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderCancelledEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderCompletedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderConfirmedEvent;
@@ -7,9 +9,6 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPaidEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderShippedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockDeductedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockRestoredEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
@@ -23,29 +22,35 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
- * 订单领域事件监听器 —— 记录事件日志并处理取消时的库存回补。
+ * 订单领域事件监听器（域内反应）—— 对订单聚合的领域事件作出进程内反应。
+ *
+ * <p>薄编排契约：方法体只做「接事件 → 加载聚合 → 委托 DomainService / Publisher」，
+ * 业务规则在 DomainService 与聚合根内，本类不含 if-else 业务判断。
  *
  * <p>监听器选型约定：
  * <ul>
  *   <li>纯日志等无副作用监听 —— {@code @EventListener}（事务内同步，开销可忽略）
+ *   <li>出站通知 —— {@code @TransactionalEventListener(AFTER_COMMIT)}（尽力而为，不阻断主事务）
  *   <li>补偿型副作用（如取消后回补库存）—— {@code @TransactionalEventListener(AFTER_COMMIT)}
- *       + {@code REQUIRES_NEW}：主事务（取消订单）不被副作用失败阻断，
- *       副作用失败记录 ERROR 日志供人工对账
+ *       + {@code REQUIRES_NEW}：主事务（取消订单）不被副作用失败阻断，副作用失败记录 ERROR 日志供人工对账
  * </ul>
  */
 @Component
-public class OrderEventHandler {
+public class OrderDomainEventListener {
 
-    private static final Logger log = LoggerFactory.getLogger(OrderEventHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderDomainEventListener.class);
 
     // region 依赖注入
     private final OrderRepository orderRepository;
     private final InventoryDomainService inventoryDomainService;
+    private final OrderEventPublisher orderEventPublisher;
 
-    public OrderEventHandler(OrderRepository orderRepository,
-                              InventoryDomainService inventoryDomainService) {
+    public OrderDomainEventListener(OrderRepository orderRepository,
+                                    InventoryDomainService inventoryDomainService,
+                                    OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.inventoryDomainService = inventoryDomainService;
+        this.orderEventPublisher = orderEventPublisher;
     }
     // endregion
 
@@ -53,6 +58,14 @@ public class OrderEventHandler {
     public void onOrderPlaced(OrderPlacedEvent event) {
         log.info("Order placed: orderId={}, totalAmount={}, customerId={}",
                 event.getOrderId(), event.getTotalAmount(), event.getCustomerId());
+    }
+
+    /**
+     * 下单后出站通知（尽力而为）：事务提交后翻译为集成事件并投递 MQ。
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onOrderPlacedOutbound(OrderPlacedEvent event) {
+        orderEventPublisher.publishOrderPlaced(event);
     }
 
     @EventListener
@@ -103,17 +116,5 @@ public class OrderEventHandler {
             log.error("Stock replenish failed after order cancelled: orderId={}",
                     event.getOrderId(), e);
         }
-    }
-
-    @EventListener
-    public void onStockDeducted(StockDeductedEvent event) {
-        log.info("Stock deducted: productId={}, quantity={}",
-                event.getProductId(), event.getQuantity());
-    }
-
-    @EventListener
-    public void onStockRestored(StockRestoredEvent event) {
-        log.info("Stock restored: productId={}, quantity={}",
-                event.getProductId(), event.getRestoredQuantity());
     }
 }

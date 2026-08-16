@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.controller;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.adapter.rest;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;

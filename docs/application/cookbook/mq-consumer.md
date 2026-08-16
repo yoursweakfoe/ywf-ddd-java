@@ -1,5 +1,7 @@
 # MQ 消费者（Consumer）
 
+> ⛔ **本文为设计模板，尚未实现**：Consumer 依赖 common-mq 模块（RocketMQTemplate），该模块尚未建设，示例应用当前无 Consumer 实现。建设完成后按本文模板落地 `adapter/consumer/`，AppService → CommandHandler 写路径零改动复用。
+>
 > 设计原理 → [module-design/adapter.md](../module-design/adapter.md)
 
 ## 业务场景
@@ -18,7 +20,7 @@
 
 ```
 MQ Broker（RocketMQ / Kafka）
-  → adapter/order/consumer/PaymentEventConsumer
+  → adapter/consumer/PaymentEventConsumer
     → 反序列化 → 构建 Command
     → application/order/OrderAppService.payOrder(command)
       → PayOrderHandler（复用已有写路径）
@@ -27,11 +29,11 @@ MQ Broker（RocketMQ / Kafka）
 ## 1. Adapter — Consumer 入口
 
 ```java
-// adapter/order/consumer/PaymentEventConsumer.java
-package com.yoursweakfoe.sampleapplication.sampleservice.adapter.order.consumer;
+// adapter/consumer/PaymentEventConsumer.java
+package com.yoursweakfoe.sampleapplication.sampleservice.adapter.consumer;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.OrderAppService;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.PayOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -81,7 +83,7 @@ public class PaymentEventConsumer {
 ```
 
 要点：
-- 位于 `adapter/{agg}/consumer/`
+- 位于 `adapter/consumer/`
 - `@Component`（MQ 监听注解待 common-mq 模块建设后补充）
 - **纯透传** AppService，不含业务逻辑
 - 复用已有 Handler（`PayOrderHandler`），不重复编写业务代码

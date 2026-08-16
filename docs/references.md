@@ -57,8 +57,8 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| CQRS (Greg Young) | Command / Query / Event 三通道分离；写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 框架级分页 |
-| Integration Event / EDA | 领域事件（进程内）→ 集成事件（跨服务 MQ）；DomainEvent vs Event 方向对偶 |
+| CQRS (Greg Young) | Command / Query / IntegrationEvent 三通道分离；写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 框架级分页 |
+| Integration Event / EDA | 领域事件（进程内）→ 集成事件（跨服务 MQ）；DomainEvent vs IntegrationEvent 方向对偶 |
 | Saga / Process Manager | 无主长流程引入独立 Saga 服务，不在业务服务内塞入跨服务编排 |
 
 **未采纳：**

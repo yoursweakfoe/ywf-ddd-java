@@ -23,11 +23,11 @@
 sample-service/
 ├── sample-service-contract/src/main/java/.../contract/
 │   └── payment/
-│       ├── controller/PaymentController.java     ← ① Controller 契约接口
+│       ├── adapter/rest/PaymentController.java     ← ① Controller 契约接口
 │       ├── dto/co/PaymentCO.java                    ← ② 契约输出
 │       ├── dto/command/CreatePaymentCommand.java        ← ③ Command
 │       ├── dto/query/GetPaymentQuery.java             ← ④ Query
-│       └── dto/event/PaymentCreatedIntegrationEvent.java  ← ⑤ 集成事件（可选）
+│       └── dto/event/integration/PaymentCreatedIntegrationEvent.java  ← ⑤ 集成事件（可选）
 │
 └── sample-service-server/src/main/java/.../
     ├── adapter/rest/
@@ -55,7 +55,7 @@ sample-service/
 ## ① Contract — Controller 契约接口
 
 ```java
-package ...contract.payment.rest;
+package ...contract.payment.adapter.rest;
 
 @Tag(name = "支付服务", description = "支付创建与查询")
 @RequestMapping("/payments")
@@ -108,7 +108,7 @@ public class CreatePaymentCommand implements Command, Serializable {
 ## ⑤ Contract — Integration Event（可选）
 
 ```java
-public class PaymentCreatedIntegrationEvent implements Event, Serializable {
+public class PaymentCreatedIntegrationEvent implements IntegrationEvent, Serializable {
     private String paymentId;
     private String orderId;
     // 仅含外部服务需要的字段

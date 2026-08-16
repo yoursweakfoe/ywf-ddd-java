@@ -4,7 +4,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.Prod
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.controller.ProductController;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.adapter.rest.ProductController;
 import org.springframework.web.bind.annotation.RestController;
 
 /**

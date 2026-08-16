@@ -32,7 +32,8 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `Command` | `CommandHandler<C, R>` | 请做这件事 | **R** |
 | `Query` | `QueryHandler<Q, R>` | 请给我这个 | **R** |
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
-| `Event` | `EventHandler<E>` | 这件事发生了 | **void** |
+
+> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher 投递 MQ。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架不提供接口。
 
 `PageResult<T>` 是框架级分页容器（record），定义在 `application` 层，隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。**对偶原则**：业务在 application 层用它（读端口 / Handler / AppService 用 `PageResult<读 DTO>`），故框架支撑类也放在 `application` 包内，与业务分层对齐。
 
@@ -61,9 +62,11 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 
 - `DomainEvent` — 事件基类（eventId + occurredOn）
 - `DomainEventPublisher` — 发布契约接口
-- `SpringDomainEventPublisher` — 桥接 Spring `ApplicationEventPublisher`，进程内同步发布
+- `InProcessDomainEventPublisher` — 桥接 Spring `ApplicationEventPublisher`，进程内同步发布（位于 `infrastructure/event/domain/`）
 
 事件仅 AggregateRoot 可注册，仓储自动发布（opt-in 点是 `registerEvent()`），先落库后发事件 + 先清后发。
+
+> **边界**：领域事件仅进程内消费（受众为 `@EventListener` 域内反应监听器）。集成事件（IntegrationEvent）的收发不在本模块：出站由 application 层 Publisher 投递 MQ（依赖 common-mq），入站由 adapter 层 Consumer 接收。
 
 ### MyBatis-Plus 自动配置
 
@@ -206,7 +209,7 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 
 ```java
 @Component
-public class OrderEventHandler {
+public class OrderDomainEventListener {
     @EventListener  // 同事务，失败则主操作回滚
     public void onOrderPaid(OrderPaidEvent event) { /* 处理逻辑 */ }
 
@@ -220,7 +223,7 @@ public class OrderEventHandler {
 ## 4. 依赖关系
 
 ```
-common-ddd → common-contract（Command / Query / Event 标记接口）
+common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口）
            → common-exception（BusinessException）
            → mybatis-plus-spring-boot4-starter
            → mybatis-plus-jsqlparser
@@ -277,7 +280,7 @@ common-ddd → common-contract（Command / Query / Event 标记接口）
 
 **后果**：跨服务通信仍走 Seata + HTTP 显式调用；未来可靠化走 Outbox 只需替换 publisher 实现，契约不变。
 
-**确认**：`SpringDomainEventPublisher` + `MybatisPersistence` 自动发布。
+**确认**：`InProcessDomainEventPublisher` + `MybatisPersistence` 自动发布。
 
 ### ADR-0004 对象转换纯手写，不用 MapStruct
 
@@ -289,15 +292,15 @@ common-ddd → common-contract（Command / Query / Event 标记接口）
 
 **确认**：`BasicConverter` / `BasicAssembler` / `BasicPresenter` 无生成器依赖。
 
-### ADR-0005 CQRS 契约：Query 纯标记 + EventHandler 无返回值
+### ADR-0005 CQRS 契约：Query 纯标记（EventHandler 已移除）
 
-- 状态：accepted
+- 状态：accepted（2026-08 修订）
 
 **背景**：Handler 接口的契约设计。
 
-**决策**：Query 为纯标记（无泛型，避免 contract 与 internal 类型耦合，返回类型由 Service 方法签名定义）；EventHandler 无返回值（Event 是 fire-and-forget，需要返回值的是 Command）。
+**决策**：Query 为纯标记（无泛型，避免 contract 与 internal 类型耦合，返回类型由 Service 方法签名定义）。原 `EventHandler<E>` 接口已移除：入站集成事件（IntegrationEvent）统一由 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler，不设独立事件 Handler；域内反应（对领域事件）由业务侧 `DomainEventListener`（`@EventListener`）承担。
 
-**确认**：`QueryHandler` / `EventHandler` 接口签名。
+**确认**：`QueryHandler` / `CommandHandler` 接口签名。
 
 ### ADR-0006 删除操作的事件工厂重载（save/update 不提供）
 

@@ -2,7 +2,7 @@ package com.yoursweakfoe.common.ddd;
 
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.yoursweakfoe.common.ddd.infrastructure.event.SpringDomainEventPublisher;
+import com.yoursweakfoe.common.ddd.infrastructure.event.domain.InProcessDomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.MybatisPlusPluginConfiguration;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;
@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Import;
  * Spring Boot 3 的 AutoConfiguration 机制注册。业务侧无需显式扫描框架包即可装配以下 Bean：
  *
  * <ul>
- *   <li>{@link SpringDomainEventPublisher} —— 领域事件发布（桥接 Spring ApplicationEventPublisher）
+ *   <li>{@link InProcessDomainEventPublisher} —— 领域事件发布（桥接 Spring ApplicationEventPublisher）
  *   <li>{@link MybatisPlusPluginConfiguration} —— MyBatis-Plus 拦截器（分页 + 乐观锁 + 防全表攻击）
  *   <li>{@link BasicAutoFillHandler} —— createAt / updateAt 自动填充
  * </ul>
@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnClass(BaseMapper.class)
 @EnableConfigurationProperties(AuditProperties.class)
 @Import({
-    SpringDomainEventPublisher.class,
+    InProcessDomainEventPublisher.class,
     BasicAutoFillHandler.class,
     MybatisPlusPluginConfiguration.class
 })

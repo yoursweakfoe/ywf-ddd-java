@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co;
 
 
-import com.yoursweakfoe.common.contract.dto.CO;
+import com.yoursweakfoe.common.contract.dto.co.CO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;

@@ -24,11 +24,11 @@
 
 | 组件 | 位置 | 职责 |
 |------|------|------|
-| Controller 契约接口 | `{aggregate}/controller/` | 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源），`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping` 声明；服务端 ControllerImpl 实现 |
+| Controller 契约接口 | `{aggregate}/adapter/rest/` | 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源），`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping` 声明；服务端 ControllerImpl 实现 |
 | Command | `{aggregate}/dto/command/` | 写操作命令，实现 `Command` 标记接口 |
 | Query / PageableQuery | `{aggregate}/dto/query/` | 读操作查询，实现 `Query` / `PageableQuery` 标记接口（分页带 pageNum/pageSize + @Min/@Max） |
 | CO | `{aggregate}/dto/co/` | Contract Object，对内部 DTO 清洗后的外部安全视图，`@Schema` 声明字段语义 |
-| Integration Event | `{aggregate}/dto/event/` | 跨服务集成事件（MQ 载荷） |
+| Integration Event | `{aggregate}/dto/event/integration/` | 跨服务集成事件（MQ 载荷） |
 | 枚举 | `{aggregate}/enums/` | 契约共享枚举 |
 
 ## 文档注解归属
@@ -90,11 +90,11 @@ contract jar 本质是**东西向**产物（内部 Java 服务间类型契约）
 ```
 contract（本模块）                             server
 ─────────────                             ──────
-controller/{Aggregate}Controller.java           ←──  adapter/rest/（ControllerImpl 实现接口，纯透传 AppService）
+adapter/rest/{Aggregate}Controller.java           ←──  adapter/rest/（ControllerImpl 实现接口，纯透传 AppService）
 {aggregate}/dto/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/（接收 CQE 执行用例）
 {aggregate}/dto/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
-{aggregate}/dto/dto/event/XxxIntegrationEvent ←──  application/publisher/（翻译并发布到 MQ）
-{aggregate}/dto/dto/event/XxxIntegrationEvent ──→  adapter/consumer/（接收 MQ 并透传 AppService）
+{aggregate}/dto/dto/event/integration/XxxIntegrationEvent ←──  application/event/publisher/（翻译并发布到 MQ）
+{aggregate}/dto/dto/event/integration/XxxIntegrationEvent ──→  adapter/consumer/（接收 MQ 并透传 AppService）
 ```
 
 ### 消费方使用

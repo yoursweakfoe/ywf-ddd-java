@@ -8,7 +8,7 @@ import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.DomainEventPublishingSupport;
+import com.yoursweakfoe.common.ddd.infrastructure.event.domain.DomainEventFlusher;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +36,7 @@ import org.springframework.beans.factory.ObjectProvider;
  * <ul>
  *   <li>save/update 前自动调用 {@code AggregateRoot.validate()}
  *   <li>update/delete 失败时抛出 {@link IllegalStateException}（不静默失败）
- *   <li>领域事件在持久化成功后发布（先清后发，保证原子性）——发布逻辑委托 {@link DomainEventPublishingSupport}
+ *   <li>领域事件在持久化成功后发布（先清后发，保证原子性）——发布逻辑委托 {@link DomainEventFlusher}
  *   <li><b>事件事务语义</b>：事件在当前事务内同步发布（提交前）——
  *       {@code @EventListener} 监听器在同一事务内执行，抛异常会回滚主事务（适合强一致副作用）；
  *       提交后才应执行的副作用（通知/补偿/出站消息）请用
@@ -105,8 +105,8 @@ public abstract class MybatisPersistence<
     /** MyBatis-Plus Mapper（组合持有，不继承 ServiceImpl，避免泄漏底层 PO 直操方法） */
     protected final Mapper baseMapper;
 
-    /** 领域事件发布支撑（先清后发契约，委托独立 helper 以保持本类单一职责） */
-    private final DomainEventPublishingSupport eventSupport;
+    /** 领域事件冲刷器（先清后发契约，委托独立组件以保持本类单一职责） */
+    private final DomainEventFlusher eventFlusher;
 
     // region 依赖注入
     /**
@@ -116,7 +116,7 @@ public abstract class MybatisPersistence<
     protected MybatisPersistence(Mapper baseMapper,
                                        ObjectProvider<DomainEventPublisher> domainEventPublisherProvider) {
         this.baseMapper = baseMapper;
-        this.eventSupport = new DomainEventPublishingSupport(domainEventPublisherProvider);
+        this.eventFlusher = new DomainEventFlusher(domainEventPublisherProvider);
     }
     // endregion
 
@@ -220,7 +220,7 @@ public abstract class MybatisPersistence<
         if (rows == 0) {
             throw new IllegalStateException("INSERT failed for entity ID: " + domain.getId());
         }
-        eventSupport.publishAndClear(domain);
+        eventFlusher.publishAndClear(domain);
     }
 
     /**
@@ -266,7 +266,7 @@ public abstract class MybatisPersistence<
                             + " (possible cause: concurrent modification or entity not found)");
         }
 
-        eventSupport.publishAndClear(domain);
+        eventFlusher.publishAndClear(domain);
     }
 
     /**
@@ -315,7 +315,7 @@ public abstract class MybatisPersistence<
      */
     public void removeDomainById(ID id, Function<? super ID, ? extends DomainEvent> eventFactory) {
         removeDomainById(id);
-        eventSupport.publishAll(List.of(Objects.requireNonNull(
+        eventFlusher.publishAll(List.of(Objects.requireNonNull(
                 eventFactory.apply(id), "eventFactory must not return null")));
     }
 
@@ -355,7 +355,7 @@ public abstract class MybatisPersistence<
             return;
         }
         removeDomainByIds(ids);
-        eventSupport.publishAll(ids.stream()
+        eventFlusher.publishAll(ids.stream()
                 .<DomainEvent>map(id -> Objects.requireNonNull(
                         eventFactory.apply(id), "eventFactory must not return null"))
                 .toList());
@@ -371,7 +371,7 @@ public abstract class MybatisPersistence<
      */
     public void removeDomain(Domain domain) {
         removeDomainById(domain.getId());
-        eventSupport.publishAndClear(domain);
+        eventFlusher.publishAndClear(domain);
     }
 
     /**
@@ -388,7 +388,7 @@ public abstract class MybatisPersistence<
         List<ID> ids = domainList.stream().map(Domain::getId).toList();
         removeDomainByIds(ids);
         for (Domain domain : domainList) {
-            eventSupport.publishAndClear(domain);
+            eventFlusher.publishAndClear(domain);
         }
     }
 

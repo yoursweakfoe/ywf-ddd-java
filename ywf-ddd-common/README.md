@@ -7,7 +7,7 @@ DDD 公共基础模块，为业务项目提供领域建模、持久化基础设�
 
 ```
 ywf-ddd-common/
-├── common-contract/       # CQRS 契约标记接口（Command / Query / Event / CO）
+├── common-contract/       # CQRS 契约标记接口（Command / Query / IntegrationEvent / CO）
 ├── common-ddd/            # DDD 框架（领域模型 + CQRS 契约 + MyBatis-Plus 仓储 + 领域事件）
 ├── common-exception/      # 统一异常体系（BusinessException + REST 全局异常处理）
 ├── common-pg/             # PostgreSQL TypeHandler 扩展（UUID / JSONB / 数组）

@@ -1,28 +1,32 @@
 # common-contract
 
-CQRS 契约标记接口（Command / Query / PageableQuery / Event）—— 供 contract jar 与服务端共享的纯类型契约层。
+CQRS 契约标记接口（Command / Query / PageableQuery / IntegrationEvent）—— 供 contract jar 与服务端共享的纯类型契约层。
 
 > 本文分两段：§1–4 面向使用者（怎么用），§5–7 面向设计者（为什么这么设计）。
 
 ## 1. 定位与边界
 
-契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / Event 对象即可被基础设施层统一识别与拦截，契约接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
+契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / IntegrationEvent 对象即可被基础设施层统一识别与拦截，契约接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
 
 > 契约 = 完整 REST 定义（HTTP 映射 + 文档注解 + 类型一体），但零运行时：注解均为纯元数据，由服务端 Spring MVC 与消费方各自解释。
 
 ### 包结构
 
-标记接口按 CQE 类型分各自子包，不再平铺于 `contract` 根包：
+标记接口按 CQE 类型分各自子包，与业务 contract 包的 `dto/` 层级镜像对偶（业务 `dto/command/XxxCommand` implements 抽取 `dto/command/Command`，以此类推）：
 
 ```
 com.yoursweakfoe.common.contract
-├── command/
-│   └── Command.java
-├── query/
-│   ├── Query.java
-│   └── PageableQuery.java
-└── event/
-    └── Event.java
+└── dto/
+    ├── command/
+    │   └── Command.java
+    ├── query/
+    │   ├── Query.java
+    │   └── PageableQuery.java
+    ├── co/
+    │   └── CO.java
+    └── event/
+        └── integration/
+            └── IntegrationEvent.java
 ```
 
 ## 2. 核心能力
@@ -34,7 +38,7 @@ com.yoursweakfoe.common.contract
 | `Command` | 「请做这件事」— 变更系统状态 | `XxxCommand` | 事务、审计日志、幂等校验 |
 | `Query` | 「请给我这个」— 读取数据 | `XxxQuery` | 只读路由、缓存、权限校验 |
 | `PageableQuery` | 「给我一页」— 分页读取 | `GetXxxPageQuery` | 同 Query + 分页参数约束 |
-| `Event` | 「这件事发生了」— 外部事实通知 | `XxxEvent` | 消息确认、重试、死信 |
+| `IntegrationEvent` | 「这件事发生了」— 跨服务事实通知 | `XxxIntegrationEvent` | 消息确认、重试、死信 |
 
 ### PageableQuery API
 
@@ -47,13 +51,13 @@ com.yoursweakfoe.common.contract
 
 > `@Min/@Max` 依赖调用点 `@Valid` 触发；读侧查询实现（`XxxQueryRepositoryImpl`）已内置防御性 clamp，未经校验的参数也不会产生非法分页。
 
-### Event vs DomainEvent
+### IntegrationEvent vs DomainEvent
 
-| | Event（本模块） | DomainEvent（common-ddd） |
+| | IntegrationEvent（本模块） | DomainEvent（common-ddd） |
 |---|---|---|
-| 来源 | 外部进入（MQ / RPC / Webhook） | 领域内部产生（聚合根注册） |
-| 发布方 | 外部系统 | 本进程 Spring Event |
-| 处理入口 | `EventHandler<E>` | `@EventListener` / `@TransactionalEventListener` |
+| 来源 | 跨服务边界（MQ / RPC），出入站均为它 | 领域内部产生（聚合根注册） |
+| 发布方 | 本服务 Publisher（出站）/ 外部系统（入站） | 本进程 Spring Event |
+| 处理入口 | adapter 层 Consumer（入站）/ Publisher（出站） | `@EventListener` / `@TransactionalEventListener` |
 
 ## 3. 使用方式
 

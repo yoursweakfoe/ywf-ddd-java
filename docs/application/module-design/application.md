@@ -58,14 +58,15 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 | `Assembler` | `BasicAssembler<Domain, DTO>` | Domain → DTO | Handler | 从领域模型组装内部完整视图 |
 | `Presenter` | `BasicPresenter<DTO, CO>` | DTO → CO | AppService | 清洗内部细节，呈现契约安全视图 |
 
-### EventHandler（领域事件编排）
+### DomainEventListener（域内反应）
 
-位于 `handler/event/`，监听领域事件并编排后续业务（如：取消订单 → 回补库存）。
-与 adapter 层 consumer 的区别：EventHandler 处理**内部**领域事件（Spring Event），adapter consumer 处理**外部**事件（MQ/Webhook）。
+位于 `event/listener/`，监听领域事件并编排后续业务（如：取消订单 → 回补库存）。
+薄编排：接事件 → 加载聚合 → 委托 DomainService / Publisher，不含 if-else 业务判断。
+与 adapter 层 consumer 的区别：DomainEventListener 处理**内部**领域事件（Spring Event），adapter consumer 处理**外部**集成事件（MQ/Webhook）。
 
 ### Publisher（集成事件出站）
 
-位于 `publisher/`，被 Handler（普通或 event）显式调用，将领域事件翻译为契约 Integration Event 并投递到 MQ。
+位于 `event/publisher/`，被 CommandHandler 或 DomainEventListener 显式调用，将领域事件翻译为契约 IntegrationEvent 并投递到 MQ。
 AppService 不直接依赖 publisher。
 
 ## 协作关系

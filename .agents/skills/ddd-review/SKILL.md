@@ -39,7 +39,7 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 
 - [ ] DomainEvent 所有字段 final
 - [ ] registerEvent 在状态变迁之后
-- [ ] EventHandler 事务注解选择正确
+- [ ] DomainEventListener 事务注解选择正确
 - [ ] 集成事件定义在 contract 模块
 
 ### 命名与包结构

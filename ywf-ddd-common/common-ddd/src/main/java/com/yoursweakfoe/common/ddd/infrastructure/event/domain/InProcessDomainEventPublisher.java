@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.event;
+package com.yoursweakfoe.common.ddd.infrastructure.event.domain;
 
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
@@ -7,10 +7,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
- * Spring 领域事件发布者 —— 基于 Spring {@link ApplicationEventPublisher} 的默认实现。
+ * 进程内领域事件发布者 —— {@link DomainEventPublisher} 的默认实现，基于 Spring {@link ApplicationEventPublisher}。
  *
  * <p>将领域事件桥接到 Spring 事件机制，使得 {@code @EventListener} 或 {@code @TransactionalEventListener}
  * 注解的方法能够接收和处理领域事件。
+ *
+ * <p><strong>边界</strong>：本包（{@code infrastructure.event.domain}）仅负责<strong>领域事件</strong>的
+ * 进程内投递。集成事件（IntegrationEvent）的收发不在此包：出站由 application 层 {@code Publisher} 投递
+ * （依赖 common-mq），入站由 adapter 层 {@code Consumer} 接收。
  *
  * <p>
  *
@@ -18,7 +22,7 @@ import org.springframework.stereotype.Component;
  *
  * <pre>{@code
  * @Component
- * public class OrderEventHandler {
+ * public class OrderDomainEventListener {
  *
  *     // 同步监听（事务内执行，抛异常会回滚主事务 —— 适合强一致副作用）
  *     @EventListener
@@ -39,9 +43,10 @@ import org.springframework.stereotype.Component;
  *
  * <p>
  *
- * <h3>异步扩展</h3>
+ * <h3>扩展</h3>
  *
- * 如需异步处理事件，可在监听方法上添加 {@code @Async} 注解， 或替换本实现为基于消息队列的 Publisher。
+ * 如需可靠化（Outbox）或跨进程（MQ）发布，替换本实现为基于事件表 / 消息队列的 {@link DomainEventPublisher} 即可，
+ * 契约（{@link DomainEventPublisher}）不变。异步处理可在监听方法上添加 {@code @Async} 注解。
  *
  * @see DomainEventPublisher
  * @see DomainEvent
@@ -49,7 +54,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class SpringDomainEventPublisher implements DomainEventPublisher {
+public class InProcessDomainEventPublisher implements DomainEventPublisher {
 
     // region 依赖注入
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -59,7 +64,7 @@ public class SpringDomainEventPublisher implements DomainEventPublisher {
      *
      * @param applicationEventPublisher Spring 事件发布器
      */
-    public SpringDomainEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+    public InProcessDomainEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
     }
     // endregion

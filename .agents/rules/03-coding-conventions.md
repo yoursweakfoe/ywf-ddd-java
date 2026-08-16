@@ -2,7 +2,7 @@
 
 ## CQRS 模式
 
-- 三类请求对象：`Command`（写）、`Query`（读）、`Event`（外部事件入站）
+- 三类请求对象：`Command`（写）、`Query`（读）、`IntegrationEvent`（跨服务事件契约）
 - 每个 CQE 对应一个 Handler（1:1），实现 `CommandHandler<C, R>` 或 `QueryHandler<Q, R>`
 - Handler 位于 `application/{aggregate}/handler/`
 
@@ -68,9 +68,9 @@ public void cancelOrder(CancelOrderCommand command) {
 ## 领域事件
 
 - 聚合根内 `registerEvent(new XxxEvent(...))`（暂存）
-- Repository 持久化成功后自动 `publishAndClearEvents()`（Spring Event）
+- Repository 持久化成功后自动 `publishAndClearEvents()`（Spring Event，仅进程内）
 - DomainEvent 不可变（所有字段 final）
-- EventHandler 位于 `application/{agg}/handler/event/`，标注 `@EventListener`
+- 域内反应监听器（DomainEventListener）位于 `application/{agg}/event/listener/`，标注 `@EventListener`；薄编排：接事件 → 加载聚合 → 委托 DomainService / Publisher
 - 集成事件（跨服务）：Publisher 翻译为 contract 中的 IntegrationEvent → MQ
 
 ## 命名规范
@@ -84,6 +84,7 @@ public void cancelOrder(CancelOrderCommand command) {
 | 持久化对象 | `XxxPO` | `OrderPO` |
 | 领域事件 | `XxxEvent` | `OrderPlacedEvent` |
 | 集成事件 | `XxxIntegrationEvent` | `OrderPlacedIntegrationEvent` |
+| 域内反应监听器 | `XxxDomainEventListener` | `OrderDomainEventListener` |
 | Domain 外部接口 | `XxxPortal` | `PaymentPortal` |
 | Infra 外部实现 | `XxxGateway` | `AlipayPaymentGateway` |
 | 聚合根 | `Xxx extends AggregateRoot<ID>` | `Order` |

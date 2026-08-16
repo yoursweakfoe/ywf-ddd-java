@@ -77,7 +77,7 @@ public record GetOrderPageQuery(
 ## 2. Adapter — Controller 契约接口 + 实现（纯透传）
 
 ```java
-// contract/order/controller/OrderController.java（契约接口，承载 HTTP 映射）
+// contract/order/adapter/rest/OrderController.java（契约接口，承载 HTTP 映射）
 @RequestMapping("/orders")
 public interface OrderController {
 

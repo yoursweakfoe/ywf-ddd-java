@@ -21,7 +21,7 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 2. `contract/{agg}/dto/Create{Agg}Command.java` — 写请求
 3. `contract/{agg}/dto/Get{Agg}Query.java` — 读请求
 4. `contract/{agg}/co/{Agg}CO.java` — 契约输出
-5. `contract/{agg}/dto/event/{Agg}CreatedIntegrationEvent.java`（可选）
+5. `contract/{agg}/dto/event/integration/{Agg}CreatedIntegrationEvent.java`（可选）
 
 ### Phase 2: domain 层
 

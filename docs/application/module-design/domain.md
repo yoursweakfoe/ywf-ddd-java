@@ -94,17 +94,17 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 ### 事件边界
 
-#### DomainEvent vs 外部 Event
+#### DomainEvent vs IntegrationEvent
 
-| 维度 | DomainEvent（领域事件） | Event（外部事件，common-contract） |
+| 维度 | DomainEvent（领域事件） | IntegrationEvent（集成事件，common-contract） |
 |------|----------------------|---------------------------|
-| 方向 | 由内向外（聚合根 → 外界） | 由外向内（外界 → 本服务） |
-| 产生者 | 本服务聚合根 | 其他微服务 / MQ / Webhook |
-| 所在层 | domain 层 | application 层（CQRS 契约） |
-| 发布机制 | 仓储持久化后 → Spring Event | 外部消息到达 → Adapter → EventHandler |
-| 典型例子 | `OrderPlacedEvent`（我下单了） | `PaymentCompletedEvent`（支付服务通知我） |
+| 方向 | 由内向外（聚合根 → 进程内） | 双向（出站 + 入站） |
+| 产生者 | 本服务聚合根 | 本服务 Publisher（出站）/ 其他微服务（入站） |
+| 所在层 | domain 层 | contract 模块（跨服务契约） |
+| 发布机制 | 仓储持久化后 → Spring Event（进程内） | Publisher 投递 MQ（出站）/ 外部消息到达 → Adapter Consumer（入站） |
+| 典型例子 | `OrderPlacedEvent`（我下单了） | `OrderPlacedIntegrationEvent`（我通知外界） |
 
-简记：**DomainEvent 是"我告诉别人"，Event 是"别人告诉我"**。
+简记：**DomainEvent 是"进程内我告诉自己人"，IntegrationEvent 是"跨服务我告诉别人 / 别人告诉我"**。
 
 #### 事件监听原理（Spring 机制）
 
@@ -132,7 +132,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 | 事件类型 | 位置 | 消费方式 | 暴露范围 |
 |---------|------|---------|--------|
 | **领域事件** | `domain/{aggregate}/model/event/` | Spring `@EventListener`（进程内） | 不对外 |
-| **集成事件** | `contract/{aggregate}/dto/event/` | MQ / RPC（跨服务） | 对外发布 |
+| **集成事件** | `contract/{aggregate}/dto/event/integration/` | MQ / RPC（跨服务） | 对外发布 |
 
 微服务拆分时：领域事件仍留在服务内部；需要跨服务通知时，由 application 层将领域事件转换为集成事件发布到 MQ。
 

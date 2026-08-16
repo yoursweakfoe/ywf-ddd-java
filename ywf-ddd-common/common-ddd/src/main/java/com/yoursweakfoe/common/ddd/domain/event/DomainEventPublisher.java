@@ -7,6 +7,9 @@ import java.util.List;
  *
  * <p>在 DDD 架构中，领域事件在聚合根内部注册， 在仓储层持久化成功后由 {@code DomainEventPublisher} 统一发布。 这确保了"先持久化，后发事件"的可靠顺序。
  *
+ * <p><strong>边界</strong>：本接口仅定义领域事件的<strong>进程内</strong>发布契约。集成事件（IntegrationEvent）
+ * 的收发不经过本接口：出站由 application 层 Publisher 投递 MQ，入站由 adapter 层 Consumer 接收。
+ *
  * <p>
  *
  * <h3>扩展点</h3>

@@ -1,11 +1,10 @@
-package com.yoursweakfoe.common.ddd.infrastructure.event;
+package com.yoursweakfoe.common.ddd.infrastructure.event.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
-import com.yoursweakfoe.common.ddd.infrastructure.event.SpringDomainEventPublisher;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,16 +15,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
-class SpringDomainEventPublisherTest {
+class InProcessDomainEventPublisherTest {
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private SpringDomainEventPublisher publisher;
+    private InProcessDomainEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
-        publisher = new SpringDomainEventPublisher(applicationEventPublisher);
+        publisher = new InProcessDomainEventPublisher(applicationEventPublisher);
     }
 
     @Test

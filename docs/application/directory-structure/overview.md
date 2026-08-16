@@ -17,22 +17,24 @@ sample-service/
 ```
 contract/
 └── {aggregate}/                     # 顶层按聚合分包
-    ├── controller/                  # Controller 契约接口（REST 端点契约，ControllerImpl 实现）
+    ├── adapter/                     # 协议契约（对偶 server 的 adapter 层）
+    │   └── rest/                    # Controller 契约接口（REST 端点契约，ControllerImpl 实现）
     ├── dto/                         # 数据传输对象（CQE / CO / 集成事件）
     │   ├── command/                 # Command（写操作意图）
     │   ├── query/                   # Query（读操作请求）
     │   ├── co/                      # Contract Object（契约输出对象）
     │   └── event/                   # Integration Event（集成事件）
+    │       └── integration/         # 集成事件（对偶抽取包 dto/event/integration）
     └── enums/                       # 契约共享枚举
 ```
 
 | 目录 | 职责 |
 |------|------|
-| `{aggregate}/controller/` | Controller 契约接口定义（方法签名 + HTTP 映射 + 文档注解的单一事实源） |
+| `{aggregate}/adapter/rest/` | Controller 契约接口定义（方法签名 + HTTP 映射 + 文档注解的单一事实源） |
 | `{aggregate}/dto/co/` | Contract Object（对内部 DTO 进行字段清洗后的外部安全视图） |
 | `{aggregate}/dto/command/` | Command（写操作意图） |
 | `{aggregate}/dto/query/` | Query（读操作请求） |
-| `{aggregate}/dto/event/` | Integration Event（跨服务集成事件） |
+| `{aggregate}/dto/event/integration/` | Integration Event（跨服务集成事件） |
 | `{aggregate}/enums/` | 契约共享枚举 |
 
 ---
@@ -50,9 +52,12 @@ server/
 ├── application/                     # 用例编排
 │   └── {aggregate}/
 │       ├── {Aggregate}AppService.java # 聚合入口（全部用例方法）
-│       ├── handler/                   # Command/Query Handler【按需】
-│       │   └── event/                 # Domain Event Handler（域内反应）
-│       ├── publisher/                 # MQ 出站投递【按需】
+│       ├── handler/                   # CQRS Handler【按需】
+│       │   ├── command/               # CommandHandler（写用例）
+│       │   └── query/                 # QueryHandler（读用例）
+│       ├── event/                     # 事件处理【按需】
+│       │   ├── listener/              # DomainEventListener（域内反应）
+│       │   └── publisher/             # Publisher（出站投递）
 │       ├── assembler/                 # Domain → DTO（手写显式映射）
 │       ├── presenter/                 # DTO → CO（手写显式映射）
 │       └── dto/                       # 内部视图

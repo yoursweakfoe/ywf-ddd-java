@@ -1,6 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event;
+package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event.integration;
 
-import com.yoursweakfoe.common.contract.dto.Event;
+import com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderPlacedIntegrationEvent implements Event, Serializable {
+public class OrderPlacedIntegrationEvent implements IntegrationEvent, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

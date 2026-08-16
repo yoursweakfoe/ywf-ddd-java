@@ -1,6 +1,6 @@
 package com.yoursweakfoe.common.ddd.application.handler;
 
-import com.yoursweakfoe.common.contract.dto.Command;
+import com.yoursweakfoe.common.contract.dto.command.Command;
 
 /**
  * 命令处理器契约 —— 接收一个 Command 并执行写操作用例。

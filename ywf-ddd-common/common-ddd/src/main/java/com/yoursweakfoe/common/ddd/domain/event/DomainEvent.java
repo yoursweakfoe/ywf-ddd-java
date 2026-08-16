@@ -12,6 +12,10 @@ import lombok.Getter;
  * {@code AggregateRoot#registerEvent(DomainEvent)}
  * 注册事件，仓储层在持久化成功后自动发布。
  *
+ * <p><strong>边界</strong>：领域事件<strong>仅在进程内</strong>消费，受众是 application 层的域内反应监听器
+ * （{@code @EventListener}），不对外、不做跨服务序列化。需要跨服务通知时，由 application 层 Publisher
+ * 将领域事件翻译为集成事件（IntegrationEvent）后投递 MQ。
+ *
  * <p>每个事件包含：
  *
  * <ul>

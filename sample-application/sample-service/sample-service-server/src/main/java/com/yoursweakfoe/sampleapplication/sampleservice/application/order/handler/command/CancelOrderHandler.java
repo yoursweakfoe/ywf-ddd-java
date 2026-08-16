@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 取消订单（库存回补由 EventHandler 处理）。 */
+/** 取消订单（库存回补由域内反应监听器 OrderDomainEventListener 处理）。 */
 @Component
 public class CancelOrderHandler implements CommandHandler<CancelOrderCommand, Void> {
 

@@ -144,7 +144,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| contract | `rest/OrderController.java` | Controller 契约接口 |
+| contract | `adapter/rest/OrderController.java` | Controller 契约接口 |
 | contract | `dto/command/PlaceOrderCommand.java` | 下单命令（含订单项列表） |
 | adapter | `rest/OrderControllerImpl.java` | 协议适配（透传） |
 | application | `handler/PlaceOrderHandler.java` | 跨聚合编排 |

@@ -123,15 +123,16 @@ public class PaymentCallbackRecordDTO {
     private OffsetDateTime receivedAt;     // 接收时间
 }
 
-// Handler
+// CommandHandler（入站集成事件经 adapter Consumer 转 Command 后进入）
 @Component
-public class PaymentCallbackHandler implements EventHandler<PaymentCallbackEvent> {
+public class ReconcilePaymentHandler implements CommandHandler<ReconcilePaymentCommand, Void> {
     @Override
-    public void handle(PaymentCallbackEvent event) {
-        PaymentCallbackRecordDTO record = toRecord(event);
+    public Void handle(ReconcilePaymentCommand command) {
+        PaymentCallbackRecordDTO record = toRecord(command);
         Order order = orderRepository.findById(record.toOrderId()).orElseThrow();
         order.reconcilePayment(record.externalTransactionId());  // 领域方法用内部类型
         orderRepository.save(order);
+        return null;
     }
 }
 ```

@@ -6,7 +6,7 @@
 |------|------|------|
 | CO | Contract Object | 契约输出对象。对内部 DTO 清洗后的外部安全视图，定义在 contract 模块，是消费方唯一可见的数据结构 |
 | DTO | Data Transfer Object | 应用层内部视图。可含审计字段、version、内部评分等，不出服务边界 |
-| CQE | Command / Query / Event | 三类请求对象的统称。Command=写，Query=读，Event=外部事件入站 |
+| CQE | Command / Query / IntegrationEvent | 三类请求对象的统称。Command=写，Query=读，IntegrationEvent=跨服务事件契约（出入站） |
 | Command | — | 写操作请求对象，实现 `common-contract` 的 `Command` 标记接口 |
 | Query | — | 读操作请求对象，实现 `common-contract` 的 `Query` 标记接口 |
 | PageableQuery | — | 分页查询对象，实现 `PageableQuery` 接口（自带 pageNum/pageSize） |
@@ -19,8 +19,9 @@
 | Handler | — | 用例执行单元。CommandHandler（写）或 QueryHandler（读），与 CQE 1:1 对应 |
 | AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口，spring-web 注解声明 REST 路径，纯透传 AppService |
-| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外。"我告诉别人" |
-| IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务消费（MQ）。对外发布 |
+| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外。"进程内我告诉自己人" |
+| IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它 |
+| DomainEventListener | — | Application 层组件，监听领域事件（@EventListener）执行域内反应。薄编排：接事件 → 加载聚合 → 委托 DomainService/Publisher |
 | Publisher | — | Application 层组件，将领域事件翻译为集成事件并投递 MQ |
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
 | PageResult | — | 框架级分页容器（record），定义在 domain 层，隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |

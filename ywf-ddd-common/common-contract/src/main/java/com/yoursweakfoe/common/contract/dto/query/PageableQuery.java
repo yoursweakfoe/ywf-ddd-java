@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.contract.dto;
+package com.yoursweakfoe.common.contract.dto.query;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
