@@ -35,12 +35,6 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
         return po;
     }
 
-    /** 富领域模型不使用增量更新，由 reconstitute 重建替代。 */
-    @Override
-    public void updateDomain(ProductPO po, Product domain) {
-        throw new UnsupportedOperationException("Rich domain model: use reconstitute instead");
-    }
-
     @Override
     public void updatePO(Product domain, ProductPO po) {
         po.setName(domain.getName());

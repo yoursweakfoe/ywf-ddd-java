@@ -14,6 +14,7 @@ import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>这是从 AppService 拆出的复杂用例样例：
  * 依赖 5 个组件、跨 2 个聚合、含事件编排，适合独立为 Handler。
  */
+@Slf4j
 @Component
 public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
 
@@ -64,6 +66,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
         Order order = new Order(UUID.randomUUID(), items, command.getCustomerId());
         order.place();
         orderRepository.save(order);
+        log.info("Order placed: orderId={}, customerId={}", order.getId(), command.getCustomerId());
 
         // 4. 返回 DTO
         return orderAssembler.toDTO(order);

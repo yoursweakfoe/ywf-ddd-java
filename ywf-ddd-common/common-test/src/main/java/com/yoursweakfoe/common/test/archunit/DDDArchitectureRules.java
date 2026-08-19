@@ -92,9 +92,10 @@ public final class DDDArchitectureRules {
                     .mayOnlyBeAccessedByLayers("Application", "Infrastructure")
                     .whereLayer("Infrastructure")
                     .mayNotBeAccessedByAnyLayer()
-                    .as("R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；"
-                            + "外层不得直接依赖 infrastructure，domain 不得反向依赖任何层；"
-                            + "读侧例外：infrastructure 读查询实现可访问 application 读端口");
+                    .as("""
+                            R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；
+                            外层不得直接依赖 infrastructure，domain 不得反向依赖任何层；
+                            读侧例外：infrastructure 读查询实现可访问 application 读端口""");
 
     /**
      * R2 —— adapter 层（REST / MQ / 定时任务入口）只依赖 application 与 contract，

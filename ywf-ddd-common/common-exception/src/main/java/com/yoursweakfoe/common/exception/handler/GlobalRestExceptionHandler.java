@@ -6,8 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,10 +44,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * <p>由 {@code ExceptionAutoConfiguration} 在 Servlet Web 应用中注册为 Bean，
  * Spring MVC 自动发现 {@code @RestControllerAdvice} 并接入异常解析管线。
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalRestExceptionHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(GlobalRestExceptionHandler.class);
 
     /** RFC 9457 标准媒体类型 */
     private static final MediaType CONTENT_TYPE_PROBLEM =

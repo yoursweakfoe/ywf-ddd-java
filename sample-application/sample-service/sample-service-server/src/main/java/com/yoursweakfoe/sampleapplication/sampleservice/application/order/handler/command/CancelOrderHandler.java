@@ -6,10 +6,12 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.
 import com.yoursweakfoe.common.ddd.application.handler.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /** 取消订单（库存回补由域内反应监听器 OrderDomainEventListener 处理）。 */
+@Slf4j
 @Component
 public class CancelOrderHandler implements CommandHandler<CancelOrderCommand, Void> {
 
@@ -28,6 +30,7 @@ public class CancelOrderHandler implements CommandHandler<CancelOrderCommand, Vo
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         order.cancel(command.getReason());
         orderRepository.update(order);
+        log.info("Order cancelled: orderId={}", order.getId());
         return null;
     }
 }

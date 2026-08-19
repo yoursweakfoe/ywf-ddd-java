@@ -7,10 +7,12 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.common.ddd.application.handler.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /** 确认订单。 */
+@Slf4j
 @Component
 public class ConfirmOrderHandler implements CommandHandler<ConfirmOrderCommand, OrderDTO> {
 
@@ -31,6 +33,7 @@ public class ConfirmOrderHandler implements CommandHandler<ConfirmOrderCommand, 
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         order.confirm();
         orderRepository.update(order);
+        log.info("Order confirmed: orderId={}", order.getId());
         return orderAssembler.toDTO(order);
     }
 }

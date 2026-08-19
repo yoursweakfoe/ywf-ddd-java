@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
  * 订单装配器 —— 写侧 Domain → DTO（{@link OrderDTO}）纯手写显式映射。
  *
  * <p>富领域模型：toDomain 不适用（Order 无 setter，需通过 reconstitute 重建），
- * 仅 toDTO 方向有效。字段增删时必须同步修改本类。
+ * 仅 toDTO 方向有效。updateDomain / updateDTO 由 {@code BasicAssembler} default 实现抛
+ * {@code UnsupportedOperationException}，富模型无需覆写。字段增删时必须同步修改本类。
  *
  * <p>读侧不经过本类：读路径绕过 domain，由 {@code OrderQueryRepository} 直接 PO → 读 DTO 投影。
  */
@@ -39,17 +40,5 @@ public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
     @Override
     public Order toDomain(OrderDTO dto) {
         throw new UnsupportedOperationException("Rich domain model: use Order.reconstitute() instead");
-    }
-
-    /** 富领域模型不使用增量更新。 */
-    @Override
-    public void updateDomain(OrderDTO dto, Order domain) {
-        throw new UnsupportedOperationException("Rich domain model: use reconstitute instead");
-    }
-
-    /** 富领域模型不使用增量更新。 */
-    @Override
-    public void updateDTO(Order domain, OrderDTO dto) {
-        throw new UnsupportedOperationException("Rich domain model: use toDTO instead");
     }
 }

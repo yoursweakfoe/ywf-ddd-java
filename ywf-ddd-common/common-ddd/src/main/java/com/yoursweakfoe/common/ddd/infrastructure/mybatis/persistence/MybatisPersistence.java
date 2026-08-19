@@ -266,8 +266,8 @@ public abstract class MybatisPersistence<
         int rows = baseMapper.updateById(po);
         if (rows == 0) {
             throw new IllegalStateException(
-                    "UPDATE affected 0 rows for entity ID: " + domain.getId()
-                            + " (possible cause: concurrent modification or entity not found)");
+                    "UPDATE affected 0 rows for entity ID: %s (possible cause: concurrent modification or entity not found)"
+                            .formatted(domain.getId()));
         }
 
         eventFlusher.publishAndClear(domain);

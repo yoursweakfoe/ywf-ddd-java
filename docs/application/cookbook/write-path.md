@@ -150,7 +150,8 @@ public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
         return dto;
     }
 
-    // toDomain / updateDomain / updateDTO 抛 UnsupportedOperationException（富领域模型走 reconstitute）
+    // toDomain 抛 UnsupportedOperationException（富领域模型走 reconstitute）；
+    // updateDomain / updateDTO 由 BasicAssembler default 实现抛异常，富模型无需覆写
 }
 ```
 
@@ -275,7 +276,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         return po;
     }
 
-    // updateDomain 抛 UnsupportedOperationException；updatePO 合并业务字段
+    // updateDomain 由 BasicConverter default 实现抛异常（无需覆写）；updatePO 覆写合并业务字段
 }
 
 @Component

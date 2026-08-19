@@ -58,12 +58,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         return po;
     }
 
-    /** 富领域模型不使用增量更新，由 reconstitute 重建替代。 */
-    @Override
-    public void updateDomain(OrderPO po, Order domain) {
-        throw new UnsupportedOperationException("Rich domain model: use reconstitute instead");
-    }
-
+    /** 富领域模型不使用增量更新。updateDomain 由 {@code BasicConverter} default 实现抛异常，无需覆写。 */
     @Override
     public void updatePO(Order domain, OrderPO po) {
         po.setStatus(domain.getStatus().name());

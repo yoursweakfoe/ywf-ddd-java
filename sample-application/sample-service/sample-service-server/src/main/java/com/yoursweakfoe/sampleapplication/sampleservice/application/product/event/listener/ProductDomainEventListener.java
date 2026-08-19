@@ -2,8 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product.eve
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockDeductedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockRestoredEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +12,9 @@ import org.springframework.stereotype.Component;
  * <p>当前为纯日志监听（无副作用）。若未来出现跨聚合业务反应（如库存告警触发补货单），
  * 遵循「接事件 → 加载聚合 → 委托 DomainService」的薄编排契约在本类扩展。
  */
+@Slf4j
 @Component
 public class ProductDomainEventListener {
-
-    private static final Logger log = LoggerFactory.getLogger(ProductDomainEventListener.class);
 
     @EventListener
     public void onStockDeducted(StockDeductedEvent event) {

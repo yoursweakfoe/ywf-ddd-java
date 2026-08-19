@@ -2,8 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event
 
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event.integration.OrderPlacedIntegrationEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,10 +13,9 @@ import org.springframework.stereotype.Component;
  *
  * <p>只被域内反应监听器（DomainEventListener）或 Handler 显式调用，不被 AppService 直接调用。
  */
+@Slf4j
 @Component
 public class OrderEventPublisher {
-
-    private static final Logger log = LoggerFactory.getLogger(OrderEventPublisher.class);
 
     /**
      * 发布「订单已下单」集成事件。

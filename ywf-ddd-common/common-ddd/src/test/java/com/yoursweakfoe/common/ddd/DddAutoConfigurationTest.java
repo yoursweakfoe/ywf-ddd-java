@@ -1,8 +1,7 @@
-package com.yoursweakfoe.common.ddd.infrastructure;
+package com.yoursweakfoe.common.ddd;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.yoursweakfoe.common.ddd.DddAutoConfiguration;
 import com.yoursweakfoe.common.ddd.infrastructure.event.domain.InProcessDomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.MybatisPlusPluginConfiguration;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;

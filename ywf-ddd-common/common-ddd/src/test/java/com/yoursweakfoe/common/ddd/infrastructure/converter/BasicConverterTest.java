@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure;
+package com.yoursweakfoe.common.ddd.infrastructure.converter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

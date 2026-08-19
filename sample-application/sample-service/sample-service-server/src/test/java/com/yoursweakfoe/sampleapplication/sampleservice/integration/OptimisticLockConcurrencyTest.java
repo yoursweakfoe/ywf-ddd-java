@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +31,7 @@ import org.springframework.web.client.RestClient;
  *   <li>成功订单数 * 购买数量 + 剩余库存 = 初始库存
  * </ul>
  */
+@Slf4j
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestSecurityConfiguration.class)
@@ -113,9 +115,8 @@ class OptimisticLockConcurrencyTest {
         // 守恒：成功数 + 剩余库存 = 初始库存
         assertThat(successCount.get() + remainingStock).isEqualTo(10);
 
-        // 4. 输出统计
-        System.out.printf(
-                "[Stress] success=%d, conflict(409)=%d, businessError(422/500)=%d, remainingStock=%d%n",
+        // 4. 输出统计（SLF4J；断言已在上方守恒）
+        log.info("[Stress] success={}, conflict(409)={}, businessError(422/500)={}, remainingStock={}",
                 successCount.get(), conflictCount.get(), businessErrorCount.get(), remainingStock);
     }
 }

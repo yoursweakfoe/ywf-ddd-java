@@ -1,8 +1,7 @@
-package com.yoursweakfoe.common.ddd.application;
+package com.yoursweakfoe.common.ddd.application.assembler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler;
 import com.yoursweakfoe.common.ddd.application.presenter.BasicPresenter;
 import java.util.List;
 import java.util.Set;
@@ -14,12 +13,10 @@ import org.junit.jupiter.api.Test;
  */
 class BasicAssemblerPresenterTest {
 
-    // 测试用简单 Assembler（String ↔ Integer 映射）
+    // 测试用简单 Assembler（String ↔ Integer 映射；updateDomain/updateDTO 不覆写，走 default 抛异常）
     static class TestAssembler implements BasicAssembler<Integer, String> {
         @Override public Integer toDomain(String dto) { return Integer.parseInt(dto); }
         @Override public String toDTO(Integer domain) { return domain.toString(); }
-        @Override public void updateDomain(String dto, Integer domain) { throw new UnsupportedOperationException(); }
-        @Override public void updateDTO(Integer domain, String dto) { throw new UnsupportedOperationException(); }
     }
 
     // 测试用简单 Presenter（Integer → Long 映射）

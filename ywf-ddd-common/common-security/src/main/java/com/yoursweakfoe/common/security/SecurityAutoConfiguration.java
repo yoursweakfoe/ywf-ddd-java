@@ -30,7 +30,7 @@ public class SecurityAutoConfiguration {
     @ConditionalOnMissingBean
     JwtAuthenticationConverter jwtAuthenticationConverter(SecurityProperties properties) {
         JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName(properties.getRolesClaim());
+        authorities.setAuthoritiesClaimName(properties.rolesClaim());
         authorities.setAuthorityPrefix("ROLE_");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authorities);

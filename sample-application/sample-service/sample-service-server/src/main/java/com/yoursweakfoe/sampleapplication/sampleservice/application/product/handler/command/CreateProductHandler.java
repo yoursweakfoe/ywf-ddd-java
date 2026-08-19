@@ -6,10 +6,12 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.com
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.ddd.application.handler.CommandHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /** 创建商品。 */
+@Slf4j
 @Component
 public class CreateProductHandler implements CommandHandler<CreateProductCommand, ProductDTO> {
 
@@ -33,6 +35,7 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
         // 自增 ID 回填在 PO 上，重新查询获取完整实体
         Product saved = productRepository.findByName(command.getName())
                 .orElseThrow(() -> new IllegalStateException("Product save failed"));
+        log.info("Product created: productId={}", saved.getId());
         return productAssembler.toDTO(saved);
     }
 }

@@ -2,7 +2,6 @@ package com.yoursweakfoe.common.ddd.domain.model;
 
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,9 +53,9 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
         this.domainEvents.add(event);
     }
 
-    /** 获取已注册事件（只读视图） */
+    /** 获取已注册事件（不可变快照） */
     public List<DomainEvent> getDomainEvents() {
-        return Collections.unmodifiableList(domainEvents);
+        return List.copyOf(domainEvents);
     }
 
     /** 清空事件（由仓储层在发布后调用，业务代码不应直接调用） */

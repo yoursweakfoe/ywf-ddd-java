@@ -12,8 +12,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -35,10 +34,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *       + {@code REQUIRES_NEW}：主事务（取消订单）不被副作用失败阻断，副作用失败记录 ERROR 日志供人工对账
  * </ul>
  */
+@Slf4j
 @Component
 public class OrderDomainEventListener {
-
-    private static final Logger log = LoggerFactory.getLogger(OrderDomainEventListener.class);
 
     // region 依赖注入
     private final OrderRepository orderRepository;

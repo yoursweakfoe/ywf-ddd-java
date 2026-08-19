@@ -30,8 +30,8 @@ public class BasicAutoFillHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         OffsetDateTime now = OffsetDateTime.now();
-        this.strictInsertFill(metaObject, auditProperties.getCreateField(), OffsetDateTime.class, now);
-        this.strictInsertFill(metaObject, auditProperties.getUpdateField(), OffsetDateTime.class, now);
+        this.strictInsertFill(metaObject, auditProperties.createField(), OffsetDateTime.class, now);
+        this.strictInsertFill(metaObject, auditProperties.updateField(), OffsetDateTime.class, now);
     }
 
     /**
@@ -44,6 +44,6 @@ public class BasicAutoFillHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         OffsetDateTime now = OffsetDateTime.now();
-        setFieldValByName(auditProperties.getUpdateField(), now, metaObject);
+        setFieldValByName(auditProperties.updateField(), now, metaObject);
     }
 }

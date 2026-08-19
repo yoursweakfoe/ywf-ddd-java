@@ -27,7 +27,7 @@ class SecurityAutoConfigurationTest {
     @Test
     void rolesClaim_defaultsToRoles() {
         JwtAuthenticationConverter converter =
-                new SecurityAutoConfiguration().jwtAuthenticationConverter(new SecurityProperties());
+                new SecurityAutoConfiguration().jwtAuthenticationConverter(new SecurityProperties("roles"));
 
         Authentication auth = converter.convert(jwt("roles", List.of("ADMIN")));
 
@@ -38,8 +38,7 @@ class SecurityAutoConfigurationTest {
 
     @Test
     void rolesClaim_customizable() {
-        SecurityProperties properties = new SecurityProperties();
-        properties.setRolesClaim("permissions");
+        SecurityProperties properties = new SecurityProperties("permissions");
 
         JwtAuthenticationConverter converter =
                 new SecurityAutoConfiguration().jwtAuthenticationConverter(properties);

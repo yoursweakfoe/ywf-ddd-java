@@ -1,9 +1,10 @@
 package com.yoursweakfoe.common.ddd.infrastructure.mybatis.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * DDD 审计字段名配置。
+ * DDD 审计字段名配置（record，构造器绑定）。
  *
  * <p>{@code BasicAutoFillHandler} 自动维护创建时间 / 更新时间字段。
  * 字段名默认统一为 {@code createAt} / {@code updateAt}；业务若已存在不同命名的
@@ -19,27 +20,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * }</pre>
  */
 @ConfigurationProperties(prefix = "ywf.ddd.audit")
-public class AuditProperties {
-
-    /** 创建时间字段名，默认 {@code createAt} */
-    private String createField = "createAt";
-
-    /** 更新时间字段名，默认 {@code updateAt} */
-    private String updateField = "updateAt";
-
-    public String getCreateField() {
-        return createField;
-    }
-
-    public void setCreateField(String createField) {
-        this.createField = createField;
-    }
-
-    public String getUpdateField() {
-        return updateField;
-    }
-
-    public void setUpdateField(String updateField) {
-        this.updateField = updateField;
-    }
+public record AuditProperties(
+        /** 创建时间字段名，默认 {@code createAt} */
+        @DefaultValue("createAt") String createField,
+        /** 更新时间字段名，默认 {@code updateAt} */
+        @DefaultValue("updateAt") String updateField) {
 }

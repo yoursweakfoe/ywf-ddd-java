@@ -14,7 +14,6 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -75,7 +74,7 @@ public class Order extends AggregateRoot<UUID> {
     }
 
     public List<OrderItem> getItems() {
-        return Collections.unmodifiableList(items);
+        return List.copyOf(items);
     }
 
     // endregion
@@ -200,10 +199,7 @@ public class Order extends AggregateRoot<UUID> {
     }
 
     private static boolean contains(OrderStatus[] statuses, OrderStatus target) {
-        for (OrderStatus s : statuses) {
-            if (s == target) return true;
-        }
-        return false;
+        return List.of(statuses).contains(target);
     }
 
     private BigDecimal calculateTotal() {

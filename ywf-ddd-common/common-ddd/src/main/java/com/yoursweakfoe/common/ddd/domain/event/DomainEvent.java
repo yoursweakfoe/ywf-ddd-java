@@ -73,12 +73,7 @@ public abstract class DomainEvent {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()
-                + "{eventId="
-                + getEventId()
-                + ", occurredOn="
-                + getOccurredOn()
-                + "}";
+        return "%s{eventId=%s, occurredOn=%s}".formatted(getClass().getSimpleName(), getEventId(), getOccurredOn());
     }
 
     @Override

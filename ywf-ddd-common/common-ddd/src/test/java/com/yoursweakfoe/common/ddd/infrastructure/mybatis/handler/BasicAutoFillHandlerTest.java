@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;
 import java.time.OffsetDateTime;
 import lombok.Data;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -31,7 +30,7 @@ class BasicAutoFillHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new BasicAutoFillHandler(new AuditProperties());
+        handler = new BasicAutoFillHandler(new AuditProperties("createAt", "updateAt"));
     }
 
     private MetaObject metaObject(Object object) {
