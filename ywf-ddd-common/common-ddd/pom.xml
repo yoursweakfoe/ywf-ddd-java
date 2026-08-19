@@ -52,6 +52,13 @@
             <artifactId>common-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- common-pg：MybatisPersistenceTest 的 removeDomain* 用例需要 UUIDTypeHandler 注册
+             （common-pg 不依赖 common-ddd，无循环依赖；test scope 不传递给消费方） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-pg</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Jackson 3（测试 fixtures 中 JSON 序列化用；统一到 Spring Boot 4 基线） -->
         <dependency>
             <groupId>tools.jackson.core</groupId>

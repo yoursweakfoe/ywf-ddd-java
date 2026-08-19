@@ -45,6 +45,13 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
+        <!-- Jackson 3（显式声明：OrderConverter / OrderQueryRepositoryImpl 主代码直接使用 tools.jackson.*，
+             此前仅靠传递依赖编译，严格 classpath 下会失败；版本由 Boot BOM 管理） -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
         <!-- H2 内存数据库（测试专用） -->
         <dependency>
             <groupId>com.h2database</groupId>

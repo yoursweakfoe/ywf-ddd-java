@@ -17,6 +17,10 @@
         spring-boot-starter-test 仅含 JUnit 5 + Mockito + AssertJ + Spring Test 核心，
         @SpringBootTest 不再自动提供 MockMvc，需按技术引入对应 -test starter。
         业务服务统一从本模块传递获取，无需各自补齐。
+
+        依赖可见性说明：下方依赖均为默认 compile scope、故意不标 optional ——
+        本模块定位即"测试依赖聚合"：消费方以 <scope>test</scope> 引入本模块，
+        这些依赖自然落入 test classpath，compile scope 正是传递聚合的机制。
     -->
     <dependencies>
         <!-- Spring Boot 测试核心（JUnit 5 + Mockito + AssertJ + Spring Test） -->

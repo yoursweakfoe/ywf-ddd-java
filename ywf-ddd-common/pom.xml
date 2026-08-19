@@ -170,12 +170,13 @@
                 <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
                 <version>${dynamic-datasource-spring-boot4-starter.version}</version>
             </dependency>
-            <!-- PostgreSQL JDBC 驱动（common-pg 编译期需要 PGobject） -->
+            <!-- PostgreSQL JDBC 驱动（scope 统一为 compile：common-pg 具体 TypeHandler 编译期直接引用
+                 PGobject 类；若仅声明 runtime 会迫使子模块重复覆写 scope） -->
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
-                <scope>runtime</scope>
+                <scope>compile</scope>
             </dependency>
 
             <!-- ==================== 代码生成 / 注解处理器 ==================== -->
@@ -263,8 +264,8 @@
                     <docencoding>UTF-8</docencoding>
                     <charset>UTF-8</charset>
 
-                    <!-- 输出目录：项目根目录下的 docs 文件夹 -->
-                    <outputDirectory>${project.basedir}/docs</outputDirectory>
+                    <!-- 输出目录不再覆写：默认 ${project.build.directory}/apidocs，
+                         避免在每个模块根目录污染出 docs/ 与顶层项目文档混淆 -->
 
                     <!-- 只包含 common 相关的包（递归包含子包） -->
                     <subpackages>com.yoursweakfoe.common</subpackages>

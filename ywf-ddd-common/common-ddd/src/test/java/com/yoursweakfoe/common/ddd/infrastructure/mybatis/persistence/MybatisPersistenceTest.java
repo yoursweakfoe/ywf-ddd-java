@@ -411,7 +411,6 @@ class MybatisPersistenceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("需要 common-pg UUIDTypeHandler，测试环境未引入")
     void removeDomain_byEntity() {
         Order order = OrderFixtures.createOrder();
         orderRepository.save(order);
@@ -422,7 +421,6 @@ class MybatisPersistenceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("需要 common-pg UUIDTypeHandler，测试环境未引入")
     void removeDomains_byEntityList() {
         Order o1 = OrderFixtures.createOrder();
         Order o2 = OrderFixtures.createOrder();

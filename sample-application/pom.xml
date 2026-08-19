@@ -26,6 +26,8 @@
         <!-- ywf-ddd-common 版本（BOM import 统一子模块版本） -->
         <common.version>0.0.1-SNAPSHOT</common.version>
 
+        <!-- ⚠️ 以下版本常量与 ywf-ddd-common 主 POM 重复声明。BOM 不传递 properties，
+             故需在此保持一致（评审时若版本升级，两处同步）。共享版本源为二期议题。 -->
         <!-- Spring Cloud 版本（与 ywf-ddd-common 主 POM 保持一致；BOM 不传递故需自行声明） -->
         <spring-cloud.version>2025.1.2</spring-cloud.version>
 
