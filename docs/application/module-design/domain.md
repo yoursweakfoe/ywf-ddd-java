@@ -125,7 +125,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 | 非聚合根想发事件 | 建模信号 → 升级为聚合根；纯技术特例 → Handler 注入 `DomainEventPublisher` 手动发（自担时序契约） |
 | 抑制自动发布（如 Saga 补偿） | save 前显式 `clearDomainEvents()` |
 
-为什么不改成全手动发布、为什么 save/update 没有事件工厂重载 → 设计决策详见 [common-ddd.md 领域事件节](../../../ywf-ddd-common/docs/common-ddd.md)。
+为什么不改成全手动发布、为什么 save/update 没有事件工厂重载 → 设计决策详见 [common-ddd.md 领域事件节](../../common/common-ddd.md)。
 
 #### 事件类型与消费方式
 

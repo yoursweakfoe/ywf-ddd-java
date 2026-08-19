@@ -226,6 +226,10 @@ public abstract class MybatisPersistence<
     /**
      * 批量保存领域实体。
      *
+     * <p><b>语义</b>：batch = 单事务循环（逐条 insert），非多行 VALUES SQL——每条聚合须独立
+     * {@code validate()} + {@code registerEvent()} / 事件发布，多行 INSERT 无法触发逐聚合行为。
+     * 需要真·多行性能优化时由调用方自行实现。
+     *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方
      * （Handler）在入口方法标注 {@code @Transactional} 保证。未包裹事务时，逐条 INSERT
      * 各自提交，中途失败不回滚已插入的记录。
@@ -271,6 +275,9 @@ public abstract class MybatisPersistence<
 
     /**
      * 批量更新领域实体。
+     *
+     * <p><b>语义</b>：batch = 单事务循环（逐条 update），非多行 UPDATE SQL——每条聚合须独立
+     * {@code validate()} + {@code registerEvent()} / 事件发布，多行 UPDATE 无法触发逐聚合行为。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      */

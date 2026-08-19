@@ -7,7 +7,7 @@ description: 为已有聚合、Handler、Domain 模型或基础设施组件编�
 
 ## 前置阅读
 
-1. `ywf-ddd-common/docs/common-test.md`（测试基础设施 + ArchUnit 规则）
+1. `docs/common/common-test.md`（测试基础设施 + ArchUnit 规则）
 2. `ywf-ddd-common/common-ddd/src/test/`（Fixture 模式参照）
 3. `.agents/rules/03-coding-conventions.md`（命名规范）
 
@@ -159,4 +159,4 @@ class OrderFlowIntegrationTest {
 
 ## 文档同步
 
-- 如新增了 Fixture 模式或测试基础设施，更新 `ywf-ddd-common/docs/common-test.md`
+- 如新增了 Fixture 模式或测试基础设施，更新 `docs/common/common-test.md`

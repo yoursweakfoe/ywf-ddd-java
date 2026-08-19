@@ -38,6 +38,8 @@
 | Bounded Context (Evans) | 每个微服务 = 一个限界上下文；contract 模块定义上下文对外边界 |
 | Shared Kernel (Evans) | common-contract / common-ddd 为多个限界上下文共享的构建块 |
 | Customer-Supplier (Evans) | contract jar 是消费方唯一依赖；CO 变更需协调消费方（Breaking Change） |
+| Published Language (Evans) | contract 模块即跨上下文共享语言：CQE / CO / IntegrationEvent 是发布方与消费方的共同词汇表，避免逐点翻译 |
+| Context Map 策略集 | 已知策略显式定档：Shared Kernel（common-contract/ common-ddd）、Customer-Supplier（contract jar）。Conformist（顺从外部模型）/ Open Host Service / Anti-Corruption 的上下文级 Partner 关系**按需在业务上下文引入**（当前无此场景，不预设）；Separate Ways（无协作上下文）默认为未协作服务的常态 |
 
 **未采纳：**
 
@@ -47,6 +49,7 @@
 | 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸且仍需转换为错误码 |
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
+| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（ADR-0001）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，cookbook 提供复制粘贴示例 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略，MyBatis-Plus 场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
 | 领域事件异步/跨进程发布 | Axon Framework、EventStoreDB、Kafka + Outbox | 当前为进程内 Spring Event；跨服务通过 Seata + HTTP 显式调用，不引入 MQ 耦合 |
@@ -72,6 +75,7 @@
 | Change Data Capture (CDC) | Debezium、Canal、Maxwell | 无事件溯源 / 实时同步需求，不引入额外中间件 |
 | 事件存储 (Event Store) | EventStoreDB、Axon Server | 非 Event Sourcing 架构，无事件持久化重放需求 |
 | Application Service 拆分 Command/Query 两个类 | 部分 CQRS 严格实践 | 一个聚合一个 AppService 已足够内聚；拆分增加类数量无实际收益 |
+| DomainEventListener 基类/标记接口 | Axon Framework、Spring Modulith | **决策：不设立监听器基类或标记接口**。领域事件监听器保持朴素 `@EventListener` / `@TransactionalEventListener` 类（按聚合分目录、类名 = 监听语义）。ADR-0005 已移除 EventHandler 抽象；基类不承载行为、只增间接层。若未来需要架构规则识别监听器，再另行表决引入标记接口 |
 
 ### 架构模式与设计模式
 
@@ -98,11 +102,17 @@
 
 ### 微服务治理
 
+**采纳：**
+
+| 模式 | 本项目采纳要素 |
+|------|--------|
+| Resilience4j（熔断） | common-cloud 引入 `spring-cloud-starter-circuitbreaker-resilience4j`，规则经 `resilience4j.*` 配置（docs/common/common-cloud.md ADR-0002）；采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
+
 **未采纳：**
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| 服务熔断/降级 (Sentinel / Resilience4j) | Spring Cloud Alibaba、Netflix OSS | 当前服务规模小，HTTP 超时/重试（RestClient）已够用；引入 Sentinel 增加部署复杂度 |
+| Sentinel（熔断/降级） | Spring Cloud Alibaba | 功能与 Resilience4j 重叠；Sentinel 控制台 + 配置体系增加部署复杂度 |
 | 服务网格 / Sidecar (Istio / Linkerd) | CNCF 生态 | 当前部署规模不需要 Mesh；Higress 网关已提供流量治理能力 |
 | 灰度发布 / 流量染色 SDK | Spring Cloud Alibaba | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
 | 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装 |
@@ -145,6 +155,8 @@
 | 异常不透传内部堆栈 | REST 通道 GlobalRestExceptionHandler（@RestControllerAdvice）将 BusinessException 统一映射为 HTTP 422 + RFC 9457 Problem Details，Consumer 仅收到 messageKey + params |
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
+| 时间类型约定 | 审计字段（createAt/updateAt）统一 `OffsetDateTime`（保留写入方偏移供审计展示）；领域事件发生时刻 `DomainEvent.occurredOn` 用 `Instant`（绝对时刻，UTC 序列化无偏移歧义，渲染由查看方时区决定）——统一规则的唯一例外 |
+| sealed 类型（框架适用性决策） | **不施加于框架扩展点**：`AggregateRoot` / `Entity` / `ValueObject` / `Repository` / `Policy` / `Portal` / `DomainService` 是业务扩展点，sealed 会锁死业务继承；框架内唯一封闭层级 `PgArrayType` 已是 enum。sealed / pattern-matching switch 留给**业务侧**：状态转换守卫在聚合根内使用 JDK 21 穷尽性 switch（框架无 enum-switch 场景，不强制） |
 | swagger-annotations | REST 面文档注解（`@Operation` / `@Tag` / `@Schema` 纯注解 jar，零运行时零端点），契约层声明语义，配合 Apifox IDE 插件识别 |
 
 **未采纳：**

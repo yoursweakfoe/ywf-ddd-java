@@ -155,6 +155,6 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
 ## 相关模式
 
-- **SecurityUtil 获取当前用户** → 参见 `ywf-ddd-common/docs/common-security.md` + `.agents/rules/03-coding-conventions.md`（SecurityUtil 使用层归属）
-- **common-pg TypeHandler** → 参见 `ywf-ddd-common/docs/common-pg.md`（UUID/JSONB/数组自动映射）
+- **SecurityUtil 获取当前用户** → 参见 `docs/common/common-security.md` + `.agents/rules/03-coding-conventions.md`（SecurityUtil 使用层归属）
+- **common-pg TypeHandler** → 参见 `docs/common/common-pg.md`（UUID/JSONB/数组自动映射）
 - **Factory 复杂创建** → 参见 `docs/application/module-design/domain.md`（Factory 章节）

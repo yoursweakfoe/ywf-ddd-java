@@ -1,7 +1,7 @@
 # 事件全链路
 
 > 设计原理 → [module-design/domain.md](../module-design/domain.md)（事件边界章节）
-> 事件事务语义详解 → `ywf-ddd-common/docs/common-ddd.md`（领域事件章节）
+> 事件事务语义详解 → `docs/common/common-ddd.md`（领域事件章节）
 
 ## 业务场景
 

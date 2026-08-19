@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>common-observability</artifactId>
-    <description>运维可观测性 - 结构化日志格式（logback-spring.xml）+ Actuator 健康检查/指标暴露 + Prometheus 抓取端点（opt-in）</description>
+    <description>运维可观测性 - 依赖聚合模块（Actuator 健康检查/指标暴露 + Prometheus 抓取端点）；不 ship logback 配置，结构化日志由业务侧自持（opt-in）</description>
 
     <!--
         关于链路追踪（OpenTelemetry）：

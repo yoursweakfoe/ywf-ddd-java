@@ -25,12 +25,12 @@ ywf-ddd-common/
 common-contract     纯标记接口 + 注解（swagger / spring-web / jakarta-validation）
 common-exception    统一异常体系（BusinessException + REST 全局异常处理）
 common-security     零信任身份（JWT 资源服务器）
-common-observability 可观测性（结构化日志 + Actuator + Prometheus）
+common-observability 可观测性（Actuator + Prometheus）
+common-pg           PG TypeHandler 扩展（仅依赖 MyBatis-Plus / PG 驱动 / Jackson 3）
 
 ── 编译依赖链 ──
 
 common-ddd  →  common-contract + common-exception    DDD 框架
-common-pg   →  common-ddd                            PG TypeHandler 扩展
 common-cloud → common-security                       微服务治理（东西向 JWT 透传）
 
 ── 测试依赖（test scope） ──

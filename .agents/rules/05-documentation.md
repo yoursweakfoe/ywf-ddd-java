@@ -7,7 +7,7 @@
 | 触发条件 | 必须更新的文档 |
 |---------|--------------|
 | 修改 sample-application 代码结构（新增/删除/重命名文件） | 对应 `docs/application/cookbook/` 文档 |
-| 新增 common 模块公开 API | `ywf-ddd-common/docs/common-{module}.md` |
+| 新增 common 模块公开 API | `docs/common/common-{module}.md` |
 | 设计决策变更（采纳/弃用某模式） | `docs/references.md` |
 | 新增聚合 | `docs/application/directory-structure/overview.md` |
 | 层间协作关系变化 | 对应 `docs/application/module-design/{layer}.md` |
@@ -17,7 +17,7 @@
 | 内容类型 | 位置 |
 |---------|------|
 | 业务应用设计文档 | `docs/application/` |
-| common 模块使用文档 | `ywf-ddd-common/docs/` |
+| common 模块使用文档 | `docs/common/` |
 | 架构理论参考 | `docs/references.md` |
 | 项目术语表 | `docs/glossary.md` |
 | Agent 规则（本目录） | `.agents/` |
@@ -30,7 +30,7 @@
 
 ## common 模块文档规范
 
-- 每个 common 模块必须有 `ywf-ddd-common/docs/common-{module}.md`
+- 每个 common 模块必须有 `docs/common/common-{module}.md`
 - 内容结构：模块定位 → 核心类表 → 使用方式（含场景代码）→ 配置项
 - 新增公开类/方法时必须同步更新
 

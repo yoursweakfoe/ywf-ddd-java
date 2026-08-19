@@ -7,7 +7,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 ## 前置阅读
 
-1. `ywf-ddd-common/docs/common-{module}.md`（目标模块文档）
+1. `docs/common/common-{module}.md`（目标模块文档）
 2. `ywf-ddd-common/README.md`（模块依赖拓扑）
 3. `.agents/rules/04-forbidden-patterns.md`（Common 模块约束节）
 
@@ -33,7 +33,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 ### 3. 更新模块文档
 
-- 更新 `ywf-ddd-common/docs/common-{module}.md`：
+- 更新 `docs/common/common-{module}.md`：
   - 核心功能表（新增/修改的类）
   - 使用方式（场景代码）
   - 设计决策表（如有新决策）
@@ -62,11 +62,11 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 - [ ] `mvn compile -pl ywf-ddd-common/{module}` 编译通过
 - [ ] `mvn test -pl ywf-ddd-common/{module}` 现有测试 + 新测试通过
 - [ ] `mvn compile -pl sample-application/sample-service/sample-service-server` 消费方编译通过
-- [ ] `ywf-ddd-common/docs/common-{module}.md` 已同步更新
+- [ ] `docs/common/common-{module}.md` 已同步更新
 - [ ] 无新增超出编译需要的依赖（依赖最小化）
 - [ ] 无业务逻辑泄漏（common 模块纯技术骨架）
 
 ## 文档同步
 
-- 必须更新：`ywf-ddd-common/docs/common-{module}.md`
+- 必须更新：`docs/common/common-{module}.md`
 - 视情况更新：`docs/application/cookbook/`、`docs/glossary.md`、`ywf-ddd-common/README.md`

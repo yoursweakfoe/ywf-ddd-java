@@ -170,6 +170,8 @@ public class OrderRepositoryImpl
 
 ### 场景 3：批量操作与事件工厂
 
+`saveDomainBatch` / `updateDomainBatch` 语义为**单事务循环**（逐条 insert/update），非多行 VALUES SQL——每条聚合须独立 `validate()` + `registerEvent()` / 发布，多行 INSERT 无法触发逐聚合行为；批量原子性由调用方（Handler 标 `@Transactional`）保证。
+
 ```java
 repository.saveDomainBatch(List.of(order1, order2, order3));           // 批量保存
 repository.updateDomainBatch(List.of(order1, order2));                // 批量更新

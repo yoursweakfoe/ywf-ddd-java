@@ -81,7 +81,7 @@
 - 禁止 common 模块包含任何业务逻辑（纯技术骨架）
 - 禁止 common 模块声明超出自身编译需要的依赖（依赖最小化）
 - 禁止 common 模块的 test scope 依赖泄漏给消费方（Maven test scope 不传递）
-- 禁止新增 common 模块时不附带 `ywf-ddd-common/docs/common-{module}.md` 文档
+- 禁止新增 common 模块时不附带 `docs/common/common-{module}.md` 文档
 - 禁止在 common 模块中硬编码业务包名（通过泛型 / SPI / 配置注入）
 
 ## Git 工作流（绝对约束）
