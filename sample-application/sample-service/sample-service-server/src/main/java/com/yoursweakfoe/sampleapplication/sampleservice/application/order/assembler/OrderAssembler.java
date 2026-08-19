@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
  * 订单装配器 —— 写侧 Domain → DTO（{@link OrderDTO}）纯手写显式映射。
  *
  * <p>富领域模型：toDomain 不适用（Order 无 setter，需通过 reconstitute 重建），
- * 仅 toDTO 方向有效。updateDomain / updateDTO 由 {@code BasicAssembler} default 实现抛
- * {@code UnsupportedOperationException}，富模型无需覆写。字段增删时必须同步修改本类。
+ * 仅 toDTO 方向有效。BasicAssembler 为最小契约（仅 toDomain/toDTO 与集合委托），
+ * 不提供增量更新方法，富模型无需任何「不支持也要写 throw」的样板。字段增删时必须同步修改本类。
  *
  * <p>读侧不经过本类：读路径绕过 domain，由 {@code OrderQueryRepository} 直接 PO → 读 DTO 投影。
  */

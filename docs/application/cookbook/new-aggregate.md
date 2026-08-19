@@ -196,8 +196,7 @@ public class PaymentAssembler implements BasicAssembler<Payment, PaymentDTO> {
         return dto;
     }
 
-    // toDomain 抛 UnsupportedOperationException（富领域模型走 reconstitute）；
-// updateDomain / updateDTO 由 BasicAssembler default 实现抛异常，富模型无需覆写
+    // 最小契约：仅 toDomain / toDTO（+ 集合委托）；toDomain 抛 UnsupportedOperationException（富领域模型走 reconstitute）
 }
 ```
 
@@ -364,7 +363,7 @@ public class PaymentConverter implements BasicConverter<Payment, PaymentPO> {
         return po;
     }
 
-    // updateDomain 由 BasicConverter default 实现抛异常（无需覆写）；updatePO 覆写合并业务字段
+    // 最小契约：仅 toDomain / toPO（+ 集合委托）；updatePO 为自行扩充的合并方法，合并业务字段
 }
 
 @Mapper

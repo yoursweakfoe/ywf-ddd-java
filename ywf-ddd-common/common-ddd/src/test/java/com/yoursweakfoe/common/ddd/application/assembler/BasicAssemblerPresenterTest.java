@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
  */
 class BasicAssemblerPresenterTest {
 
-    // 测试用简单 Assembler（String ↔ Integer 映射；updateDomain/updateDTO 不覆写，走 default 抛异常）
+    // 测试用简单 Assembler（String ↔ Integer 映射；接口为最小契约，仅需实现 toDomain/toDTO）
     static class TestAssembler implements BasicAssembler<Integer, String> {
         @Override public Integer toDomain(String dto) { return Integer.parseInt(dto); }
         @Override public String toDTO(Integer domain) { return domain.toString(); }

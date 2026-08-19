@@ -35,7 +35,9 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
         return po;
     }
 
-    @Override
+    /**
+     * 合并业务字段到已有 PO —— 本类自行扩充的普通方法（BasicConverter 为最小契约，不定义增量更新）。
+     */
     public void updatePO(Product domain, ProductPO po) {
         po.setName(domain.getName());
         po.setStock(domain.getStock());

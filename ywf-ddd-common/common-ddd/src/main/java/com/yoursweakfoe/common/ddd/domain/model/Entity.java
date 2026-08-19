@@ -23,7 +23,8 @@ package com.yoursweakfoe.common.ddd.domain.model;
  * 以便 Converter 将其映射到 PO 供乐观锁拦截器使用。
  * 这是「领域零持久化关注」原则的<b>已文档化例外</b>：
  * version 在领域层为只读透传（不参与业务决策），仅作为持久化层乐观锁的载体。
- * 若仓储采用「reload PO → updatePO」路径，则领域层无需持有 version。
+ * 若仓储采用「reload PO → 自行定义的合并方法（如 {@code updatePO}）→ updateById」路径，
+ * 则领域层无需持有 version（合并方法由 Converter 实现类自行扩充，非框架接口约束）。
  *
  * <p><strong>关于 equals/hashCode</strong>：本基类<b>不覆写</b> {@code equals}/{@code hashCode}， 子类可自由使用
  * Lombok {@code @Data} 生成基于全字段的判等逻辑。 需要按 ID 判等时请显式调用 {@link #entityEquals(Object)}。

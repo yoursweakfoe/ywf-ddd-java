@@ -38,24 +38,6 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         return po;
     }
 
-    @Override
-    public void updateDomain(OrderPO po, Order domain) {
-        domain.setId(po.getId() != null ? UUID.fromString(po.getId()) : null);
-        domain.setStatus(po.getStatus() != null ? OrderStatus.valueOf(po.getStatus()) : null);
-        domain.setItems(jsonToItems(po.getItems()));
-        domain.setTotalAmount(po.getTotalAmount());
-        domain.setCustomerId(po.getCustomerId());
-    }
-
-    @Override
-    public void updatePO(Order domain, OrderPO po) {
-        po.setId(domain.getId() != null ? domain.getId().toString() : null);
-        po.setStatus(domain.getStatus() != null ? domain.getStatus().name() : null);
-        po.setItems(itemsToJson(domain.getItems()));
-        po.setTotalAmount(domain.getTotalAmount());
-        po.setCustomerId(domain.getCustomerId());
-    }
-
     // ==================== JSON 序列化 ====================
 
     private static String itemsToJson(List<OrderItem> items) {

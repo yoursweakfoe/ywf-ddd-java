@@ -45,7 +45,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `BasicConverter<Domain, PO>` | 基础设施层 | Domain ↔ PO |
 | `BasicPresenter<DTO, CO>` | 应用层 | DTO → CO（单向） |
 
-三者均为普通 `@Component` 类、逐字段显式赋值（不使用代码生成器）。富领域模型的 `toDomain` 走 `reconstitute()` 静态工厂，不适用的 update 方法抛 `UnsupportedOperationException`。List/Set 集合方法由接口 default 实现提供。
+三者均为普通 `@Component` 类、逐字段显式赋值（不使用代码生成器）。**最小契约原则**：`BasicAssembler` 仅声明 `toDomain`/`toDTO`、`BasicConverter` 仅声明 `toDomain`/`toPO`（+ List/Set 集合委托 default 方法），**不定义增量更新方法**——需要增量合并的实现类自行声明普通方法（如 `updatePO` 合并业务字段），富领域模型因此无需任何「不支持也要写 throw」样板。富领域模型的 `toDomain` 走 `reconstitute()` 静态工厂。
 
 ### 仓储支撑（MybatisPersistence）
 

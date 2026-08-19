@@ -97,15 +97,6 @@ class OrderConverterTest {
     }
 
     @Test
-    void updateDomain_shouldThrowUnsupported() {
-        OrderPO po = buildOrderPO();
-        Order order = converter.toDomain(po);
-
-        assertThatThrownBy(() -> converter.updateDomain(po, order))
-                .isInstanceOf(UnsupportedOperationException.class);
-    }
-
-    @Test
     void updatePO_shouldMergeChangedFields() {
         Order order = new Order(UUID.randomUUID(),
                 List.of(new OrderItem(1L, 2, BigDecimal.TEN)), "customer-1");

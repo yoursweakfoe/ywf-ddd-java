@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 基础转换器接口 —— 基础设施层 Domain 与 PO 之间的双向转换契约。
+ * 基础转换器接口 —— 基础设施层 Domain 与 PO 之间的转换契约。
  *
  * <p>与 {@link com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler} 对称：
  *
@@ -13,6 +13,10 @@ import java.util.stream.Collectors;
  *   <li>BasicAssembler —— 应用层：DTO ↔ Domain
  *   <li>BasicConverter —— 基础设施层：Domain ↔ PO
  * </ul>
+ *
+ * <p>本接口是<strong>最小契约</strong>：只声明 {@code MybatisPersistence} 实际消费的
+ * {@code toDomain}/{@code toPO} 与批量委托组合子，<strong>不携带任何与模型形态相关的
+ * 非通用方法</strong>（如增量更新 updateXxx）——抽取层代码最小化，子类自行扩充。
  *
  * <h3>实现约定（纯手写显式映射）</h3>
  * <ul>
@@ -26,6 +30,12 @@ import java.util.stream.Collectors;
  *
  * <p>List/Set 方法已提供 default 实现（委托单体方法），实现类只需关注
  * {@code toDomain}/{@code toPO} 核心逻辑。
+ *
+ * <p><strong>增量更新说明</strong>：本接口<strong>不定义</strong> {@code updateDomain} /
+ * {@code updatePO}。框架持久化路径为「load → 聚合行为 → toPO 全量 UPDATE」；
+ * 若实现类确有增量合并需求（如「reload PO → 合并业务字段」的乐观锁变体），
+ * 自行在类上声明普通方法（{@code public void mergeInto(XxxDomain domain, XxxPO po)}），
+ * 框架不为此提供占位。
  *
  * <p>乐观锁说明：需要乐观锁的实体在 PO 上声明 {@code @Version} 字段，
  * 由 {@code OptimisticLockerInnerInterceptor} 自动处理，领域层无需感知。
@@ -52,50 +62,6 @@ public interface BasicConverter<Domain, PO> {
      * @return 对应的 PO
      */
     PO toPO(Domain domain);
-
-    // ==================== 增量更新 ====================
-
-    /**
-     * 将 PO 中的属性合并到已有领域对象上（不创建新实例）。
-     *
-     * <p>富领域模型（聚合根无 setter）通常不支持增量更新，保持默认抛
-     * {@link UnsupportedOperationException}（重建走 {@code reconstitute()}）。
-     * 贫血模型需要时覆写本方法，参考实现思路：
-     * <pre>{@code
-     * @Override
-     * public void updateDomain(XxxPO po, XxxDomain domain) {
-     *     domain.setName(po.getName());
-     *     // ... 逐字段显式赋值
-     * }
-     * }</pre>
-     *
-     * @param po 持久化对象
-     * @param domain 待更新的领域对象
-     */
-    default void updateDomain(PO po, Domain domain) {
-        throw new UnsupportedOperationException(
-                "updateDomain not supported for rich domain model; use reconstitute() instead");
-    }
-
-    /**
-     * 将领域对象中的属性合并到已有 PO 上（不创建新实例）。
-     *
-     * <p>默认抛 {@link UnsupportedOperationException}，需要时覆写：
-     * <pre>{@code
-     * @Override
-     * public void updatePO(XxxDomain domain, XxxPO po) {
-     *     po.setName(domain.getName());
-     *     // ... 逐字段显式赋值
-     * }
-     * }</pre>
-     *
-     * @param domain 领域对象
-     * @param po 待更新的持久化对象
-     */
-    default void updatePO(Domain domain, PO po) {
-        throw new UnsupportedOperationException(
-                "updatePO not supported for rich domain model");
-    }
 
     // ==================== List 转换（default 委托单体方法） ====================
 

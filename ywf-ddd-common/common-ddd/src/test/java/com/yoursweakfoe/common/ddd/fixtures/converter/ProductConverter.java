@@ -21,18 +21,4 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
         // version 由乐观锁拦截器维护，createAt / updateAt 由 BasicAutoFillHandler 填充，不映射
         return po;
     }
-
-    @Override
-    public void updateDomain(ProductPO po, Product domain) {
-        domain.setId(po.getId());
-        domain.setName(po.getName());
-        domain.setStock(po.getStock());
-    }
-
-    @Override
-    public void updatePO(Product domain, ProductPO po) {
-        po.setId(domain.getId());
-        po.setName(domain.getName());
-        po.setStock(domain.getStock());
-    }
 }
