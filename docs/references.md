@@ -45,7 +45,7 @@
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| Specification 模式 | Evans 原著、Spring Data JPA Specification、jMolecules | MyBatis-Plus `LambdaQueryWrapper` 已是类型安全可组合查询规约；充血模型下校验内聚于聚合根；CQRS 分离后无"同一规则既做校验又做查询"场景 |
+| Specification 模式 | Evans 原著、Spring Data JPA Specification、jMolecules | 采纳为**纯接口（可选工具）**：领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用；但**查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`**（读侧绕过 domain），简单校验仍用聚合根内 if-throw，不强制走规约 |
 | 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸且仍需转换为错误码 |
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |

@@ -321,4 +321,4 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 | 边界：聚合根 ID 自动生成策略 | ID 生成与业务强相关，由子类构造器自行决定 |
 | 边界：脏检查 / 变更追踪 | 全量 UPDATE 策略已覆盖 |
 | 边界：领域事件异步 / 跨进程发布 | 当前进程内 Spring Event；跨服务经 Seata + HTTP 显式调用 |
-| 边界：Specification 模式（已移除） | MyBatis-Plus `LambdaQueryWrapper` 已是可组合查询规约 |
+| 边界：Specification 模式 | 采纳为纯接口（可选工具）：领域规则 and/or/not 组合表达，供复杂校验场景；查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`，简单校验仍用聚合根 if-throw |
