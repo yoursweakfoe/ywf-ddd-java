@@ -21,10 +21,47 @@ import java.util.Optional;
  *   <li>业务代码只依赖本接口，不依赖 MyBatis/数据库相关实现类
  * </ul>
  *
+ * <h3>本接口是「聚合生命周期」契约，不是「数据查询」契约</h3>
+ * <p>五个方法构成最小生命周期集（load → 行为 → save/update/delete + exists 守卫）。
+ * 两类「读」方法刻意<strong>不</strong>在此声明，落点另有所属：
+ * <ul>
+ *   <li><b>展示型读</b>（分页 / 条件查询投影 / findAll / count for UI）——
+ *       CQRS 下拆至 application 层读端口
+ *       {@link com.yoursweakfoe.common.ddd.application.repository.QueryRepository}
+ *       （PO → 读 DTO 直接投影，绕过 domain），<strong>本接口不声明</strong>。</li>
+ *   <li><b>决策型读</b>（领域逻辑需要读数据来做判断）——按领域语义写在<strong>业务子接口</strong>上
+ *       （如 {@code findByOrderNo} / {@code countByCustomerAndStatus}），返回聚合根或计数，
+ *       由 {@code MybatisPersistence} 的 {@code findDomainOneByCondition} 支撑，
+ *       不进本最小契约（避免用查询形状污染生命周期抽象）。</li>
+ * </ul>
+ *
  * @param <Domain> 领域对象类型（必须实现 {@link Identifiable}）
  * @param <ID>     标识类型
  */
 public interface Repository<Domain extends Identifiable<ID>, ID> {
+
+    // =============================================================
+    // 结构性参考（注释版方法，非契约）
+    // 取消每行行首 "// " 即为真实的方法声明形态。两类「读」落点不同：
+    //
+    // 【一】展示型读（分页 / 条件投影 / findAll / count-for-UI）→ 已拆出，
+    //      归 application 层 read 端口（QueryRepository 标记），本接口不声明：
+    //
+    //     PageResult<XxxViewDTO> findPage(XxxPageQuery query);   // 分页投影
+    //     Optional<XxxViewDTO> findOne(XxxQuery query);         // 条件投影（Query 封装条件）
+    //     List<XxxViewDTO> findAll();                           // 全量投影
+    //     long count(XxxQuery query);                           // 计数
+    //
+    // 【二】决策型读（领域逻辑要读数据做判断）→ 写在业务子接口（extends Repository），
+    //      按领域语义命名、返回聚合根或计数，由 MybatisPersistence.findDomainOneByCondition 支撑：
+    //
+    //     Optional<Domain> findByXxx(String someKey);                 // 幂等：业务唯一键查重
+    //     int countByXxx(ID customerId, String status);              // 风控：满足条件的计数
+    //     List<Domain> findRecentByXxx(ID customerId, int limit);    // 决策：最近 N 笔
+    //
+    // 注意：以上是「形状参考」，不返回 DTO、不承载分页（那些归【一】）。真实方法
+    // 只应在业务子接口里按需添加，本最小生命周期契约保持五个方法不变。
+    // =============================================================
 
     /**
      * 根据 ID 查找领域对象。

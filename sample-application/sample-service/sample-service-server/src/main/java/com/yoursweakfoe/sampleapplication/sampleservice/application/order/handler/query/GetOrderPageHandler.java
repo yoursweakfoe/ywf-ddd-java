@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.query;
 
 import com.yoursweakfoe.common.ddd.application.handler.QueryHandler;
-import com.yoursweakfoe.common.ddd.application.PageResult;
+import com.yoursweakfoe.common.ddd.application.repository.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;

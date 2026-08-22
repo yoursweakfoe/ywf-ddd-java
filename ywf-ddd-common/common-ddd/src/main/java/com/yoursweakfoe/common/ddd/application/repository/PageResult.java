@@ -1,11 +1,12 @@
-package com.yoursweakfoe.common.ddd.application;
+package com.yoursweakfoe.common.ddd.application.repository;
 
 import java.util.List;
 
 /**
  * 分页结果 —— 框架级分页响应容器，隔离基础设施分页实现（如 MyBatis-Plus Page）。
  *
- * <p>本类型定义在 application 层（读侧 CQRS 查询的分页结果容器）。读侧绕过 domain
+ * <p>本类型定义在 application 层（读侧 CQRS 查询的分页结果容器，与 {@link QueryRepository}
+ * 同居 {@code application.repository} 子包）。读侧绕过 domain
  * （PO → 读 DTO 直接投影），分页容器是应用层读模型的载体：
  *
  * <pre>

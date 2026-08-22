@@ -2,7 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persiste
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.yoursweakfoe.common.ddd.application.PageResult;
+import com.yoursweakfoe.common.ddd.application.repository.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mapper.OrderMapper;

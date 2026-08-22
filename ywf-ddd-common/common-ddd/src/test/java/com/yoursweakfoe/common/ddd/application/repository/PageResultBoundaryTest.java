@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.application;
+package com.yoursweakfoe.common.ddd.application.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
