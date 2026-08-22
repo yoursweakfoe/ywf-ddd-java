@@ -3,6 +3,7 @@ package com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.GenericTypeResolver;
 
 /**
  * MyBatis 仓储支撑类 —— 封装 MyBatis-Plus 持久化 + 领域事件发布。
@@ -108,15 +110,21 @@ public abstract class MybatisPersistence<
     /** 领域事件冲刷器（先清后发契约，委托独立组件以保持本类单一职责） */
     private final DomainEventFlusher eventFlusher;
 
+    /** PO 类型（构造期经泛型解析固化，供主键列名反射） */
+    private final Class<PO> poClass;
+
     // region 依赖注入
     /**
      * @param baseMapper MyBatis-Plus Mapper 实例（由子类构造器注入具体 Mapper 类型）
      * @param domainEventPublisherProvider 领域事件发布者（可选，容器中无此 Bean 时为 null，事件将被丢弃并记录警告）
      */
+    @SuppressWarnings("unchecked")
     protected MybatisPersistence(Mapper baseMapper,
                                        ObjectProvider<DomainEventPublisher> domainEventPublisherProvider) {
         this.baseMapper = baseMapper;
         this.eventFlusher = new DomainEventFlusher(domainEventPublisherProvider);
+        this.poClass = (Class<PO>) GenericTypeResolver
+                .resolveTypeArguments(getClass(), MybatisPersistence.class)[1];
     }
     // endregion
 
@@ -194,8 +202,8 @@ public abstract class MybatisPersistence<
     /**
      * 判断指定 ID 的实体是否存在。
      *
-     * <p>默认使用 {@code exists} 查询（SELECT 1 ... LIMIT 1，不加载完整行）。
-     * 子类可覆写 {@link #existsById(Serializable)} 以自定义 ID 列名。
+     * <p>使用 {@code exists} 查询（SELECT 1 ... LIMIT 1，不加载完整行）。
+     * 主键列名经 {@link TableInfoHelper} 反射 PO 的 {@code @TableId} 注解解析，子类无需指定。
      */
     public boolean existsDomainById(ID id) {
         return existsById(toPersistenceId(id));
@@ -413,11 +421,17 @@ public abstract class MybatisPersistence<
     /**
      * 判断指定 ID 的记录是否存在（轻量 EXISTS 查询，不加载完整行）。
      *
-     * <p>默认使用主键列名 {@code id}。若 PO 的主键列名不是 {@code id}，
-     * 子类应覆写本方法指定正确的列名。
+     * <p>主键列名经 {@link TableInfoHelper} 反射 PO 的 {@code @TableId} 注解解析，
+     * 不写死列名：PO 字段叫 {@code id} 则为 {@code id}，叫 {@code orderId}
+     * （配合驼峰映射）则为 {@code order_id}，或按 {@code @TableId("order_no")} 显式指定。
      */
     protected boolean existsById(Serializable id) {
-        return baseMapper.exists(new QueryWrapper<PO>().eq("id", id));
+        return baseMapper.exists(new QueryWrapper<PO>().eq(keyColumn(), id));
+    }
+
+    /** 反射 PO 的 {@code @TableId} 注解，返回真实主键列名。 */
+    private String keyColumn() {
+        return TableInfoHelper.getTableInfo(poClass).getKeyColumn();
     }
 
     // endregion
