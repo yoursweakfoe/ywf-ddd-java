@@ -61,13 +61,16 @@ server/
 │       │   └── publisher/             # Publisher（出站投递）
 │       ├── assembler/                 # Domain → DTO（手写显式映射）
 │       ├── presenter/                 # DTO → CO（手写显式映射）
-│       └── dto/                       # 内部视图
+│       ├── dto/                       # 内部视图
+│       └── repository/                # 读端口（读侧查询接口，对偶 infra repository/application）
+│           └── application/           #   XxxQueryRepository（CQRS 读端口，绕过 domain）
 │
 ├── domain/                          # 领域模型
 │   ├── {aggregate}/
 │   │   ├── model/                     # 聚合根 + 实体 + 值对象 + 枚举
 │   │   │   └── event/                 # 领域事件
-│   │   ├── repository/                # Repository 接口
+│   │   ├── repository/                # Repository 接口（对偶 infra repository/domain）
+│   │   │   └── domain/                #   XxxRepository（写侧，聚合生命周期）
 │   │   ├── portal/                    # 外部资源访问接口【按需】
 │   │   ├── service/                   # 聚合内领域服务【按需】
 │   │   ├── factory/                   # 复杂创建逻辑【按需】
@@ -80,13 +83,16 @@ server/
 └── infrastructure/                  # 基础设施
     ├── persistence/                   # 持久化（实现 Domain Repository）
     │   ├── master/                    # 主数据源（框架默认回退值）
-    │   │   └── {aggregate}/           # 按聚合命名空间隔离
-    │   │       ├── po/                # 持久化对象
-    │   │       ├── converter/         # Domain ↔ PO 转换
-    │   │       ├── mapper/            # MyBatis-Plus Mapper
-    │   │       │   └── xml/           # MyBatis XML（复杂 SQL）
-    │   │       └── repository/        # Repository 实现
-    │   └── {other}/                   # 其他数据源（结构同 master）【按需】
+│   │   └── {aggregate}/           # 按聚合命名空间隔离
+│   │       ├── mybatisplus/           # MyBatis-Plus 技术位（撤换 ORM 时整体删除）
+│   │       │   ├── po/                # 持久化对象
+│   │       │   └── mapper/            # MyBatis-Plus Mapper
+│   │       │       └── xml/           # MyBatis XML（复杂 SQL）
+│   │       ├── converter/             # Domain ↔ PO 转换（框架 BasicConverter 桥）
+│   │       └── repository/            # Repository 实现
+│   │           ├── application/       # XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
+│   │           └── domain/            # XxxRepositoryImpl（写侧，对偶 domain Repository）
+│   │   └── {other}/                   # 其他数据源（结构同 master）【按需】
     ├── gateway/                       # 外部系统网关（实现 Domain Portal）
     │   └── {capability}/              # 按外部能力分包
     └── config/                        # Spring @Configuration

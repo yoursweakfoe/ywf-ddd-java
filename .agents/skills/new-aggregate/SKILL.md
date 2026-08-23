@@ -28,14 +28,14 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 6. `domain/{agg}/model/{Agg}.java` — 聚合根（extends AggregateRoot<UUID>）
 7. `domain/{agg}/model/{Agg}Status.java` — 状态枚举
 8. `domain/{agg}/event/domain/{Agg}CreatedEvent.java` — 领域事件
-9. `domain/{agg}/repository/{Agg}Repository.java` — 仓储接口
+9. `domain/{agg}/repository/domain/{Agg}Repository.java` — 仓储接口（写侧，对偶 infra repository/domain）
 
 ### Phase 3: infrastructure 层
 
 10. `infrastructure/persistence/master/{agg}/mybatisplus/po/{Agg}PO.java` — 持久化对象（MyBatis-Plus 注解载体）
 11. `infrastructure/persistence/master/{agg}/mybatisplus/mapper/{Agg}Mapper.java` — MyBatis-Plus Mapper（extends BaseMapper）
 12. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器（框架 BasicConverter 桥）
-13. `infrastructure/persistence/master/{agg}/repository/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPlusPersistence）
+13. `infrastructure/persistence/master/{agg}/repository/domain/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPlusPersistence）
 
 ### Phase 4: application 层
 

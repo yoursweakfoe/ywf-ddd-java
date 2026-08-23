@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository;
+package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;

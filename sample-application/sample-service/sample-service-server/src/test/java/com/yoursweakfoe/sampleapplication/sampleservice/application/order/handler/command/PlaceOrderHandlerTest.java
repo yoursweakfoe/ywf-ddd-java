@@ -10,7 +10,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assemb
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;

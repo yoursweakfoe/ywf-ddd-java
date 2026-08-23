@@ -44,12 +44,12 @@ sample-service/
     │   ├── model/Payment.java                   ← ⑬ 聚合根
     │   ├── model/PaymentStatus.java             ← ⑭ 枚举
     │   ├── event/domain/PaymentCreatedEvent.java ← ⑮ DomainEvent（可选）
-    │   └── repository/PaymentRepository.java    ← ⑯ Repository 接口
+    │   └── repository/domain/PaymentRepository.java ← ⑯ Repository 接口（写侧）
     └── infrastructure/persistence/master/payment/
         ├── mybatisplus/po/PaymentPO.java         ← ⑰ PO（MyBatis-Plus 注解载体）
         ├── mybatisplus/mapper/PaymentMapper.java ← ⑲ Mapper（extends BaseMapper）
         ├── converter/PaymentConverter.java       ← ⑱ Converter（框架 BasicConverter 桥）
-        └── repository/PaymentRepositoryImpl.java ← ⑳ RepositoryImpl（继承 MybatisPlusPersistence）
+        └── repository/domain/PaymentRepositoryImpl.java ← ⑳ RepositoryImpl（继承 MybatisPlusPersistence）
 ```
 
 ## ① Contract — Controller 契约接口

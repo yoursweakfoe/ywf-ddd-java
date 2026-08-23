@@ -10,7 +10,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domai
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPlacedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderShippedEvent;
 import com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.extern.slf4j.Slf4j;

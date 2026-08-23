@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.application.repository.query;
+package com.yoursweakfoe.common.ddd.application.repository.application;
 
 import com.yoursweakfoe.common.contract.dto.query.PageableQuery;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;

@@ -75,8 +75,8 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 7. 创建分层包结构：
    ```
    adapter/web/（Controller；东西向同样经 HTTP 消费契约接口）
-   application/{agg}/handler/ + assembler/ + presenter/ + dto/
-   domain/{agg}/model/ + repository/ + portal/
+   application/{agg}/handler/ + assembler/ + presenter/ + dto/ + repository/application/
+   domain/{agg}/model/ + repository/domain/ + portal/
    domain/shared/service/
    infrastructure/persistence/master/{agg}/mybatisplus/po/ + mybatisplus/mapper/ + converter/ + repository/
    infrastructure/gateway/

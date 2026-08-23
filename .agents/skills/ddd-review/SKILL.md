@@ -29,8 +29,10 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 
 ### 持久化
 
-- [ ] Repository 接口在 `domain/{agg}/repository/`
-- [ ] Repository 实现在 `infrastructure/persistence/{ds}/{agg}/repository/`
+- [ ] Repository 接口在 `domain/{agg}/repository/domain/`
+- [ ] Repository 实现在 `infrastructure/persistence/{ds}/{agg}/repository/domain/`
+- [ ] 读端口（QueryRepository）接口在 `application/{agg}/repository/application/`
+- [ ] 读实现在 `infrastructure/persistence/{ds}/{agg}/repository/application/`
 - [ ] PO 有 `@Version` + `@TableLogic` + `@TableName` 含 schema 前缀
 - [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器）
 - [ ] 无跨聚合共享 PO / Mapper

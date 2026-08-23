@@ -24,8 +24,8 @@ REST 请求
   → adapter/rest/OrderControllerImpl（参数包装）
     → application/order/service/OrderAppService（委托 + 呈现）
   → application/order/handler/GetOrderHandler（查询编排）
-    → application/order/repository/OrderQueryRepository（读端口）
-      → infrastructure/.../repository/query/OrderQueryRepositoryImpl（PO → 读 DTO 直接投影）
+    → application/order/repository/application/OrderQueryRepository（读端口）
+      → infrastructure/.../repository/application/OrderQueryRepositoryImpl（PO → 读 DTO 直接投影）
       → application/order/presenter/OrderViewPresenter（DTO → CO）
   ← OrderCO
 ```
@@ -171,7 +171,7 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 ## 5. Application — 读端口（Query Port）
 
 ```java
-// application/order/repository/OrderQueryRepository.java
+// application/order/repository/application/OrderQueryRepository.java
 public interface OrderQueryRepository {
 
     /** 按 ID 投影订单读 DTO（不存在返回 empty）。 */
@@ -278,4 +278,4 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 | application | `handler/GetOrderPageHandler.java` | 分页查询编排 |
 | application | `repository/OrderQueryRepository.java` | 读端口（返回读 DTO） |
 | application | `presenter/OrderViewPresenter.java` | 读 DTO → CO |
-| infrastructure | `repository/query/OrderQueryRepositoryImpl.java` | 读实现（PO → 读 DTO 投影） |
+| infrastructure | `repository/application/OrderQueryRepositoryImpl.java` | 读实现（PO → 读 DTO 投影） |

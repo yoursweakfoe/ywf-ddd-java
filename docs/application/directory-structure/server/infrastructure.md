@@ -10,7 +10,9 @@ infrastructure/
 │   │       │   └── mapper/            #         MyBatis-Plus Mapper 接口
 │   │       │       └── xml/           #            MyBatis XML（复杂 SQL）
 │   │       ├── converter/             #       Domain ↔ PO 转换（BasicConverter，框架原生桥）
-│   │       └── repository/            #       Repository 实现（MybatisPlusPersistence）
+│   │       └── repository/            #       Repository 实现
+│   │           ├── application/       #         XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
+│   │           └── domain/            #         XxxRepositoryImpl（写侧，对偶 domain Repository）
 │   └── {other}/                       #   其他数据源（结构同 master）【按需】
 ├── gateway/                           # 外部系统网关（实现 Domain Portal 接口）
 │   └── {capability}/                  #   按外部能力分包（多于 3 个实现时）
@@ -26,7 +28,8 @@ infrastructure/
 | `persistence/{datasource}/{aggregate}/mybatisplus/mapper/` | MyBatis-Plus Mapper 接口（简单 CRUD） |
 | `persistence/{datasource}/{aggregate}/mybatisplus/mapper/xml/` | MyBatis XML（复杂 SQL、多表联查） |
 | `persistence/{datasource}/{aggregate}/converter/` | Domain ↔ PO 转换（BasicConverter 手写显式映射，框架原生桥） |
-| `persistence/{datasource}/{aggregate}/repository/` | Repository 接口实现（继承 MybatisPlusPersistence） |
+| `persistence/{datasource}/{aggregate}/repository/application/` | 读侧实现（XxxQueryRepositoryImpl，对偶 application 读端口，PO → 读 DTO 投影） |
+| `persistence/{datasource}/{aggregate}/repository/domain/` | 写侧实现（继承 MybatisPlusPersistence，对偶 domain Repository） |
 | `gateway/{capability}/` | 外部系统网关（实现 Domain Portal 接口，含 ACL 翻译） |
 | `config/` | Spring @Configuration 全局配置（Bean 定义、拦截器注册等） |
 
