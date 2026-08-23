@@ -1,8 +1,10 @@
-package com.yoursweakfoe.common.ddd.domain.event;
+package com.yoursweakfoe.common.ddd.domain.event.domain;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import lombok.Getter;
 
 /**

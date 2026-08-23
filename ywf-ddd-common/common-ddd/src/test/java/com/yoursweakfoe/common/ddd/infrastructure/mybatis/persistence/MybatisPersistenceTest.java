@@ -21,7 +21,7 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.OrderRepository;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
-import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

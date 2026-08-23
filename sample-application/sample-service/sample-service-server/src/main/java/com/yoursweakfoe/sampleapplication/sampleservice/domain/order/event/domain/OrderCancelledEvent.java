@@ -1,6 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event;
+package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain;
 
-import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import java.util.UUID;
 import lombok.Getter;
 

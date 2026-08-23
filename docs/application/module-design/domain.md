@@ -53,8 +53,8 @@
 | AggregateRoot | common-ddd/domain/model/ | `{aggregate}/model/` |
 | Entity | common-ddd/domain/model/ | `{aggregate}/model/` |
 | ValueObject | common-ddd/domain/model/ | `{aggregate}/model/` |
-| DomainEvent | common-ddd/domain/event/ | `{aggregate}/model/event/` |
-| DomainEventPublisher | common-ddd/domain/event/ | Infrastructure 层实现 |
+| DomainEvent | common-ddd/domain/event/domain/ | `{aggregate}/event/domain/` |
+| DomainEventPublisher | common-ddd/domain/event/publisher/ | `{aggregate}/event/publisher/`（业务自定义，可选；默认框架 InProcessDomainEventPublisher） |
 | Repository | common-ddd/domain/repository/ | `{aggregate}/repository/` |
 | Factory | common-ddd/domain/factory/ | `{aggregate}/factory/` |
 | DomainService | common-ddd/domain/service/ | `{aggregate}/service/` 或 `shared/service/` |
@@ -131,7 +131,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 | 事件类型 | 位置 | 消费方式 | 暴露范围 |
 |---------|------|---------|--------|
-| **领域事件** | `domain/{aggregate}/model/event/` | Spring `@EventListener`（进程内） | 不对外 |
+| **领域事件** | `domain/{aggregate}/event/domain/` | Spring `@EventListener`（进程内） | 不对外 |
 | **集成事件** | `contract/{aggregate}/dto/event/integration/` | MQ / RPC（跨服务） | 对外发布 |
 
 微服务拆分时：领域事件仍留在服务内部；需要跨服务通知时，由 application 层将领域事件转换为集成事件发布到 MQ。

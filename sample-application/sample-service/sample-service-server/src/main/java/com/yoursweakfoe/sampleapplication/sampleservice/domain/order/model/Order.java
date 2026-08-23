@@ -1,12 +1,12 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderCancelledEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderCompletedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderConfirmedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderDeliveredEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPaidEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderShippedEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCancelledEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCompletedEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderConfirmedEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderDeliveredEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPaidEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPlacedEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderShippedEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;

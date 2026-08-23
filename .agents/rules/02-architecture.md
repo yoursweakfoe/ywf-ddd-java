@@ -42,7 +42,7 @@ adapter → application → domain ← infrastructure
 每层内部以聚合名分包，打开一个聚合目录即可看到该聚合在该层的全部代码：
 
 ```
-domain/order/          → model/ + repository/ + portal/ + service/ + model/event/
+domain/order/          → model/ + repository/ + portal/ + service/ + event/（domain/ + publisher/）
 application/order/     → OrderAppService + handler/ + assembler/ + presenter/ + dto/
 infrastructure/.../order/ → po/ + converter/ + mapper/ + repository/
 adapter/order/         → web/（Controller）

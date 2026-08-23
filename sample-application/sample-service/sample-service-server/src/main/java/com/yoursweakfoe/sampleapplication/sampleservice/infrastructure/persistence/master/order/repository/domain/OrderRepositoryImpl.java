@@ -5,7 +5,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter.OrderConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mapper.OrderMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.po.OrderPO;
-import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
 import java.io.Serializable;

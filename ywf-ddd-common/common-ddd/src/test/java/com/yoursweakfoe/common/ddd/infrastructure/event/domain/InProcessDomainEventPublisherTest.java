@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
-import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

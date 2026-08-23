@@ -64,7 +64,7 @@ graph TB
 
 | 环节 | 状态 | 落地位置 |
 |------|------|---------|
-| 领域事件定义 + 聚合根注册 | ✅ 已实现 | `domain/{agg}/model/event/` + `registerEvent()` |
+| 领域事件定义 + 聚合根注册 | ✅ 已实现 | `domain/{agg}/event/domain/` + `registerEvent()` |
 | 仓储持久化后发布（先清后发） | ✅ 已实现 | `MybatisPersistence` → `DomainEventFlusher` → `InProcessDomainEventPublisher` |
 | 域内反应（DomainEventListener） | ✅ 已实现 | `application/{agg}/event/listener/` |
 | 集成事件契约 | ✅ 已实现 | `contract/{agg}/dto/event/integration/` |
@@ -74,7 +74,7 @@ graph TB
 ## 1. Domain — 定义 + 注册事件
 
 ```java
-// domain/order/model/event/OrderCancelledEvent.java
+// domain/order/event/domain/OrderCancelledEvent.java
 public class OrderCancelledEvent extends DomainEvent {
 
     private final UUID orderId;
@@ -178,7 +178,7 @@ public class OrderEventPublisher {
 
 | 维度 | DomainEvent | IntegrationEvent |
 |------|-------------|------------------|
-| 位置 | `domain/{agg}/model/event/` | `contract/{agg}/dto/event/integration/` |
+| 位置 | `domain/{agg}/event/domain/` | `contract/{agg}/dto/event/integration/` |
 | 基类 | `extends DomainEvent`（common-ddd） | `implements IntegrationEvent`（common-contract） |
 | 受众 | 服务内部（@EventListener） | 外部服务（MQ 订阅） |
 | 内容 | 丰富（领域细节） | 精简（仅外部需要的字段） |
@@ -189,7 +189,7 @@ public class OrderEventPublisher {
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| domain | `model/event/OrderCancelledEvent.java` | 领域事件定义 |
+| domain | `event/domain/OrderCancelledEvent.java` | 领域事件定义 |
 | domain | `model/Order.java` | registerEvent() 注册 |
 | infrastructure | `repository/OrderRepositoryImpl.java` | 持久化后触发发布 |
 | application | `event/listener/OrderDomainEventListener.java` | @EventListener 监听（域内反应） |

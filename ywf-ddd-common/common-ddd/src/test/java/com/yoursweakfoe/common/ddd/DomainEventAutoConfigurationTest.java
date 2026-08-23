@@ -3,7 +3,7 @@ package com.yoursweakfoe.common.ddd;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.event.domain.InProcessDomainEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;

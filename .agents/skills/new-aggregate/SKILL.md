@@ -27,7 +27,7 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 
 6. `domain/{agg}/model/{Agg}.java` — 聚合根（extends AggregateRoot<UUID>）
 7. `domain/{agg}/model/{Agg}Status.java` — 状态枚举
-8. `domain/{agg}/model/event/{Agg}CreatedEvent.java` — 领域事件
+8. `domain/{agg}/event/domain/{Agg}CreatedEvent.java` — 领域事件
 9. `domain/{agg}/repository/{Agg}Repository.java` — 仓储接口
 
 ### Phase 3: infrastructure 层

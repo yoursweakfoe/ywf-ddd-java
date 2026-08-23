@@ -14,7 +14,7 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 ### 1. 定义领域事件
 
-- 位置：`domain/{agg}/model/event/{Agg}{Action}Event.java`
+- 位置：`domain/{agg}/event/domain/{Agg}{Action}Event.java`
 - 继承 `DomainEvent`
 - 所有字段 `final`（不可变）
 - 构造器接收必要业务数据（如聚合根 ID）

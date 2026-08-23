@@ -6,7 +6,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repositor
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter.ProductConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.po.ProductPO;
-import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
 import java.util.Optional;

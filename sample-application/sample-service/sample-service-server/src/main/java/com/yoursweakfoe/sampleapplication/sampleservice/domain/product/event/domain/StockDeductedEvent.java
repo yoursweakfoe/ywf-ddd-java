@@ -1,6 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event;
+package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.event.domain;
 
-import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import lombok.Getter;
 
 /** 库存扣减事件 —— 商品库存被成功扣减后发布。 */

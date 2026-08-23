@@ -1,8 +1,8 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.event.listener;
 
 import com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockDeductedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockRestoredEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.event.domain.StockDeductedEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.event.domain.StockRestoredEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

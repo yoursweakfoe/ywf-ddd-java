@@ -1,6 +1,6 @@
 package com.yoursweakfoe.common.ddd;
 
-import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.event.domain.InProcessDomainEventPublisher;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

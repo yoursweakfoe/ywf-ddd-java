@@ -1,7 +1,7 @@
 package com.yoursweakfoe.common.ddd.infrastructure.event.domain;
 
-import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
-import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 

@@ -1,4 +1,6 @@
-package com.yoursweakfoe.common.ddd.domain.event;
+package com.yoursweakfoe.common.ddd.domain.event.publisher;
+
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 
 import java.util.List;
 

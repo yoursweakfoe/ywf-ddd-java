@@ -1,6 +1,6 @@
 package com.yoursweakfoe.common.ddd.domain.model;
 
-import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import java.util.ArrayList;
 import java.util.List;
 

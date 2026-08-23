@@ -1,5 +1,8 @@
 package com.yoursweakfoe.common.ddd.application.event.listener;
 
+import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
+import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
+
 /**
  * 域内反应监听器标记接口 —— 标识 application 层对领域事件（DomainEvent）作出进程内反应的监听器。
  *
@@ -27,11 +30,11 @@ package com.yoursweakfoe.common.ddd.application.event.listener;
  *   <tr><th>类型</th><th>层级</th><th>方向</th></tr>
  *   <tr><td>{@code DomainEventListener}（本接口）</td><td>application/event/listener</td><td>内部领域事件入（消费）</td></tr>
  *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher}</td><td>application/event/publisher</td><td>集成事件出（投递）</td></tr>
- *   <tr><td>{@link com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher}</td><td>domain/event（接口）→ infrastructure 实现</td><td>领域事件进程内发布（框架自动）</td></tr>
+ *   <tr><td>{@link DomainEventPublisher}</td><td>domain/event（接口）→ infrastructure 实现</td><td>领域事件进程内发布（框架自动）</td></tr>
  *   <tr><td>adapter Consumer</td><td>adapter/event/consumer</td><td>集成事件入（MQ）</td></tr>
  * </table>
  *
- * @see com.yoursweakfoe.common.ddd.domain.event.DomainEvent
+ * @see DomainEvent
  * @see com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher
  */
 public interface DomainEventListener {

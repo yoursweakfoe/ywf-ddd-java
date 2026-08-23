@@ -43,7 +43,7 @@ sample-service/
     ├── domain/payment/
     │   ├── model/Payment.java                   ← ⑬ 聚合根
     │   ├── model/PaymentStatus.java             ← ⑭ 枚举
-    │   ├── model/event/PaymentCreatedEvent.java ← ⑮ DomainEvent（可选）
+    │   ├── event/domain/PaymentCreatedEvent.java ← ⑮ DomainEvent（可选）
     │   └── repository/PaymentRepository.java    ← ⑯ Repository 接口
     └── infrastructure/persistence/master/payment/
         ├── po/PaymentPO.java                    ← ⑰ PO
