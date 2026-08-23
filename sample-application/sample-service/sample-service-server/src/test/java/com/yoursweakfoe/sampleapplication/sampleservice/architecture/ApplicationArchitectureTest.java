@@ -110,6 +110,26 @@ class ApplicationArchitectureTest {
     static final ArchRule r7c_app_service_no_direct_publisher =
             DDDArchitectureRules.APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_PUBLISHER;
 
+    /** R8a —— 实现 RestAdapter 标记的类必须位于 adapter 层。 */
+    @ArchTest
+    static final ArchRule r8a_rest_entries_marked_in_adapter =
+            DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+
+    /** R8b —— 类名以 ControllerImpl 结尾的类必须实现 RestAdapter 标记。 */
+    @ArchTest
+    static final ArchRule r8b_controller_impl_must_be_marked =
+            DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
+
+    /** R9a —— 实现 IntegrationEventConsumer 标记的类必须位于 adapter 层。 */
+    @ArchTest
+    static final ArchRule r9a_event_consumers_marked_in_adapter =
+            DDDArchitectureRules.EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER;
+
+    /** R9b —— ..event.consumer.. 包下的类必须实现 IntegrationEventConsumer 标记。 */
+    @ArchTest
+    static final ArchRule r9b_event_consumer_package_marked =
+            DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
+
     // ── 应用特有规则 ───────────────────────────────────────────────────
 
     /** A3 —— 领域 Repository 接口（继承框架 Repository）必须在 domain..repository.. 包下（读端口 QueryRepository 除外）。 */

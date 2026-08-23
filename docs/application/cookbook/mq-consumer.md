@@ -1,6 +1,6 @@
 # MQ 消费者（Consumer）
 
-> ⛔ **本文为设计模板，尚未实现**：Consumer 依赖 common-mq 模块（RocketMQTemplate），该模块尚未建设，示例应用当前无 Consumer 实现。建设完成后按本文模板落地 `adapter/consumer/`，AppService → CommandHandler 写路径零改动复用。
+> ⛔ **本文为设计模板，尚未实现**：Consumer 依赖 common-mq 模块（RocketMQTemplate），该模块尚未建设，示例应用当前无 Consumer 实现。建设完成后按本文模板落地 `adapter/event/consumer/`（实现 `IntegrationEventConsumer` 标记，common-ddd/adapter/event/consumer/），AppService → CommandHandler 写路径零改动复用。
 >
 > 设计原理 → [module-design/adapter.md](../module-design/adapter.md)
 
@@ -20,7 +20,7 @@
 
 ```
 MQ Broker（RocketMQ / Kafka）
-  → adapter/consumer/PaymentEventConsumer
+  → adapter/event/consumer/PaymentEventConsumer
     → 反序列化 → 构建 Command
     → application/order/service/OrderAppService.payOrder(command)
       → PayOrderHandler（复用已有写路径）
@@ -29,9 +29,10 @@ MQ Broker（RocketMQ / Kafka）
 ## 1. Adapter — Consumer 入口
 
 ```java
-// adapter/consumer/PaymentEventConsumer.java
-package com.yoursweakfoe.sampleapplication.sampleservice.adapter.consumer;
+// adapter/event/consumer/PaymentEventConsumer.java
+package com.yoursweakfoe.sampleapplication.sampleservice.adapter.event.consumer;
 
+import com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.service.OrderAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import org.slf4j.Logger;
@@ -42,9 +43,10 @@ import org.springframework.stereotype.Component;
  * 支付事件消费者 —— 接收支付成功消息，触发订单状态变迁。
  *
  * <p>当前为模板代码，MQ 监听注解待 common-mq 模块建设后接入。
+ * <p>实现 {@link IntegrationEventConsumer} 标记定型「集成事件入站」角色（ArchUnit 守护）。
  */
 @Component
-public class PaymentEventConsumer {
+public class PaymentEventConsumer implements IntegrationEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentEventConsumer.class);
 
@@ -83,7 +85,7 @@ public class PaymentEventConsumer {
 ```
 
 要点：
-- 位于 `adapter/consumer/`
+- 位于 `adapter/event/consumer/`（实现 `IntegrationEventConsumer` 标记，common-ddd/adapter/event/consumer/）
 - `@Component`（MQ 监听注解待 common-mq 模块建设后补充）
 - **纯透传** AppService，不含业务逻辑
 - 复用已有 Handler（`PayOrderHandler`），不重复编写业务代码
@@ -129,7 +131,7 @@ public void onPaymentSucceeded(String messageBody) {
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| adapter | `consumer/PaymentEventConsumer.java` | MQ 消费入口 |
+| adapter | `event/consumer/PaymentEventConsumer.java` | MQ 消费入口 |
 | application | `OrderAppService.java` | 委托 Handler（复用） |
 | application | `handler/PayOrderHandler.java` | 已有写路径（复用） |
 | contract | `dto/command/PayOrderCommand.java` | 命令对象（复用） |

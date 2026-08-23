@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
 
+import com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.service.ProductAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 本实现类仅以 {@code @RestController} 标记协议并透传。
  */
 @RestController
-public class ProductControllerImpl implements ProductController {
+public class ProductControllerImpl implements ProductController, RestAdapter {
 
     private final ProductAppService productAppService;
 

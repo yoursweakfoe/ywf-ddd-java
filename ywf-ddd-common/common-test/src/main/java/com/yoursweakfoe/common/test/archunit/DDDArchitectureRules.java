@@ -57,6 +57,10 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R7a —— 域内反应监听器必须实现 {@code DomainEventListener} 标记（定型 application 层域内反应角色）</li>
  *   <li>R7b —— 集成事件出站 Publisher 必须实现 {@code IntegrationEventPublisher} 标记（定型 application 层出站角色）</li>
  *   <li>R7c —— AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）</li>
+ *   <li>R8a —— 实现 {@code RestAdapter} 标记的类必须位于 adapter 层（定型 REST 入口角色）</li>
+ *   <li>R8b —— 类名以 ControllerImpl 结尾的类必须实现 {@code RestAdapter} 标记（堵命名漂移）</li>
+ *   <li>R9a —— 实现 {@code IntegrationEventConsumer} 标记的类必须位于 adapter 层（定型 MQ 入站角色）</li>
+ *   <li>R9b —— {@code ..event.consumer..} 包下的类必须实现 {@code IntegrationEventConsumer} 标记</li>
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 的 adapter/application/domain/infrastructure</li>
  * </ul>
  */
@@ -224,6 +228,72 @@ public final class DDDArchitectureRules {
                     .implement("com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher")
                     .allowEmptyShould(true)
                     .as("R7c AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）");
+
+    /**
+     * R8a —— 实现 {@code RestAdapter} 标记的类（adapter 层 REST 入口）必须位于 adapter 层。
+     *
+     * <p>{@code RestAdapter}（common-ddd/adapter/rest/）为<strong>空标记</strong>，定型「REST
+     * 入口适配器」角色：纯透传 ApplicationService，不含业务逻辑。本规则保证被标记的组件
+     * 不泄漏到其他层。空集时允许通过（业务服务可能暂无 REST 入口——通常不会）。
+     */
+    public static final ArchRule REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER =
+            classes()
+                    .that()
+                    .implement("com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter")
+                    .should()
+                    .resideInAPackage("..adapter..")
+                    .allowEmptyShould(true)
+                    .as("R8a 实现 RestAdapter 标记的类必须位于 adapter 层（REST 入口角色）");
+
+    /**
+     * R8b —— 类名以 ControllerImpl 结尾的类必须实现 {@code RestAdapter} 标记（堵命名漂移）。
+     *
+     * <p>识别 REST 入口用「类型锚点」而非「名字猜测」：实现 contract 的 {@code XxxController}
+     * 契约接口之外，还必须实现 {@code RestAdapter} 标记，否则视为命名漂移。
+     */
+    public static final ArchRule CONTROLLER_IMPL_NAMING_MUST_BE_MARKED =
+            classes()
+                    .that()
+                    .haveSimpleNameEndingWith("ControllerImpl")
+                    .should()
+                    .implement("com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter")
+                    .allowEmptyShould(true)
+                    .as("R8b 类名以 ControllerImpl 结尾的类必须实现 RestAdapter 标记（识别锚点用类型而非名字）");
+
+    /**
+     * R9a —— 实现 {@code IntegrationEventConsumer} 标记的类（adapter 层 MQ 入站）必须位于 adapter 层。
+     *
+     * <p>{@code IntegrationEventConsumer}（common-ddd/adapter/event/consumer/）为<strong>空标记</strong>，
+     * 定型「集成事件入站」角色：接收 MQ 集成事件 → 反序列化 → 透传 ApplicationService。
+     * 与 application 层出站 {@code IntegrationEventPublisher} 对偶。空集时允许通过
+     * （当前 common-mq 未建设，无实现类，标记为框架预留）。
+     */
+    public static final ArchRule EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER =
+            classes()
+                    .that()
+                    .implement("com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer")
+                    .should()
+                    .resideInAPackage("..adapter..")
+                    .allowEmptyShould(true)
+                    .as("R9a 实现 IntegrationEventConsumer 标记的类必须位于 adapter 层（MQ 入站角色）");
+
+    /**
+     * R9b —— {@code ..event.consumer..} 包下的<strong>非接口</strong>类必须实现
+     * {@code IntegrationEventConsumer} 标记。
+     *
+     * <p>与 R8b 同理：识别入站消费者用类型锚点而非包名猜测。排除接口自身
+     * （标记接口本身位于 {@code ..adapter.event.consumer..}，接口不实现自己）。
+     */
+    public static final ArchRule EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED =
+            classes()
+                    .that()
+                    .resideInAPackage("..event.consumer..")
+                    .and()
+                    .areNotInterfaces()
+                    .should()
+                    .implement("com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer")
+                    .allowEmptyShould(true)
+                    .as("R9b ..event.consumer.. 包下的类必须实现 IntegrationEventConsumer 标记");
 
     /**
      * C1 —— contract 纯契约模块（Service 接口 + CQE + CO + IntegrationEvent + 枚举），

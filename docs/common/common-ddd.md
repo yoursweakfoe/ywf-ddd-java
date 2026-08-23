@@ -39,6 +39,11 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 
 `ApplicationService` 是 application 层聚合协调入口的**标记接口**（`common-ddd/application/service/`），业务侧 `XxxAppService` 实现之，与 domain 层 `DomainService` 标记对偶（应用编排 vs 领域协调）。业务类名沿用缩写 `XxxAppService`（`App` = Application 的缩写，仅类名简洁），标记接口保持全名语义（与 `IntegrationEventPublisher ↔ XxxEventPublisher` 缩写惯例同构）。
 
+Adapter 层入口同样以**空标记**定型角色：
+
+- `RestAdapter`（`common-ddd/adapter/rest/`）—— REST 入口适配器标记。业务 `XxxControllerImpl` 在实现 contract 的 `XxxController` 契约接口之外再实现之（contract 接口承载 HTTP 面，标记声明「adapter 层 REST 入口」身份，供 ArchUnit 识别）。不命名 `Controller`：与 contract 契约接口及 Spring `@Controller` 过宽/易混淆
+- `IntegrationEventConsumer`（`common-ddd/adapter/event/consumer/`）—— 集成事件入站消费者标记，与 application 层出站 `IntegrationEventPublisher` 对偶。当前为框架预留（common-mq 未建设，无实现类），模板见 `docs/application/cookbook/mq-consumer.md`
+
 ### 对象转换
 
 | 接口 | 层 | 方向 |
@@ -241,7 +246,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 ## 5. 设计原则
 
-- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`DomainEventListener`、`IntegrationEventPublisher`）→ 放 `common-ddd/application`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`DomainEventListener`、`IntegrationEventPublisher`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`IntegrationEventConsumer`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新

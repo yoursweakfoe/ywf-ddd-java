@@ -69,7 +69,7 @@ graph TB
 | 域内反应（DomainEventListener） | ✅ 已实现 | `application/{agg}/event/listener/` |
 | 集成事件契约 | ✅ 已实现 | `contract/{agg}/dto/event/integration/` |
 | Publisher 出站 | ⚠️ 日志占位 | `application/{agg}/event/publisher/`，待 common-mq 接入 RocketMQTemplate |
-| Consumer 入站 | ⛔ 未实现 | `adapter/consumer/`，设计见 [mq-consumer.md](mq-consumer.md) |
+| Consumer 入站 | ⛔ 未实现 | `adapter/event/consumer/`，设计见 [mq-consumer.md](mq-consumer.md) |
 
 ## 1. Domain — 定义 + 注册事件
 
@@ -195,4 +195,4 @@ public class OrderEventPublisher {
 | application | `event/listener/OrderDomainEventListener.java` | @EventListener 监听（域内反应） |
 | application | `event/publisher/OrderEventPublisher.java` | 集成事件出站（占位） |
 | contract | `dto/event/integration/OrderPlacedIntegrationEvent.java` | 跨服务契约 |
-| adapter | `consumer/` ⛔ | 入站 Consumer（未实现，待 common-mq，见 [mq-consumer.md](mq-consumer.md)） |
+| adapter | `event/consumer/` ⛔ | 入站 Consumer（未实现，待 common-mq，见 [mq-consumer.md](mq-consumer.md)） |

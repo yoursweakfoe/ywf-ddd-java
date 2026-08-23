@@ -51,4 +51,18 @@ class DddArchitectureTest {
 
     @ArchTest
     static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+
+    // 框架包自身无 adapter 层组件（标记接口位于 common-ddd/adapter/..，规则按空集通过），
+    // 挂载以守护「标记接口所在的包结构不被破坏」。
+    @ArchTest
+    static final ArchRule r8a = DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+
+    @ArchTest
+    static final ArchRule r8b = DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
+
+    @ArchTest
+    static final ArchRule r9a = DDDArchitectureRules.EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER;
+
+    @ArchTest
+    static final ArchRule r9b = DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
 }

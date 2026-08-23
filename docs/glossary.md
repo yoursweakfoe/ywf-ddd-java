@@ -30,7 +30,7 @@
 | BasicAutoFillHandler | — | MyBatis-Plus 自动填充处理器，INSERT 填 createAt + updateAt，UPDATE 填 updateAt |
 | DomainService | — | Domain 层标记接口（common-ddd），跨聚合协调的无状态服务。实现类标注 @Service 由组件扫描注册 |
 | Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
-| Consumer | — | Adapter 层组件，MQ 消息消费入口，反序列化后透传 AppService |
+| Consumer | — | Adapter 层组件，MQ 消息消费入口（`adapter/event/consumer/`），反序列化后透传 AppService。实现 `IntegrationEventConsumer` 标记接口（common-ddd），与出站 `IntegrationEventPublisher` 对偶 |
 | opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |
 | PgArrayType | — | common-pg 枚举，定义 Java 数组类型与 PG 数组类型名的映射（如 INTEGER → `integer[]`） |
 | DDDArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 6 条 DDD 分层守护规则 |

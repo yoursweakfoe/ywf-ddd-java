@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
 
+import com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.service.OrderAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 本实现类仅以 {@code @RestController} 标记协议并透传。
  */
 @RestController
-public class OrderControllerImpl implements OrderController {
+public class OrderControllerImpl implements OrderController, RestAdapter {
 
     private final OrderAppService orderAppService;
 

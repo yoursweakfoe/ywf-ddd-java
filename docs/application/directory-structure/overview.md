@@ -45,7 +45,7 @@ contract/
 server/
 ├── adapter/                         # 入站适配器（driving adapter）
 │   ├── rest/                          # REST 面：@RestController 实现 contract 的 Controller 契约接口（纯透传）
-│   ├── consumer/                      # MQ 消费入口（Integration Event 入站）【按需】
+│   ├── event/consumer/                # MQ 消费入口（Integration Event 入站）【按需】
 │   ├── scheduler/                     # 定时任务入口【按需】
 │   └── shared/                        # 跨聚合/系统级入口【按需】
 │
