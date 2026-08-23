@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS orders.orders (
     version INT NOT NULL DEFAULT 0,
     create_at TIMESTAMP,
     update_at TIMESTAMP,
+    created_by VARCHAR(64),
+    updated_by VARCHAR(64),
     is_delete BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -34,6 +36,8 @@ CREATE TABLE IF NOT EXISTS products.products (
     version INT NOT NULL DEFAULT 0,
     create_at TIMESTAMP,
     update_at TIMESTAMP,
+    created_by VARCHAR(64),
+    updated_by VARCHAR(64),
     is_delete BOOLEAN NOT NULL DEFAULT FALSE
 );
 

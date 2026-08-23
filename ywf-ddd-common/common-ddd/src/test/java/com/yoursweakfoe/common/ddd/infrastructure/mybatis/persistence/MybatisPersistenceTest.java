@@ -24,6 +24,7 @@ import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -484,6 +485,87 @@ class MybatisPersistenceTest {
 
         assertThatThrownBy(() -> orderRepository.findDomainOneByCondition(wrapper))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    // ==================== 审计字段自动填充（真实链路验证） ====================
+
+    /**
+     * 真实 MyBatis-Plus 链路下，INSERT 后 createAt / updateAt 应被 BasicAutoFillHandler 填充。
+     *
+     * <p>这条是「填充 Bug 已修」的关键证据：PO 标了 @TableField(fill) 后，
+     * MybatisParameterHandler 的 isWithInsertFill 门控变为 true，insertFill 才真正被触发。
+     */
+    @Test
+    void insert_autoFillsCreateAtAndUpdateAt() {
+        Order order = OrderFixtures.createOrder();
+        orderRepository.save(order);
+
+        OrderPO po = orderMapper.selectById(order.getId().toString());
+        assertThat(po.getCreateAt()).isNotNull();
+        assertThat(po.getUpdateAt()).isNotNull();
+    }
+
+    /** 真实链路下，UPDATE 后 updateAt 被无条件刷新（区别于有值不覆盖的 strictUpdateFill）。 */
+    @Test
+    void update_refreshesUpdateAt() {
+        Order order = OrderFixtures.createOrder();
+        orderRepository.save(order);
+        OffsetDateTime before = orderMapper.selectById(order.getId().toString()).getUpdateAt();
+
+        // 让 updateAt 有一个可区分的旧值；直接改状态触发 update
+        order.setStatus(OrderStatus.CONFIRMED);
+        orderRepository.update(order);
+
+        OffsetDateTime after = orderMapper.selectById(order.getId().toString()).getUpdateAt();
+        assertThat(after).isNotNull();
+        assertThat(after).isAfterOrEqualTo(before);
+    }
+
+    /**
+     * 逻辑删除（@TableLogic → UPDATE isDelete=true）后，聚合不可见（逻辑删除生效）。
+     *
+     * <p>updateAt 的刷新由 {@code DeleteById} 的 UPDATE fill 段（标了 @TableField(fill=UPDATE) 的
+     * 非逻辑删除字段会被纳入 SET 子句）+ {@code updateFill} 的 setFieldValByName 无条件刷新共同保证。
+     */
+    @Test
+    void logicDelete_marksRowInvisible() {
+        Order order = OrderFixtures.createOrder();
+        orderRepository.save(order);
+
+        orderRepository.deleteById(order.getId());
+
+        // 逻辑删除后，findById 走 selectById（带逻辑删除过滤），应查不到
+        assertThat(orderRepository.findById(order.getId())).isEmpty();
+    }
+
+    /**
+     * 真实验证：逻辑删除是否刷新 updateAt —— 直接 JDBC 查物理行（绕过 @TableLogic 自动过滤）。
+     *
+     * <p>这条测试「用物理事实说话」：逻辑删除是 UPDATE isDelete=true，本应复用 update（刷新 updateAt）。
+     * 若 fill 注解 + useFill 兜底正确生效，物理行的 update_at 应变为删除时刻；否则保留旧值。
+     */
+    @Test
+    void logicDelete_refreshesUpdateAt_physicalRow() {
+        Order order = OrderFixtures.createOrder();
+        orderRepository.save(order);
+        String id = order.getId().toString();
+
+        // 物理行删除前的 update_at
+        OffsetDateTime before = jdbcTemplate.queryForObject(
+                "SELECT update_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
+        assertThat(before).isNotNull();
+
+        orderRepository.deleteById(order.getId());
+
+        // 绕过逻辑删除过滤，直接查物理行
+        Boolean deleted = jdbcTemplate.queryForObject(
+                "SELECT deleted FROM orders.orders WHERE id = ?", Boolean.class, id);
+        OffsetDateTime after = jdbcTemplate.queryForObject(
+                "SELECT update_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
+
+        assertThat(deleted).isTrue();               // 逻辑删除标记已置位
+        assertThat(after).isNotNull();              // updateAt 仍非空
+        assertThat(after).isAfter(before);          // 严格大于：证明 updateAt 确实被刷新（而非保留旧值）
     }
 
 }

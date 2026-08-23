@@ -1,6 +1,8 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.po;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -25,9 +27,17 @@ public class ProductPO {
     @Version
     private Integer version;
 
+    @TableField(fill = FieldFill.INSERT)
     private OffsetDateTime createAt;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private OffsetDateTime updateAt;
+
+    @TableField(fill = FieldFill.INSERT)
+    private String createdBy;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private String updatedBy;
 
     @TableLogic
     private Boolean isDelete;
