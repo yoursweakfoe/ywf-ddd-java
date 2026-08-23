@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handl
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.query.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
-import com.yoursweakfoe.common.ddd.application.handler.QueryHandler;
+import com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.UUID;
 import org.springframework.stereotype.Component;

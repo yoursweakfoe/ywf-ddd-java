@@ -33,7 +33,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `Query` | `QueryHandler<Q, R>` | 请给我这个 | **R** |
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
 
-> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher 投递 MQ。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架提供 `application/event/` 下的两个**空标记接口**定型该角色（见「领域事件」节）。
+> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher 投递 MQ。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架提供 `application/event/listener|publisher/` 下的两个**空标记接口**定型该角色（见「领域事件」节）。
 
 `PageResult<T>` 是框架级分页容器（record），定义在 **contract 层**（与 `PageableQuery` 同居 `dto/query`），隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。服务端 application（读端口 / Handler / AppService）与 infrastructure（读实现装填）均使用它，消费方从 common-contract 直接拿到分页元数据（records / total / pageNum / pageSize）。
 
@@ -70,8 +70,8 @@ Adapter 层入口同样以**空标记**定型角色：
 - `DomainEvent` — 事件基类（eventId + occurredOn）
 - `DomainEventPublisher` — 发布契约接口
 - `InProcessDomainEventPublisher` — 桥接 Spring `ApplicationEventPublisher`，进程内同步发布（位于 `infrastructure/event/domain/`）
-- `DomainEventListener` — application 层域内反应监听器**空标记接口**（`application/event/`）：定型「消费内部领域事件（Spring Event）」的角色，与 adapter 层处理外部集成事件的 Consumer 划清边界
-- `IntegrationEventPublisher` — application 层集成事件出站 Publisher **空标记接口**（`application/event/`）：定型「翻译领域事件 → 契约 IntegrationEvent → 投递 MQ」的角色，与 domain 层进程内发布的 `DomainEventPublisher` 划清边界
+- `DomainEventListener` — application 层域内反应监听器**空标记接口**（`application/event/listener/`）：定型「消费内部领域事件（Spring Event）」的角色，与 adapter 层处理外部集成事件的 Consumer 划清边界
+- `IntegrationEventPublisher` — application 层集成事件出站 Publisher **空标记接口**（`application/event/publisher/`）：定型「翻译领域事件 → 契约 IntegrationEvent → 投递 MQ」的角色，与 domain 层进程内发布的 `DomainEventPublisher` 划清边界
 
 事件仅 AggregateRoot 可注册，仓储自动发布（opt-in 点是 `registerEvent()`），先落库后发事件 + 先清后发。
 

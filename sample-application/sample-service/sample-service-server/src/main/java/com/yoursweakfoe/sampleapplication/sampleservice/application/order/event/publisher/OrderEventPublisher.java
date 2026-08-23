@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher;
 
-import com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher;
+import com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event.integration.OrderPlacedIntegrationEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
 import lombok.extern.slf4j.Slf4j;

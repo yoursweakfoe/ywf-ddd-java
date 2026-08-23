@@ -5,7 +5,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.Or
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
-import com.yoursweakfoe.common.ddd.application.handler.CommandHandler;
+import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

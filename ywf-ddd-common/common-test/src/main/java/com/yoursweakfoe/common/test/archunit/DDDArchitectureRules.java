@@ -180,7 +180,7 @@ public final class DDDArchitectureRules {
      * R7a —— 域内反应监听器（{@code ..event.listener..} 包下）必须实现 {@code DomainEventListener}
      * 标记接口。
      *
-     * <p>{@code DomainEventListener}（common-ddd/application/event/）为<strong>空标记</strong>，
+     * <p>{@code DomainEventListener}（common-ddd/application/event/listener/）为<strong>空标记</strong>，
      * 价值在定型「application 层域内反应」角色：消费<strong>内部</strong>领域事件（Spring Event），
      * 与 adapter 层处理外部集成事件的 Consumer 划清边界。本规则保证每个监听器都被显式标记，
      * 使该角色可被其他架构规则定位。空集时允许通过（业务服务可能暂无监听器）。
@@ -190,7 +190,7 @@ public final class DDDArchitectureRules {
                     .that()
                     .resideInAPackage("..event.listener..")
                     .should()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.DomainEventListener")
+                    .implement("com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener")
                     .allowEmptyShould(true)
                     .as("R7a 域内反应监听器必须实现 DomainEventListener 标记（..event.listener.. 包下）");
 
@@ -198,7 +198,7 @@ public final class DDDArchitectureRules {
      * R7b —— 集成事件出站 Publisher（{@code ..event.publisher..} 包下）必须实现
      * {@code IntegrationEventPublisher} 标记接口。
      *
-     * <p>{@code IntegrationEventPublisher}（common-ddd/application/event/）为<strong>空标记</strong>，
+     * <p>{@code IntegrationEventPublisher}（common-ddd/application/event/publisher/）为<strong>空标记</strong>，
      * 价值在定型「application 层集成事件出站」角色：消费领域事件、翻译为契约 IntegrationEvent
      * 并跨服务投递 MQ，与 domain 层进程内发布的 {@code DomainEventPublisher} 划清边界。
      * 空集时允许通过（业务服务可能暂无出站 Publisher）。
@@ -208,7 +208,7 @@ public final class DDDArchitectureRules {
                     .that()
                     .resideInAPackage("..event.publisher..")
                     .should()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher")
+                    .implement("com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher")
                     .allowEmptyShould(true)
                     .as("R7b 集成事件出站 Publisher 必须实现 IntegrationEventPublisher 标记（..event.publisher.. 包下）");
 
@@ -225,7 +225,7 @@ public final class DDDArchitectureRules {
                     .haveSimpleNameEndingWith("AppService")
                     .should()
                     .dependOnClassesThat()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher")
+                    .implement("com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher")
                     .allowEmptyShould(true)
                     .as("R7c AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）");
 

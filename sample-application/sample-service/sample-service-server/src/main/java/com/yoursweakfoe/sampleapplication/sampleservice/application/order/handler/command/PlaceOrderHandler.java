@@ -9,7 +9,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
-import com.yoursweakfoe.common.ddd.application.handler.CommandHandler;
+import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.application.handler;
+package com.yoursweakfoe.common.ddd.application.handler.query;
 
 import com.yoursweakfoe.common.contract.dto.query.Query;
 
@@ -26,7 +26,7 @@ import com.yoursweakfoe.common.contract.dto.query.Query;
  * @param <R> 查询结果类型
  *
  * @see Query
- * @see CommandHandler
+ * @see com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler
  */
 public interface QueryHandler<Q extends Query, R> {
 

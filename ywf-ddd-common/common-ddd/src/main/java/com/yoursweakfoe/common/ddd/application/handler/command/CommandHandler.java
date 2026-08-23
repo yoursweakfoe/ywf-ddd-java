@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.application.handler;
+package com.yoursweakfoe.common.ddd.application.handler.command;
 
 import com.yoursweakfoe.common.contract.dto.command.Command;
 
@@ -28,7 +28,7 @@ import com.yoursweakfoe.common.contract.dto.command.Command;
  * @param <R> 执行结果类型（无返回值时使用 {@link Void}）
  *
  * @see Command
- * @see QueryHandler
+ * @see com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler
  */
 public interface CommandHandler<C extends Command, R> {
 

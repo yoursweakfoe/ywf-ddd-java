@@ -91,10 +91,10 @@ contract jar 本质是**东西向**产物（内部 Java 服务间类型契约）
 contract（本模块）                             server
 ─────────────                             ──────
 adapter/rest/{Aggregate}Controller.java           ←──  adapter/rest/（ControllerImpl 实现接口，纯透传 AppService）
-{aggregate}/dto/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/（接收 CQE 执行用例）
+{aggregate}/dto/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/command|query/（接收 CQE 执行用例）
 {aggregate}/dto/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
 {aggregate}/dto/dto/event/integration/XxxIntegrationEvent ←──  application/event/publisher/（翻译并发布到 MQ）
-{aggregate}/dto/dto/event/integration/XxxIntegrationEvent ──→  adapter/consumer/（接收 MQ 并透传 AppService）
+{aggregate}/dto/dto/event/integration/XxxIntegrationEvent ──→  adapter/event/consumer/（接收 MQ 并透传 AppService）
 ```
 
 ### 消费方使用

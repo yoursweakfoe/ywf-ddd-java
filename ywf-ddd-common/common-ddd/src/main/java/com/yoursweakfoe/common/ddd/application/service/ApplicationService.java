@@ -33,8 +33,8 @@ package com.yoursweakfoe.common.ddd.application.service;
  *   <tr><td>{@link com.yoursweakfoe.common.ddd.domain.service.DomainService}</td><td>domain/service</td><td>跨聚合领域协调（领域逻辑）</td></tr>
  * </table>
  *
- * @see com.yoursweakfoe.common.ddd.application.handler.CommandHandler
- * @see com.yoursweakfoe.common.ddd.application.handler.QueryHandler
+ * @see com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler
+ * @see com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler
  * @see com.yoursweakfoe.common.ddd.domain.service.DomainService
  */
 public interface ApplicationService {

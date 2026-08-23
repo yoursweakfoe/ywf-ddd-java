@@ -19,8 +19,8 @@ package com.yoursweakfoe.common.ddd.adapter.event.consumer;
  * <table>
  *   <tr><th>类型</th><th>层级</th><th>方向</th></tr>
  *   <tr><td>{@code IntegrationEventConsumer}（本接口）</td><td>adapter/event/consumer</td><td>集成事件入（MQ 接收）</td></tr>
- *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher}</td><td>application/event/publisher</td><td>集成事件出（MQ 投递）</td></tr>
- *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.DomainEventListener}</td><td>application/event/listener</td><td>内部领域事件入（进程内）</td></tr>
+ *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher}</td><td>application/event/publisher</td><td>集成事件出（MQ 投递）</td></tr>
+ *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener}</td><td>application/event/listener</td><td>内部领域事件入（进程内）</td></tr>
  *   <tr><td>{@code IntegrationEvent}（common-contract）</td><td>contract/dto/event/integration</td><td>跨服务契约（本接口实现类反序列化之）</td></tr>
  * </table>
  *
@@ -29,8 +29,8 @@ package com.yoursweakfoe.common.ddd.adapter.event.consumer;
  * 落地后按模板补全 {@code adapter/event/consumer/} 下实现类并实现本标记。
  *
  * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
- * @see com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher
- * @see com.yoursweakfoe.common.ddd.application.event.DomainEventListener
+ * @see com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher
+ * @see com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener
  */
 public interface IntegrationEventConsumer {
 }
