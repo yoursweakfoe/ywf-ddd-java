@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -98,7 +98,7 @@ import org.springframework.core.GenericTypeResolver;
  * @param <ID>     领域标识类型（须为 {@link Serializable}）
  */
 @Slf4j
-public abstract class MybatisPersistence<
+public abstract class MybatisPlusPersistence<
         Mapper extends BaseMapper<PO>,
         PO,
         Domain extends Identifiable<ID>,
@@ -119,12 +119,12 @@ public abstract class MybatisPersistence<
      * @param domainEventPublisherProvider 领域事件发布者（可选，容器中无此 Bean 时为 null，事件将被丢弃并记录警告）
      */
     @SuppressWarnings("unchecked")
-    protected MybatisPersistence(Mapper baseMapper,
-                                       ObjectProvider<DomainEventPublisher> domainEventPublisherProvider) {
+    protected MybatisPlusPersistence(Mapper baseMapper,
+                                     ObjectProvider<DomainEventPublisher> domainEventPublisherProvider) {
         this.baseMapper = baseMapper;
         this.eventFlusher = new DomainEventFlusher(domainEventPublisherProvider);
         this.poClass = (Class<PO>) GenericTypeResolver
-                .resolveTypeArguments(getClass(), MybatisPersistence.class)[1];
+                .resolveTypeArguments(getClass(), MybatisPlusPersistence.class)[1];
     }
     // endregion
 

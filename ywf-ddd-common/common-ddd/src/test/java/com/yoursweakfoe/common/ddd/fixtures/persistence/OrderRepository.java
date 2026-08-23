@@ -7,7 +7,7 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class OrderRepository extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
+public class OrderRepository extends MybatisPlusPersistence<OrderMapper, OrderPO, Order, UUID>
         implements Repository<Order, UUID> {
 
     private final OrderConverter converter;

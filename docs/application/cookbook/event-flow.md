@@ -65,7 +65,7 @@ graph TB
 | 环节 | 状态 | 落地位置 |
 |------|------|---------|
 | 领域事件定义 + 聚合根注册 | ✅ 已实现 | `domain/{agg}/event/domain/` + `registerEvent()` |
-| 仓储持久化后发布（先清后发） | ✅ 已实现 | `MybatisPersistence` → `DomainEventFlusher` → `InProcessDomainEventPublisher` |
+| 仓储持久化后发布（先清后发） | ✅ 已实现 | `MybatisPlusPersistence` → `DomainEventFlusher` → `InProcessDomainEventPublisher` |
 | 域内反应（DomainEventListener） | ✅ 已实现 | `application/{agg}/event/listener/` |
 | 集成事件契约 | ✅ 已实现 | `contract/{agg}/dto/event/integration/` |
 | Publisher 出站 | ⚠️ 日志占位 | `application/{agg}/event/publisher/`，待 common-mq 接入 RocketMQTemplate |

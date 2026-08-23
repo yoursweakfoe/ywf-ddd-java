@@ -7,14 +7,14 @@ import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class ProductRepository extends MybatisPersistence<ProductMapper, ProductPO, Product, Long>
+public class ProductRepository extends MybatisPlusPersistence<ProductMapper, ProductPO, Product, Long>
         implements Repository<Product, Long> {
 
     private final ProductConverter converter;

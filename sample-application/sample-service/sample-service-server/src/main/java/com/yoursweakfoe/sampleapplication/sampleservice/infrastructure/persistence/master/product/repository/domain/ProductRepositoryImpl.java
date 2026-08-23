@@ -8,7 +8,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.po.ProductPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ProductRepositoryImpl
-        extends MybatisPersistence<ProductMapper, ProductPO, Product, Long>
+        extends MybatisPlusPersistence<ProductMapper, ProductPO, Product, Long>
         implements ProductRepository {
 
     // region 依赖注入

@@ -29,9 +29,9 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 | PO | `XxxPO`，标注 `@TableName("schema.table")` | 纯数据载体，无业务逻辑 |
 | Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） |
 | Mapper | `XxxMapper extends BaseMapper<XxxPO>` | 简单 CRUD 用 MP 内置方法，复杂 SQL 写 XML |
-| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` |
+| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPlusPersistence`，标注 `@Component` |
 
-`MybatisPersistence` 仅承载写侧聚合生命周期（load → 行为 → save）；读侧由独立的
+`MybatisPlusPersistence` 仅承载写侧聚合生命周期（load → 行为 → save）；读侧由独立的
 `XxxQueryRepositoryImpl`（infra 读实现）直接用 Mapper 从 PO 投影读 DTO（PO → DTO 直接投影，
 `PageResult<读 DTO>` 隔离 MyBatis-Plus `Page`），不经过 domain。
 

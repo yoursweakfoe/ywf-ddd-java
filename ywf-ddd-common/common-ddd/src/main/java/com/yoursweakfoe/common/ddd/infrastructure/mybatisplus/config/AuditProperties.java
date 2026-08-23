@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.config;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * <ul>
  *   <li><b>字段名是「约定」，不是「开关」</b>：默认 {@code createdBy} / {@code updatedBy}（与时间字段
  *       {@code createAt} / {@code updateAt} 命名对称）。填充是否发生，由两道宽松守卫决定——
- *       ① 容器中是否存在 {@link com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.CurrentUserProvider} Bean；
+ *       ① 容器中是否存在 {@link com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.handler.CurrentUserProvider} Bean；
  *       ② PO 是否声明了该字段（{@code hasSetter}）。二者任一不满足即静默跳过。</li>
  *   <li><b>高度宽松可选</b>：即使表里建了操作人列，业务未提供 {@code CurrentUserProvider} 时依旧不填
  *       （不报错、不写 null 覆盖已有值）；字段名可显式配为空串以彻底关闭操作人填充。</li>

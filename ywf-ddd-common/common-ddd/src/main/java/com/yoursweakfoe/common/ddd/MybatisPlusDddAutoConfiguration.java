@@ -2,9 +2,9 @@ package com.yoursweakfoe.common.ddd;
 
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.MybatisPlusPluginConfiguration;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config.AuditProperties;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config.MybatisPlusPluginConfiguration;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.handler.BasicAutoFillHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,4 +33,4 @@ import org.springframework.context.annotation.Import;
     BasicAutoFillHandler.class,
     MybatisPlusPluginConfiguration.class
 })
-public class MybatisDddAutoConfiguration {}
+public class MybatisPlusDddAutoConfiguration {}

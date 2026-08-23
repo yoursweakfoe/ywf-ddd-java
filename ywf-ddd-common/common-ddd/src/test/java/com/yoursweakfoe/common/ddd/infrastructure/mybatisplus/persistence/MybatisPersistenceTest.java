@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

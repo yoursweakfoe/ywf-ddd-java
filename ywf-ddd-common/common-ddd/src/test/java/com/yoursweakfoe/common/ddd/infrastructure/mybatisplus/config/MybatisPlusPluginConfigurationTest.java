@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.config;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,7 +50,7 @@ class MybatisPlusPluginConfigurationTest {
     @Test
     void blockAttackDisabled_omitsBlockAttackInterceptor() {
         contextRunner
-                .withPropertyValues("ywf.ddd.mybatis.block-attack-enabled=false")
+                .withPropertyValues("ywf.ddd.mybatisplus.block-attack-enabled=false")
                 .run(context -> {
                     MybatisPlusInterceptor interceptor = context.getBean(MybatisPlusInterceptor.class);
                     assertThat(interceptor.getInterceptors()).hasSize(2);
@@ -62,7 +62,7 @@ class MybatisPlusPluginConfigurationTest {
     @Test
     void paginationMaxLimit_configured() {
         contextRunner
-                .withPropertyValues("ywf.ddd.mybatis.pagination-max-limit=500")
+                .withPropertyValues("ywf.ddd.mybatisplus.pagination-max-limit=500")
                 .run(context -> {
                     MybatisPlusInterceptor interceptor = context.getBean(MybatisPlusInterceptor.class);
                     PaginationInnerInterceptor pagination = (PaginationInnerInterceptor) interceptor

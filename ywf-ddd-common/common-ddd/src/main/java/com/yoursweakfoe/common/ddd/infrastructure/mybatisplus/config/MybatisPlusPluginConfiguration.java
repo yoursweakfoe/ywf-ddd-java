@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.config;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
@@ -24,11 +24,11 @@ import org.springframework.context.annotation.Configuration;
  *   <li>分页 — 仅当 Mapper 方法传入 {@code Page} 参数时触发，普通查询不受影响</li>
  *   <li>乐观锁 — 仅当实体含 {@code @Version} 字段时触发，无该字段的实体不受影响</li>
  *   <li>防全表攻击 — 对所有无 WHERE 的 UPDATE/DELETE 生效；默认开启，
- *       可经 {@code ywf.ddd.mybatis.block-attack-enabled=false} 关闭（数据修复等场景），
+ *       可经 {@code ywf.ddd.mybatisplus.block-attack-enabled=false} 关闭（数据修复等场景），
  *       确需全表操作时请改用原生 MyBatis 编写 SQL</li>
  * </ul>
  *
- * <p><strong>分页上限：</strong>默认不限制；可经 {@code ywf.ddd.mybatis.pagination-max-limit}
+ * <p><strong>分页上限：</strong>默认不限制；可经 {@code ywf.ddd.mybatisplus.pagination-max-limit}
  * 设单页条数上限（正值），超过上限的 pageSize 会被钳制，防止超大分页拖垮数据库。</p>
  *
  * <p><strong>数据变动记录：</strong>不注册 {@code DataChangeRecorderInnerInterceptor}。

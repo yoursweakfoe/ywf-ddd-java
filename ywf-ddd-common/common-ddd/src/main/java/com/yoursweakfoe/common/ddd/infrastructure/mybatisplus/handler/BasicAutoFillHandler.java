@@ -1,7 +1,7 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config.AuditProperties;
 import java.time.OffsetDateTime;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.beans.factory.ObjectProvider;

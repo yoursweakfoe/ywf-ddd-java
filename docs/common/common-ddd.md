@@ -248,7 +248,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 ## 5. 设计原则
 
-- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`DomainEventListener`、`IntegrationEventPublisher`、`ApplicationDTO`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`IntegrationEventConsumer`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`DomainEventListener`、`IntegrationEventPublisher`、`ApplicationDTO`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`IntegrationEventConsumer`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPlusPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
@@ -295,7 +295,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **后果**：跨服务通信仍走 Seata + HTTP 显式调用；未来可靠化走 Outbox 只需替换 publisher 实现，契约不变。
 
-**确认**：`InProcessDomainEventPublisher` + `MybatisPersistence` 自动发布。
+**确认**：`InProcessDomainEventPublisher` + `MybatisPlusPersistence` 自动发布。
 
 ### ADR-0004 对象转换纯手写，不用 MapStruct
 

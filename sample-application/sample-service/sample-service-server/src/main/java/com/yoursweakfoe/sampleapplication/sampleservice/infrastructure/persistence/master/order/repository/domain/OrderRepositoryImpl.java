@@ -7,7 +7,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class OrderRepositoryImpl
-        extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
+        extends MybatisPlusPersistence<OrderMapper, OrderPO, Order, UUID>
         implements OrderRepository {
 
     // region 依赖注入

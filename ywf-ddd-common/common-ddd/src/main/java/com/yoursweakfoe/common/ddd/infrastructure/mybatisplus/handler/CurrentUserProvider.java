@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler;
+package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.handler;
 
 /**
  * 当前操作用户提供者 SPI —— 为审计字段（createdBy / updatedBy）提供「谁在操作」。
