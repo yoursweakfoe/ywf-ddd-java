@@ -1,8 +1,5 @@
 package com.yoursweakfoe.common.contract.dto.command;
 
-import com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent;
-import com.yoursweakfoe.common.contract.dto.query.Query;
-
 /**
  * 命令标记接口 —— 标识一个对象为写操作意图（CQRS 中的 Command）。
  *
@@ -11,7 +8,7 @@ import com.yoursweakfoe.common.contract.dto.query.Query;
  *
  * <p>基础设施层可基于此接口做统一拦截（事务、审计日志、幂等校验等）。
  *
- * @see Query
- * @see IntegrationEvent
+ * @see com.yoursweakfoe.common.contract.dto.query.Query
+ * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
  */
 public interface Command {}

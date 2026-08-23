@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import lombok.Getter;
 
 /**
@@ -46,7 +45,7 @@ import lombok.Getter;
  * }</pre>
  *
  * @see com.yoursweakfoe.common.ddd.domain.model.AggregateRoot
- * @see DomainEventPublisher
+ * @see com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher
  */
 public abstract class DomainEvent {
 

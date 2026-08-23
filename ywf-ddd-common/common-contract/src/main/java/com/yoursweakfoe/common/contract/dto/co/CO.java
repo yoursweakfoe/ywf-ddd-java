@@ -1,9 +1,5 @@
 package com.yoursweakfoe.common.contract.dto.co;
 
-import com.yoursweakfoe.common.contract.dto.command.Command;
-import com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent;
-import com.yoursweakfoe.common.contract.dto.query.Query;
-
 /**
  * 客户端对象标记接口 —— 标识一个对象为出站返回 DTO（Client Object）。
  *
@@ -14,8 +10,8 @@ import com.yoursweakfoe.common.contract.dto.query.Query;
  *
  * <p>基础设施层可基于此接口做统一处理（日志脱敏、序列化增强、统一响应包装等）。
  *
- * @see Command
- * @see Query
- * @see IntegrationEvent
+ * @see com.yoursweakfoe.common.contract.dto.command.Command
+ * @see com.yoursweakfoe.common.contract.dto.query.Query
+ * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
  */
 public interface CO {}

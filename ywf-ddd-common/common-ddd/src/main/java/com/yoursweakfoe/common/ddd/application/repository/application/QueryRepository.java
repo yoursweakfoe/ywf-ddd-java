@@ -1,13 +1,9 @@
 package com.yoursweakfoe.common.ddd.application.repository.application;
 
-import com.yoursweakfoe.common.contract.dto.query.PageableQuery;
-import com.yoursweakfoe.common.contract.dto.query.PageResult;
-import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
-
 /**
  * 读模型（查询）仓储标记接口 —— 标识 CQRS 读侧的查询端口，与写侧 {@code domain/repository/Repository} 对偶。
  *
- * <p>写侧 {@link Repository} 承载「聚合生命周期」
+ * <p>写侧 {@code Repository} 承载「聚合生命周期」
  * （findById / save / update / exists / deleteById）；读侧<strong>绕过 domain</strong>，
  * 由本接口标记的读端口直接 PO → 读 DTO 投影。两者职责不同、签名无法统一，故分离标记。
  *
@@ -16,7 +12,7 @@ import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
  *
  * <h3>为什么是空标记，而不是带方法的契约接口？</h3>
  * <ul>
- *   <li>读侧「通用形状」已由 {@link PageableQuery}（分页入参）+ {@link PageResult}（分页出参）承载，
+ *   <li>读侧「通用形状」已由 {@code PageableQuery}（分页入参）+ {@code PageResult}（分页出参）承载，
  *       无需靠方法名再表达一遍。</li>
  *   <li>条件字段（订单的 status/customerId、商品的 category）是业务专属的，
  *       强行把 {@code findPage(...)} 抽成契约方法会退化成 {@code Object...} / {@code Map}，丢失类型安全。</li>
@@ -36,9 +32,9 @@ import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
  *   <tr><td>实现在</td><td>infrastructure/persistence</td><td>infrastructure/persistence</td></tr>
  * </table>
  *
- * @see Repository
- * @see PageableQuery
- * @see PageResult
+ * @see com.yoursweakfoe.common.ddd.domain.repository.domain.Repository
+ * @see com.yoursweakfoe.common.contract.dto.query.PageableQuery
+ * @see com.yoursweakfoe.common.contract.dto.query.PageResult
  */
 public interface QueryRepository {
 

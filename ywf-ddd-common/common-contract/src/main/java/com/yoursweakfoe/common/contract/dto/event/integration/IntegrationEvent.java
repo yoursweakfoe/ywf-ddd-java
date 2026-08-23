@@ -1,8 +1,5 @@
 package com.yoursweakfoe.common.contract.dto.event.integration;
 
-import com.yoursweakfoe.common.contract.dto.command.Command;
-import com.yoursweakfoe.common.contract.dto.query.Query;
-
 /**
  * 集成事件标记接口 —— 标识一个对象为跨服务边界事件契约（CQRS 中的 IntegrationEvent）。
  *
@@ -20,7 +17,7 @@ import com.yoursweakfoe.common.contract.dto.query.Query;
  * <p>实现类应命名为 {@code XxxIntegrationEvent}，位于 {@code contract/{agg}/dto/event/integration/}，
  * 如 {@code PaymentCompletedIntegrationEvent}。
  *
- * @see Command
- * @see Query
+ * @see com.yoursweakfoe.common.contract.dto.command.Command
+ * @see com.yoursweakfoe.common.contract.dto.query.Query
  */
 public interface IntegrationEvent {}

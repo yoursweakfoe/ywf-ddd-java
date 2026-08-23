@@ -1,8 +1,5 @@
 package com.yoursweakfoe.common.contract.dto.query;
 
-import com.yoursweakfoe.common.contract.dto.command.Command;
-import com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent;
-
 /**
  * 查询标记接口 —— 标识一个对象为读操作请求（CQRS 中的 Query）。
  *
@@ -11,7 +8,7 @@ import com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent;
  *
  * <p>基础设施层可基于此接口做统一拦截（只读路由、缓存、权限校验等）。
  *
- * @see Command
- * @see IntegrationEvent
+ * @see com.yoursweakfoe.common.contract.dto.command.Command
+ * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
  */
 public interface Query {}

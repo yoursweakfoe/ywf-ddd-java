@@ -1,11 +1,9 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
-
 /**
  * 订单状态枚举（契约共享）。
  *
- * <p>消费方通过此枚举解读 {@link OrderCO#getStatus()} 字段。
+ * <p>消费方通过此枚举解读 {@code OrderCO.getStatus()} 字段。
  */
 public enum OrderStatus {
 

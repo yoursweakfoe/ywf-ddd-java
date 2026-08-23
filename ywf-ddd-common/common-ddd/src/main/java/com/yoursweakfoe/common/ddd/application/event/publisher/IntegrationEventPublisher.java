@@ -1,12 +1,10 @@
 package com.yoursweakfoe.common.ddd.application.event.publisher;
 
-import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
-
 /**
  * 集成事件出站发布器标记接口 —— 标识 application 层将领域事件翻译为契约集成事件并投递 MQ 的 Publisher。
  *
  * <p>位于 {@code application/{aggregate}/event/publisher/}，被 CommandHandler 或
- * {@link DomainEventListener} 显式调用，将领域事件（丰富领域细节）翻译为契约
+ * {@code DomainEventListener} 显式调用，将领域事件（丰富领域细节）翻译为契约
  * IntegrationEvent（仅外部需要的精简字段）后投递到 MQ。本标记将这类组件显式定型为
  * <strong>集成事件出站</strong>，与 domain 层进程内发布的 {@code DomainEventPublisher}
  * 划清边界：本标记组件消费领域事件、产出 IntegrationEvent 并<strong>跨服务</strong>投递；
@@ -36,7 +34,7 @@ import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
  *
  * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
  * @see com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener
- * @see DomainEventPublisher
+ * @see com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher
  */
 public interface IntegrationEventPublisher {
 }
