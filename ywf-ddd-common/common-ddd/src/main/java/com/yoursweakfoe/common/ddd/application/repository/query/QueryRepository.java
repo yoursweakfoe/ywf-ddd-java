@@ -2,14 +2,12 @@ package com.yoursweakfoe.common.ddd.application.repository.query;
 
 import com.yoursweakfoe.common.contract.dto.query.PageableQuery;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
-import com.yoursweakfoe.common.contract.dto.query.Query;
-import java.util.List;
-import java.util.Optional;
+import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 
 /**
  * 读模型（查询）仓储标记接口 —— 标识 CQRS 读侧的查询端口，与写侧 {@code domain/repository/Repository} 对偶。
  *
- * <p>写侧 {@link com.yoursweakfoe.common.ddd.domain.repository.Repository} 承载「聚合生命周期」
+ * <p>写侧 {@link Repository} 承载「聚合生命周期」
  * （findById / save / update / exists / deleteById）；读侧<strong>绕过 domain</strong>，
  * 由本接口标记的读端口直接 PO → 读 DTO 投影。两者职责不同、签名无法统一，故分离标记。
  *
@@ -38,7 +36,7 @@ import java.util.Optional;
  *   <tr><td>实现在</td><td>infrastructure/persistence</td><td>infrastructure/persistence</td></tr>
  * </table>
  *
- * @see com.yoursweakfoe.common.ddd.domain.repository.Repository
+ * @see Repository
  * @see PageableQuery
  * @see PageResult
  */

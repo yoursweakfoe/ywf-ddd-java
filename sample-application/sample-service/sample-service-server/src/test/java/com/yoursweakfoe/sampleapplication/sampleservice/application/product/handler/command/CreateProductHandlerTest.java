@@ -9,7 +9,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.asse
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

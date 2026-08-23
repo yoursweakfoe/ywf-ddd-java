@@ -5,7 +5,7 @@ import com.yoursweakfoe.common.ddd.fixtures.mapper.ProductMapper;
 import com.yoursweakfoe.common.ddd.fixtures.model.Product;
 import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
-import com.yoursweakfoe.common.ddd.domain.repository.Repository;
+import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.util.Optional;

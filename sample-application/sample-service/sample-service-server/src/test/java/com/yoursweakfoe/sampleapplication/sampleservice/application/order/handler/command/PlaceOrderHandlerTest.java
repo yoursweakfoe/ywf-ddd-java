@@ -1,7 +1,5 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,7 +12,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.comma
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.List;

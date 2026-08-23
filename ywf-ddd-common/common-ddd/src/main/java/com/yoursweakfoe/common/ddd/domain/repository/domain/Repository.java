@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.domain.repository;
+package com.yoursweakfoe.common.ddd.domain.repository.domain;
 
 import com.yoursweakfoe.common.ddd.application.repository.query.QueryRepository;
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;

@@ -1,5 +1,7 @@
 package com.yoursweakfoe.common.ddd.domain.portal;
 
+import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
+
 /**
  * 外部资源访问标记接口 —— 标识 Domain 层对外部系统的抽象依赖（传送门）。
  *
@@ -54,7 +56,7 @@ package com.yoursweakfoe.common.ddd.domain.portal;
  *   <li>Repository 实现 → infrastructure/persistence
  * </ul>
  *
- * @see com.yoursweakfoe.common.ddd.domain.repository.Repository
+ * @see Repository
  */
 public interface Portal {
 }

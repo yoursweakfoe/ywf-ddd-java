@@ -1,7 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository;
+package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.common.ddd.domain.repository.Repository;
+import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import java.util.Optional;
 
 /**

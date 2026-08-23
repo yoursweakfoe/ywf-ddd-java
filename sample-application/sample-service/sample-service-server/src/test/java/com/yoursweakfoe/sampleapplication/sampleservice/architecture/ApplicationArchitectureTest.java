@@ -11,7 +11,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
 import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
-import com.yoursweakfoe.common.ddd.domain.repository.Repository;
+import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
 /**

@@ -7,7 +7,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;

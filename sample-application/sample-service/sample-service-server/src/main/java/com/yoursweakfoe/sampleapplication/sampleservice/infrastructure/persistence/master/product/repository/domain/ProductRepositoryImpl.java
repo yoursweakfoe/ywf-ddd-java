@@ -2,7 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persiste
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter.ProductConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;

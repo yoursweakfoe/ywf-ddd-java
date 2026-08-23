@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
-import com.yoursweakfoe.common.ddd.domain.repository.Repository;
+import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import java.util.UUID;
 
 /**
