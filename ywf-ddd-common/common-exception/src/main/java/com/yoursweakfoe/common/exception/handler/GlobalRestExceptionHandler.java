@@ -52,14 +52,28 @@ public class GlobalRestExceptionHandler {
     private static final MediaType CONTENT_TYPE_PROBLEM =
             MediaType.parseMediaType("application/problem+json");
 
+    /** RFC 9457 标准成员 {@code type} 的默认值（未文档化错误类型前统一为 about:blank） */
+    private static final String TYPE_ABOUT_BLANK = "about:blank";
+
+    /** 各类异常的 RFC 9457 {@code title} 摘要（常量收敛，避免散落字面量） */
+    private static final String TITLE_BUSINESS = "Business Error";
+    private static final String TITLE_VALIDATION = "Validation Failed";
+    private static final String TITLE_CONFLICT = "Conflict";
+    private static final String TITLE_BAD_REQUEST = "Bad Request";
+    private static final String TITLE_INTERNAL_ERROR = "Internal Server Error";
+
+    /** BusinessException 未显式指定状态时的缺省状态码 */
+    private static final int DEFAULT_BUSINESS_STATUS = 422;
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusiness(BusinessException e, HttpServletRequest request) {
+        int status = e.getHttpStatus() != null ? e.getHttpStatus() : DEFAULT_BUSINESS_STATUS;
         log.warn("Business error: {} | params: {}", e.getMessage(), e.getParams());
-        Map<String, Object> body = problemBody(request, "Business Error", 422, e.getMessage());
+        Map<String, Object> body = problemBody(request, TITLE_BUSINESS, status, e.getMessage());
         if (!e.getParams().isEmpty()) {
             body.put("params", e.getParams());
         }
-        return problem(body, 422);
+        return problem(body, status);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -71,7 +85,7 @@ public class GlobalRestExceptionHandler {
                         v -> v.getPropertyPath().toString(),
                         v -> v.getMessage(),
                         (a, b) -> a));
-        Map<String, Object> body = problemBody(request, "Validation Failed", 400, "Parameter validation failed");
+        Map<String, Object> body = problemBody(request, TITLE_VALIDATION, 400, "Parameter validation failed");
         body.put("fieldErrors", fieldErrors);
         return problem(body, 400);
     }
@@ -89,7 +103,7 @@ public class GlobalRestExceptionHandler {
                         fe -> fe.getField(),
                         fe -> fe.getDefaultMessage() == null ? "invalid" : fe.getDefaultMessage(),
                         (a, b) -> a));
-        Map<String, Object> body = problemBody(request, "Validation Failed", 400, "Parameter validation failed");
+        Map<String, Object> body = problemBody(request, TITLE_VALIDATION, 400, "Parameter validation failed");
         body.put("fieldErrors", fieldErrors);
         return problem(body, 400);
     }
@@ -97,19 +111,19 @@ public class GlobalRestExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException e, HttpServletRequest request) {
         log.warn("Illegal state: {}", e.getMessage());
-        return problem(problemBody(request, "Conflict", 409, e.getMessage()), 409);
+        return problem(problemBody(request, TITLE_CONFLICT, 409, e.getMessage()), 409);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
         log.warn("Bad request: {}", e.getMessage(), e);
-        return problem(problemBody(request, "Bad Request", 400, e.getMessage()), 400);
+        return problem(problemBody(request, TITLE_BAD_REQUEST, 400, e.getMessage()), 400);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnknown(Exception e, HttpServletRequest request) {
         log.error("Unhandled exception in REST pipeline", e);
-        return problem(problemBody(request, "Internal Server Error", 500, "Internal Server Error"), 500);
+        return problem(problemBody(request, TITLE_INTERNAL_ERROR, 500, TITLE_INTERNAL_ERROR), 500);
     }
 
     // ==================== 工具方法 ====================
@@ -125,7 +139,7 @@ public class GlobalRestExceptionHandler {
     private static Map<String, Object> problemBody(HttpServletRequest request,
                                                    String title, int status, String detail) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("type", "about:blank");
+        map.put("type", TYPE_ABOUT_BLANK);
         map.put("title", title);
         map.put("status", status);
         map.put("detail", detail);

@@ -21,8 +21,13 @@ import java.util.Map;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
+ * // 缺省 422
  * throw new BusinessException("order:err.insufficientStock",
  *         Map.of("sku", sku, "required", qty, "available", stock));
+ *
+ * // 显式指定状态（如资源不存在 404、冲突 409）
+ * throw new BusinessException("order:err.notFound", 404);
+ * throw new BusinessException("order:err.alreadyConfirmed", Map.of("id", id), 409);
  * }</pre>
  */
 public class BusinessException extends RuntimeException {
@@ -31,26 +36,56 @@ public class BusinessException extends RuntimeException {
     @Getter
     private final Map<String, Object> params;
 
+    /** 可选 HTTP 状态码；{@code null} 表示未显式指定，由 REST 通道 handler 缺省映射为 422 */
+    @Getter
+    private final Integer httpStatus;
+
     /**
-     * 构造函数 —— 仅 i18n 位点，无占位符参数。
+     * 构造函数 —— 仅 i18n 位点，无占位符参数。HTTP 状态缺省 422。
      *
      * @param messageKey i18n 位点（如 {@code "order:err.insufficientStock"}）
      */
     public BusinessException(String messageKey) {
-        this(messageKey, Collections.emptyMap());
+        this(messageKey, null, null);
     }
 
     /**
-     * 构造函数 —— i18n 位点 + 占位符参数。
+     * 构造函数 —— i18n 位点 + 占位符参数。HTTP 状态缺省 422。
      *
      * @param messageKey i18n 位点（如 {@code "order:err.insufficientStock"}）
      * @param params 占位符参数，{@code null} 视为空 Map
      */
     public BusinessException(String messageKey, Map<String, Object> params) {
+        this(messageKey, params, null);
+    }
+
+    /**
+     * 构造函数 —— i18n 位点 + 显式 HTTP 状态，无占位符参数。
+     *
+     * @param messageKey i18n 位点（如 {@code "order:err.notFound"}）
+     * @param httpStatus 期望的 HTTP 状态码（如 {@code 404} / {@code 409}）
+     */
+    public BusinessException(String messageKey, int httpStatus) {
+        this(messageKey, null, httpStatus);
+    }
+
+    /**
+     * 构造函数 —— i18n 位点 + 占位符参数 + 显式 HTTP 状态。
+     *
+     * @param messageKey i18n 位点（如 {@code "order:err.insufficientStock"}）
+     * @param params 占位符参数，{@code null} 视为空 Map
+     * @param httpStatus 期望的 HTTP 状态码（如 {@code 404} / {@code 409}）
+     */
+    public BusinessException(String messageKey, Map<String, Object> params, int httpStatus) {
+        this(messageKey, params, (Integer) httpStatus);
+    }
+
+    private BusinessException(String messageKey, Map<String, Object> params, Integer httpStatus) {
         super(messageKey);
         this.params = params == null
                 ? Collections.emptyMap()
                 : Collections.unmodifiableMap(new LinkedHashMap<>(params));
+        this.httpStatus = httpStatus;
     }
 
 }

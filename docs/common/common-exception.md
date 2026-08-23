@@ -16,10 +16,13 @@
 
 | 方法/字段 | 说明 |
 |---------|------|
-| `BusinessException(String messageKey)` | 构造（无参数） |
-| `BusinessException(String messageKey, Map<String,Object> params)` | 构造（携带占位符参数） |
+| `BusinessException(String messageKey)` | 构造（无参数，状态缺省 422） |
+| `BusinessException(String messageKey, Map<String,Object> params)` | 构造（携带占位符参数，状态缺省 422） |
+| `BusinessException(String messageKey, int httpStatus)` | 构造（显式 HTTP 状态，如 404 / 409） |
+| `BusinessException(String messageKey, Map<String,Object> params, int httpStatus)` | 构造（占位符参数 + 显式 HTTP 状态） |
 | `getMessage()` | 返回 messageKey（如 `"order:err.insufficientStock"`） |
 | `getParams()` | 返回占位符参数（不可变 Map，空表示无插值） |
+| `getHttpStatus()` | 返回显式指定的 HTTP 状态；未指定时为 `null`（REST 通道缺省映射 422） |
 
 ### GlobalRestExceptionHandler（REST 通道）
 
@@ -27,7 +30,7 @@
 
 | 异常类型 | HTTP 状态码 | title |
 |---------|:-----------:|-------|
-| `BusinessException` | 422 | Business Error |
+| `BusinessException` | 异常自带状态，缺省 422 | Business Error |
 | `ConstraintViolationException` | 400 | Validation Failed |
 | `MethodArgumentNotValidException` | 400 | Validation Failed |
 | `IllegalStateException` | 409 | Conflict |
@@ -65,6 +68,11 @@ throw new BusinessException("order:err.notFound");
 
 throw new BusinessException("order:err.insufficientStock",
         Map.of("sku", "A001", "required", 10, "available", 3));
+
+// 显式指定 HTTP 状态（默认 422）
+throw new BusinessException("order:err.notFound", 404);
+throw new BusinessException("order:err.alreadyConfirmed",
+        Map.of("id", "A001"), 409);
 ```
 
 > **安全注意**：`params` 内容会序列化到 HTTP 响应体，禁止放入敏感信息。
@@ -121,7 +129,7 @@ common-exception → spring-boot-autoconfigure（AutoConfiguration）
 
 **决策**：采用 RFC 9457（`application/problem+json`），`type` 当前为 `about:blank`，待错误类型文档化后替换为绝对 URI；`params`/`fieldErrors` 为合规扩展字段。
 
-**确认**：`GlobalRestExceptionHandler` 返回 ProblemDetail。
+**确认**：`GlobalRestExceptionHandler` 返回 `Map<String, Object>`（`LinkedHashMap` 精确控制字段顺序），而非 Spring `ProblemDetail`。理由：① `params`/`fieldErrors` 为动态扩展字段，`Map` 直接 `put` 序列化最直观，`ProblemDetail` 需经 `setProperty` 间接承载、且序列化顺序不受控；② 响应体本身完全符合 RFC 9457 字段语义（`type`/`title`/`status`/`detail`/`instance` + 扩展成员），不引入 `ProblemDetail` 类型并未损失标准性；③ 保持 handler 返回值轻量（`Map`），避免为格式化引入额外抽象。
 
 ### ADR-0003 IllegalStateException → 409
 

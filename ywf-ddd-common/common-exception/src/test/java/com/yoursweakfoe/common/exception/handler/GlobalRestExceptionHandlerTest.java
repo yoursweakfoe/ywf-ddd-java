@@ -48,6 +48,17 @@ class GlobalRestExceptionHandlerTest {
                     Map.of("sku", "A001", "required", 10));
         }
 
+        @GetMapping("/business-404")
+        public String business404() {
+            throw new BusinessException("order:err.notFound", 404);
+        }
+
+        @GetMapping("/business-409")
+        public String business409() {
+            throw new BusinessException("order:err.alreadyConfirmed",
+                    Map.of("id", "A001"), 409);
+        }
+
         @GetMapping("/constraint-violation")
         public String constraintViolation() {
             Path path = mock(Path.class);
@@ -105,6 +116,28 @@ class GlobalRestExceptionHandlerTest {
                 .andExpect(jsonPath("$.detail").value("order:err.insufficientStock"))
                 .andExpect(jsonPath("$.params.sku").value("A001"))
                 .andExpect(jsonPath("$.params.required").value(10));
+    }
+
+    @Test
+    @DisplayName("BusinessException 显式 404 → 响应 404")
+    void businessExceptionWithExplicit404() throws Exception {
+        mockMvc.perform(get("/business-404"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Business Error"))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.detail").value("order:err.notFound"))
+                .andExpect(jsonPath("$.instance").value("/business-404"));
+    }
+
+    @Test
+    @DisplayName("BusinessException 显式 409 + params → 响应 409")
+    void businessExceptionWithExplicit409AndParams() throws Exception {
+        mockMvc.perform(get("/business-409"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.detail").value("order:err.alreadyConfirmed"))
+                .andExpect(jsonPath("$.params.id").value("A001"));
     }
 
     @Test
