@@ -6,6 +6,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repositor
 import com.yoursweakfoe.common.ddd.domain.service.DomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 /**
  * 库存领域服务 —— 协调跨聚合的库存扣减与回补。
@@ -13,9 +14,9 @@ import java.util.List;
  * <p>下单时需要同时操作多个 Product 聚合的库存，
  * 这一跨聚合协调逻辑不归属于任何单一聚合，因此封装为领域服务。
  *
- * <p>Bean 注册由 {@code infrastructure.config.DomainServiceConfig} 负责，
- * 保持领域层零框架依赖。
+ * <p>标注 {@code @Service} 由 Spring 组件扫描自动注册（Spring 是框架生态基座）。
  */
+@Service
 public class InventoryDomainService implements DomainService {
 
     // region 依赖注入

@@ -11,9 +11,9 @@ package com.yoursweakfoe.common.ddd.domain.service;
  *   <li>由应用层调用 —— 不直接被接口层调用</li>
  * </ul>
  *
- * <p>本接口为纯标记接口，实现类<strong>零框架注解</strong>（不使用 Spring {@code @Service}），
- * 以维持 domain 层的零框架依赖约束。Bean 注册由 infrastructure 层
- * {@code DomainServiceConfig} 负责，构造器注入所需的
+ * <p>本接口为纯标记接口，实现类标注 Spring {@code @Service} / {@code @Component}，
+ * 由 Spring 组件扫描自动注册为 Bean（Spring 是本框架的生态基座，标注注解即标准做法，
+ * 不手写注册样板）。构造器注入所需的
  * {@link com.yoursweakfoe.common.ddd.domain.repository.Repository}。
  */
 public interface DomainService {

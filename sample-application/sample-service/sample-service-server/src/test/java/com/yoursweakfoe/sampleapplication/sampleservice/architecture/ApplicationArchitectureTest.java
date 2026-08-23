@@ -1,5 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.architecture;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -68,17 +70,17 @@ class ApplicationArchitectureTest {
             .resideInAPackage("com.yoursweakfoe.common.security..")
             .as("R6 Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）");
 
-    /** A2 —— Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus。 */
+    /** A2 —— Domain 不依赖框架运行时能力（允许 @Service/@Component 等 stereotype 注解——Spring 是生态基座，注解是纯元数据）。 */
     @ArchTest
     static final ArchRule a2_domain_zero_framework_dependency = noClasses()
             .that()
             .resideInAPackage(BASE + "domain..")
             .should()
-            .dependOnClassesThat()
-            .resideInAnyPackage(
-                    "org.springframework..",
-                    "com.baomidou.mybatisplus..")
-            .as("A2 Domain 层零框架依赖：不依赖 Spring / MyBatis-Plus");
+            .dependOnClassesThat(
+                    resideInAPackage("com.baomidou.mybatisplus..")
+                            .or(resideInAPackage("org.springframework..")
+                                    .and(not(resideInAPackage("org.springframework.stereotype..")))))
+            .as("A2 Domain 不依赖框架运行时能力（允许 stereotype 注解，禁 Spring 容器 / MyBatis-Plus）");
 
     // ── 复用 DDDArchitectureRules 通用规则（不涉及 repository.domain/application 碰撞） ──
 
