@@ -13,7 +13,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.comma
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.adapter.rest.OrderController;
-import java.util.List;
+import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -73,7 +73,7 @@ public class OrderControllerImpl implements OrderController {
     }
 
     @Override
-    public List<OrderSummaryCO> getOrderPage(GetOrderPageQuery query) {
-        return orderAppService.getOrderPage(query).records();
+    public PageResult<OrderSummaryCO> getOrderPage(GetOrderPageQuery query) {
+        return orderAppService.getOrderPage(query);
     }
 }

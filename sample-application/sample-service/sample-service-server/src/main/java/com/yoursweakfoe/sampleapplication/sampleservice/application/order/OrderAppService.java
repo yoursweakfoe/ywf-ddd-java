@@ -13,7 +13,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presen
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderViewPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
-import com.yoursweakfoe.common.ddd.application.repository.PageResult;
+import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CompleteOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;

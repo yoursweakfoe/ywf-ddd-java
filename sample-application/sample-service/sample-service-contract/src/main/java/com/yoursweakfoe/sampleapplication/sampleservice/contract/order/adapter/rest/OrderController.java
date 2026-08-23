@@ -5,11 +5,11 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.Or
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
+import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -125,9 +125,9 @@ public interface OrderController {
      * 分页查询订单列表（概要）。
      *
      * @param query 分页查询条件
-     * @return 订单概览列表
+     * @return 分页结果（records 为订单概览 + total / pageNum / pageSize / totalPages 分页元数据）
      */
-    @Operation(summary = "分页查询订单列表", description = "返回精简字段的订单概览列表，不含订单项明细")
+    @Operation(summary = "分页查询订单列表", description = "返回精简字段的订单概览列表（含分页元数据），不含订单项明细")
     @GetMapping("/page")
-    List<OrderSummaryCO> getOrderPage(@Valid @RequestBody GetOrderPageQuery query);
+    PageResult<OrderSummaryCO> getOrderPage(@Valid @RequestBody GetOrderPageQuery query);
 }

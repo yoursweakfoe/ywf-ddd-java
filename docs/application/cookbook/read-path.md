@@ -184,7 +184,7 @@ public interface OrderQueryRepository {
 
 要点：
 - 读端口定义在 **application 层**（不是 domain 层），返回**读 DTO**（应用层类型），不返回领域类型
-- `PageResult<T>` 是框架级分页容器（common-ddd），业务在 application/infrastructure 用它，框架支撑类放在 `common-ddd/application`（对偶原则：框架构建块按业务使用层级归类）
+- `PageResult<T>` 是框架级分页容器（common-contract，与 `PageableQuery` 同居契约层），业务在 application/infrastructure 用它，消费方从契约直接拿到分页元数据
 - 写侧 `OrderRepository`（domain 层）只保留聚合生命周期，读侧完全不经过它
 
 ### 读侧业务判断放哪？

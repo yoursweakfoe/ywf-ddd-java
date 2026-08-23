@@ -24,7 +24,7 @@
 | DomainEventListener | — | Application 层组件，监听领域事件（@EventListener）执行域内反应。薄编排：接事件 → 加载聚合 → 委托 DomainService/Publisher |
 | Publisher | — | Application 层组件，将领域事件翻译为集成事件并投递 MQ |
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
-| PageResult | — | 框架级分页容器（record），定义在 domain 层，隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
+| PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |
 | MybatisPersistence | — | common-ddd 提供的仓储支撑基类，封装持久化 + 领域事件发布 + 乐观锁 + validate 自动调用 |
 | BasicAutoFillHandler | — | MyBatis-Plus 自动填充处理器，INSERT 填 createAt + updateAt，UPDATE 填 updateAt |

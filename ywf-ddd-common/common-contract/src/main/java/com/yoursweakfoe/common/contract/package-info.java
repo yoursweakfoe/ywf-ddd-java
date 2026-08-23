@@ -5,7 +5,7 @@
  *
  * <ul>
  *   <li>{@code dto/command/} —— Command
- *   <li>{@code dto/query/} —— Query / PageableQuery
+ *   <li>{@code dto/query/} —— Query / PageableQuery / PageResult
  *   <li>{@code dto/co/} —— CO
  *   <li>{@code dto/event/integration/} —— IntegrationEvent
  * </ul>

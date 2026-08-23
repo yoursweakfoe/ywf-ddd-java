@@ -1,6 +1,7 @@
 package com.yoursweakfoe.common.ddd.application.repository;
 
 import com.yoursweakfoe.common.contract.dto.query.PageableQuery;
+import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.common.contract.dto.query.Query;
 import java.util.List;
 import java.util.Optional;

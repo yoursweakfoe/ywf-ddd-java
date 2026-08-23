@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.application.repository;
+package com.yoursweakfoe.common.contract.dto.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

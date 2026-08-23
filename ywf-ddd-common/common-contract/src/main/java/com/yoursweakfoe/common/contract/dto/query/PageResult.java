@@ -1,19 +1,24 @@
-package com.yoursweakfoe.common.ddd.application.repository;
+package com.yoursweakfoe.common.contract.dto.query;
 
 import java.util.List;
 
 /**
- * 分页结果 —— 框架级分页响应容器，隔离基础设施分页实现（如 MyBatis-Plus Page）。
+ * 分页结果 —— 通用的分页响应信封（contract 层）。
  *
- * <p>本类型定义在 application 层（读侧 CQRS 查询的分页结果容器，与 {@link QueryRepository}
- * 同居 {@code application.repository} 子包）。读侧绕过 domain
- * （PO → 读 DTO 直接投影），分页容器是应用层读模型的载体：
+ * <p>与 {@link PageableQuery}（分页入参）成对，同居 {@code dto/query} 包：分页的
+ * 入参（请求条件）与出参（响应信封）都归契约层所有，消费方从 common-contract
+ * 即可拿到完整分页语义（records / total / pageNum / pageSize）。
+ *
+ * <p>本类型是纯 Java 泛型容器（record），零框架依赖，隔离基础设施分页实现
+ * （如 MyBatis-Plus {@code Page}）——服务端读实现负责把底层分页结果装填为本信封，
+ * 契约边界不再拆信封，消费方直接读到分页元数据。
  *
  * <pre>
- * application    → PageResult（application）    ✓ 读端口 / Handler / AppService 使用
- * infrastructure → PageResult（application）    ✓ 读实现构造返回值（读侧例外）
- * domain         → PageResult                    ✗ 读侧绕过 domain，domain 不使用分页
- * 任何层         → Page（MyBatis-Plus）          ✗ 框架泄漏
+ * contract       → PageResult（contract）     ✓ 契约出参（消费方唯一依赖）
+ * application    → PageResult（contract）     ✓ Handler / AppService 使用
+ * infrastructure → PageResult（contract）     ✓ 读实现构造返回值
+ * domain         → PageResult                 ✗ 读侧绕过 domain，domain 不使用分页
+ * 任何层         → Page（MyBatis-Plus）       ✗ 框架泄漏
  * </pre>
  *
  * <p>本类是不可变容器（record），对内部元素的清洗/转换由 Presenter 负责（逐条 map），
@@ -22,14 +27,11 @@ import java.util.List;
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * // QueryHandler 返回分页结果（读侧绕过 domain，PO → 读 DTO 直接投影）
- * public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
- *     return orderQueryRepository.findPage(
- *             query.status(), query.customerId(), query.pageNum(), query.pageSize());
- * }
+ * // 读实现装填（PO → DTO + 分页元数据）
+ * return new PageResult<>(records, page.getTotal(), pageNum, pageSize);
  *
- * // AppService 呈现为 CO
- * PageResult<OrderCO> result = handler.handle(query).map(orderViewPresenter::present);
+ * // AppService 呈现为 CO（分页元数据不变）
+ * PageResult<OrderCO> result = handler.handle(query).map(presenter::present);
  * }</pre>
  *
  * @param records  当前页数据
