@@ -114,6 +114,7 @@ public class FullReductionPolicy implements DiscountPolicy {
 
 ```java
 // domain/order/service/OrderPricingDomainService.java
+@Service
 public class OrderPricingDomainService implements DomainService {
 
     private final List<DiscountPolicy> discountPolicies;  // 构造器注入，@Order 排序
@@ -136,24 +137,8 @@ public class OrderPricingDomainService implements DomainService {
 
 要点：
 - 实现 `DomainService` 标记接口（common-ddd）
-- **零框架注解**：无 `@Service`、无 `@Component`、无 `@Autowired`
-- Bean 注册由 `infrastructure/config/DomainServiceConfig.java` 负责（同 cross-aggregate.md 模式）
-
-### 3.5 Infrastructure — Bean 注册
-
-```java
-// infrastructure/config/DomainServiceConfig.java（节选）
-@Configuration
-public class DomainServiceConfig {
-
-    @Bean
-    public OrderPricingDomainService orderPricingDomainService(List<DiscountPolicy> discountPolicies) {
-        return new OrderPricingDomainService(discountPolicies);
-    }
-}
-```
-
-> Domain Service 禁止框架注解，Bean 注册统一放在 `infrastructure/config/`，保持领域层零框架依赖。
+- 标注 `@Service` 由 Spring 组件扫描自动注册（Spring 是生态基座，标注注解即标准做法；
+  领域层允许 stereotype 注解，见 A2 规则——领域层零框架依赖特指容器运行时 / MyBatis，非注解）
 
 ## 三种组合形态
 

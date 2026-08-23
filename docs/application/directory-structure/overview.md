@@ -51,7 +51,8 @@ server/
 │
 ├── application/                     # 用例编排
 │   └── {aggregate}/
-│       ├── {Aggregate}AppService.java # 聚合入口（全部用例方法）
+│       ├── service/                   # 应用服务（聚合入口）
+│       │   └── {Aggregate}AppService.java
 │       ├── handler/                   # CQRS Handler【按需】
 │       │   ├── command/               # CommandHandler（写用例）
 │       │   └── query/                 # QueryHandler（读用例）

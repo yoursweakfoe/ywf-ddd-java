@@ -19,7 +19,7 @@
 ```
 REST 请求（BatchConfirmOrderCommand）
   → adapter/rest/OrderControllerImpl
-    → application/order/OrderAppService
+    → application/order/service/OrderAppService
       → application/order/handler/BatchConfirmOrderHandler
         → 循环：repository.findById → order.confirm()
         → repository.updateDomainBatch(orders)
@@ -122,5 +122,5 @@ public BatchResultDTO handle(BatchImportCommand command) {
 |----|------|------|
 | contract | `dto/command/BatchConfirmOrderCommand.java` | 批量命令（含 ID 列表） |
 | application | `handler/BatchConfirmOrderHandler.java` | 批量编排 |
-| application | `OrderAppService.java` | 委托 + 呈现 |
+| application | `service/OrderAppService.java` | 委托 + 呈现 |
 | adapter | `rest/OrderControllerImpl.java` | 透传 |

@@ -54,10 +54,9 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 当用例涉及多个聚合协调时（如下单 = Order + Product 库存扣减）：
 
 1. 创建 Domain Service（`domain/shared/service/{Xxx}DomainService.java`）
-   - 实现 `DomainService` 标记接口，零框架注解
+   - 实现 `DomainService` 标记接口，标注 `@Service` 由组件扫描自动注册（领域层允许 stereotype 注解，见 A2 规则）
    - 协调多个 Repository，修改多个聚合
-2. Bean 注册在 `infrastructure/config/DomainServiceConfig.java`
-3. Handler 调用 Domain Service（而非直接操作多个 Repository）
+2. Handler 调用 Domain Service（而非直接操作多个 Repository）
 - 详见 `docs/application/cookbook/cross-aggregate.md`
 
 ## 变体：批量 Handler

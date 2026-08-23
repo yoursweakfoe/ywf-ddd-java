@@ -23,7 +23,7 @@
 ```
 REST 请求
   → adapter/rest/OrderControllerImpl（@RestController，参数包装）
-    → application/order/OrderAppService（委托 Handler + Presenter 呈现）
+    → application/order/service/OrderAppService（委托 Handler + Presenter 呈现）
       → application/order/handler/PayOrderHandler（编排领域逻辑）
         → domain/order/model/Order.pay()（业务规则 + 状态变迁）
         → domain/order/repository/OrderRepository.update()（持久化抽象）
@@ -92,7 +92,7 @@ public class OrderControllerImpl implements OrderController {
 
 ```java
 @Service
-public class OrderAppService {
+public class OrderAppService implements ApplicationService {
 
     private final OrderPresenter orderPresenter;
     private final PayOrderHandler payOrderHandler;
@@ -309,7 +309,7 @@ public class OrderRepositoryImpl
 | contract | `dto/co/OrderCO.java` | 契约输出 |
 | contract | `adapter/rest/OrderController.java` | Controller 契约接口 |
 | adapter | `rest/OrderControllerImpl.java` | 协议适配（透传） |
-| application | `OrderAppService.java` | 聚合入口 |
+| application | `service/OrderAppService.java` | 聚合入口 |
 | application | `handler/PayOrderHandler.java` | 用例编排 |
 | application | `assembler/OrderAssembler.java` | Domain → DTO |
 | application | `presenter/OrderPresenter.java` | DTO → CO |

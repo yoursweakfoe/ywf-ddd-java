@@ -22,7 +22,7 @@
 MQ Broker（RocketMQ / Kafka）
   → adapter/consumer/PaymentEventConsumer
     → 反序列化 → 构建 Command
-    → application/order/OrderAppService.payOrder(command)
+    → application/order/service/OrderAppService.payOrder(command)
       → PayOrderHandler（复用已有写路径）
 ```
 
@@ -32,7 +32,7 @@ MQ Broker（RocketMQ / Kafka）
 // adapter/consumer/PaymentEventConsumer.java
 package com.yoursweakfoe.sampleapplication.sampleservice.adapter.consumer;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.OrderAppService;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.service.OrderAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

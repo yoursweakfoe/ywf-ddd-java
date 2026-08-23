@@ -73,7 +73,7 @@ XML 与 Mapper 接口同包管理，IDE 内 Ctrl+Click 互跳。
 Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 
 - 技术域专属配置跟随 common 模块（如 MQ 配置在 common-mq 内）
-- 当前内容：`DomainServiceConfig`（领域服务 Bean 注册，保持 domain 零框架依赖）
+- 当前内容：无（Domain Service 已改为 @Service 组件扫描注册，无需手动 Bean 注册配置）
 
 ## 协作关系
 

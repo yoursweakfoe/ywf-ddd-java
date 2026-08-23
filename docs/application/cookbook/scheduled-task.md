@@ -19,7 +19,7 @@
 ```
 Spring @Scheduled 触发
   → adapter/order/scheduler/OrderAutoDeliverScheduler
-    → application/order/OrderAppService（或直接 Handler）
+    → application/order/service/OrderAppService（或直接 Handler）
       → application/order/handler/AutoDeliverExpiredOrdersHandler
         → repository 条件查询 → 逐个 order.deliver() → updateDomainBatch
 ```
@@ -30,7 +30,7 @@ Spring @Scheduled 触发
 // adapter/order/scheduler/OrderAutoDeliverScheduler.java
 package com.yoursweakfoe.sampleapplication.sampleservice.adapter.order.scheduler;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.OrderAppService;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.service.OrderAppService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -73,7 +73,7 @@ public class OrderAutoDeliverScheduler {
 ## 2. Application — AppService 方法
 
 ```java
-// application/order/OrderAppService.java（节选）
+// application/order/service/OrderAppService.java（节选）
 public int autoDeliverExpiredOrders() {
     return autoDeliverExpiredOrdersHandler.handle();
 }

@@ -3,7 +3,8 @@
 ```
 application/
 └── {aggregate}/                        # 按聚合自包含
-    ├── {Aggregate}AppService.java      # 聚合入口（全部用例方法）
+    ├── service/                        # 应用服务（聚合入口，全部用例方法）
+    │   └── {Aggregate}AppService.java
     ├── handler/                        # CQRS Handler【按需】
     │   ├── command/                    # CommandHandler（写用例，与 CQE 1:1）
     │   └── query/                      # QueryHandler（读用例，与 CQE 1:1）
@@ -22,7 +23,7 @@ application/
 
 | 目录 | 职责 |
 |------|------|
-| `{aggregate}/{xxx}AppService.java` | 聚合入口，全部用例方法（简单直接实现，复杂委托 Handler） |
+| `{aggregate}/service/{xxx}AppService.java` | 聚合入口，全部用例方法（简单直接实现，复杂委托 Handler）。实现 `ApplicationService` 标记接口（common-ddd），与 domain 层 `DomainService` 对偶 |
 | `{aggregate}/handler/` | Command/Query Handler（与 CQE 1:1）；用例完成后如需通知外部则调用 publisher |
 | `{aggregate}/event/listener/` | DomainEventListener，监听 Spring ApplicationEvent 执行域内反应（如取消→回补库存）；如需通知外部则调用 publisher |
 | `{aggregate}/event/publisher/` | 被 CommandHandler/DomainEventListener 显式调用 → 翻译为契约 IntegrationEvent → 调 Infrastructure MQ Producer 投递。AppService 不直接依赖 publisher |

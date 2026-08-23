@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.ProductAppService;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.service.ProductAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;

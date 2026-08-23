@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.OrderAppService;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.service.OrderAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;

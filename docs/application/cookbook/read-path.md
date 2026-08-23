@@ -22,7 +22,7 @@ CQRS 读写分离：写侧需要聚合根是因为要调用行为方法（`order
 ```
 REST 请求
   → adapter/rest/OrderControllerImpl（参数包装）
-    → application/order/OrderAppService（委托 + 呈现）
+    → application/order/service/OrderAppService（委托 + 呈现）
   → application/order/handler/GetOrderHandler（查询编排）
     → application/order/repository/OrderQueryRepository（读端口）
       → infrastructure/.../repository/query/OrderQueryRepositoryImpl（PO → 读 DTO 直接投影）
@@ -103,9 +103,9 @@ public class OrderControllerImpl implements OrderController {
 ## 3. Application — AppService
 
 ```java
-// application/order/OrderAppService.java（节选）
+// application/order/service/OrderAppService.java（节选）
 @Service
-public class OrderAppService {
+public class OrderAppService implements ApplicationService {
 
     private final OrderViewPresenter orderViewPresenter;  // 读侧 Presenter（写侧用 OrderPresenter）
     private final GetOrderHandler getOrderHandler;
@@ -273,7 +273,7 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 | contract | `dto/query/GetOrderPageQuery.java` | 分页查询 |
 | contract | `dto/co/OrderCO.java` | 契约输出 |
 | adapter | `rest/OrderControllerImpl.java` | 协议适配 |
-| application | `OrderAppService.java` | 聚合入口 |
+| application | `service/OrderAppService.java` | 聚合入口 |
 | application | `handler/GetOrderHandler.java` | 单条查询编排 |
 | application | `handler/GetOrderPageHandler.java` | 分页查询编排 |
 | application | `repository/OrderQueryRepository.java` | 读端口（返回读 DTO） |

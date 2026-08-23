@@ -17,7 +17,7 @@
 | Assembler | — | Application 层组件，Domain → DTO 转换。由 Handler 调用 |
 | Presenter | — | Application 层组件，DTO → CO 转换。由 AppService 调用 |
 | Handler | — | 用例执行单元。CommandHandler（写）或 QueryHandler（读），与 CQE 1:1 对应 |
-| AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter |
+| AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter。实现 `ApplicationService` 标记接口（common-ddd，位于 `application/{agg}/service/`） |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口，spring-web 注解声明 REST 路径，纯透传 AppService |
 | DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外。"进程内我告诉自己人" |
 | IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它 |
@@ -28,7 +28,7 @@
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |
 | MybatisPersistence | — | common-ddd 提供的仓储支撑基类，封装持久化 + 领域事件发布 + 乐观锁 + validate 自动调用 |
 | BasicAutoFillHandler | — | MyBatis-Plus 自动填充处理器，INSERT 填 createAt + updateAt，UPDATE 填 updateAt |
-| DomainServiceConfig | — | Infrastructure 层配置类，负责 Domain Service 的 Bean 注册（保持 Domain 层零框架依赖） |
+| DomainService | — | Domain 层标记接口（common-ddd），跨聚合协调的无状态服务。实现类标注 @Service 由组件扫描注册 |
 | Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
 | Consumer | — | Adapter 层组件，MQ 消息消费入口，反序列化后透传 AppService |
 | opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |

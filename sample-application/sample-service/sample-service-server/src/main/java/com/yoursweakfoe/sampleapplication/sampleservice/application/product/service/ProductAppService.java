@@ -1,5 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.product;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.product.service;
 
+import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.command.CreateProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.query.GetProductHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.presenter.ProductPresenter;
@@ -13,9 +14,11 @@ import org.springframework.stereotype.Service;
  * 商品应用服务 —— 聚合协调入口。
  *
  * <p>所有用例委托 Handler 执行（返回 DTO），本类仅做 DTO → CO 呈现。
+ *
+ * <p>实现 {@link ApplicationService} 标记接口定型「应用服务」角色（ArchUnit 守护）。
  */
 @Service
-public class ProductAppService {
+public class ProductAppService implements ApplicationService {
 
     // region 依赖注入
     private final ProductPresenter productPresenter;

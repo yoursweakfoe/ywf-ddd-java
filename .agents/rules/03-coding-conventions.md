@@ -100,10 +100,9 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Domain Service（跨聚合协调）
 
 - 位置：`domain/shared/service/{Xxx}DomainService.java`
-- 实现 `DomainService` 标记接口
+- 实现 `DomainService` 标记接口，标注 `@Service` 由 Spring 组件扫描自动注册（Spring 是生态基座，标注注解即标准做法；领域层允许 stereotype 注解，见 A2 规则）
 - 职责：协调多个聚合的操作（不归属于任何单一聚合）
 - 可调用 Repository，可修改实体状态
-- **零框架注解**：Bean 注册由 `infrastructure/config/DomainServiceConfig.java` 负责
 - 示例：`InventoryDomainService`（下单时跨 Product 聚合扣库存）
 
 ## Policy（领域策略）

@@ -1,5 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.order;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.order.service;
 
+import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.CancelOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.CompleteOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.ConfirmOrderHandler;
@@ -30,9 +31,11 @@ import org.springframework.stereotype.Service;
  *
  * <p>所有用例委托 Handler 执行（返回 DTO），本类仅做 DTO → CO 呈现。
  * 具备编排多个 Handler 的能力（通过 DTO 流转，不涉及 CO）。
+ *
+ * <p>实现 {@link ApplicationService} 标记接口定型「应用服务」角色（ArchUnit 守护）。
  */
 @Service
-public class OrderAppService {
+public class OrderAppService implements ApplicationService {
 
     // region 依赖注入
     private final OrderPresenter orderPresenter;

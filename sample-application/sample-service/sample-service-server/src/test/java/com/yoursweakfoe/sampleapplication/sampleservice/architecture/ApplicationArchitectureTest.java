@@ -10,6 +10,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
+import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
 import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
@@ -122,13 +123,23 @@ class ApplicationArchitectureTest {
             .allowEmptyShould(true)
             .as("A3 领域 Repository 接口必须在 domain..repository.. 包下");
 
-    /** A4 —— AppService 必须在 application.. 包下。 */
+    /** A4 —— 应用服务（实现 {@code ApplicationService} 标记）必须在 application.. 包下。 */
     @ArchTest
     static final ArchRule a4_app_service_in_application = classes()
             .that()
-            .haveSimpleNameEndingWith("AppService")
+            .implement(ApplicationService.class)
             .should()
             .resideInAPackage("..application..")
             .allowEmptyShould(true)
-            .as("A4 AppService 必须在 application.. 包下");
+            .as("A4 应用服务（implements ApplicationService）必须在 application.. 包下");
+
+    /** A4b —— 类名以 AppService 结尾的类必须实现 {@code ApplicationService} 标记（堵命名漂移）。 */
+    @ArchTest
+    static final ArchRule a4b_app_service_naming_must_be_marked = classes()
+            .that()
+            .haveSimpleNameEndingWith("AppService")
+            .should()
+            .implement(ApplicationService.class)
+            .allowEmptyShould(true)
+            .as("A4b 类名以 AppService 结尾的类必须实现 ApplicationService 标记（识别锚点用类型而非名字）");
 }

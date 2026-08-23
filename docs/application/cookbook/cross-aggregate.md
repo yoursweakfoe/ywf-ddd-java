@@ -28,7 +28,7 @@
 ```
 REST 请求（PlaceOrderCommand）
   → adapter/rest/OrderControllerImpl
-    → application/order/OrderAppService
+    → application/order/service/OrderAppService
       → application/order/handler/PlaceOrderHandler（复杂用例，跨 2 个聚合）
         → domain/product/repository/ProductRepository.findById()     ← 查询商品
         → domain/shared/service/InventoryDomainService.deductStock() ← 跨聚合扣库存
@@ -38,10 +38,11 @@ REST 请求（PlaceOrderCommand）
   ← OrderCO
 ```
 
-## 1. Domain — Domain Service（零框架依赖）
+## 1. Domain — Domain Service（@Service 组件扫描注册）
 
 ```java
 // domain/shared/service/InventoryDomainService.java
+@Service
 public class InventoryDomainService implements DomainService {
 
     private final ProductRepository productRepository;
@@ -73,25 +74,11 @@ public class InventoryDomainService implements DomainService {
 ```
 
 关键约束：
-- 实现 `DomainService` 标记接口，**零框架注解**（无 @Service/@Component）
-- Bean 注册由 `infrastructure/config/DomainServiceConfig` 负责
+- 实现 `DomainService` 标记接口（common-ddd），标注 `@Service` 由 Spring 组件扫描自动注册
+  （Spring 是生态基座，标注注解即标准做法，不手写注册样板；领域层允许 stereotype 注解，见 A2 规则）
 - 可调用 Repository、可修改实体状态（与 Policy 的区别：Policy 无副作用）
 
-## 2. Infrastructure — Bean 注册配置
-
-```java
-// infrastructure/config/DomainServiceConfig.java
-@Configuration
-public class DomainServiceConfig {
-
-    @Bean
-    public InventoryDomainService inventoryDomainService(ProductRepository productRepository) {
-        return new InventoryDomainService(productRepository);
-    }
-}
-```
-
-## 3. Application — 复杂 CommandHandler（跨聚合编排）
+## 2. Application — 复杂 CommandHandler（跨聚合编排）
 
 ```java
 @Component
@@ -137,7 +124,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 |--|---------------|--------|---------|
 | 层 | Domain | Domain | Application |
 | 副作用 | **有**（修改实体、调用 Repository） | **无**（纯计算） | **有**（编排持久化） |
-| 框架注解 | **零**（Bean 注册在 infra config） | 可有 @Component（无状态单例） | @Component + @Transactional |
+| 框架注解 | `@Service`（组件扫描注册） | 可有 @Component（无状态单例） | @Component + @Transactional |
 | 职责 | 跨聚合协调 | 可插拔决策规则 | 单用例编排 |
 
 ## 完整文件清单
@@ -151,7 +138,6 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 | domain | `shared/service/InventoryDomainService.java` | 跨聚合库存协调 |
 | domain | `order/model/Order.java` | 订单聚合根（place 行为） |
 | domain | `product/model/Product.java` | 商品聚合根（deductStock 行为） |
-| infrastructure | `config/DomainServiceConfig.java` | Domain Service Bean 注册 |
 
 ## 相关模式
 
