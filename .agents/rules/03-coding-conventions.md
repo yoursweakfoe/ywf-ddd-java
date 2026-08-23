@@ -94,7 +94,7 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Repository 泛型
 
 - 接口：`Repository<Domain, ID>`（domain 层）
-- 实现：继承 `MybatisPersistence<Mapper, PO, Domain>`（infrastructure 层）
+- 实现：继承 `MybatisPlusPersistence<Mapper, PO, Domain>`（infrastructure 层）
 - Converter：实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
 
 ## Domain Service（跨聚合协调）

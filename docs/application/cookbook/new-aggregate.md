@@ -371,7 +371,7 @@ public interface PaymentMapper extends BaseMapper<PaymentPO> {}
 
 @Component
 public class PaymentRepositoryImpl
-        extends MybatisPersistence<PaymentMapper, PaymentPO, Payment>
+        extends MybatisPlusPersistence<PaymentMapper, PaymentPO, Payment>
         implements PaymentRepository {
 
     private final PaymentConverter converter;

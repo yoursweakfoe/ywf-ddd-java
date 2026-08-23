@@ -11,7 +11,7 @@ import org.springframework.beans.factory.ObjectProvider;
 /**
  * 领域事件冲刷器 —— 在聚合持久化成功后，把聚合根暂存的领域事件「先清后发」地冲刷出去。
  *
- * <p>从 {@code MybatisPersistence} 抽出，承担事件冲刷的单一职责：聚合根持久化成功后，
+ * <p>从 {@code MybatisPlusPersistence} 抽出，承担事件冲刷的单一职责：聚合根持久化成功后，
  * 由本类快照其已注册的领域事件、清空暂存、再逐个发布（先清后发，保证即使监听器抛异常也不会重复发布）。
  *
  * <p><strong>边界</strong>：本包（{@code infrastructure.event.domain}）仅负责<strong>领域事件</strong>的

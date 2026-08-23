@@ -41,9 +41,9 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.event.EventListener;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest(classes = MybatisPersistenceTest.TestConfig.class)
+@SpringBootTest(classes = MybatisPlusPersistenceTest.TestConfig.class)
 @ActiveProfiles("test")
-class MybatisPersistenceTest {
+class MybatisPlusPersistenceTest {
 
     @Configuration
     @SpringBootApplication(
@@ -85,7 +85,7 @@ class MybatisPersistenceTest {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    MybatisPersistenceTest(OrderRepository orderRepository,
+    MybatisPlusPersistenceTest(OrderRepository orderRepository,
                                  ProductRepository productRepository,
                                  OrderMapper orderMapper,
                                  ProductMapper productMapper,

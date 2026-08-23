@@ -38,7 +38,7 @@
         </dependency>
 
         <!-- 多数据源（@DS 注解切换，底层 HikariCP）：
-             框架源码不直接使用，仅测试环境验证 MybatisPersistence 在多数据源下的兼容性。
+             框架源码不直接使用，仅测试环境验证 MybatisPlusPersistence 在多数据源下的兼容性。
              消费方需多数据源时自行引入（依赖最小化，见 .agents/rules/04-forbidden-patterns.md） -->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -52,7 +52,7 @@
             <artifactId>common-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- common-pg：MybatisPersistenceTest 的 removeDomain* 用例需要 UUIDTypeHandler 注册
+        <!-- common-pg：MybatisPlusPersistenceTest 的 removeDomain* 用例需要 UUIDTypeHandler 注册
              （common-pg 不依赖 common-ddd，无循环依赖；test scope 不传递给消费方） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
@@ -65,7 +65,7 @@
             <artifactId>jackson-databind</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- H2 内存数据库（MybatisPersistenceTest 用） -->
+        <!-- H2 内存数据库（MybatisPlusPersistenceTest 用） -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

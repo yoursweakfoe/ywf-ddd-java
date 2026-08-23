@@ -13,7 +13,7 @@ import java.util.Optional;
  * 则实现层会自动附加不变量校验和领域事件发布。
  *
  * <p>业务 Repository 接口应继承本接口，业务 Repository 实现类通过组合
- * {@code MybatisPersistence} 获得具体能力，而非继承框架实现类。
+ * {@code MybatisPlusPersistence} 获得具体能力，而非继承框架实现类。
  *
  * <h3>设计原则</h3>
  * <ul>
@@ -32,7 +32,7 @@ import java.util.Optional;
  *       （PO → 读 DTO 直接投影，绕过 domain），<strong>本接口不声明</strong>。</li>
  *   <li><b>决策型读</b>（领域逻辑需要读数据来做判断）——按领域语义写在<strong>业务子接口</strong>上
  *       （如 {@code findByOrderNo} / {@code countByCustomerAndStatus}），返回聚合根或计数，
- *       由 {@code MybatisPersistence} 的 {@code findDomainOneByCondition} 支撑，
+ *       由 {@code MybatisPlusPersistence} 的 {@code findDomainOneByCondition} 支撑，
  *       不进本最小契约（避免用查询形状污染生命周期抽象）。</li>
  * </ul>
  *
@@ -54,7 +54,7 @@ public interface Repository<Domain extends Identifiable<ID>, ID> {
     //     long count(XxxQuery query);                           // 计数
     //
     // 【二】决策型读（领域逻辑要读数据做判断）→ 写在业务子接口（extends Repository），
-    //      按领域语义命名、返回聚合根或计数，由 MybatisPersistence.findDomainOneByCondition 支撑：
+    //      按领域语义命名、返回聚合根或计数，由 MybatisPlusPersistence.findDomainOneByCondition 支撑：
     //
     //     Optional<Domain> findByXxx(String someKey);                 // 幂等：业务唯一键查重
     //     int countByXxx(ID customerId, String status);              // 风控：满足条件的计数

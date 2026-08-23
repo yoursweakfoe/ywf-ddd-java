@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  *   <li>BasicConverter —— 基础设施层：Domain ↔ PO
  * </ul>
  *
- * <p>本接口是<strong>最小契约</strong>：只声明 {@code MybatisPersistence} 实际消费的
+ * <p>本接口是<strong>最小契约</strong>：只声明 {@code MybatisPlusPersistence} 实际消费的
  * {@code toDomain}/{@code toPO} 与批量委托组合子，<strong>不携带任何与模型形态相关的
  * 非通用方法</strong>（如增量更新 updateXxx）——抽取层代码最小化，子类自行扩充。
  *
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  *   <li>{@code toDomain} —— 通过聚合根的 {@code reconstitute()} 静态工厂重建，不经过业务校验/事件注册
  *   <li>{@code toPO} —— 提取领域对象当前状态的快照，不修改 Domain 任何状态
  *   <li>Domain 的状态变更只通过其行为方法（如 {@code place()}、{@code cancel()}），内聚校验 + 事件注册
- *   <li>持久化前的不变量校验由 {@code MybatisPersistence} 自动调用 {@code validate()}，Converter 不管校验
+ *   <li>持久化前的不变量校验由 {@code MybatisPlusPersistence} 自动调用 {@code validate()}，Converter 不管校验
  *   <li>字段增删时必须同步修改映射方法，并以往返测试守护完整性
  * </ul>
  *

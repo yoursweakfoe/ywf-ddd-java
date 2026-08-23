@@ -26,7 +26,7 @@ import org.springframework.beans.factory.ObjectProvider;
  *
  * <p>注意：本测试验证的是 handler「内部逻辑」（填什么、什么条件下填），不覆盖
  * MyBatis-Plus 的 {@code isWithInsertFill/isWithUpdateFill} 门控——该门控的端到端验证
- * 由 {@code MybatisPersistenceTest}（真实 H2 链路）承担。
+ * 由 {@code MybatisPlusPersistenceTest}（真实 H2 链路）承担。
  */
 class BasicAutoFillHandlerTest {
 

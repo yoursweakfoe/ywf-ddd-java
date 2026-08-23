@@ -56,7 +56,7 @@ Adapter 层入口同样以**空标记**定型角色：
 
 被转换的 `DTO` 由 `ApplicationDTO` **空标记接口**（`common-ddd/application/dto/`）定型：业务顶层 DTO 类（写侧 `XxxDTO` / 读侧 `XxxViewDTO`）实现之，与 contract 层对外 `CO` 标记对偶（DTO = 内部视图可含 version/审计，CO = 经 Presenter 清洗后对外暴露）。嵌套 DTO（如 `OrderDTO.OrderItemDTO`）随外层定型，不重复标记。
 
-### 仓储支撑（MybatisPersistence）
+### 仓储支撑（MybatisPlusPersistence）
 
 组合持有 `BaseMapper`（不继承 ServiceImpl，避免 `save(PO)`/`updateById(PO)` 等底层 PO 直操方法泄漏为公开 API），封装：
 
@@ -154,7 +154,7 @@ public class Order extends AggregateRoot<UUID> {
 ```java
 @Component
 public class OrderRepositoryImpl
-        extends MybatisPersistence<OrderMapper, OrderPO, Order>
+        extends MybatisPlusPersistence<OrderMapper, OrderPO, Order>
         implements OrderRepository {
 
     private final OrderConverter converter;
