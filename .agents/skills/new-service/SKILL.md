@@ -78,7 +78,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
    application/{agg}/handler/ + assembler/ + presenter/ + dto/
    domain/{agg}/model/ + repository/ + portal/
    domain/shared/service/
-   infrastructure/persistence/master/{agg}/po/ + converter/ + mapper/ + repository/
+   infrastructure/persistence/master/{agg}/mybatisplus/po/ + mybatisplus/mapper/ + converter/ + repository/
    infrastructure/gateway/
    infrastructure/config/
    ```

@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.po.ProductPO;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import org.springframework.stereotype.Component;
 

@@ -201,7 +201,7 @@ public interface OrderQueryRepository {
 ## 6. Infrastructure — 读实现（PO → DTO 直接投影）
 
 ```java
-// infrastructure/persistence/master/order/repository/query/OrderQueryRepositoryImpl.java
+// infrastructure/persistence/master/order/repository/application/OrderQueryRepositoryImpl.java
 @Component
 public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 

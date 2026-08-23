@@ -10,7 +10,7 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 - **依赖倒置**：Infrastructure 依赖 Domain（实现其接口），Domain 不依赖 Infrastructure
 - **可复用能力上提 common**：通用技术能力（MQ/Cache/OSS/通知）抽取为 common 模块，服务级 infra 不重复建设
 - **服务级 infra 只放不可复用的、绑定本服务领域的实现**：persistence / gateway / config
-- **按聚合自包含**：persistence 内每个聚合的 po/converter/mapper/repository 在一起，打开即全貌
+- **按聚合自包含**：persistence 内每个聚合的 mybatisplus/converter/repository 在一起，打开即全貌
 
 ## 包结构
 
@@ -22,14 +22,16 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 
 ### persistence/ — 持久化实现
 
-实现 Domain 层 Repository 接口。三级分包：**数据源 → 聚合 → 技术职责**。
+实现 Domain 层 Repository 接口。分包：**数据源 → 聚合 → 技术/语义归属**。聚合命名空间下，纯 MyBatis-Plus 技术文件（PO / Mapper）归拢到 `mybatisplus/` 子目录；带独立身份锚点的文件（Converter 对偶框架 BasicConverter、RepositoryImpl 对偶 domain Repository）留在聚合根下。
 
-| 组件 | 命名规范 | 准入规则 |
-|------|---------|--------|
-| PO | `XxxPO`，标注 `@TableName("schema.table")` | 纯数据载体，无业务逻辑 |
-| Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） |
-| Mapper | `XxxMapper extends BaseMapper<XxxPO>` | 简单 CRUD 用 MP 内置方法，复杂 SQL 写 XML |
-| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPlusPersistence`，标注 `@Component` |
+| 组件 | 命名规范 | 准入规则 | 归属 |
+|------|---------|--------|------|
+| PO | `XxxPO`，标注 `@TableName("schema.table")` | 纯数据载体，无业务逻辑 | `mybatisplus/po/` |
+| Mapper | `XxxMapper extends BaseMapper<XxxPO>` | 简单 CRUD 用 MP 内置方法，复杂 SQL 写 XML | `mybatisplus/mapper/` |
+| Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） | 聚合根 `converter/` |
+| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPlusPersistence`，标注 `@Component` | 聚合根 `repository/` |
+
+> **mybatisplus/ 边界**：仅收「撤换 ORM（如换 Hibernate）时需彻底删除」的纯技术文件。PO 的注解体系与类名（`@TableName`/`@TableId`/`@Version`/`@TableLogic` + PO 命名）全部由 MyBatis-Plus 提供，撤换后整体重建为 Entity；Mapper 是 MyBatis 家族独有概念（`@Mapper` + `BaseMapper`），Hibernate 世界不存在。Converter / RepositoryImpl 撤换后仅部分修改（改参数类型 / 重写实现体），故不进此目录。
 
 `MybatisPlusPersistence` 仅承载写侧聚合生命周期（load → 行为 → save）；读侧由独立的
 `XxxQueryRepositoryImpl`（infra 读实现）直接用 Mapper 从 PO 投影读 DTO（PO → DTO 直接投影，
@@ -42,10 +44,10 @@ MyBatis XML 配置：
 
 ```yaml
 mybatis-plus:
-  mapper-locations: classpath*:com/yoursweakfoe/**/infrastructure/persistence/*/*/mapper/xml/*.xml
+  mapper-locations: classpath*:com/yoursweakfoe/**/infrastructure/persistence/*/*/mybatisplus/mapper/xml/*.xml
 ```
 
-XML 与 Mapper 接口同包管理，IDE 内 Ctrl+Click 互跳。
+XML 与 Mapper 接口同包管理（`mybatisplus/mapper/xml/`），IDE 内 Ctrl+Click 互跳。
 
 ### gateway/ — 外部系统网关实现
 
@@ -105,7 +107,7 @@ infrastructure → 外部框架/SDK（MyBatis-Plus、Alipay SDK、OSS Client 等
 ### 多数据源规则
 
 - 每个数据源一个顶级目录（`master/`、`second/`），**永远平级，不嵌套**
-- 每个数据源内按聚合分包，聚合内部结构完全一致（po/converter/mapper/repository）
+- 每个数据源内按聚合分包，聚合内部结构完全一致（mybatisplus/po/ + mybatisplus/mapper/ + converter/ + repository/）
 - `@MapperScan` 按数据源分别扫描
 - 默认数据源（master）的 RepositoryImpl 可省略 `@DS`
 - Domain 层完全不感知数据源归属
@@ -114,7 +116,7 @@ infrastructure → 外部框架/SDK（MyBatis-Plus、Alipay SDK、OSS Client 等
 
 | 考量 | 说明 |
 |------|------|
-| 聚合自包含 | 一个聚合的 po/converter/mapper/repository 在一起，打开即全貌 |
+| 聚合自包含 | 一个聚合的 mybatisplus/converter/repository 在一起，打开即全貌 |
 | 与 Domain 层对齐 | domain/{aggregate}/ ↔ persistence/{datasource}/{aggregate}/，映射清晰 |
 | 拆分友好 | 微服务拆分时整个聚合目录迁走即可 |
 | 结构一致 | 每个聚合内部结构相同，新人看一个即懂全部 |

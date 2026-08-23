@@ -2,8 +2,8 @@ package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persiste
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.ProductQueryRepository;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mapper.ProductMapper;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.po.ProductPO;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.mapper.ProductMapper;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 

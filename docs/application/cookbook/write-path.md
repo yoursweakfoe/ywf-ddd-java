@@ -317,7 +317,7 @@ public class OrderRepositoryImpl
 | domain | `model/Order.java` | 聚合根（业务规则） |
 | domain | `model/OrderItem.java` | 值对象 |
 | domain | `repository/OrderRepository.java` | 持久化抽象 |
-| infrastructure | `po/OrderPO.java` | 持久化对象 |
-| infrastructure | `converter/OrderConverter.java` | Domain ↔ PO |
-| infrastructure | `mapper/OrderMapper.java` | MyBatis-Plus Mapper |
-| infrastructure | `repository/OrderRepositoryImpl.java` | 仓储实现 |
+| infrastructure | `mybatisplus/po/OrderPO.java` | 持久化对象（MyBatis-Plus 注解载体） |
+| infrastructure | `converter/OrderConverter.java` | Domain ↔ PO（框架 BasicConverter 桥） |
+| infrastructure | `mybatisplus/mapper/OrderMapper.java` | MyBatis-Plus Mapper |
+| infrastructure | `repository/OrderRepositoryImpl.java` | 仓储实现（继承 MybatisPlusPersistence） |

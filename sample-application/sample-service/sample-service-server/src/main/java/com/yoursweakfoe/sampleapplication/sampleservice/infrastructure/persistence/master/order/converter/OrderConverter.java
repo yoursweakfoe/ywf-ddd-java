@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persiste
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.po.OrderPO;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po.OrderPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import java.util.List;
 import java.util.UUID;

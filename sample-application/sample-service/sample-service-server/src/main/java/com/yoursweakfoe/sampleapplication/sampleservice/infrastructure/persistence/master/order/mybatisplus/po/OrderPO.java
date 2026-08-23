@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.po;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

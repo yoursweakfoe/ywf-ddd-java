@@ -1,4 +1,4 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.po;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

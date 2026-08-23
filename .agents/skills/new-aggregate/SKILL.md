@@ -32,10 +32,10 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 
 ### Phase 3: infrastructure 层
 
-10. `infrastructure/persistence/master/{agg}/po/{Agg}PO.java` — 持久化对象
-11. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器
-12. `infrastructure/persistence/master/{agg}/mapper/{Agg}Mapper.java` — Mapper
-13. `infrastructure/persistence/master/{agg}/repository/{Agg}RepositoryImpl.java` — 仓储实现
+10. `infrastructure/persistence/master/{agg}/mybatisplus/po/{Agg}PO.java` — 持久化对象（MyBatis-Plus 注解载体）
+11. `infrastructure/persistence/master/{agg}/mybatisplus/mapper/{Agg}Mapper.java` — MyBatis-Plus Mapper（extends BaseMapper）
+12. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器（框架 BasicConverter 桥）
+13. `infrastructure/persistence/master/{agg}/repository/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPlusPersistence）
 
 ### Phase 4: application 层
 
