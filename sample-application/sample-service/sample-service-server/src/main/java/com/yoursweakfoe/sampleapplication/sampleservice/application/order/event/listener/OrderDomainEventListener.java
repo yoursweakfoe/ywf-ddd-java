@@ -9,6 +9,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPaidEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderShippedEvent;
+import com.yoursweakfoe.common.ddd.application.event.DomainEventListener;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
@@ -36,7 +37,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  */
 @Slf4j
 @Component
-public class OrderDomainEventListener {
+public class OrderDomainEventListener implements DomainEventListener {
 
     // region 依赖注入
     private final OrderRepository orderRepository;

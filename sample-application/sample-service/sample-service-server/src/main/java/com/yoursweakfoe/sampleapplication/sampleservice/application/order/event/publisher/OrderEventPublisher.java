@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher;
 
+import com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event.integration.OrderPlacedIntegrationEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.event.OrderPlacedEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class OrderEventPublisher {
+public class OrderEventPublisher implements IntegrationEventPublisher {
 
     /**
      * 发布「订单已下单」集成事件。

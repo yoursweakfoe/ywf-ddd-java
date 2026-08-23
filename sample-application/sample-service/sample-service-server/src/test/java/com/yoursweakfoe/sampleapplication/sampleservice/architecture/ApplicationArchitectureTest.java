@@ -96,6 +96,19 @@ class ApplicationArchitectureTest {
     @ArchTest
     static final ArchRule c1_contract_pure = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
 
+    /** R7a —— 域内反应监听器必须实现 DomainEventListener 标记。 */
+    @ArchTest
+    static final ArchRule r7a_event_listeners_marked = DDDArchitectureRules.EVENT_LISTENERS_ARE_MARKED;
+
+    /** R7b —— 集成事件出站 Publisher 必须实现 IntegrationEventPublisher 标记。 */
+    @ArchTest
+    static final ArchRule r7b_event_publishers_marked = DDDArchitectureRules.EVENT_PUBLISHERS_ARE_MARKED;
+
+    /** R7c —— AppService 不得直接依赖集成事件出站 Publisher。 */
+    @ArchTest
+    static final ArchRule r7c_app_service_no_direct_publisher =
+            DDDArchitectureRules.APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_PUBLISHER;
+
     // ── 应用特有规则 ───────────────────────────────────────────────────
 
     /** A3 —— 领域 Repository 接口（继承框架 Repository）必须在 domain..repository.. 包下（读端口 QueryRepository 除外）。 */

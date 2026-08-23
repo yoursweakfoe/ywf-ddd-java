@@ -54,6 +54,9 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R5a —— domain Repository 必须是 interface</li>
  *   <li>R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下</li>
  *   <li>R6 —— domain 不依赖 common-security（领域模型不感知认证上下文）</li>
+ *   <li>R7a —— 域内反应监听器必须实现 {@code DomainEventListener} 标记（定型 application 层域内反应角色）</li>
+ *   <li>R7b —— 集成事件出站 Publisher 必须实现 {@code IntegrationEventPublisher} 标记（定型 application 层出站角色）</li>
+ *   <li>R7c —— AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）</li>
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 的 adapter/application/domain/infrastructure</li>
  * </ul>
  */
@@ -168,6 +171,59 @@ public final class DDDArchitectureRules {
                     .resideInAPackage("..infrastructure.persistence..repository..")
                     .allowEmptyShould(true)
                     .as("R5b 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下");
+
+    /**
+     * R7a —— 域内反应监听器（{@code ..event.listener..} 包下）必须实现 {@code DomainEventListener}
+     * 标记接口。
+     *
+     * <p>{@code DomainEventListener}（common-ddd/application/event/）为<strong>空标记</strong>，
+     * 价值在定型「application 层域内反应」角色：消费<strong>内部</strong>领域事件（Spring Event），
+     * 与 adapter 层处理外部集成事件的 Consumer 划清边界。本规则保证每个监听器都被显式标记，
+     * 使该角色可被其他架构规则定位。空集时允许通过（业务服务可能暂无监听器）。
+     */
+    public static final ArchRule EVENT_LISTENERS_ARE_MARKED =
+            classes()
+                    .that()
+                    .resideInAPackage("..event.listener..")
+                    .should()
+                    .implement("com.yoursweakfoe.common.ddd.application.event.DomainEventListener")
+                    .allowEmptyShould(true)
+                    .as("R7a 域内反应监听器必须实现 DomainEventListener 标记（..event.listener.. 包下）");
+
+    /**
+     * R7b —— 集成事件出站 Publisher（{@code ..event.publisher..} 包下）必须实现
+     * {@code IntegrationEventPublisher} 标记接口。
+     *
+     * <p>{@code IntegrationEventPublisher}（common-ddd/application/event/）为<strong>空标记</strong>，
+     * 价值在定型「application 层集成事件出站」角色：消费领域事件、翻译为契约 IntegrationEvent
+     * 并跨服务投递 MQ，与 domain 层进程内发布的 {@code DomainEventPublisher} 划清边界。
+     * 空集时允许通过（业务服务可能暂无出站 Publisher）。
+     */
+    public static final ArchRule EVENT_PUBLISHERS_ARE_MARKED =
+            classes()
+                    .that()
+                    .resideInAPackage("..event.publisher..")
+                    .should()
+                    .implement("com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher")
+                    .allowEmptyShould(true)
+                    .as("R7b 集成事件出站 Publisher 必须实现 IntegrationEventPublisher 标记（..event.publisher.. 包下）");
+
+    /**
+     * R7c —— AppService 不得直接依赖集成事件出站 Publisher。
+     *
+     * <p>文档契约（module-design/application.md）：「AppService 不直接依赖 publisher」——
+     * 出站发布只经 CommandHandler 或 DomainEventListener 显式调用。本规则以
+     * {@code IntegrationEventPublisher} 标记为锚点，将该约束从文档变为可强制执行的架构规则。
+     */
+    public static final ArchRule APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_PUBLISHER =
+            noClasses()
+                    .that()
+                    .haveSimpleNameEndingWith("AppService")
+                    .should()
+                    .dependOnClassesThat()
+                    .implement("com.yoursweakfoe.common.ddd.application.event.IntegrationEventPublisher")
+                    .allowEmptyShould(true)
+                    .as("R7c AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）");
 
     /**
      * C1 —— contract 纯契约模块（Service 接口 + CQE + CO + IntegrationEvent + 枚举），

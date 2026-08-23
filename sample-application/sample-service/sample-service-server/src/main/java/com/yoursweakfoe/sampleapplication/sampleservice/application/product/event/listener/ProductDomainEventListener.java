@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.event.listener;
 
+import com.yoursweakfoe.common.ddd.application.event.DomainEventListener;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockDeductedEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.event.StockRestoredEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class ProductDomainEventListener {
+public class ProductDomainEventListener implements DomainEventListener {
 
     @EventListener
     public void onStockDeducted(StockDeductedEvent event) {

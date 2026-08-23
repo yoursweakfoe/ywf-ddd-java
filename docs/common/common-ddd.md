@@ -33,7 +33,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `Query` | `QueryHandler<Q, R>` | 请给我这个 | **R** |
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
 
-> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher 投递 MQ。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架不提供接口。
+> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher 投递 MQ。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架提供 `application/event/` 下的两个**空标记接口**定型该角色（见「领域事件」节）。
 
 `PageResult<T>` 是框架级分页容器（record），定义在 **contract 层**（与 `PageableQuery` 同居 `dto/query`），隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。服务端 application（读端口 / Handler / AppService）与 infrastructure（读实现装填）均使用它，消费方从 common-contract 直接拿到分页元数据（records / total / pageNum / pageSize）。
 
@@ -63,10 +63,12 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 - `DomainEvent` — 事件基类（eventId + occurredOn）
 - `DomainEventPublisher` — 发布契约接口
 - `InProcessDomainEventPublisher` — 桥接 Spring `ApplicationEventPublisher`，进程内同步发布（位于 `infrastructure/event/domain/`）
+- `DomainEventListener` — application 层域内反应监听器**空标记接口**（`application/event/`）：定型「消费内部领域事件（Spring Event）」的角色，与 adapter 层处理外部集成事件的 Consumer 划清边界
+- `IntegrationEventPublisher` — application 层集成事件出站 Publisher **空标记接口**（`application/event/`）：定型「翻译领域事件 → 契约 IntegrationEvent → 投递 MQ」的角色，与 domain 层进程内发布的 `DomainEventPublisher` 划清边界
 
 事件仅 AggregateRoot 可注册，仓储自动发布（opt-in 点是 `registerEvent()`），先落库后发事件 + 先清后发。
 
-> **边界**：领域事件仅进程内消费（受众为 `@EventListener` 域内反应监听器）。集成事件（IntegrationEvent）的收发不在本模块：出站由 application 层 Publisher 投递 MQ（依赖 common-mq），入站由 adapter 层 Consumer 接收。
+> **边界**：领域事件仅进程内消费（受众为 `DomainEventListener` 标记的域内反应监听器）。集成事件（IntegrationEvent）的收发不在本模块：出站由 application 层 `IntegrationEventPublisher` 标记的 Publisher 投递 MQ（依赖 common-mq），入站由 adapter 层 Consumer 接收。
 
 ### MyBatis-Plus 自动配置
 
@@ -211,7 +213,7 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 
 ```java
 @Component
-public class OrderDomainEventListener {
+public class OrderDomainEventListener implements DomainEventListener {  // 实现空标记：定型「域内反应」角色
     @EventListener  // 同事务，失败则主操作回滚
     public void onOrderPaid(OrderPaidEvent event) { /* 处理逻辑 */ }
 
@@ -219,6 +221,8 @@ public class OrderDomainEventListener {
     public void onOrderPaidAfterCommit(OrderPaidEvent event) { /* 发通知、更新缓存等副作用 */ }
 }
 ```
+
+出站 Publisher 同理：`public class OrderEventPublisher implements IntegrationEventPublisher { ... }`（翻译领域事件 → 契约 IntegrationEvent → 投递 MQ，见 `docs/application/cookbook/event-flow.md`）。
 
 完整示例见 `docs/application/cookbook/write-path.md`。
 
@@ -235,7 +239,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 ## 5. 设计原则
 
-- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`）→ 放 `common-ddd/application`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainEvent`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`DomainEventListener`、`IntegrationEventPublisher`）→ 放 `common-ddd/application`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
@@ -300,7 +304,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **背景**：Handler 接口的契约设计。
 
-**决策**：Query 为纯标记（无泛型，避免 contract 与 internal 类型耦合，返回类型由 Service 方法签名定义）。原 `EventHandler<E>` 接口已移除：入站集成事件（IntegrationEvent）统一由 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler，不设独立事件 Handler；域内反应（对领域事件）由业务侧 `DomainEventListener`（`@EventListener`）承担。
+**决策**：Query 为纯标记（无泛型，避免 contract 与 internal 类型耦合，返回类型由 Service 方法签名定义）。原 `EventHandler<E>` 接口已移除：入站集成事件（IntegrationEvent）统一由 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler，不设独立事件 Handler；域内反应（对领域事件）由业务侧 `DomainEventListener`（`@EventListener`）承担，框架以 `DomainEventListener` / `IntegrationEventPublisher` 两个空标记定型 application 层「监听 / 出站」两角色（2026-08 增补）。
 
 **确认**：`QueryHandler` / `CommandHandler` 接口签名。
 
