@@ -1,5 +1,6 @@
 package com.yoursweakfoe.common.ddd.domain.repository;
 
+import com.yoursweakfoe.common.ddd.application.repository.query.QueryRepository;
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;
 import java.util.Optional;
 
@@ -27,7 +28,7 @@ import java.util.Optional;
  * <ul>
  *   <li><b>展示型读</b>（分页 / 条件查询投影 / findAll / count for UI）——
  *       CQRS 下拆至 application 层读端口
- *       {@link com.yoursweakfoe.common.ddd.application.repository.QueryRepository}
+ *       {@link QueryRepository}
  *       （PO → 读 DTO 直接投影，绕过 domain），<strong>本接口不声明</strong>。</li>
  *   <li><b>决策型读</b>（领域逻辑需要读数据来做判断）——按领域语义写在<strong>业务子接口</strong>上
  *       （如 {@code findByOrderNo} / {@code countByCustomerAndStatus}），返回聚合根或计数，
