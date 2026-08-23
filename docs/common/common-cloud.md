@@ -6,7 +6,7 @@
 
 ## 1. 定位与边界
 
-聚合 pom + 东西向 JWT 身份传播（内置 Feign RequestInterceptor），引入即获得服务注册发现、配置中心、分布式事务、声明式 HTTP 调用（含 JWT 透传）、客户端负载均衡、熔断降级能力。面向使用分布式事务与东西向 HTTP 调用的微服务。
+聚合 pom + 东西向 JWT 身份传播（内置 Feign RequestInterceptor）。**所有依赖均为 optional opt-in**——本模块自身的两个类（`JwtPropagationRequestInterceptor` + `FeignJwtPropagationAutoConfiguration`）仅依赖 Feign 接口与 common-security，且经 `@ConditionalOnClass` 门控（缺依赖时静默不激活）。Feign、JWT 透传、Nacos、Seata、LoadBalancer、CircuitBreaker **消费方用到哪个就显式声明哪个**（见 §3.1「能力 → 需显式声明的依赖」清单）。面向使用分布式事务与东西向 HTTP 调用的微服务。
 
 > 统一异常体系（common-exception）不在本包分发，由业务服务按需显式引入。
 
@@ -23,25 +23,42 @@
 
 ## 3. 使用方式
 
-引入依赖即生效：
+引入 common-cloud 后，所有能力均按需显式声明依赖后自动装配（本模块编译期依赖 Feign/starter 与 common-security，但不传递——消费方需要用到的能力自行声明）：
 
 ```xml
 <dependency>
     <groupId>com.yoursweakfoe</groupId>
     <artifactId>common-cloud</artifactId>
 </dependency>
+
+<!-- 按需：声明式 HTTP -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+<!-- 按需：东西向身份传播所依赖的身份上下文 -->
+<dependency>
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>common-security</artifactId>
+</dependency>
+<!-- 按需：分布式事务 -->
+<dependency>
+    <groupId>org.apache.seata</groupId>
+    <artifactId>seata-spring-boot-starter</artifactId>
+</dependency>
 ```
 
-### 3.1 启用前提
+### 3.1 能力 → 需显式声明的依赖
 
-| 组件 | 前提 |
-|------|------|
-| Nacos | Nacos Server 地址（注册发现 + 配置中心） |
-| Seata | Seata Server 地址 + 事务分组（TC 不可达时启动 fail-fast；测试环境 `seata.enabled: false`） |
-| Feign | 启动类标注 `@EnableFeignClients` |
-| JWT 身份传播 | 引入 common-cloud 即生效（自动装配 `JwtPropagationRequestInterceptor`），无需额外配置 |
-| LoadBalancer | 服务端多实例（单实例直连时无需） |
-| CircuitBreaker | 无（默认装配；规则经 `resilience4j.*` 配置） |
+| 能力 | 需显式声明的依赖（坐标） | 启用前提 |
+|------|------------------------|---------|
+| Feign（声明式 HTTP） | `org.springframework.cloud:spring-cloud-starter-openfeign` | 启动类标注 `@EnableFeignClients` |
+| 东西向 JWT 身份传播 | `spring-cloud-starter-openfeign` + `com.yoursweakfoe:common-security` | 自动装配，可经 `ywf.cloud.feign.jwt.*` 配置 |
+| 服务注册发现 | `com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery` | Nacos Server 地址 |
+| 配置中心 | `com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config` | Nacos Server + `spring.config.import=nacos:` |
+| 分布式事务 | `org.apache.seata:seata-spring-boot-starter` | Seata Server + 事务分组（TC 不可达 fail-fast） |
+| 客户端负载均衡 | `org.springframework.cloud:spring-cloud-starter-loadbalancer` | 服务端多实例 |
+| 熔断 / 降级 | `org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j` | 规则经 `resilience4j.*` 配置 |
 
 ### 3.2 最小配置样例
 
@@ -80,21 +97,21 @@ resilience4j:
 ## 4. 依赖关系
 
 ```
-common-cloud → spring-cloud-starter-alibaba-nacos-discovery
-             → spring-cloud-starter-alibaba-nacos-config
-             → seata-spring-boot-starter
-             → spring-cloud-starter-openfeign
-             → spring-cloud-starter-loadbalancer
-             → spring-cloud-starter-circuitbreaker-resilience4j
-             → common-security（JWT 身份传播）
+common-cloud → spring-cloud-starter-openfeign                    （optional）
+             → common-security                                   （optional，JWT 身份传播）
+             → spring-cloud-starter-alibaba-nacos-discovery      （optional）
+             → spring-cloud-starter-alibaba-nacos-config         （optional）
+             → seata-spring-boot-starter                         （optional）
+             → spring-cloud-starter-loadbalancer                 （optional）
+             → spring-cloud-starter-circuitbreaker-resilience4j  （optional）
 ```
 
-> 依赖树以 `mvn dependency:tree` 为准，本清单可能滞后。
+> 依赖树以 `mvn dependency:tree` 为准，本清单可能滞后。**全部 optional 依赖不传递**——本模块自身两个类经 `@ConditionalOnClass` 门控，缺依赖时不激活；消费方用到相应能力时须自行显式声明（见 §3.1）。
 > Spring Cloud 组件版本由 spring-cloud-dependencies BOM 管理；SCA 组件版本由 spring-cloud-alibaba-dependencies BOM 管理；nacos-client / seata 版本独立声明覆盖 SCA BOM。**BOM 不传递**，消费方需自行 import 对齐版本。
 
 ## 5. 设计原则
 
-- **引入即生效**：Seata / Feign / Nacos / CircuitBreaker 经 starter 自动装配
+- **全 optional opt-in**：所有依赖不传递，消费方用到哪个能力就显式声明哪个；本模块代码经 `@ConditionalOnClass` 门控，缺依赖时安全静默
 - **聚合不封装**：直接传递官方 starter，业务服务直接使用原生 API
 - **统一 HTTP**：对外 REST 经 Higress 网关，东西向 Feign 直连
 - **零信任东西向**：服务间调用透传已验签 JWT，下游自验签，不靠内网可信

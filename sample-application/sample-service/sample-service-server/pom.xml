@@ -34,11 +34,6 @@
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-observability</artifactId>
         </dependency>
-        <!-- 微服务治理（Nacos 预留 + Seata） -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-cloud</artifactId>
-        </dependency>
         <!-- REST 面：Spring MVC + 内嵌 Tomcat（对外端点经 Higress 网关入口） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

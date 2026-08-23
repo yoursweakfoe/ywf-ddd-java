@@ -22,19 +22,6 @@ spring:
         maximum-pool-size: 200
         minimum-idle: 5
 
-  # 禁用 Nacos（测试环境无 Nacos Server；nacos-config 默认强制要求 spring.config.import=nacos:）
-  cloud:
-    nacos:
-      config:
-        import-check:
-          enabled: false
-      discovery:
-        enabled: false
-
-# 禁用 Seata 分布式事务（H2 不支持 AT 模式；且 TC 不可达时 Seata 启动 fail-fast）
-seata:
-  enabled: false
-
 mybatis-plus:
   global-config:
     db-config:

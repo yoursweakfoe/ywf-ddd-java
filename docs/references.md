@@ -106,7 +106,7 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| Resilience4j（熔断） | common-cloud 引入 `spring-cloud-starter-circuitbreaker-resilience4j`，规则经 `resilience4j.*` 配置（docs/common/common-cloud.md ADR-0002）；采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
+| Resilience4j（熔断） | common-cloud 以 **optional** 提供 `spring-cloud-starter-circuitbreaker-resilience4j`（消费方按需显式声明），规则经 `resilience4j.*` 配置（docs/common/common-cloud.md ADR-0002）；采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
 
 **未采纳：**
 
@@ -115,7 +115,7 @@
 | Sentinel（熔断/降级） | Spring Cloud Alibaba | 功能与 Resilience4j 重叠；Sentinel 控制台 + 配置体系增加部署复杂度 |
 | 服务网格 / Sidecar (Istio / Linkerd) | CNCF 生态 | 当前部署规模不需要 Mesh；Higress 网关已提供流量治理能力 |
 | 灰度发布 / 流量染色 SDK | Spring Cloud Alibaba | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
-| 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装 |
+| 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装；common-cloud 仅以 **optional** 提供 nacos-config starter（消费方按需显式声明），不做强传 |
 | 链路追踪 SDK (SkyWalking / Zipkin) | Spring Cloud Sleuth、SkyWalking | 由 OTel Java Agent 零侵入方式覆盖，不在代码中引入 SDK |
 | API 版本管理框架 | Spring Boot、API 网关插件 | REST 路径由 Spring MVC 显式声明，天然支持版本（`/v1/orders`），无需框架级抽象 |
 | 幂等性框架 | 各类幂等 starter、分布式锁方案 | 幂等逻辑与业务强相关（唯一键、状态机、Token），通用抽象反而增加理解成本 |
