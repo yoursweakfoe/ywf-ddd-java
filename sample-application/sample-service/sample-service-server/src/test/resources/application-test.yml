@@ -28,7 +28,3 @@ mybatis-plus:
       id-type: auto
   configuration:
     map-underscore-to-camel-case: true
-
-# 安全策略（测试环境关闭鉴权）
-security:
-  enabled: false

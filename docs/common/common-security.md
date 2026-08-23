@@ -113,15 +113,21 @@ JwtDecoder jwtDecoder() {
   ```
 - **多方案**：见 §2 的 `DelegatingJwtDecoder`。
 
-### 配置：角色 claim 名（可选，唯一字段缝）
+### 配置：角色 claim 名 + 权限前缀（可选，唯一字段缝）
 
 ```yaml
 ywf:
   security:
-    roles-claim: roles   # 角色列表所在的 claim 名，默认 roles
+    enabled: true            # 安全链总开关，默认 true（缺省启用）
+    roles-claim: roles       # 角色列表所在的 claim 名，默认 roles
+    authority-prefix: ROLE_  # 角色 → 权限前缀，默认 ROLE_
 ```
 
 其余身份字段不配置、不写死——各服务按名字自取。
+
+> **opt-out 门控**：`ywf.security.enabled=false` 时整条安全链不注册（无 `SecurityFilterChain`、
+> 不启用 `@EnableWebSecurity`/`@EnableMethodSecurity`）。面向「不想要安全链、只想复用 `SecurityUtil`
+> 读 JWT」的消费方（如纯内部服务）。`SecurityUtil` 是静态工具类，与安全链无耦合，关闭后仍可用。
 
 ### 场景 1：获取当前用户身份（字段自取）
 

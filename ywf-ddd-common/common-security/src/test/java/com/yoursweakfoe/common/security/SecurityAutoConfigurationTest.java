@@ -27,7 +27,8 @@ class SecurityAutoConfigurationTest {
     @Test
     void rolesClaim_defaultsToRoles() {
         JwtAuthenticationConverter converter =
-                new SecurityAutoConfiguration().jwtAuthenticationConverter(new SecurityProperties("roles"));
+                new SecurityAutoConfiguration().jwtAuthenticationConverter(
+                        new SecurityProperties(true, "roles", "ROLE_"));
 
         Authentication auth = converter.convert(jwt("roles", List.of("ADMIN")));
 
@@ -38,7 +39,7 @@ class SecurityAutoConfigurationTest {
 
     @Test
     void rolesClaim_customizable() {
-        SecurityProperties properties = new SecurityProperties("permissions");
+        SecurityProperties properties = new SecurityProperties(true, "permissions", "ROLE_");
 
         JwtAuthenticationConverter converter =
                 new SecurityAutoConfiguration().jwtAuthenticationConverter(properties);
@@ -47,5 +48,18 @@ class SecurityAutoConfigurationTest {
 
         assertThat(auth.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .contains("ROLE_ADMIN", "ROLE_USER");
+    }
+
+    @Test
+    void authorityPrefix_customizable() {
+        SecurityProperties properties = new SecurityProperties(true, "roles", "SCOPE_");
+
+        JwtAuthenticationConverter converter =
+                new SecurityAutoConfiguration().jwtAuthenticationConverter(properties);
+
+        Authentication auth = converter.convert(jwt("roles", List.of("ADMIN")));
+
+        assertThat(auth.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+                .contains("SCOPE_ADMIN");
     }
 }
