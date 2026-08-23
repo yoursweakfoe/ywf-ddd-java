@@ -18,6 +18,7 @@
 | Presenter | — | Application 层组件，DTO → CO 转换。由 AppService 调用 |
 | Handler | — | 用例执行单元。CommandHandler（写）或 QueryHandler（读），与 CQE 1:1 对应 |
 | AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter。实现 `ApplicationService` 标记接口（common-ddd，位于 `application/{agg}/service/`） |
+| DTO | — | Application 层内部视图对象（`application/{agg}/dto/`），写侧/读侧均实现 `ApplicationDTO` 标记接口（common-ddd），与 contract 层 `CO` 标记对偶（内部可含 version/审计，对外经 Presenter 清洗） |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口，spring-web 注解声明 REST 路径，纯透传 AppService |
 | DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外。"进程内我告诉自己人" |
 | IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它 |

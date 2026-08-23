@@ -1,5 +1,7 @@
 package com.yoursweakfoe.common.test.archunit;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.NESTED_CLASSES;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -61,6 +63,8 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R8b —— 类名以 ControllerImpl 结尾的类必须实现 {@code RestAdapter} 标记（堵命名漂移）</li>
  *   <li>R9a —— 实现 {@code IntegrationEventConsumer} 标记的类必须位于 adapter 层（定型 MQ 入站角色）</li>
  *   <li>R9b —— {@code ..event.consumer..} 包下的类必须实现 {@code IntegrationEventConsumer} 标记</li>
+ *   <li>R10a —— 实现 {@code ApplicationDTO} 标记的类必须位于 application 层（定型应用层内部视图角色）</li>
+ *   <li>R10b —— {@code ..application..dto..} 包下的顶层类必须实现 {@code ApplicationDTO} 标记</li>
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 的 adapter/application/domain/infrastructure</li>
  * </ul>
  */
@@ -294,6 +298,41 @@ public final class DDDArchitectureRules {
                     .implement("com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer")
                     .allowEmptyShould(true)
                     .as("R9b ..event.consumer.. 包下的类必须实现 IntegrationEventConsumer 标记");
+
+    /**
+     * R10a —— 实现 {@code ApplicationDTO} 标记的类（application 层内部视图）必须位于 application 层。
+     *
+     * <p>{@code ApplicationDTO}（common-ddd/application/dto/）为<strong>空标记</strong>，定型
+     * 「应用层内部视图」角色：写侧 DTO（含 version）+ 读侧 DTO（投影），与 contract 层对外
+     * {@code CO} 标记对偶。本规则保证被标记的组件不泄漏到其他层。空集时允许通过。
+     */
+    public static final ArchRule APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION =
+            classes()
+                    .that()
+                    .implement("com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO")
+                    .should()
+                    .resideInAPackage("..application..")
+                    .allowEmptyShould(true)
+                    .as("R10a 实现 ApplicationDTO 标记的类必须位于 application 层（应用层内部视图角色）");
+
+    /**
+     * R10b —— {@code ..application..dto..} 包下的<strong>顶层</strong>类必须实现
+     * {@code ApplicationDTO} 标记。
+     *
+     * <p>识别应用层内部视图用类型锚点而非包名猜测。排除嵌套类：嵌套 DTO（如
+     * {@code OrderDTO.OrderItemDTO}）随外层定型，不重复标记（javadoc 约定）。
+     */
+    public static final ArchRule APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED =
+            classes()
+                    .that()
+                    .resideInAPackage("..application..dto..")
+                    .and(not(NESTED_CLASSES))
+                    .and()
+                    .areNotInterfaces()
+                    .should()
+                    .implement("com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO")
+                    .allowEmptyShould(true)
+                    .as("R10b ..application..dto.. 包下的顶层类必须实现 ApplicationDTO 标记（嵌套类除外）");
 
     /**
      * C1 —— contract 纯契约模块（Service 接口 + CQE + CO + IntegrationEvent + 枚举），

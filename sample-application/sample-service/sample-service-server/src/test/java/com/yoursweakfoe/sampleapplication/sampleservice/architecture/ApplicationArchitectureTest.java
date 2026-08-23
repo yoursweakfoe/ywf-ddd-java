@@ -130,6 +130,16 @@ class ApplicationArchitectureTest {
     static final ArchRule r9b_event_consumer_package_marked =
             DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
 
+    /** R10a —— 实现 ApplicationDTO 标记的类必须位于 application 层。 */
+    @ArchTest
+    static final ArchRule r10a_application_dtos_marked_in_application =
+            DDDArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
+
+    /** R10b —— ..application..dto.. 包下的顶层类必须实现 ApplicationDTO 标记。 */
+    @ArchTest
+    static final ArchRule r10b_application_dto_package_marked =
+            DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+
     // ── 应用特有规则 ───────────────────────────────────────────────────
 
     /** A3 —— 领域 Repository 接口（继承框架 Repository）必须在 domain..repository.. 包下（读端口 QueryRepository 除外）。 */

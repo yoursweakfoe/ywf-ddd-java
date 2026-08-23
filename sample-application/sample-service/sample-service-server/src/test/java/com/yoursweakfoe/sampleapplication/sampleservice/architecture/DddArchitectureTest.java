@@ -65,4 +65,11 @@ class DddArchitectureTest {
 
     @ArchTest
     static final ArchRule r9b = DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
+
+    // 框架包自身无 dto 实现类（标记接口位于 common-ddd/application/dto/，规则按空集通过）
+    @ArchTest
+    static final ArchRule r10a = DDDArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
+
+    @ArchTest
+    static final ArchRule r10b = DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
 }

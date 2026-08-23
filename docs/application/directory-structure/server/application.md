@@ -29,4 +29,4 @@ application/
 | `{aggregate}/event/publisher/` | 被 CommandHandler/DomainEventListener 显式调用 → 翻译为契约 IntegrationEvent → 调 Infrastructure MQ Producer 投递。AppService 不直接依赖 publisher |
 | `{aggregate}/assembler/` | Domain → DTO 转换（手写显式映射） |
 | `{aggregate}/presenter/` | DTO → CO 呈现/清洗（手写显式映射） |
-| `{aggregate}/dto/` | 内部视图对象（不对外暴露，可能含乐观锁，审计等内部字段） |
+| `{aggregate}/dto/` | 内部视图对象（不对外暴露，可能含乐观锁，审计等内部字段）。顶层 DTO 实现 `ApplicationDTO` 标记（common-ddd/application/dto/），嵌套项随外层定型 |

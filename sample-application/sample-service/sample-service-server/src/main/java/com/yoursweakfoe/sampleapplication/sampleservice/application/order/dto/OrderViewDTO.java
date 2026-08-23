@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto;
 
+import com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -19,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderViewDTO implements Serializable {
+public class OrderViewDTO implements ApplicationDTO, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

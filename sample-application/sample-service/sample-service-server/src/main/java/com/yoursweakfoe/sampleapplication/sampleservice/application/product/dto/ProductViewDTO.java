@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto;
 
+import com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductViewDTO implements Serializable {
+public class ProductViewDTO implements ApplicationDTO, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
