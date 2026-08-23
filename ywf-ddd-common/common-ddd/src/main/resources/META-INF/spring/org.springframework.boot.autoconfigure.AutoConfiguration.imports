@@ -1,1 +1,2 @@
-com.yoursweakfoe.common.ddd.DddAutoConfiguration
+com.yoursweakfoe.common.ddd.DomainEventAutoConfiguration
+com.yoursweakfoe.common.ddd.MybatisDddAutoConfiguration

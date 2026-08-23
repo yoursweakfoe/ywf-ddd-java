@@ -2,22 +2,20 @@ package com.yoursweakfoe.common.ddd;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.yoursweakfoe.common.ddd.infrastructure.event.domain.InProcessDomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.MybatisPlusPluginConfiguration;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.BasicAutoFillHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-class DddAutoConfigurationTest {
+class MybatisDddAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(DddAutoConfiguration.class));
+            .withConfiguration(AutoConfigurations.of(MybatisDddAutoConfiguration.class));
 
     @Test
-    void withMybatisPlusOnClasspath_allBeansLoaded() {
+    void withMybatisPlusOnClasspath_mybatisBeansLoaded() {
         contextRunner.run(context -> {
-            assertThat(context).hasSingleBean(InProcessDomainEventPublisher.class);
             assertThat(context).hasSingleBean(BasicAutoFillHandler.class);
             assertThat(context.getBeanNamesForType(
                     MybatisPlusPluginConfiguration.class)).hasSize(1);

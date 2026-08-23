@@ -5,7 +5,6 @@ import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties
 import java.time.OffsetDateTime;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
 
 /**
  * MyBatis-Plus 自动填充处理器 —— 自动维护创建时间 / 更新时间字段，以及可选的创建人 / 修改人字段。
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Component;
  * @see com.baomidou.mybatisplus.core.handlers.MetaObjectHandler
  * @see CurrentUserProvider
  */
-@Component
 public class BasicAutoFillHandler implements MetaObjectHandler {
 
     private final AuditProperties auditProperties;

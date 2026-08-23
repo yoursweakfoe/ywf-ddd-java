@@ -4,7 +4,6 @@ import com.yoursweakfoe.common.ddd.domain.event.DomainEvent;
 import com.yoursweakfoe.common.ddd.domain.event.DomainEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 /**
  * 进程内领域事件发布者 —— {@link DomainEventPublisher} 的默认实现，基于 Spring {@link ApplicationEventPublisher}。
@@ -53,7 +52,6 @@ import org.springframework.stereotype.Component;
  * @see ApplicationEventPublisher
  */
 @Slf4j
-@Component
 public class InProcessDomainEventPublisher implements DomainEventPublisher {
 
     // region 依赖注入

@@ -47,6 +47,30 @@ class MybatisPlusPluginConfigurationTest {
                 });
     }
 
+    @Test
+    void blockAttackDisabled_omitsBlockAttackInterceptor() {
+        contextRunner
+                .withPropertyValues("ywf.ddd.mybatis.block-attack-enabled=false")
+                .run(context -> {
+                    MybatisPlusInterceptor interceptor = context.getBean(MybatisPlusInterceptor.class);
+                    assertThat(interceptor.getInterceptors()).hasSize(2);
+                    assertThat(interceptor.getInterceptors())
+                            .noneMatch(inner -> inner instanceof BlockAttackInnerInterceptor);
+                });
+    }
+
+    @Test
+    void paginationMaxLimit_configured() {
+        contextRunner
+                .withPropertyValues("ywf.ddd.mybatis.pagination-max-limit=500")
+                .run(context -> {
+                    MybatisPlusInterceptor interceptor = context.getBean(MybatisPlusInterceptor.class);
+                    PaginationInnerInterceptor pagination = (PaginationInnerInterceptor) interceptor
+                            .getInterceptors().get(0);
+                    assertThat(pagination.getMaxLimit()).isEqualTo(500L);
+                });
+    }
+
     @Configuration
     static class CustomInterceptorConfig {
         @Bean

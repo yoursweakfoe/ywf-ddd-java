@@ -13,7 +13,7 @@ import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
  * <p>{@code com.yoursweakfoe.common.ddd} 包含标准 DDD 分层（domain / application / infrastructure），
  * 所有规则均可有效校验。
  *
- * <p>R1 覆写：新增 Configuration 层（{@code DddAutoConfiguration} 等根包类）以允许框架
+ * <p>R1 覆写：新增 Configuration 层（{@code MybatisDddAutoConfiguration} 等根包类）以允许框架
  * 自动配置类跨层引用基础设施组件。
  */
 @AnalyzeClasses(
@@ -23,7 +23,7 @@ class DddArchitectureTest {
 
     /**
      * R1 本地覆写：在标准四层基础上增加 Configuration 层，
-     * 容纳 {@code DddAutoConfiguration} 等根包自动配置类，避免其跨层引用被误报。
+     * 容纳 {@code MybatisDddAutoConfiguration} 等根包自动配置类，避免其跨层引用被误报。
      */
     @ArchTest
     static final ArchRule r1 = Architectures.layeredArchitecture()
