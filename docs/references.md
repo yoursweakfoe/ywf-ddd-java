@@ -35,6 +35,7 @@
 | Domain Event (Evans) | registerEvent → save → publish；事件是模型的组成部分；进程内 Spring Event |
 | Factory (Evans) | 复杂创建逻辑抽离为独立工厂，仅当构造器不足以表达创建语义时使用 |
 | Domain Service (Evans) | 跨聚合协调 / 逻辑不自然归属任何实体时使用；无状态 |
+| Specification (Evans) | 纯接口（可选工具）：领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用；查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`（读侧绕过 domain），简单校验仍用聚合根内 if-throw，不强制走规约 |
 | Bounded Context (Evans) | 每个微服务 = 一个限界上下文；contract 模块定义上下文对外边界 |
 | Shared Kernel (Evans) | common-contract / common-ddd 为多个限界上下文共享的构建块 |
 | Customer-Supplier (Evans) | contract jar 是消费方唯一依赖；CO 变更需协调消费方（Breaking Change） |
@@ -45,7 +46,6 @@
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| Specification 模式 | Evans 原著、Spring Data JPA Specification、jMolecules | 采纳为**纯接口（可选工具）**：领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用；但**查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`**（读侧绕过 domain），简单校验仍用聚合根内 if-throw，不强制走规约 |
 | 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸且仍需转换为错误码 |
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
@@ -62,6 +62,7 @@
 |------|--------|
 | CQRS (Greg Young) | Command / Query / IntegrationEvent 三通道分离；写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 同居契约层，框架级分页 |
 | Integration Event / EDA | 领域事件（进程内）→ 集成事件（跨服务 MQ）；DomainEvent vs IntegrationEvent 方向对偶 |
+| 标记接口定型体系 | 空标记接口 + ArchUnit 锚点：RestAdapter / ApplicationDTO / DomainEventListener / IntegrationEventPublisher / IntegrationEventConsumer / QueryRepository 各定型一层角色（REST 入口 / 应用层内部视图 / 域内反应监听器 / 集成事件出站 / 集成事件入站 / 读端口），供架构规则按类型锚点识别与约束（非包名猜测） |
 | Saga / Process Manager | 无主长流程引入独立 Saga 服务，不在业务服务内塞入跨服务编排 |
 
 **未采纳：**
@@ -75,7 +76,6 @@
 | Change Data Capture (CDC) | Debezium、Canal、Maxwell | 无事件溯源 / 实时同步需求，不引入额外中间件 |
 | 事件存储 (Event Store) | EventStoreDB、Axon Server | 非 Event Sourcing 架构，无事件持久化重放需求 |
 | Application Service 拆分 Command/Query 两个类 | 部分 CQRS 严格实践 | 一个聚合一个 AppService 已足够内聚；拆分增加类数量无实际收益 |
-| DomainEventListener 基类/标记接口 | Axon Framework、Spring Modulith | **决策：不设立监听器基类或标记接口**。领域事件监听器保持朴素 `@EventListener` / `@TransactionalEventListener` 类（按聚合分目录、类名 = 监听语义）。ADR-0005 已移除 EventHandler 抽象；基类不承载行为、只增间接层。若未来需要架构规则识别监听器，再另行表决引入标记接口 |
 
 ### 架构模式与设计模式
 
