@@ -32,7 +32,10 @@ spring:
   # ----------------------------------------------------------------------------
   # 多数据源（dynamic-datasource + HikariCP）
   # 切换方式：业务代码标注 @DS("second") 即可切换到第二数据源
-  # 敏感凭证生产环境由环境变量 / K8s Secret 注入
+  #
+  # ⚠️ 本文件占位符一律不带默认值：任何环境（含 prod）漏配环境变量时
+  #    占位符无法解析、上下文启动即失败（fail-fast），杜绝静默回落弱口令。
+  #    本地开发默认值见 application-dev.yml。
   # ----------------------------------------------------------------------------
   datasource:
     dynamic:
@@ -41,14 +44,14 @@ spring:
       datasource:
         master:
           driver-class-name: org.postgresql.Driver
-          url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/app_master}
-          username: ${DB_MASTER_USER:postgres}
-          password: ${DB_MASTER_PASSWORD:postgres}
+          url: ${DB_MASTER_URL}
+          username: ${DB_MASTER_USER}
+          password: ${DB_MASTER_PASSWORD}
         second:
           driver-class-name: org.postgresql.Driver
-          url: ${DB_SECOND_URL:jdbc:postgresql://localhost:5432/app_second}
-          username: ${DB_SECOND_USER:postgres}
-          password: ${DB_SECOND_PASSWORD:postgres}
+          url: ${DB_SECOND_URL}
+          username: ${DB_SECOND_USER}
+          password: ${DB_SECOND_PASSWORD}
 
 # ----------------------------------------------------------------------------
 # MyBatis-Plus（显式声明全部配置，框架 Customizer 仅作兜底）
