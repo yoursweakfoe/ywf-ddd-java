@@ -17,6 +17,7 @@ CommandHandler.handle(command):
 ```
 
 - Handler 标注 `@Transactional(rollbackFor = Exception.class)`
+- 同事务跨聚合写入是**已定档决策**（强一致 fail-fast，理由与边界见 `docs/references.md`）：Handler 允许在同一事务内协调多个聚合的持久化，不拆事件补偿
 - Handler 返回 **DTO**（不是 CO）
 
 ## 读侧固定模式

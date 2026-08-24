@@ -47,6 +47,11 @@ class ApplicationArchitectureTest {
             .as("R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；"
                     + "读侧例外：infrastructure 读实现可访问 application 读端口");
 
+    /** R1b —— 收窄 R1 读侧例外：Infrastructure 对 Application 的访问仅限读端口类型锚点。 */
+    @ArchTest
+    static final ArchRule r1b_infra_access_application_only_read_ports =
+            DDDArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
+
     /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。 */
     @ArchTest
     static final ArchRule r3_domain_no_outer = noClasses()
@@ -139,6 +144,21 @@ class ApplicationArchitectureTest {
     @ArchTest
     static final ArchRule r10b_application_dto_package_marked =
             DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+
+    /** R11 —— CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制）。 */
+    @ArchTest
+    static final ArchRule r11_command_handlers_transactional =
+            DDDArchitectureRules.COMMAND_HANDLERS_ARE_TRANSACTIONAL;
+
+    /** R12 —— Domain 层禁止 public setter（守护充血模型不变量）。 */
+    @ArchTest
+    static final ArchRule r12_domain_no_public_setters =
+            DDDArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
+
+    /** R13 —— QueryHandler 禁止触碰写侧仓储（CQRS 读写隔离）。 */
+    @ArchTest
+    static final ArchRule r13_query_handlers_no_write_repository =
+            DDDArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
 
     // ── 应用特有规则 ───────────────────────────────────────────────────
 

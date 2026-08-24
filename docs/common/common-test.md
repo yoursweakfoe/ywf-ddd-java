@@ -14,18 +14,36 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DDDArchitectureRules` 类：
+公开常量位于 `DDDArchitectureRules` 类（规则编号与类级 Javadoc 清单一致）：
 
-| 常量名 | 守护内容 |
-|------|---------|
-| `LAYERED_ARCHITECTURE` | DDD 四层依赖方向（Domain 不得 import Application） |
-| `CONTROLLER_ONLY_DEPENDS_ON_APPLICATION` | Adapter 只依赖 Application |
-| `DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS` | Domain 不依赖外层 |
-| `DOMAIN_MODEL_IS_PURE` | 领域模型纯净（domain.model 无 Spring 注解） |
-| `DOMAIN_REPOSITORIES_MUST_BE_INTERFACES` | Repository 是接口 |
-| `REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE` | 实现在 infrastructure |
+| 常量名 | 编号 | 守护内容 |
+|--------|------|---------|
+| `LAYERED_ARCHITECTURE` | R1 | DDD 四层依赖方向（adapter → application → domain ← infrastructure，含读侧整层例外） |
+| `INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES` | R1b | 收窄 R1 读侧例外：Infrastructure 对 Application 的访问仅限 QueryRepository 实现 / ApplicationDTO 类型锚点 |
+| `ADAPTER_ONLY_DEPENDS_ON_APPLICATION` | R2 | Adapter 只依赖 Application/Contract，不得直连 Domain 或 Infrastructure |
+| `DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS` | R3 | Domain 不依赖 application/infrastructure/adapter/contract |
+| `DOMAIN_MODEL_IS_PURE` | R4 | 领域模型纯净（domain.model 不依赖 MyBatis-Plus/Spring Stereotype/JPA） |
+| `DOMAIN_REPOSITORIES_MUST_BE_INTERFACES` | R5a | Domain Repository 必须是接口 |
+| `REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE` | R5b | 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository |
+| `DOMAIN_DOES_NOT_DEPEND_ON_SECURITY` | R6 | Domain 不依赖 common-security（领域模型不感知认证上下文） |
+| `EVENT_LISTENERS_ARE_MARKED` | R7a | ..event.listener.. 包下类必须实现 DomainEventListener 标记 |
+| `EVENT_PUBLISHERS_ARE_MARKED` | R7b | ..event.publisher.. 包下类必须实现 IntegrationEventPublisher 标记 |
+| `APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_PUBLISHER` | R7c | AppService 不得直接依赖集成事件出站 Publisher |
+| `REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER` | R8a | 实现 RestAdapter 标记的类必须位于 adapter 层 |
+| `CONTROLLER_IMPL_NAMING_MUST_BE_MARKED` | R8b | 类名以 ControllerImpl 结尾必须实现 RestAdapter 标记 |
+| `EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER` | R9a | 实现 IntegrationEventConsumer 标记的类必须位于 adapter 层 |
+| `EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED` | R9b | ..event.consumer.. 包下非接口类必须实现 IntegrationEventConsumer 标记 |
+| `APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION` | R10a | 实现 ApplicationDTO 标记的类必须位于 application 层 |
+| `APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED` | R10b | ..application..dto.. 包下顶层类必须实现 ApplicationDTO 标记 |
+| `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制） |
+| `DOMAIN_HAS_NO_PUBLIC_SETTERS` | R12 | Domain 层禁止 public setter（守护充血模型不变量） |
+| `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口） |
+| `CONTRACT_DOES_NOT_DEPEND_ON_SERVER` | C1 | Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施 |
 
-规则通过 `@AnalyzeClasses(packages = "...")` 指定的根包递归扫描，自动识别 `.domain.` / `.application.` / `.adapter.` / `.infrastructure.` 子包归属。
+> **段匹配碰撞提示**：`..domain..` / `..application..` 按包段精确匹配（非子串），但会同时命中
+> infrastructure 下按「实现哪层接口」命名的 `repository.domain` / `repository.application` 子包。
+> 业务服务若需精确分层语义，请在测试中用根包前缀覆写相关规则（参见 sample-service 的
+> ApplicationArchitectureTest 对 R1/R3/R6 的写法）。
 
 ### Spring Boot Test 统一版本
 
@@ -51,7 +69,7 @@ public class ArchitectureTest {
     @ArchTest
     static final ArchRule r1 = DDDArchitectureRules.LAYERED_ARCHITECTURE;
     @ArchTest
-    static final ArchRule r2 = DDDArchitectureRules.CONTROLLER_ONLY_DEPENDS_ON_APPLICATION;
+    static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
     @ArchTest
     static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
     // ... 其余规则同式引用

@@ -39,6 +39,7 @@
 | PgArrayType | — | common-pg 枚举，定义 Java 数组类型与 PG 数组类型名的映射（如 INTEGER → `integer[]`） |
 | DDDArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 6 条 DDD 分层守护规则 |
 | RFC 9457 | Problem Details for HTTP APIs | HTTP 错误响应标准（原 RFC 7807），定义 type/title/status/detail/instance 字段 + `application/problem+json` 媒体类型 |
+| 枚举双份（contract / domain） | — | 同名枚举在 contract 与 domain 各存一份是**刻意的上下文隔离**（如 `contract/order/enums/OrderStatus` 与 `domain/order/model/OrderStatus`）：对外契约的稳定性与对内建模的自由度解耦，两边字段演进互不牵连。禁止为「去重」而合并共享 |
 
 ## 命名映射规范
 
@@ -54,3 +55,21 @@
 | 服务名（Spring） | 纯小写 | `service`（`spring.application.name`） |
 
 > **新建服务约定**：groupId 统一用 `com.yoursweakfoe.application`，Java 包名取目录名去连字符（`my-new-service` → `com.yoursweakfoe.mynewservice`）。
+
+## 业务词汇（订单域通用语言）
+
+领域事件与状态机背后的业务语义。代码中的方法名即此处词汇的落地（Evans：Ubiquitous Language）。
+
+| 词汇 | 代码落点 | 业务含义 | 前置条件 / 迁移 |
+|------|---------|---------|----------------|
+| 下单 place | `Order.place()` | 创建订单，初始 PENDING，注册 OrderPlacedEvent | 订单项非空、客户 ID 必填、总金额 > 0 |
+| 支付 pay | `Order.pay()` | 买家完成付款，PENDING → PAID | 仅待支付订单可支付 |
+| 确认 confirm | `Order.confirm()` | 商家审核通过已付款订单，PAID → CONFIRMED | 商家操作 |
+| 发货 ship | `Order.ship(trackingNumber)` | 商家交付物流并登记单号，CONFIRMED → SHIPPED | 必填物流单号 |
+| 签收 deliver | `Order.deliver()` | 买家确认收货，SHIPPED → DELIVERED | — |
+| 完成 complete | `Order.complete()` | 订单闭环（终态），DELIVERED → COMPLETED | 终态不可再迁移 |
+| 取消 cancel | `Order.cancel(reason)` | 关闭订单并记录原因（终态），触发库存回补补偿 | 仅 PENDING/PAID 可取消；已发货不可取消 |
+| 扣减库存 deductStock | `Product.deductStock(quantity)` | 库存减少并发 StockDeductedEvent | 数量为正且库存充足，否则拒绝下单 |
+| 回补库存 restoreStock | `Product.restoreStock(quantity)` | 取消后归还占用量并发 StockRestoredEvent | 数量为正 |
+
+> 状态迁移守卫集中在聚合根 `requireStatus(...)`（穷尽性 switch），新增枚举值时编译器强制处理。

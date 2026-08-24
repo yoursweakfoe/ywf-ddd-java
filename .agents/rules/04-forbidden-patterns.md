@@ -69,6 +69,7 @@
 - PO **必须**声明 `@Version` 字段（乐观锁，无此注解视为架构违规）
 - PO **必须**声明 `@TableLogic` 字段（逻辑删除，字段名 `isDelete`）
 - 建表 DDL 必须包含 `version INT NOT NULL DEFAULT 0` 和 `is_delete BOOLEAN NOT NULL DEFAULT FALSE`
+- 乐观锁**仅由** `OptimisticLockerInnerInterceptor` 对 MyBatis-Plus 内置方法自动织入（如 `updateById`）；**手写 XML/注解 SQL 的 UPDATE 不经过插件、无任何版本保护**。确需手写更新时必须复刻插件参数契约：实体参数标 `@Param("et")`，并在 `<if test="et != null and et['version'] != null">` 守卫内追加 `AND version = #{MP_OPTLOCK_VERSION_ORIGINAL}` 版本条件——行为基线由 common-ddd 的 `OptimisticLockHandWrittenXmlTest` 运行时实证钉死
 
 ## 虚拟线程兼容
 

@@ -41,6 +41,7 @@
 | Customer-Supplier (Evans) | contract jar 是消费方唯一依赖；CO 变更需协调消费方（Breaking Change） |
 | Published Language (Evans) | contract 模块即跨上下文共享语言：CQE / CO / IntegrationEvent 是发布方与消费方的共同词汇表，避免逐点翻译 |
 | Context Map 策略集 | 已知策略显式定档：Shared Kernel（common-contract/ common-ddd）、Customer-Supplier（contract jar）。Conformist（顺从外部模型）/ Open Host Service / Anti-Corruption 的上下文级 Partner 关系**按需在业务上下文引入**（当前无此场景，不预设）；Separate Ways（无协作上下文）默认为未协作服务的常态 |
+| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》「一事务一聚合实例」经验法则：用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast——任一聚合校验失败整体回滚，以 PO `@Version` 乐观锁防超卖替代事件补偿；事后副作用（取消订单回补库存）走 AFTER_COMMIT 最终一致。跨服务一致性由 Seata + HTTP 显式调用承担。不采纳「先建单再异步扣库存」：会引入『单建成而库存未扣』的中间态难题，用户体验与实现复杂度双输 |
 
 **未采纳：**
 

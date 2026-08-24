@@ -2,8 +2,15 @@ package com.yoursweakfoe.common.test.archunit;
 
 import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.NESTED_CLASSES;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.assignableTo;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
+
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
 
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
@@ -43,6 +50,21 @@ import com.tngtech.archunit.library.Architectures;
  *     static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
  *
  *     @ArchTest
+ *     static final ArchRule r10b = DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+ *
+ *     @ArchTest
+ *     static final ArchRule r1b = DDDArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
+ *
+ *     @ArchTest
+ *     static final ArchRule r11 = DDDArchitectureRules.COMMAND_HANDLERS_ARE_TRANSACTIONAL;
+ *
+ *     @ArchTest
+ *     static final ArchRule r12 = DDDArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
+ *
+ *     @ArchTest
+ *     static final ArchRule r13 = DDDArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
+ *
+ *     @ArchTest
  *     static final ArchRule c1 = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
  * }
  * }</pre>
@@ -65,6 +87,10 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R9b —— {@code ..event.consumer..} 包下的类必须实现 {@code IntegrationEventConsumer} 标记</li>
  *   <li>R10a —— 实现 {@code ApplicationDTO} 标记的类必须位于 application 层（定型应用层内部视图角色）</li>
  *   <li>R10b —— {@code ..application..dto..} 包下的顶层类必须实现 {@code ApplicationDTO} 标记</li>
+ *   <li>R1b —— Infrastructure 对 Application 的访问仅限读端口类型锚点（QueryRepository 实现 / ApplicationDTO），收窄 R1 读侧整层例外</li>
+ *   <li>R11 —— CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制）</li>
+ *   <li>R12 —— Domain 层禁止 public setter（守护充血模型不变量）</li>
+ *   <li>R13 —— QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口）</li>
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 的 adapter/application/domain/infrastructure</li>
  * </ul>
  */
@@ -107,6 +133,60 @@ public final class DDDArchitectureRules {
                             R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；
                             外层不得直接依赖 infrastructure，domain 不得反向依赖任何层；
                             读侧例外：infrastructure 读查询实现可访问 application 读端口""");
+
+    /**
+     * R1b —— Infrastructure 对 Application 的访问仅限「读端口类型锚点」（CQRS 读侧例外收窄）。
+     *
+     * <p>R1 为读侧放行了 Infrastructure → Application 整层访问；本规则把该例外收窄为白名单，
+     * 被依赖的 application 类必须满足其一：
+     * <ul>
+     *   <li>实现 {@code QueryRepository}（application 层读端口接口）</li>
+     *   <li>实现 {@code ApplicationDTO}（读 DTO，作为查询签名的出入参）</li>
+     *   <li>是上述 ApplicationDTO 实现类的<b>嵌套类</b>（嵌套 DTO 随外层定型，见 R10b 约定）</li>
+     * </ul>
+     * Handler / AppService / Assembler / Presenter 等其余 application 组件对
+     * infrastructure 一律不可见——防止仓储实现反向调用应用层逻辑造成循环依赖。
+     *
+     * <p><strong>段匹配碰撞内置排除</strong>：{@code ..application..} 按包段匹配，会同时命中
+     * infrastructure 下 {@code ..repository.application..} 子包（读实现及其匿名类所在包）。
+     * 目标谓词已显式排除任何位于 {@code ..infrastructure..} 下的类——infra 内部的自依赖
+     * （如实现类引用自己的匿名类）不属于本规则管辖范围。若业务服务的分层包命名存在其他
+     * 同类碰撞且需更精确语义，用精确根包前缀覆写本规则（参见各业务服务
+     * ApplicationArchitectureTest 对 R1/R3/R6 的精确前缀写法）。
+     */
+    private static final String QUERY_REPOSITORY_TYPE =
+            "com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository";
+
+    private static final String APPLICATION_DTO_TYPE =
+            "com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO";
+
+    /**
+     * R1b 读端口类型白名单：QueryRepository 实现 / ApplicationDTO 实现 /
+     * ApplicationDTO 实现类的嵌套类（嵌套 DTO 随外层定型，见 R10b 约定，字节码上不携带标记）。
+     */
+    private static final DescribedPredicate<JavaClass> READ_PORT_TYPE_ANCHORS =
+            assignableTo(QUERY_REPOSITORY_TYPE)
+                    .or(assignableTo(APPLICATION_DTO_TYPE))
+                    .or(new DescribedPredicate<JavaClass>("nested class of an ApplicationDTO implementation") {
+                        @Override
+                        public boolean test(JavaClass candidate) {
+                            JavaClass enclosing = candidate.getEnclosingClass().orElse(null);
+                            return enclosing != null && enclosing.isAssignableTo(APPLICATION_DTO_TYPE);
+                        }
+                    });
+
+    public static final ArchRule INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..infrastructure..")
+                    .should()
+                    .dependOnClassesThat(
+                            resideInAPackage("..application..")
+                                    .and(not(resideInAPackage("..infrastructure..")))
+                                    .and(not(READ_PORT_TYPE_ANCHORS)))
+                    .allowEmptyShould(true)
+                    .as("R1b Infrastructure 对 Application 的访问仅限读端口类型"
+                            + "（QueryRepository 实现 / ApplicationDTO 及其嵌套类），其余 application 组件一律禁止");
 
     /**
      * R2 —— adapter 层（REST / MQ / 定时任务入口）只依赖 application 与 contract，
@@ -371,4 +451,66 @@ public final class DDDArchitectureRules {
                     .dependOnClassesThat()
                     .resideInAPackage("com.yoursweakfoe.common.security..")
                     .as("R6 Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）");
+
+    /**
+     * R11 —— 写侧事务边界强制：{@code CommandHandler} 实现类的 {@code handle} 方法必须标注
+     * {@code @Transactional(rollbackFor = Exception.class)}。
+     *
+     * <p>写侧固定模式「load → 聚合行为 → save」的原子性由 Handler 入口事务保证；仓储支撑类
+     * （{@code MybatisPlusPersistence}）刻意不声明事务（边界上收至应用层），因此漏标注解时
+     * 多次持久化将各自提交、中途失败不回滚——本规则将该遗漏从纪律约束变为编译期后置红线。
+     * 读侧 {@code QueryHandler} 刻意豁免（只读可省事务，见编码规范 03）。
+     */
+    public static final ArchRule COMMAND_HANDLERS_ARE_TRANSACTIONAL =
+            methods()
+                    .that()
+                    .haveName("handle")
+                    .and()
+                    .areDeclaredInClassesThat()
+                    .implement("com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler")
+                    .should()
+                    .beAnnotatedWith("org.springframework.transaction.annotation.Transactional")
+                    .allowEmptyShould(true)
+                    .as("R11 CommandHandler.handle 必须标注 @Transactional"
+                            + "（写侧事务边界由应用层保证，框架不兜底）");
+
+    /**
+     * R12 —— Domain 层禁止 public setter：名称匹配 {@code setXxx} 的方法不得为 public。
+     *
+     * <p>充血模型的根基是「状态变迁只通过行为方法」——setter 允许外部绕过聚合根的状态机守卫
+     * 与不变量校验直接改写内部状态。本规则把禁止清单中的该条目机器化（含 Lombok @Data 在
+     * domain 类上生成的 setter，一并拦截）。返回 {@code this} 的流式风格 setter 同样命中，
+     * 属预期行为。
+     */
+    public static final ArchRule DOMAIN_HAS_NO_PUBLIC_SETTERS =
+            noMethods()
+                    .that()
+                    .areDeclaredInClassesThat()
+                    .resideInAPackage("..domain..")
+                    .and()
+                    .haveNameMatching("set[A-Z].*")
+                    .should()
+                    .bePublic()
+                    .allowEmptyShould(true)
+                    .as("R12 Domain 层禁止 public setter（状态变迁只经行为方法，保护聚合不变量）");
+
+    /**
+     * R13 —— CQRS 读写隔离强制：{@code QueryHandler} 实现类不得依赖写侧仓储
+     * （{@code ..domain..repository..} 包下的任何类型）。
+     *
+     * <p>读侧固定模式要求查询完全绕过 domain：只经 application 层 {@code QueryRepository}
+     * 读端口做 PO → 读 DTO 投影。若读处理器图方便注入写侧 Repository 加载聚合根，
+     * 读写分离即在事实上瓦解。本规则同时覆盖接口与实现类（{@code ..domain..repository..}
+     * 段匹配也会命中 infrastructure 下 {@code ..repository.domain..} 子包的仓储实现类），
+     * 误依赖实现类同样被拦截。
+     */
+    public static final ArchRule QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES =
+            noClasses()
+                    .that()
+                    .implement("com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..domain..repository..")
+                    .allowEmptyShould(true)
+                    .as("R13 QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口）");
 }
