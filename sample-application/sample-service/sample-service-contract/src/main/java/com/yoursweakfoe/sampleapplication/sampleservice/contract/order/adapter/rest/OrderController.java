@@ -119,7 +119,7 @@ public interface OrderController {
     @Operation(summary = "查询订单详情", description = "根据 ID 获取订单完整信息")
     @GetMapping("/{orderId}")
     OrderCO getOrder(
-            @PathVariable("orderId") @Parameter(description = "订单 ID") String orderId);
+            @PathVariable("orderId") @Parameter(description = "订单 ID") UUID orderId);
 
     /**
      * 分页查询订单列表（概要）。

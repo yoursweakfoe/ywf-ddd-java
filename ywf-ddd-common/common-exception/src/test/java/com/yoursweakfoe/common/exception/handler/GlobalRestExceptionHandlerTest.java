@@ -80,6 +80,11 @@ class GlobalRestExceptionHandlerTest {
             throw new IllegalArgumentException("quantity must be positive");
         }
 
+        @GetMapping("/type-mismatch/{id}")
+        public String typeMismatch(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
+            return id.toString();
+        }
+
         @GetMapping("/unknown")
         public String unknown() {
             throw new RuntimeException("unexpected failure");
@@ -172,6 +177,18 @@ class GlobalRestExceptionHandlerTest {
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("Bad Request"))
                 .andExpect(jsonPath("$.detail").value("quantity must be positive"));
+    }
+
+    @Test
+    @DisplayName("路径变量类型转换失败（非法 UUID）→ 400 而非兜底 500")
+    void typeMismatch_returns400WithParamName() throws Exception {
+        mockMvc.perform(get("/type-mismatch/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").value("Parameter 'id' has invalid value 'not-a-uuid'"))
+                .andExpect(jsonPath("$.instance").value("/type-mismatch/not-a-uuid"));
     }
 
     @Test

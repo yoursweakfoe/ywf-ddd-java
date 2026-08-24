@@ -8,7 +8,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handle
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.query.GetOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.query.GetOrderPageHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.PayOrderHandler;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.PlaceOrderHandler;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.RetryablePlaceOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command.ShipOrderHandler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.presenter.OrderViewPresenter;
@@ -40,7 +40,7 @@ public class OrderAppService implements ApplicationService {
     // region 依赖注入
     private final OrderPresenter orderPresenter;
     private final OrderViewPresenter orderViewPresenter;
-    private final PlaceOrderHandler placeOrderHandler;
+    private final RetryablePlaceOrderHandler placeOrderHandler;
     private final PayOrderHandler payOrderHandler;
     private final ConfirmOrderHandler confirmOrderHandler;
     private final ShipOrderHandler shipOrderHandler;
@@ -52,7 +52,7 @@ public class OrderAppService implements ApplicationService {
 
     public OrderAppService(OrderPresenter orderPresenter,
                            OrderViewPresenter orderViewPresenter,
-                           PlaceOrderHandler placeOrderHandler,
+                           RetryablePlaceOrderHandler placeOrderHandler,
                            PayOrderHandler payOrderHandler,
                            ConfirmOrderHandler confirmOrderHandler,
                            ShipOrderHandler shipOrderHandler,

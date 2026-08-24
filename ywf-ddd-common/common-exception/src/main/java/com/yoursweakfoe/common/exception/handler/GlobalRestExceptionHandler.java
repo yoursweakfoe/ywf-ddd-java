@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * REST 通道全局异常处理器（{@code @RestControllerAdvice}）。
@@ -118,6 +119,21 @@ public class GlobalRestExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
         log.warn("Bad request: {}", e.getMessage(), e);
         return problem(problemBody(request, TITLE_BAD_REQUEST, 400, e.getMessage()), 400);
+    }
+
+    /**
+     * 路径变量 / 请求参数类型转换失败（如非法 UUID、错误枚举名、非数字格式）。
+     *
+     * <p>客户端传参错误统一映射 400——若不处理会落入 {@code Exception} 兜底变成 500，
+     * 既误导排障方向，又以 ERROR 级日志污染告警。detail 指明参数名与非法值便于定位。
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+        log.warn("Type mismatch: {}", e.getMessage());
+        String detail = "Parameter '%s' has invalid value '%s'"
+                .formatted(e.getName(), e.getValue());
+        return problem(problemBody(request, TITLE_BAD_REQUEST, 400, detail), 400);
     }
 
     @ExceptionHandler(Exception.class)

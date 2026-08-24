@@ -70,7 +70,7 @@ public class OrderControllerImpl implements OrderController, RestAdapter {
     }
 
     @Override
-    public OrderCO getOrder(String orderId) {
+    public OrderCO getOrder(UUID orderId) {
         return orderAppService.getOrder(new GetOrderQuery(orderId));
     }
 

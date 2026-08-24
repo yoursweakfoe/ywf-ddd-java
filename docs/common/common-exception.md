@@ -35,7 +35,10 @@
 | `MethodArgumentNotValidException` | 400 | Validation Failed |
 | `IllegalStateException` | 409 | Conflict |
 | `IllegalArgumentException` | 400 | Bad Request |
+| `MethodArgumentTypeMismatchException` | 400 | Bad Request |
 | 其他未捕获异常 | 500 | Internal Server Error |
+
+> `MethodArgumentTypeMismatchException`：路径变量 / 请求参数类型转换失败（如非法 UUID、错误枚举名）。不处理时会落入兜底 500——客户端传参错误必须返回 400，detail 格式为 `Parameter '{参数名}' has invalid value '{非法值}'`。
 
 响应格式（Content-Type: `application/problem+json`）：
 

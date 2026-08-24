@@ -34,7 +34,7 @@ class GetOrderHandlerTest {
         when(orderQueryRepository.findById(any())).thenReturn(Optional.of(new OrderViewDTO()));
 
         // When
-        OrderViewDTO result = handler.handle(new GetOrderQuery(UUID.randomUUID().toString()));
+        OrderViewDTO result = handler.handle(new GetOrderQuery(UUID.randomUUID()));
 
         // Then
         assertThat(result).isNotNull();
@@ -46,7 +46,7 @@ class GetOrderHandlerTest {
         when(orderQueryRepository.findById(any())).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> handler.handle(new GetOrderQuery(UUID.randomUUID().toString())))
+        assertThatThrownBy(() -> handler.handle(new GetOrderQuery(UUID.randomUUID())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("order:err.notFound");
     }

@@ -26,10 +26,12 @@ package com.yoursweakfoe.common.ddd.domain.model;
  * 若仓储采用「reload PO → 自行定义的合并方法（如 {@code updatePO}）→ updateById」路径，
  * 则领域层无需持有 version（合并方法由 Converter 实现类自行扩充，非框架接口约束）。
  *
- * <p><strong>关于 equals/hashCode</strong>：本基类<b>不覆写</b> {@code equals}/{@code hashCode}， 子类可自由使用
- * Lombok {@code @Data} 生成基于全字段的判等逻辑。 需要按 ID 判等时请显式调用 {@link #entityEquals(Object)}。
+ * <p><strong>关于 equals/hashCode</strong>：本基类<b>不覆写</b> {@code equals}/{@code hashCode}。
+ * 实体身份由 ID 决定：需要按 ID 判等时请显式调用 {@link #entityEquals(Object)}。
  *
- * <p>当子类继承本类并使用 {@code @Data} 时，建议加上 {@code @EqualsAndHashCode(callSuper = false)} 以避免 Lombok 警告。
+ * <p><strong>Lombok 约定</strong>：领域层实体禁用 {@code @Data}（项目规则 {@code .agents/rules/03}：
+ * 仅 {@code @Getter}）——全字段判等对可变实体是反模式（状态变化破坏 Set/Map 语义），
+ * 公开 setter 会绕过行为方法的不变量守卫。{@code @Data} 仅用于 PO / DTO / CQE / CO。
  *
  * @param <ID> 标识类型，如 {@link java.util.UUID}、{@link Long} 等
  * @see Identifiable

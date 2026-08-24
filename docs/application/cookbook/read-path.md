@@ -84,7 +84,7 @@ public interface OrderController {
 
     @Operation(summary = "查询订单详情", description = "根据 ID 获取订单完整信息")
     @GetMapping("/{orderId}")
-    OrderCO getOrder(@PathVariable("orderId") String orderId);
+    OrderCO getOrder(@PathVariable("orderId") UUID orderId);
 }
 
 // adapter/rest/OrderControllerImpl.java（实现，仅标记协议 + 透传）
@@ -94,8 +94,8 @@ public class OrderControllerImpl implements OrderController {
     private final OrderAppService orderAppService;
 
     @Override
-    public OrderCO getOrder(String orderId) {
-        // REST 路径参数 → Query 包装 → 透传
+    public OrderCO getOrder(UUID orderId) {
+        // REST 路径参数 → Query 包装 → 透传（非法 UUID 由 Web 层类型转换拦截 → 400）
         return orderAppService.getOrder(new GetOrderQuery(orderId));
     }
 }
@@ -134,8 +134,9 @@ public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderViewDTO
 
     @Override
     public OrderViewDTO handle(GetOrderQuery query) {
-        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 投影，不 reconstitute 聚合根
-        return orderQueryRepository.findById(UUID.fromString(query.getOrderId()))
+        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 投影，不 reconstitute 聚合根；
+        // 非法 UUID 已由 Web 层类型转换拦截（400），此处必为合法值
+        return orderQueryRepository.findById(query.getOrderId())
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
     }
 }

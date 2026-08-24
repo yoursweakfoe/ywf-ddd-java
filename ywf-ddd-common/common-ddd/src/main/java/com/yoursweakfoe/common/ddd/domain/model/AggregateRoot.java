@@ -46,8 +46,9 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
      */
     protected void registerEvent(DomainEvent event) {
         if (event == null) {
-            // 框架契约违反（编程错误），非业务规则违反——用 IllegalArgumentException 而非 BusinessException，
-            // 使 domain 层彻底不依赖 common-exception（BusinessException 终点是 web 层 i18n）。
+            // 框架契约违反（编程错误），非业务规则违反——用标准未受检异常 IllegalArgumentException。
+            // 边界：业务规则违反仍抛 BusinessException（i18n 位点；domain 经 common-ddd 传递依赖可用），
+            // 框架契约错误（如 null 事件）用 JDK 标准异常，二者不混用。
             throw new IllegalArgumentException("Domain event must not be null");
         }
         this.domainEvents.add(event);

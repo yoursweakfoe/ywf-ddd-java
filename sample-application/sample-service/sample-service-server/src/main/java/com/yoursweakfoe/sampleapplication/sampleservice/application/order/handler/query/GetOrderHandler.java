@@ -5,7 +5,6 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.reposi
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
 import com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
-import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,8 +21,9 @@ public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderViewDTO
 
     @Override
     public OrderViewDTO handle(GetOrderQuery query) {
-        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 投影，不 reconstitute 聚合根
-        return orderQueryRepository.findById(UUID.fromString(query.getOrderId()))
+        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 投影，不 reconstitute 聚合根；
+        // 非法 UUID 已由 Web 层类型转换拦截（400），此处必为合法值
+        return orderQueryRepository.findById(query.getOrderId())
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
     }
 }
