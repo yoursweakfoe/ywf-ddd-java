@@ -52,6 +52,7 @@ public interface QueryRepository {
 
     // 分页投影（分页 Query 对象 → PageResult）
     // <P extends PageableQuery, DTO> PageResult<DTO> findPage(P query);
+    // 提示：实现内统一消费 query.safePageNum() / query.safePageSize() 取防御性钳制后的分页参数
 
     // 全量投影
     // <DTO> List<DTO> findAll();

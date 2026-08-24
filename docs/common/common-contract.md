@@ -46,10 +46,12 @@ com.yoursweakfoe.common.contract
 |------|------|------|
 | `DEFAULT_PAGE_SIZE` | `int = 20` | 默认每页大小 |
 | `MAX_PAGE_SIZE` | `int = 1000` | 每页最大条数上限 |
-| `getPageNum()` | `default int` → 1 | 当前页码（从 1 开始），`@Min(1)` |
-| `getPageSize()` | `default int` → 20 | 每页大小，`@Min(1) @Max(1000)` |
+| `pageNum()` | 抽象方法 | 当前页码（原始值）—— record 组件 `int pageNum` 天然实现 |
+| `pageSize()` | 抽象方法 | 每页大小（原始值，批量导出逃生门）—— record 组件 `int pageSize` 天然实现 |
+| `safePageNum()` | `default int` | 防御性页码：下限钳制为 1（读侧推荐消费入口） |
+| `safePageSize()` | `default int` | 防御性每页大小：钳制到 `1..MAX_PAGE_SIZE`（读侧推荐消费入口） |
 
-> `@Min/@Max` 依赖调用点 `@Valid` 触发；读侧查询实现（`XxxQueryRepositoryImpl`）已内置防御性 clamp，未经校验的参数也不会产生非法分页。
+> **record 优先**：组件名 `pageNum`/`pageSize` 与抽象方法同签名，业务 record 实现本接口**零覆写**。读侧仓储统一消费 `safe*()` 取钳制值；未经校验的非法参数也不会产生非法分页。
 
 ### IntegrationEvent vs DomainEvent
 
@@ -79,8 +81,10 @@ public record PlaceOrderCommand(
 public record GetOrderPageQuery(
         String status,
         @Min(1) int pageNum,
-        @Min(1) @Max(1000) int pageSize
+        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) int pageSize
 ) implements PageableQuery {}
+// 组件名 pageNum/pageSize 与接口抽象方法天然匹配——零覆写样板。
+// 校验注解必须声明在组件上（见 §3.1）。
 ```
 
 ### 3.1 参数校验规范
@@ -96,7 +100,7 @@ public record GetOrderPageQuery(
 要点：
 
 - **嵌套校验**：容器元素用类型参数注解 `List<@Valid Xxx>`；不要在 `List` 字段上加 `@Valid`（Hibernate Validator 已弃用该用法）
-- **record 分页字段**：`PageableQuery` 接口的 `@Min/@Max` 是 default 方法，record 组件**不继承**，实现类须在组件上显式声明
+- **record 分页字段**：`@Min/@Max` 声明在 record **组件上**（接口方法注解不被组件继承）；运行期防线由 `safePageNum()/safePageSize()` 兜底，两层互为冗余
 - **字符串 ID 用 `@NotBlank`，对象 ID 用 `@NotNull`，集合用 `@NotEmpty`**
 - **业务规则校验不在此列**：库存够不够、状态对不对属 Domain 层 `validate()` + 显式 if-throw，不用 Bean Validation
 

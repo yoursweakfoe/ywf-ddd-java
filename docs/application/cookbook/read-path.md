@@ -71,7 +71,8 @@ public record GetOrderPageQuery(
 
 要点：
 - 单条查询实现 `Query`，分页查询实现 `PageableQuery`（common-contract）
-- `PageableQuery` 继承 `Query`，带 pageNum/pageSize 约束
+- `PageableQuery` 继承 `Query`，抽象方法 `pageNum()`/`pageSize()` 与 record 组件**同签名**——零覆写样板
+- 校验注解（`@Min`/`@Max`）声明在 record 组件上；读侧仓储统一消费 `safePageNum()`/`safePageSize()` 取防御性钳制值
 - record 天然不可变，适合简单 Query
 
 ## 2. Adapter — Controller 契约接口 + 实现（纯透传）
