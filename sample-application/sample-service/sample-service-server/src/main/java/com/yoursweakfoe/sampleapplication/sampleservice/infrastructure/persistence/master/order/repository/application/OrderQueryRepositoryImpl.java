@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.application.OrderQueryRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.mapper.OrderMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po.OrderPO;
 import java.util.List;
@@ -43,13 +44,13 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
     }
 
     @Override
-    public PageResult<OrderViewDTO> findPage(String status, String customerId, int pageNum, int pageSize) {
-        // 防御性下限 clamp：未校验参数不会产生非法分页
-        int safePageNum = Math.max(1, pageNum);
-        int safePageSize = Math.max(1, pageSize);
+    public PageResult<OrderViewDTO> findPage(GetOrderPageQuery query) {
+        // 双通道防御钳制（1..MAX_PAGE_SIZE）：即使调用点未经 Bean Validation 也安全
+        int safePageNum = query.safePageNum();
+        int safePageSize = query.safePageSize();
         LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<OrderPO>()
-                .eq(status != null, OrderPO::getStatus, status)
-                .eq(customerId != null, OrderPO::getCustomerId, customerId)
+                .eq(query.status() != null, OrderPO::getStatus, query.status())
+                .eq(query.customerId() != null, OrderPO::getCustomerId, query.customerId())
                 .orderByDesc(OrderPO::getCreateAt);
         Page<OrderPO> page = orderMapper.selectPage(new Page<>(safePageNum, safePageSize), wrapper);
         return new PageResult<>(

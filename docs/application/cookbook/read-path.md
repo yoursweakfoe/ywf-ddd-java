@@ -156,9 +156,9 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 
     @Override
     public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
-        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 分页投影
-        return orderQueryRepository.findPage(
-                query.status(), query.customerId(), query.pageNum(), query.pageSize());
+        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 分页投影；
+        // 分页参数经 Query 双通道 safe*() 在实现侧统一钳制，Handler 不重复处理
+        return orderQueryRepository.findPage(query);
     }
 }
 ```
@@ -178,8 +178,12 @@ public interface OrderQueryRepository {
     /** 按 ID 投影订单读 DTO（不存在返回 empty）。 */
     Optional<OrderViewDTO> findById(UUID id);
 
-    /** 分页投影订单读 DTO。 */
-    PageResult<OrderViewDTO> findPage(String status, String customerId, int pageNum, int pageSize);
+    /**
+     * 分页投影订单读 DTO。
+     * 实现侧统一消费 {@code query.safePageNum()} / {@code query.safePageSize()}
+     * 双通道防御钳制（1..MAX_PAGE_SIZE）。
+     */
+    PageResult<OrderViewDTO> findPage(GetOrderPageQuery query);
 }
 ```
 
@@ -221,15 +225,18 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
     }
 
     @Override
-    public PageResult<OrderViewDTO> findPage(String status, String customerId, int pageNum, int pageSize) {
+    public PageResult<OrderViewDTO> findPage(GetOrderPageQuery query) {
+        // 双通道防御钳制（1..MAX_PAGE_SIZE）：即使调用点未经 Bean Validation 也安全
+        int safePageNum = query.safePageNum();
+        int safePageSize = query.safePageSize();
         LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<OrderPO>()
-                .eq(status != null, OrderPO::getStatus, status)
-                .eq(customerId != null, OrderPO::getCustomerId, customerId)
+                .eq(query.status() != null, OrderPO::getStatus, query.status())
+                .eq(query.customerId() != null, OrderPO::getCustomerId, query.customerId())
                 .orderByDesc(OrderPO::getCreateAt);
-        Page<OrderPO> page = orderMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        Page<OrderPO> page = orderMapper.selectPage(new Page<>(safePageNum, safePageSize), wrapper);
         return new PageResult<>(
                 page.getRecords().stream().map(this::toViewDTO).toList(),
-                page.getTotal(), pageNum, pageSize);
+                page.getTotal(), safePageNum, safePageSize);
     }
 
     /** PO → 读 DTO 直接投影（不经过 domain，不 reconstitute 聚合根）。 */

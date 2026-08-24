@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.repos
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,10 +24,10 @@ public interface OrderQueryRepository extends QueryRepository {
     /**
      * 分页投影订单读 DTO。
      *
-     * @param status     订单状态过滤（可选，null 表示不过滤）
-     * @param customerId 客户 ID 过滤（可选）
-     * @param pageNum    页码（从 1 开始）
-     * @param pageSize   每页大小
+     * <p>分页入参整体接收 Query 对象，实现侧统一消费
+     * {@link GetOrderPageQuery#safePageNum()} / {@link #safePageSize()} 双通道防御钳制
+     * （{@code 1..MAX_PAGE_SIZE}），即使调用点未触发 Bean Validation 也不会产生
+     * 非法分页或拖垮数据库的超大分页。
      */
-    PageResult<OrderViewDTO> findPage(String status, String customerId, int pageNum, int pageSize);
+    PageResult<OrderViewDTO> findPage(GetOrderPageQuery query);
 }

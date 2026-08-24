@@ -98,7 +98,7 @@ public class OrderDomainEventListener implements DomainEventListener {
      *
      * <p>{@code AFTER_COMMIT}：取消事务提交后才执行，回补失败不会回滚已取消的订单；
      * {@code REQUIRES_NEW}：原事务已完成，库存写入必须开启新事务才能提交；
-     * 回补失败仅记录 ERROR 日志（人工对账），不影响已提交的取消结果。
+     * 回补失败仅记录携带明细的 ERROR 日志（人工对账），不影响已提交的取消结果。
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
@@ -106,14 +106,22 @@ public class OrderDomainEventListener implements DomainEventListener {
         log.info("Order cancelled: orderId={}, reason={}",
                 event.getOrderId(), event.getReason());
         // 库存回补：根据订单明细回补库存
+        Order order;
         try {
-            Order order = orderRepository.findById(event.getOrderId())
+            order = orderRepository.findById(event.getOrderId())
                     .orElseThrow(() -> new BusinessException("order:err.notFound"));
+        } catch (Exception e) {
+            // 订单不可读（极罕见）：无法取得明细，记录告警供人工核对
+            log.error("Stock replenish aborted: order unreadable after cancel: orderId={}",
+                    event.getOrderId(), e);
+            return;
+        }
+        try {
             inventoryDomainService.replenishStock(order.getItems());
         } catch (Exception e) {
-            // 补偿失败不向上抛（主事务已提交），记录日志供人工对账
-            log.error("Stock replenish failed after order cancelled: orderId={}",
-                    event.getOrderId(), e);
+            // 补偿失败不向上抛（主事务已提交）；携带完整明细落日志供人工对账（无 outbox，本日志即唯一线索）
+            log.error("Stock replenish failed after order cancelled: orderId={}, items={}",
+                    event.getOrderId(), order.getItems(), e);
         }
     }
 }

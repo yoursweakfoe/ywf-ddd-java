@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,5 +70,34 @@ class PlaceOrderHandlerTest {
         assertThatThrownBy(() -> handler.handle(command(99L, 1)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("product:err.notFound");
+    }
+
+    @Test
+    void handle_shouldNotSaveWhenAnyStockInsufficient() {
+        // 第二个商品库存不足（DomainService 在事务内抛出）—— 整单原子失败，订单不得落库
+        when(productRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(
+                new Product(1L, "Widget", new BigDecimal("25.50"), 100),
+                new Product(2L, "Gadget", new BigDecimal("10.00"), 1)));
+        // deductStock 返回 void —— 打桩必须用 doThrow().when() 形式
+        doThrow(new BusinessException("product:err.insufficientStock"))
+                .when(inventoryDomainService).deductStock(any());
+
+        PlaceOrderCommand command = new PlaceOrderCommand();
+        command.setCustomerId("customer-1");
+        command.setItems(List.of(itemView(1L, 1), itemView(2L, 999)));
+
+        assertThatThrownBy(() -> handler.handle(command))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("product:err.insufficientStock");
+
+        verify(orderRepository, never()).save(any());
+    }
+
+    /** 订单项命令 DTO 工厂。 */
+    private PlaceOrderCommand.OrderItemView itemView(Long productId, int quantity) {
+        PlaceOrderCommand.OrderItemView itemDto = new PlaceOrderCommand.OrderItemView();
+        itemDto.setProductId(productId);
+        itemDto.setQuantity(quantity);
+        return itemDto;
     }
 }

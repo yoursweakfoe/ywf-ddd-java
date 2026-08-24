@@ -8,6 +8,7 @@ import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,6 +20,10 @@ import org.springframework.stereotype.Service;
  * <p>性能契约：商品按 ID 集合批量加载（单次 IN 查询），不存在逐项查询的 N+1 问题；
  * 同一商品出现在多个订单项时数量自动合并为一次聚合行为调用 + 一次持久化
  * （避免对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空）。
+ *
+ * <p>锁序契约：所有事务对 Product 聚合的更新顺序统一为 <strong>productId 全局升序</strong>——
+ * 两个并发订单即使以相反顺序触及相同商品，也按同一顺序加行锁，消除交叉持锁死锁
+ * （「订单内首次出现序」只保证单事务内稳定，不足以防跨事务死锁）。
  *
  * <p>标注 {@code @Service} 由 Spring 组件扫描自动注册（stereotype 注解为纯元数据，
  * 见 ApplicationArchitectureTest A2 白名单）。
@@ -73,9 +78,14 @@ public class InventoryDomainService implements DomainService {
                 .collect(LinkedHashMap::new, (map, p) -> map.put(p.getId(), p), Map::putAll);
     }
 
-    /** 同商品订单项数量合并（保持首次出现的顺序，稳定更新次序）。 */
+    /**
+     * 同商品订单项数量合并，并按 productId <strong>全局升序</strong>排列。
+     *
+     * <p><b>锁序约定</b>：TreeMap 天然升序迭代，使所有并发事务对 Product 的 UPDATE
+     * 遵循同一加锁顺序（见类级「锁序契约」）。
+     */
     private Map<Long, Integer> quantitiesByProduct(List<OrderItem> items) {
-        Map<Long, Integer> quantities = new LinkedHashMap<>();
+        Map<Long, Integer> quantities = new TreeMap<>();
         for (OrderItem item : items) {
             quantities.merge(item.productId(), item.quantity(), Integer::sum);
         }

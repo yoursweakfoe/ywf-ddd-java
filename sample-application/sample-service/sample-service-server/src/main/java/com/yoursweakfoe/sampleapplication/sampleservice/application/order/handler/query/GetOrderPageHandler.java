@@ -25,8 +25,8 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 
     @Override
     public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
-        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 分页投影，不 reconstitute 聚合
-        return orderQueryRepository.findPage(
-                query.status(), query.customerId(), query.pageNum(), query.pageSize());
+        // 读侧绕过 domain：查询端口直接 PO → 读 DTO 分页投影，不 reconstitute 聚合；
+        // 分页参数经 Query 双通道 safe*() 在实现侧统一钳制，Handler 不重复处理
+        return orderQueryRepository.findPage(query);
     }
 }

@@ -180,11 +180,26 @@ public class Order extends AggregateRoot<UUID> {
 
     /**
      * 状态转换守卫 —— 确认当前状态在允许集合内，否则拒绝转换。
+     *
+     * <p>使用 JDK 21 模式匹配 switch：新增枚举值时编译器强制要求处理（穷尽性检查）。
      */
     private void requireStatus(String errorKey, OrderStatus... validStatuses) {
-        if (!List.of(validStatuses).contains(status)) {
+        boolean allowed = switch (status) {
+            case PENDING -> contains(validStatuses, OrderStatus.PENDING);
+            case PAID -> contains(validStatuses, OrderStatus.PAID);
+            case CONFIRMED -> contains(validStatuses, OrderStatus.CONFIRMED);
+            case SHIPPED -> contains(validStatuses, OrderStatus.SHIPPED);
+            case DELIVERED -> contains(validStatuses, OrderStatus.DELIVERED);
+            case COMPLETED -> contains(validStatuses, OrderStatus.COMPLETED);
+            case CANCELLED -> contains(validStatuses, OrderStatus.CANCELLED);
+        };
+        if (!allowed) {
             throw new BusinessException(errorKey);
         }
+    }
+
+    private static boolean contains(OrderStatus[] statuses, OrderStatus target) {
+        return List.of(statuses).contains(target);
     }
 
     private BigDecimal calculateTotal() {
