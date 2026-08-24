@@ -367,6 +367,45 @@ class MybatisPlusPersistenceTest {
                 .allMatch(OrderCancelledEvent.class::isInstance);
     }
 
+    /**
+     * 存在性过滤：请求 ID 部分存在时（5 删 3 场景），仅为真实删除的实体发布事件，
+     * 不存在的 ID 静默跳过不报错。
+     */
+    @Test
+    void removeDomainByIds_withEventFactory_partialExisting_publishesOnlyForDeleted() {
+        Order o1 = OrderFixtures.createOrder();
+        Order o2 = OrderFixtures.createOrder();
+        orderRepository.save(o1);
+        orderRepository.save(o2);
+        UUID phantomId = UUID.randomUUID(); // 从未持久化
+        eventCapture.captured.clear();
+
+        orderRepository.removeDomainByIds(
+                List.of(o1.getId(), phantomId, o2.getId()),
+                id -> new OrderCancelledEvent(id, "deleted"));
+
+        assertThat(orderRepository.findById(o1.getId())).isEmpty();
+        assertThat(orderRepository.findById(o2.getId())).isEmpty();
+        assertThat(eventCapture.captured)
+                .hasSize(2)
+                .allMatch(OrderCancelledEvent.class::isInstance);
+        // 事件只携带真实删除的两个 ID，幻影 ID 不发事件
+        assertThat(eventCapture.captured)
+                .extracting(e -> ((OrderCancelledEvent) e).getOrderId())
+                .containsExactlyInAnyOrder(o1.getId(), o2.getId());
+    }
+
+    /** 全部 ID 均不存在时保持严格语义：抛 IllegalStateException，不发事件。 */
+    @Test
+    void removeDomainByIds_withEventFactory_noneExists_throwsIllegalState() {
+        assertThatThrownBy(() -> orderRepository.removeDomainByIds(
+                List.of(UUID.randomUUID(), UUID.randomUUID()),
+                id -> new OrderCancelledEvent(id, "deleted")))
+                .isInstanceOf(IllegalStateException.class);
+
+        assertThat(eventCapture.captured).isEmpty();
+    }
+
     @Test
     void removeDomain_publishesAndClearsRegisteredEvents() {
         Product product = ProductFixtures.createProduct(100);
@@ -409,6 +448,38 @@ class MybatisPlusPersistenceTest {
                 .hasSize(2)
                 .allMatch(StockDeductedEvent.class::isInstance);
         assertThat(savedList).allMatch(p -> p.getDomainEvents().isEmpty());
+    }
+
+    /**
+     * removeDomains 存在性过滤：传入列表含未持久化的幻影聚合时，
+     * 仅为真实删除的聚合发布事件；幻影聚合的已注册事件保留（未被冲刷）。
+     */
+    @Test
+    void removeDomains_partialExistence_publishesOnlyForExistingAggregates() {
+        productRepository.save(ProductFixtures.createProduct(100));
+        productRepository.save(ProductFixtures.createProduct(200));
+        List<Long> ids = productMapper.selectList(
+                        new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"))
+                .stream().map(ProductPO::getId).toList();
+        List<Product> savedList = productRepository.findDomainsByIds(ids);
+        assertThat(savedList).hasSize(2);
+        eventCapture.captured.clear();
+
+        // 幻影聚合：从未持久化，但已注册事件
+        Product phantom = ProductFixtures.createProduct(300);
+        phantom.deductStock(10);
+
+        List<Product> mixed = new ArrayList<>(savedList);
+        mixed.add(phantom);
+        savedList.forEach(p -> p.deductStock(10)); // each registers StockDeductedEvent
+        productRepository.removeDomains(mixed);
+
+        assertThat(productRepository.findDomainsByIds(ids)).isEmpty();
+        assertThat(eventCapture.captured)
+                .hasSize(2) // 仅两个真实存在的聚合发事件，幻影不发
+                .allMatch(StockDeductedEvent.class::isInstance);
+        assertThat(savedList).allMatch(p -> p.getDomainEvents().isEmpty());
+        assertThat(phantom.getDomainEvents()).hasSize(1); // 未被删除 → 事件保留未冲刷
     }
 
     @Test

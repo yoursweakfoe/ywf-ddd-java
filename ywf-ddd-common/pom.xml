@@ -223,6 +223,17 @@
                     </configuration>
                 </plugin>
 
+                <!-- 测试 JVM 编码钉死 UTF-8：@DisplayName 中文在 GBK 默认编码的 Windows/CI
+                     环境下报告与控制台不乱码（file.encoding JDK18+ 本就默认 UTF-8，此为跨
+                     老旧 CI agent 的兜底；若未来接入 JaCoCo 需改为 @{argLine} 追加写法） -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <argLine>-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8</argLine>
+                    </configuration>
+                </plugin>
+
                 <!-- OWASP 依赖漏洞扫描：仅生成报告，不绑定 phase、不阻止构建
                      手动触发：mvn org.owasp:dependency-check-maven:aggregate
                      报告输出：target/dependency-check-report.html

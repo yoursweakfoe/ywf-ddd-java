@@ -61,8 +61,8 @@ Adapter 层入口同样以**空标记**定型角色：
 组合持有 `BaseMapper`（不继承 ServiceImpl，避免 `save(PO)`/`updateById(PO)` 等底层 PO 直操方法泄漏为公开 API），封装：
 
 - `saveDomain` / `updateDomain` — 持久化前自动 `validate()`，持久化后发布领域事件
-- `removeDomain` / `removeDomains` — 删除成功后发布聚合已注册事件
-- `removeDomainById` / `removeDomainByIds` — 纯技术删除不发事件；**事件工厂重载**在删除成功后按 ID 构造并发布事件（适配"只查 ID 不加载 Domain"路径）
+- `removeDomain` / `removeDomains` — 删除成功后发布聚合已注册事件；`removeDomains` 带**存在性过滤**：预查真实存在的 ID，仅为实际删除的聚合发事件，不存在的静默跳过
+- `removeDomainById` / `removeDomainByIds` — 纯技术删除不发事件；**事件工厂重载**在删除成功后按 ID 构造并发布事件（适配"只查 ID 不加载 Domain"路径），`removeDomainByIds(ids, factory)` 同样带存在性过滤（部分存在 → 仅为真实删除者发事件不报错；全部不存在仍抛 `IllegalStateException`）
 - `findDomainById` / `findDomainsByIds` / `findDomainOneByCondition` — 写侧加载聚合（load → 行为 → save 链路）
 - 乐观锁冲突 → `IllegalStateException`（HTTP 409）
 - **事务边界上收**：本类不声明 `@Transactional`，事务由应用层 Handler 控制（批量原子性由调用方包裹事务保证）

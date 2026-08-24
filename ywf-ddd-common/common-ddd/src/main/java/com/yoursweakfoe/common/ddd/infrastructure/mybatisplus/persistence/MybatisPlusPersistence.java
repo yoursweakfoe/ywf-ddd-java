@@ -3,6 +3,7 @@ package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
@@ -12,9 +13,12 @@ import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.event.domain.DomainEventFlusher;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.exceptions.TooManyResultsException;
@@ -44,7 +48,9 @@ import org.springframework.core.GenericTypeResolver;
  *       提交后才应执行的副作用（通知/补偿/出站消息）请用
  *       {@code @TransactionalEventListener(phase = AFTER_COMMIT)}，且监听器内的数据库写入
  *       必须标注 {@code @Transactional(propagation = REQUIRES_NEW)}（原事务已完成，否则写入不会提交）
- *   <li>删除同样覆盖事件：实体删除发布聚合已注册事件，按 ID 删除通过事件工厂重载发布
+ *   <li>删除同样覆盖事件：实体删除发布聚合已注册事件，按 ID 删除通过事件工厂重载发布；
+ *       带事件的批量删除（{@code removeDomainByIds(ids, factory)} / {@code removeDomains(list)}）
+ *       先预查真实存在的 ID，<b>仅为实际删除的实体发布事件</b>——请求中不存在的 ID 静默跳过不报错
  *   <li>每次 update 均执行全量 UPDATE（保证 update_time 等审计字段始终刷新）
  * </ul>
  *
@@ -356,21 +362,32 @@ public abstract class MybatisPlusPersistence<
     /**
      * 批量删除领域实体，并在删除成功后按 ID 逐个发布事件工厂构造的领域事件。
      *
-     * <p>适用于"只查 ID 不加载 Domain"的批量删除路径，事件与 ID 一一对应。
+     * <p><b>存在性过滤</b>：删除前预查真实存在的 ID（轻量主键列 SELECT），<strong>仅为
+     * 实际删除的实体发布事件</strong>——请求中不存在（或已被逻辑删除）的 ID 不发事件、不报错。
+     * 全部 ID 均不存在时仍抛 {@link IllegalStateException}（与无参重载一致的严格语义）。
+     *
+     * <p><b>并发窗口说明</b>：「存在性」以删除前的预查为准；若某实体在预查之后、DELETE 之前
+     * 被并发删除，事件仍会发布（消费方幂等可兜底，与 MQ at-least-once 重投语义一致）。
+     *
+     * <p>适用于"只查 ID 不加载 Domain"的批量删除路径，事件与被删除的 ID 一一对应。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      *
      * @param ids          实体 ID 集合（空集合直接返回，不发 SQL 不发事件）
      * @param eventFactory 事件工厂（入参为被删除的 ID，返回值不能为 null）
-     * @throws IllegalStateException 批量删除影响行数为 0 时
+     * @throws IllegalStateException 全部 ID 均不存在（0 行删除）时
      */
     public void removeDomainByIds(Collection<ID> ids,
                                   Function<? super ID, ? extends DomainEvent> eventFactory) {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        removeDomainByIds(ids);
-        eventFlusher.publishAll(ids.stream()
+        List<ID> existingIds = findExistingIds(ids);
+        if (existingIds.isEmpty()) {
+            throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + ids);
+        }
+        removeDomainByIds(existingIds);
+        eventFlusher.publishAll(existingIds.stream()
                 .<DomainEvent>map(id -> Objects.requireNonNull(
                         eventFactory.apply(id), "eventFactory must not return null"))
                 .toList());
@@ -392,7 +409,9 @@ public abstract class MybatisPlusPersistence<
     /**
      * 批量删除领域实体（传入实体对象列表）。
      *
-     * <p>批量删除成功后，逐个发布各聚合根已注册的领域事件（先清后发）。
+     * <p><b>存在性过滤</b>：与 {@link #removeDomainByIds(Collection, Function)} 一致——
+     * 删除前预查真实存在的 ID，批量删除后<strong>仅为实际删除的聚合发布其已注册事件</strong>（先清后发）；
+     * 传入列表中不存在（或已被逻辑删除）的聚合不发事件、不报错。全部不存在时抛 {@link IllegalStateException}。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      */
@@ -400,9 +419,16 @@ public abstract class MybatisPlusPersistence<
         if (domainList == null || domainList.isEmpty()) {
             return;
         }
-        List<ID> ids = domainList.stream().map(Domain::getId).toList();
-        removeDomainByIds(ids);
+        List<ID> requestedIds = domainList.stream().map(Domain::getId).toList();
+        Set<ID> existingIds = Set.copyOf(findExistingIds(requestedIds));
+        if (existingIds.isEmpty()) {
+            throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + requestedIds);
+        }
+        removeDomainByIds(existingIds);
         for (Domain domain : domainList) {
+            if (domain.getId() == null || !existingIds.contains(domain.getId())) {
+                continue; // 无 ID（从未持久化）或预查不存在的聚合：未删除，不发事件
+            }
             eventFlusher.publishAndClear(domain);
         }
     }
@@ -429,9 +455,48 @@ public abstract class MybatisPlusPersistence<
         return baseMapper.exists(new QueryWrapper<PO>().eq(keyColumn(), id));
     }
 
+    /**
+     * 预查集合中真实存在的领域 ID（供批量删除的事件过滤使用）。
+     *
+     * <p>一次仅查询主键列（{@code SELECT key FROM t WHERE key IN (...)}），不加载完整行；
+     * 经 MyBatis-Plus 逻辑删除机制自动过滤已删除行——「存在」与「可被 DELETE 影响」语义一致。
+     *
+     * <p>主键值匹配按字符串形式归一（规避 JDBC 对整型的 Integer/Long 装箱差异）；
+     * {@code toPersistenceId} 在本方法内确定性映射，请求中的重复 ID 天然去重。
+     *
+     * @return 入参中真实存在的领域 ID（保持入参遍历顺序）
+     */
+    private List<ID> findExistingIds(Collection<ID> ids) {
+        Map<String, ID> keyToId = new LinkedHashMap<>();
+        for (ID id : ids) {
+            if (id == null) {
+                // 无 ID 的领域对象从未持久化，视为不存在（跳过而非进 IN 子句）
+                continue;
+            }
+            keyToId.put(String.valueOf(toPersistenceId(id)), id);
+        }
+        if (keyToId.isEmpty()) {
+            return List.of();
+        }
+        List<Object> existingKeys = baseMapper.selectObjs(
+                new QueryWrapper<PO>().select(keyColumn()).in(keyColumn(), keyToId.keySet()));
+        return existingKeys.stream()
+                .filter(Objects::nonNull)
+                .map(key -> keyToId.get(String.valueOf(key)))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     /** 反射 PO 的 {@code @TableId} 注解，返回真实主键列名。 */
     private String keyColumn() {
-        return TableInfoHelper.getTableInfo(poClass).getKeyColumn();
+        TableInfo tableInfo = TableInfoHelper.getTableInfo(poClass);
+        if (tableInfo == null || tableInfo.getKeyColumn() == null) {
+            throw new IllegalStateException(
+                    "PO class " + poClass.getName()
+                            + " is not registered as a MyBatis-Plus entity"
+                            + " (missing @TableName or mapper scan); cannot resolve primary key column");
+        }
+        return tableInfo.getKeyColumn();
     }
 
     // endregion
