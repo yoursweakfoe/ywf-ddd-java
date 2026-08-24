@@ -95,18 +95,4 @@ class OrderConverterTest {
 
         assertThat(order.getItems()).isEmpty();
     }
-
-    @Test
-    void updatePO_shouldMergeChangedFields() {
-        Order order = new Order(UUID.randomUUID(),
-                List.of(new OrderItem(1L, 2, BigDecimal.TEN)), "customer-1");
-        order.pay();
-
-        OrderPO po = buildOrderPO();
-        po.setId(order.getId().toString());
-
-        converter.updatePO(order, po);
-
-        assertThat(po.getStatus()).isEqualTo("PAID");
-    }
 }

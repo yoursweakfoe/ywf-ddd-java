@@ -4,7 +4,7 @@
 
 ## Domain 层禁止
 
-- 禁止引入 Spring / MyBatis / 任何框架注解（零框架依赖）
+- 禁止引入 Spring / MyBatis 框架**运行时**依赖（DI 容器、AOP、持久化 API 等）；唯一例外：`org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`）——注解是纯元数据，不影响分层纯净性（ArchUnit A2 白名单守护，见 ApplicationArchitectureTest）
 - 禁止暴露 setter 或 public 字段（状态变迁只通过行为方法）
 - 禁止在 Domain 层实现 Repository（实现必须在 Infrastructure）
 - 禁止在领域事件中引用 Infrastructure 类

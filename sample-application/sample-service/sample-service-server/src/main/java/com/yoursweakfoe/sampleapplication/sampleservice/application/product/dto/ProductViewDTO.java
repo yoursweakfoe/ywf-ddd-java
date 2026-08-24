@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto
 import com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO;
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,6 +27,8 @@ public class ProductViewDTO implements ApplicationDTO, Serializable {
     private Long id;
     /** 商品名称 */
     private String name;
+    /** 商品单价 */
+    private BigDecimal price;
     /** 库存数量 */
     private int stock;
     /** 创建时间 */

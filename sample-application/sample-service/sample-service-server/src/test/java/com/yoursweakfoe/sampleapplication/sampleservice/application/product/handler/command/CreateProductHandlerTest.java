@@ -10,6 +10,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
+import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,12 +27,13 @@ class CreateProductHandlerTest {
 
     @Test
     void handle_shouldCreateAndReturnProduct() {
-        Product saved = new Product(1L, "Widget", 50);
+        Product saved = new Product(1L, "Widget", BigDecimal.TEN, 50);
         when(productRepository.findByName("Widget")).thenReturn(Optional.of(saved));
         when(productAssembler.toDTO(any())).thenReturn(new ProductDTO());
 
         CreateProductCommand command = new CreateProductCommand();
         command.setName("Widget");
+        command.setPrice(BigDecimal.TEN);
         command.setStock(50);
 
         ProductDTO result = handler.handle(command);

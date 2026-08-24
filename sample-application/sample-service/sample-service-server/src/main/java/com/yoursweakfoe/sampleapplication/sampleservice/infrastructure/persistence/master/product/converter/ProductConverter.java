@@ -18,7 +18,7 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
 
     @Override
     public Product toDomain(ProductPO po) {
-        return Product.reconstitute(po.getId(), po.getName(), po.getStock(),
+        return Product.reconstitute(po.getId(), po.getName(), po.getPrice(), po.getStock(),
                 po.getCreateAt(), po.getUpdateAt(), po.getVersion());
     }
 
@@ -27,20 +27,12 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
         ProductPO po = new ProductPO();
         po.setId(domain.getId());
         po.setName(domain.getName());
+        po.setPrice(domain.getPrice());
         po.setStock(domain.getStock());
         po.setVersion(domain.getVersion());
         po.setCreateAt(domain.getCreateAt());
         po.setUpdateAt(domain.getUpdateAt());
         // isDelete 由 @TableLogic 逻辑删除维护，不映射
         return po;
-    }
-
-    /**
-     * 合并业务字段到已有 PO —— 本类自行扩充的普通方法（BasicConverter 为最小契约，不定义增量更新）。
-     */
-    public void updatePO(Product domain, ProductPO po) {
-        po.setName(domain.getName());
-        po.setStock(domain.getStock());
-        // id / version / createAt / updateAt / isDelete 由持久层机制维护，不合并
     }
 }

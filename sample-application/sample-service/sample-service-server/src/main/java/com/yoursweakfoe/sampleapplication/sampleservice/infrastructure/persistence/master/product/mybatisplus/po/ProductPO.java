@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import lombok.Data;
 
@@ -21,6 +22,9 @@ public class ProductPO {
     private Long id;
 
     private String name;
+
+    /** 商品单价 */
+    private BigDecimal price;
 
     private Integer stock;
 

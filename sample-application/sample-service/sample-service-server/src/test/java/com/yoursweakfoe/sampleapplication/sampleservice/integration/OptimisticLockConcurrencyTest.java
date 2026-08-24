@@ -6,6 +6,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.Application;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +61,7 @@ class OptimisticLockConcurrencyTest {
     void concurrentOrders_optimisticLock_preventsOversell() throws Exception {
         // 1. 创建库存为 10 的商品
         ProductCO product = client().post().uri("/products")
-                .body(new CreateProductCommand("Limited Edition", 10))
+                .body(new CreateProductCommand("Limited Edition", new BigDecimal("199.00"), 10))
                 .retrieve()
                 .body(ProductCO.class);
         assertThat(product).isNotNull();

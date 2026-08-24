@@ -65,7 +65,8 @@ public class OrderControllerImpl implements OrderController, RestAdapter {
 
     @Override
     public void cancelOrder(UUID orderId, CancelOrderCommand command) {
-        orderAppService.cancelOrder(command);
+        // 订单 ID 唯一事实源是路径参数，此处组装完整命令（与 pay/confirm 等端点同模式）
+        orderAppService.cancelOrder(new CancelOrderCommand(orderId.toString(), command.getReason()));
     }
 
     @Override

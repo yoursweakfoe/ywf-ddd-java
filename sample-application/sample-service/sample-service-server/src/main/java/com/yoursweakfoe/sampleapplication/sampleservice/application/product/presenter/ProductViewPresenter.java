@@ -19,6 +19,7 @@ public class ProductViewPresenter implements BasicPresenter<ProductViewDTO, Prod
         ProductCO co = new ProductCO();
         co.setId(dto.getId());
         co.setName(dto.getName());
+        co.setPrice(dto.getPrice());
         co.setStock(dto.getStock());
         // createAt / updateAt 为内部字段，不暴露给消费方
         return co;

@@ -2,11 +2,14 @@ package com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co
 
 import com.yoursweakfoe.common.contract.dto.command.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +27,12 @@ public class CreateProductCommand implements Command, Serializable {
     @NotBlank
     @Schema(description = "商品名称")
     private String name;
+
+    /** 商品单价 */
+    @NotNull
+    @DecimalMin(value = "0", inclusive = false)
+    @Schema(description = "商品单价")
+    private BigDecimal price;
 
     /** 初始库存 */
     @Min(0)

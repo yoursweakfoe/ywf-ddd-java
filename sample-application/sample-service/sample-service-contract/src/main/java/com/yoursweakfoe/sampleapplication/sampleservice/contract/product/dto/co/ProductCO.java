@@ -5,6 +5,7 @@ import com.yoursweakfoe.common.contract.dto.co.CO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,10 @@ public class ProductCO implements CO, Serializable {
     /** 商品名称 */
     @Schema(description = "商品名称")
     private String name;
+
+    /** 商品单价 */
+    @Schema(description = "商品单价")
+    private BigDecimal price;
 
     /** 库存数量 */
     @Schema(description = "库存数量")

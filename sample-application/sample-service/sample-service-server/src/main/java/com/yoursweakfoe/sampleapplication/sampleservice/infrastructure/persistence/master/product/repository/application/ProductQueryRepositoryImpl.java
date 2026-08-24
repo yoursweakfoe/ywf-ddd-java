@@ -36,6 +36,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
         ProductViewDTO dto = new ProductViewDTO();
         dto.setId(po.getId());
         dto.setName(po.getName());
+        dto.setPrice(po.getPrice());
         dto.setStock(po.getStock() == null ? 0 : po.getStock());
         dto.setCreateAt(po.getCreateAt());
         dto.setUpdateAt(po.getUpdateAt());

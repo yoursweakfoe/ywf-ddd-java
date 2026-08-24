@@ -29,7 +29,7 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProductDTO handle(CreateProductCommand command) {
-        Product product = new Product(null, command.getName(), command.getStock());
+        Product product = new Product(null, command.getName(), command.getPrice(), command.getStock());
         productRepository.save(product);
 
         // 自增 ID 回填在 PO 上，重新查询获取完整实体

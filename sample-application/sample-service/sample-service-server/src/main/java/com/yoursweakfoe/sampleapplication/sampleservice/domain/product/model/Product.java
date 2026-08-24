@@ -6,11 +6,12 @@ import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
- * 商品聚合根 —— 管理商品基本信息和库存。
+ * 商品聚合根 —— 管理商品基本信息、单价和库存。
  *
  * <p>库存扣减/回补通过行为方法完成，内聚业务校验。
  * 乐观锁由 PO 层 {@code @Version} 保护，领域层无需感知。
@@ -21,6 +22,9 @@ public class Product extends AggregateRoot<Long> {
     private Long id;
     @Getter
     private String name;
+    /** 商品单价（下单时订单项单价的唯一来源） */
+    @Getter
+    private BigDecimal price;
     @Getter
     private int stock;
     @Getter
@@ -31,17 +35,18 @@ public class Product extends AggregateRoot<Long> {
     private Integer version;
 
     /** 业务构造器（创建新商品） */
-    public Product(Long id, String name, int stock) {
+    public Product(Long id, String name, BigDecimal price, int stock) {
         this.id = id;
         this.name = name;
+        this.price = price;
         this.stock = stock;
     }
 
     /** 重建构造器（持久化层 Converter 使用，跳过校验与事件注册） */
-    public static Product reconstitute(Long id, String name, int stock,
+    public static Product reconstitute(Long id, String name, BigDecimal price, int stock,
                                        OffsetDateTime createAt, OffsetDateTime updateAt,
                                        Integer version) {
-        Product product = new Product(id, name, stock);
+        Product product = new Product(id, name, price, stock);
         product.createAt = createAt;
         product.updateAt = updateAt;
         product.version = version;
@@ -95,6 +100,12 @@ public class Product extends AggregateRoot<Long> {
     public void validate() {
         if (name == null) {
             throw new BusinessException("product:err.nameRequired");
+        }
+        if (price == null) {
+            throw new BusinessException("product:err.priceRequired");
+        }
+        if (price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("product:err.priceNegative");
         }
         if (stock < 0) {
             throw new BusinessException("product:err.stockNegative");

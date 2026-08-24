@@ -71,6 +71,8 @@ public void deductStock(int quantity) {
 | `order:err.status.pending` | 要求订单处于 PENDING 状态 |
 | `order:err.status.cancellable` | 当前状态不允许取消 |
 | `product:err.insufficientStock` | 库存不足 |
+| `product:err.priceRequired` | 商品单价缺失 |
+| `product:err.priceNegative` | 商品单价不允许为负 |
 | `payment:err.amountPositive` | 支付金额必须为正 |
 
 规则：

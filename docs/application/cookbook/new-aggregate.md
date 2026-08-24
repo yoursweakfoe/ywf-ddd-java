@@ -363,7 +363,7 @@ public class PaymentConverter implements BasicConverter<Payment, PaymentPO> {
         return po;
     }
 
-    // 最小契约：仅 toDomain / toPO（+ 集合委托）；updatePO 为自行扩充的合并方法，合并业务字段
+    // 最小契约：仅 toDomain / toPO（+ 集合委托）；不定义增量更新方法（富模型走 reconstitute 全量快照）
 }
 
 @Mapper

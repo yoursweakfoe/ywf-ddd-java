@@ -58,21 +58,6 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         return po;
     }
 
-    /**
-     * 合并业务字段到已有 PO —— 本类自行扩充的普通方法（BasicConverter 为最小契约，不定义增量更新）。
-     *
-     * <p>适用于「reload PO → 合并 → updateById」路径；id / version / 审计字段 / 逻辑删除由持久层机制维护，不合并。
-     */
-    public void updatePO(Order domain, OrderPO po) {
-        po.setStatus(domain.getStatus().name());
-        po.setItems(serializeItems(domain.getItems()));
-        po.setTotalAmount(domain.getTotalAmount());
-        po.setCustomerId(domain.getCustomerId());
-        po.setTrackingNumber(domain.getTrackingNumber());
-        po.setCancelReason(domain.getCancelReason());
-        // id / version / createAt / updateAt / isDelete 由持久层机制维护，不合并
-    }
-
     // ==================== JSON 序列化 ====================
 
     private String serializeItems(List<OrderItem> items) {

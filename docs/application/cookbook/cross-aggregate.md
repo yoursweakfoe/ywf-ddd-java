@@ -51,24 +51,24 @@ public class InventoryDomainService implements DomainService {
         this.productRepository = productRepository;
     }
 
-    /** 批量扣减库存（下单时调用） */
+    /** 批量扣减库存（下单时调用）：批量加载 + 同商品数量合并 */
     public void deductStock(List<OrderItem> items) {
-        for (OrderItem item : items) {
-            Product product = productRepository.findById(item.productId())
-                    .orElseThrow(() -> new BusinessException("product:err.notFound"));
-            product.deductStock(item.quantity());
+        Map<Long, Product> products = loadProducts(items);
+        quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
+            Product product = requireProduct(products, productId);
+            product.deductStock(totalQuantity);
             productRepository.update(product);
-        }
+        });
     }
 
     /** 批量回补库存（取消订单时调用） */
     public void replenishStock(List<OrderItem> items) {
-        for (OrderItem item : items) {
-            Product product = productRepository.findById(item.productId())
-                    .orElseThrow(() -> new BusinessException("product:err.notFound"));
-            product.restoreStock(item.quantity());
+        Map<Long, Product> products = loadProducts(items);
+        quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
+            Product product = requireProduct(products, productId);
+            product.restoreStock(totalQuantity);
             productRepository.update(product);
-        }
+        });
     }
 }
 ```
@@ -77,6 +77,9 @@ public class InventoryDomainService implements DomainService {
 - 实现 `DomainService` 标记接口（common-ddd），标注 `@Service` 由 Spring 组件扫描自动注册
   （Spring 是生态基座，标注注解即标准做法，不手写注册样板；领域层允许 stereotype 注解，见 A2 规则）
 - 可调用 Repository、可修改实体状态（与 Policy 的区别：Policy 无副作用）
+- 商品按 ID 集合**单次 IN 批量查询**（`findAllById`），杜绝逐项 `findById` 的 N+1 问题；
+  同一商品出现在多个订单项时数量合并为一次聚合行为 + 一次持久化
+  （避免对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空）
 
 ## 2. Application — 复杂 CommandHandler（跨聚合编排）
 
@@ -94,17 +97,15 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderDTO handle(PlaceOrderCommand command) {
-        // 1. 构建订单项（查询商品单价）
+        // 1. 批量加载商品（单次 IN 查询），以真实单价构建订单项
+        Map<Long, Product> products = productRepository.findAllById(productIds(command)).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
         List<OrderItem> items = command.getItems().stream()
-                .map(dto -> {
-                    Product product = productRepository.findById(dto.getProductId())
-                            .orElseThrow(() -> new BusinessException("product:err.notFound"));
-                    BigDecimal unitPrice = BigDecimal.TEN; // 简化：从商品获取
-                    return new OrderItem(dto.getProductId(), dto.getQuantity(), unitPrice);
-                })
+                .map(dto -> new OrderItem(dto.getProductId(), dto.getQuantity(),
+                        requireProduct(products, dto.getProductId()).getPrice()))
                 .toList();
 
-        // 2. 扣减库存（跨聚合协调，委托 Domain Service）
+        // 2. 扣减库存（跨聚合协调，委托 Domain Service；其内部同样批量加载）
         inventoryDomainService.deductStock(items);
 
         // 3. 创建订单并下单（聚合根行为）

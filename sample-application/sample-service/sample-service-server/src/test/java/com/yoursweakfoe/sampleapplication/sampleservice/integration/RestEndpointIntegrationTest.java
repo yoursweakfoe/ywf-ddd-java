@@ -8,6 +8,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.comma
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.MethodOrderer;
@@ -60,7 +61,7 @@ class RestEndpointIntegrationTest {
     @Test
     @Order(1)
     void createProduct_returns200() {
-        var command = new CreateProductCommand("iPhone 15", 100);
+        var command = new CreateProductCommand("iPhone 15", new BigDecimal("5999.00"), 100);
 
         ProductCO dto = client().post().uri("/products")
                 .body(command)
@@ -69,6 +70,7 @@ class RestEndpointIntegrationTest {
 
         assertThat(dto).isNotNull();
         assertThat(dto.getName()).isEqualTo("iPhone 15");
+        assertThat(dto.getPrice()).isEqualByComparingTo(new BigDecimal("5999.00"));
         assertThat(dto.getStock()).isEqualTo(100);
         assertThat(dto.getId()).isNotNull();
         createdProductId = dto.getId();
@@ -187,13 +189,27 @@ class RestEndpointIntegrationTest {
         assertThat(body.get("detail")).isEqualTo("order:err.notFound");
     }
 
+    @Test
+    @Order(8)
+    void getOrderPage_queryParams_returns200() {
+        // GET 查询参数绑定（record 构造器绑定），验证分页端点不再依赖请求体
+        Map<String, Object> page = client().get()
+                .uri("/orders/page?pageNum=1&pageSize=10&customerId=customer-001")
+                .retrieve()
+                .body(PROBLEM_BODY);
+
+        assertThat(page).isNotNull();
+        assertThat(((Number) page.get("total")).intValue()).isGreaterThanOrEqualTo(0);
+    }
+
     // ==================== 取消订单 ====================
 
     @Test
     @Order(9)
     void cancelOrder_success_returns200() {
         assertThat(createdOrderId).isNotNull();
-        var command = new CancelOrderCommand(createdOrderId, "customer request");
+        // 请求体只带 reason：订单 ID 唯一事实源是路径参数
+        var command = new CancelOrderCommand(null, "customer request");
 
         client().put().uri("/orders/" + createdOrderId + "/cancel")
                 .body(command)
@@ -212,7 +228,7 @@ class RestEndpointIntegrationTest {
     @Order(10)
     void cancelOrder_alreadyCancelled_returns422() {
         assertThat(createdOrderId).isNotNull();
-        var command = new CancelOrderCommand(createdOrderId, "try again");
+        var command = new CancelOrderCommand(null, "try again");
 
         Map<String, Object> body = client().put().uri("/orders/" + createdOrderId + "/cancel")
                 .body(command)

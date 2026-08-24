@@ -19,6 +19,9 @@
     <name>sample-application</name>
     <description>DDD application skeleton</description>
     <properties>
+        <!-- 显式压过 spring-boot-starter-parent 继承的 maven.compiler.release=17
+             （release 参数优先级高于 source/target，不覆盖则整个示例包按 Java 17 编译） -->
+        <maven.compiler.release>21</maven.compiler.release>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

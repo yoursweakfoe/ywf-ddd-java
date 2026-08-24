@@ -9,6 +9,8 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
@@ -71,5 +73,10 @@ public class ProductRepositoryImpl
         LambdaQueryWrapper<ProductPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ProductPO::getName, name);
         return findDomainOneByCondition(wrapper);
+    }
+
+    @Override
+    public List<Product> findAllById(Collection<Long> ids) {
+        return findDomainsByIds(ids);
     }
 }
