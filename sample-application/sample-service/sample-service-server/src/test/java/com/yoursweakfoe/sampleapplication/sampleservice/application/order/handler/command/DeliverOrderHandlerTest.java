@@ -10,14 +10,11 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assemb
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.DeliverOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.support.TestOrders;
 import com.yoursweakfoe.common.exception.type.BusinessException;
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,15 +28,8 @@ class DeliverOrderHandlerTest {
     @Mock private OrderAssembler orderAssembler;
     @InjectMocks private DeliverOrderHandler handler;
 
-    private static final OrderItem ITEM = new OrderItem(1L, 2, BigDecimal.TEN);
-
     private Order createShippedOrder() {
-        Order order = new Order(UUID.randomUUID(), List.of(ITEM), "customer-1");
-        order.pay();
-        order.confirm();
-        order.ship("TRACK-001");
-        order.clearDomainEvents();
-        return order;
+        return TestOrders.rebuilt(OrderStatus.SHIPPED);
     }
 
     @Test
@@ -57,7 +47,7 @@ class DeliverOrderHandlerTest {
 
     @Test
     void handle_shouldThrowWhenNotShipped() {
-        Order order = new Order(UUID.randomUUID(), List.of(ITEM), "customer-1");
+        Order order = TestOrders.rebuilt(OrderStatus.PENDING);
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> handler.handle(new DeliverOrderCommand(order.getId())))

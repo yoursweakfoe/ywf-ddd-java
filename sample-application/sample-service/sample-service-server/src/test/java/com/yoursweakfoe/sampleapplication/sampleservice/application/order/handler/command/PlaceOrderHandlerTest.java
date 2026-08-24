@@ -13,6 +13,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assemb
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +36,9 @@ class PlaceOrderHandlerTest {
     @Mock private InventoryDomainService inventoryDomainService;
     @Mock private OrderRepository orderRepository;
     @Mock private OrderAssembler orderAssembler;
+    /** 真实工厂实例（@Spy）：创建逻辑无外部依赖，直接复用生产实现 */
+    @Spy
+    private OrderFactory orderFactory = new OrderFactory();
     @InjectMocks private PlaceOrderHandler handler;
 
     private PlaceOrderCommand command(Long productId, int quantity) {

@@ -18,7 +18,10 @@ class OrderTest {
     private static final OrderItem ITEM = new OrderItem(1L, 2, BigDecimal.TEN);
 
     private Order createPendingOrder() {
-        return new Order(UUID.randomUUID(), List.of(ITEM), "customer-1");
+        // 惰性重建出「未下单的 PENDING」——聚合自身行为方法的测试入口
+        // （新建路径已收口至 OrderFactory：创建即 place()，不存在未下单的中间态）
+        return Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING, List.of(ITEM),
+                ITEM.subtotal(), "customer-1", null, null, null, null, 0);
     }
 
     // region 状态机合法路径
@@ -180,7 +183,8 @@ class OrderTest {
 
     @Test
     void validate_shouldThrowWhenItemsEmpty() {
-        Order order = new Order(UUID.randomUUID(), List.of(), "customer-1");
+        Order order = Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING,
+                List.of(), BigDecimal.ZERO, "customer-1", null, null, null, null, 0);
 
         assertThatThrownBy(order::validate)
                 .isInstanceOf(BusinessException.class);
@@ -188,7 +192,8 @@ class OrderTest {
 
     @Test
     void validate_shouldThrowWhenCustomerIdNull() {
-        Order order = new Order(UUID.randomUUID(), List.of(ITEM), null);
+        Order order = Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING,
+                List.of(ITEM), ITEM.subtotal(), null, null, null, null, null, 0);
 
         assertThatThrownBy(order::validate)
                 .isInstanceOf(BusinessException.class);
@@ -203,12 +208,32 @@ class OrderTest {
     }
 
     @Test
-    void constructor_shouldCalculateTotal() {
+    void factory_shouldCalculateTotalAtCreation() {
         OrderItem item1 = new OrderItem(1L, 2, BigDecimal.TEN);   // 20
         OrderItem item2 = new OrderItem(2L, 1, new BigDecimal("5.50"));  // 5.50
-        Order order = new Order(UUID.randomUUID(), List.of(item1, item2), "customer-1");
+
+        Order order = new OrderFactory().create("customer-1", List.of(item1, item2));
 
         assertThat(order.getTotalAmount()).isEqualByComparingTo(new BigDecimal("25.50"));
+    }
+
+    @Test
+    void factory_shouldCreatePlacedOrder() {
+        Order order = new OrderFactory().create("customer-1", List.of(ITEM));
+
+        // 创建即合法：状态 PENDING + OrderPlacedEvent 已注册
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(order.getDomainEvents()).hasSize(1);
+    }
+
+    @Test
+    void factory_shouldRejectInvalidOrderAtCreation() {
+        // 不变量违反在创建时即被拒绝——不存在「已构造未校验」的中间态
+        assertThatThrownBy(() -> new OrderFactory().create("customer-1", List.of()))
+                .isInstanceOf(BusinessException.class);
+
+        assertThatThrownBy(() -> new OrderFactory().create(null, List.of(ITEM)))
+                .isInstanceOf(BusinessException.class);
     }
 
     // endregion

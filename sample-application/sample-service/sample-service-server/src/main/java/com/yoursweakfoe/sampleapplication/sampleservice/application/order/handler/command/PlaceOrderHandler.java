@@ -4,6 +4,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assemb
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
@@ -13,7 +14,6 @@ import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
  * 下单命令处理器 —— 跨聚合协调（商品批量加载 + 库存扣减 + 订单创建）。
  *
  * <p>这是从 AppService 拆出的复杂用例样例：
- * 依赖 4 个组件、跨 2 个聚合、含事件编排，适合独立为 Handler。
+ * 依赖 5 个组件、跨 2 个聚合、含事件编排，适合独立为 Handler。
  *
- * <p>商品加载为单次 IN 批量查询；单价取自商品真实 price 字段。
+ * <p>商品加载为单次 IN 批量查询；单价取自商品真实 price 字段；
+ * 订单创建经 {@link OrderFactory}（创建即合法：校验 + OrderPlacedEvent 注册一步到位）。
  */
 @Slf4j
 @Component
@@ -37,15 +38,18 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     private final InventoryDomainService inventoryDomainService;
     private final OrderRepository orderRepository;
     private final OrderAssembler orderAssembler;
+    private final OrderFactory orderFactory;
 
     public PlaceOrderHandler(ProductRepository productRepository,
                              InventoryDomainService inventoryDomainService,
                              OrderRepository orderRepository,
-                             OrderAssembler orderAssembler) {
+                             OrderAssembler orderAssembler,
+                             OrderFactory orderFactory) {
         this.productRepository = productRepository;
         this.inventoryDomainService = inventoryDomainService;
         this.orderRepository = orderRepository;
         this.orderAssembler = orderAssembler;
+        this.orderFactory = orderFactory;
     }
     // endregion
 
@@ -63,9 +67,8 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
         // 2. 扣减库存（跨聚合协调；DomainService 内部批量加载，同商品数量自动合并）
         inventoryDomainService.deductStock(items);
 
-        // 3. 创建订单并下单
-        Order order = new Order(UUID.randomUUID(), items, command.getCustomerId());
-        order.place();
+        // 3. 创建订单（工厂保证创建即合法：校验 + OrderPlacedEvent 注册）
+        Order order = orderFactory.create(command.getCustomerId(), items);
         orderRepository.save(order);
         log.info("Order placed: orderId={}, customerId={}", order.getId(), command.getCustomerId());
 

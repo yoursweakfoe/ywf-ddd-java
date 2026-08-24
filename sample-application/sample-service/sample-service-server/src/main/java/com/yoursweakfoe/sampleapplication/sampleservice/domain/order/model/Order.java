@@ -42,8 +42,11 @@ public class Order extends AggregateRoot<UUID> {
     @Getter
     private Integer version;
 
-    /** 业务构造器（创建新订单） */
-    public Order(UUID id, List<OrderItem> items, String customerId) {
+    /**
+     * 包私有业务构造器 —— 新建路径已收口至同包的 {@code OrderFactory}（创建即合法：
+     * 构造后立即 place() 完成校验与事件注册）。包结构在编译期锁死「谁能 new 一个订单」。
+     */
+    Order(UUID id, List<OrderItem> items, String customerId) {
         this.id = id;
         this.status = OrderStatus.PENDING;
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
@@ -51,21 +54,36 @@ public class Order extends AggregateRoot<UUID> {
         this.totalAmount = calculateTotal();
     }
 
-    /** 重建构造器（持久化层 Converter 使用） */
+    /**
+     * 私有全参构造器 —— 惰性重建专用：直接赋值快照，
+     * 不计算派生字段、不校验、不注册事件（重建绝不能把历史当新闻）。
+     */
+    private Order(UUID id, OrderStatus status, List<OrderItem> items, BigDecimal totalAmount,
+                  String customerId, String trackingNumber, String cancelReason,
+                  OffsetDateTime createAt, OffsetDateTime updateAt, Integer version) {
+        this.id = id;
+        this.status = status;
+        this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
+        this.totalAmount = totalAmount;
+        this.customerId = customerId;
+        this.trackingNumber = trackingNumber;
+        this.cancelReason = cancelReason;
+        this.createAt = createAt;
+        this.updateAt = updateAt;
+        this.version = version;
+    }
+
+    /**
+     * 重建构造器（持久化层 Converter 使用）—— 惰性：不触发校验、不注册事件。
+     * 新建请走 {@code OrderFactory.create(...)}。
+     */
     public static Order reconstitute(UUID id, OrderStatus status, List<OrderItem> items,
                                      BigDecimal totalAmount, String customerId,
                                      String trackingNumber, String cancelReason,
                                      OffsetDateTime createAt, OffsetDateTime updateAt,
                                      Integer version) {
-        Order order = new Order(id, items, customerId);
-        order.status = status;
-        order.totalAmount = totalAmount;
-        order.trackingNumber = trackingNumber;
-        order.cancelReason = cancelReason;
-        order.createAt = createAt;
-        order.updateAt = updateAt;
-        order.version = version;
-        return order;
+        return new Order(id, status, items, totalAmount, customerId,
+                trackingNumber, cancelReason, createAt, updateAt, version);
     }
 
     @Override

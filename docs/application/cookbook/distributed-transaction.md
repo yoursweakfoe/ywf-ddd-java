@@ -60,6 +60,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
     private final OrderRepository orderRepository;
     private final OrderAssembler orderAssembler;
+    private final OrderFactory orderFactory;
     private final RestClient productRestClient;  // 远程服务（HTTP，静态 baseUrl 直连）
 
     @Override
@@ -72,9 +73,8 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
                 .retrieve()
                 .toBodilessEntity();
 
-        // 2. 本地创建订单（Seata 分支事务，同一全局事务内）
-        Order order = new Order(UUID.randomUUID(), command.toItems(), command.getCustomerId());
-        order.place();
+        // 2. 本地创建订单（OrderFactory 创建即合法；Seata 分支事务，同一全局事务内）
+        Order order = orderFactory.create(command.getCustomerId(), command.toItems());
         orderRepository.save(order);
 
         return orderAssembler.toDTO(order);
@@ -144,8 +144,7 @@ public class SeataXidBindFilter implements Filter {
 @Transactional(rollbackFor = Exception.class)  // 本地事务，无需 Seata
 public OrderDTO handle(PlaceOrderCommand command) {
     inventoryDomainService.deductStock(command.getProductId(), command.getQuantity());
-    Order order = new Order(UUID.randomUUID(), command.toItems(), command.getCustomerId());
-    order.place();
+    Order order = orderFactory.create(command.getCustomerId(), command.toItems());
     orderRepository.save(order);
     return orderAssembler.toDTO(order);
 }

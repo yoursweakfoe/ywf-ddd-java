@@ -65,6 +65,11 @@ if (!success) {
 
 ## 2. 自动重试模板（系统间调用）
 
+> **落地状态**：该模式已在示例应用 **PlaceOrder 链路真实落地**——
+> `sample-service-server` 的 `RetryablePlaceOrderHandler`（包装 `PlaceOrderHandler`，
+> 由 `OrderAppService` 注入使用），含 4 个单测覆盖重试成功 / 非冲突穿透 / 耗尽上抛。
+> 下文以 PayOrder 为例保留教学模板形态，结构与真实实现一致。
+
 ```java
 // application/order/handler/RetryablePayOrderHandler.java
 @Component
@@ -130,7 +135,10 @@ public class RetryablePayOrderHandler {
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| application | `handler/RetryablePayOrderHandler.java` | 重试包装（可选，系统间调用时使用） |
-| application | `handler/PayOrderHandler.java` | 标准写路径（复用） |
+| application | `handler/RetryablePlaceOrderHandler.java` | 重试包装（**已落地**，PlaceOrder 链路；PayOrder 场景按下文模板仿写） |
+| application | `handler/PlaceOrderHandler.java` / `PayOrderHandler.java` | 标准写路径（被包装复用） |
 | infrastructure | `MybatisPlusPersistence.updateDomain()` | 冲突检测 + 抛异常（框架内置） |
 | common-exception | `GlobalRestExceptionHandler` | 409 响应翻译（框架内置） |
+
+> 注意：重试识别与 `updateDomain()` 的异常消息契约耦合（`affected 0 rows` 字样）——
+> 框架侧调整消息措辞时需同步 `RetryablePlaceOrderHandler.isOptimisticLockConflict()`。

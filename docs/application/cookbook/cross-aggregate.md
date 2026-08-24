@@ -29,11 +29,12 @@
 REST 请求（PlaceOrderCommand）
   → adapter/rest/OrderControllerImpl
     → application/order/service/OrderAppService
-      → application/order/handler/PlaceOrderHandler（复杂用例，跨 2 个聚合）
-        → domain/product/repository/ProductRepository.findById()     ← 查询商品
-        → domain/shared/service/InventoryDomainService.deductStock() ← 跨聚合扣库存
-        → domain/order/model/Order（创建 + place()）                 ← 创建订单
-        → domain/order/repository/OrderRepository.save()             ← 持久化
+      → application/order/handler/RetryablePlaceOrderHandler（乐观锁冲突重试包装，见 optimistic-lock-retry.md）
+        → application/order/handler/PlaceOrderHandler（复杂用例，跨 2 个聚合，@Transactional）
+          → domain/product/repository/ProductRepository.findAllById()   ← 批量查询商品（单次 IN）
+          → domain/shared/service/InventoryDomainService.deductStock()  ← 跨聚合扣库存（productId 升序加锁）
+          → domain/order/model/Order（创建 + place()）                  ← 创建订单
+          → domain/order/repository/OrderRepository.save()              ← 持久化
       → application/order/presenter/OrderPresenter
   ← OrderCO
 ```
@@ -91,6 +92,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     private final InventoryDomainService inventoryDomainService;
     private final OrderRepository orderRepository;
     private final OrderAssembler orderAssembler;
+    private final OrderFactory orderFactory;
 
     // 构造器注入（省略）
 
@@ -108,9 +110,8 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
         // 2. 扣减库存（跨聚合协调，委托 Domain Service；其内部同样批量加载）
         inventoryDomainService.deductStock(items);
 
-        // 3. 创建订单并下单（聚合根行为）
-        Order order = new Order(UUID.randomUUID(), items, command.getCustomerId());
-        order.place();
+        // 3. 创建订单并下单（OrderFactory：创建即合法——校验 + 注册 OrderPlacedEvent 一步到位）
+        Order order = orderFactory.create(command.getCustomerId(), items);
         orderRepository.save(order);
 
         // 4. 返回 DTO
@@ -135,7 +136,8 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 | contract | `adapter/rest/OrderController.java` | Controller 契约接口 |
 | contract | `dto/command/PlaceOrderCommand.java` | 下单命令（含订单项列表） |
 | adapter | `rest/OrderControllerImpl.java` | 协议适配（透传） |
-| application | `handler/PlaceOrderHandler.java` | 跨聚合编排 |
+| application | `handler/RetryablePlaceOrderHandler.java` | 乐观锁冲突重试包装（AppService 实际注入的是本类） |
+| application | `handler/PlaceOrderHandler.java` | 跨聚合编排（@Transactional，被上者包装） |
 | domain | `shared/service/InventoryDomainService.java` | 跨聚合库存协调 |
 | domain | `order/model/Order.java` | 订单聚合根（place 行为） |
 | domain | `product/model/Product.java` | 商品聚合根（deductStock 行为） |
