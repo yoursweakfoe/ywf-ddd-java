@@ -9,7 +9,10 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config.AuditProperties;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import lombok.Data;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.apache.ibatis.reflection.MetaObject;
@@ -30,6 +33,11 @@ import org.springframework.beans.factory.ObjectProvider;
  */
 class BasicAutoFillHandlerTest {
 
+    /** 固定时钟 —— 审计时间断言确定化（Clock 注入能力的直接验证） */
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-08-25T12:00:00Z");
+    private static final Clock FIXED_CLOCK = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
+    private static final OffsetDateTime FIXED_NOW = OffsetDateTime.ofInstant(FIXED_INSTANT, ZoneOffset.UTC);
+
     private BasicAutoFillHandler handler;
     private CurrentUserProvider userProvider;
 
@@ -47,10 +55,11 @@ class BasicAutoFillHandlerTest {
         when(userProvider.currentUser()).thenReturn(null);
         ObjectProvider<CurrentUserProvider> objectProvider = mock(ObjectProvider.class);
         when(objectProvider.getIfAvailable()).thenReturn(userProvider);
-        // 默认字段名（createAt/updateAt/createdBy/updatedBy），NORMAL 情况
+        // 默认字段名（createAt/updateAt/createdBy/updatedBy），NORMAL 情况；固定时钟使时间断言精确
         handler = new BasicAutoFillHandler(
                 new AuditProperties("createAt", "updateAt", "createdBy", "updatedBy"),
-                objectProvider);
+                objectProvider,
+                FIXED_CLOCK);
     }
 
     private MetaObject metaObject(Object object) {
@@ -68,8 +77,9 @@ class BasicAutoFillHandlerTest {
 
         handler.insertFill(meta);
 
-        assertThat(po.getCreateAt()).isNotNull();
-        assertThat(po.getUpdateAt()).isNotNull();
+        // 固定时钟 → 断言确定化（精确等于注入时钟的瞬间，而非仅非空）
+        assertThat(po.getCreateAt()).isEqualTo(FIXED_NOW);
+        assertThat(po.getUpdateAt()).isEqualTo(FIXED_NOW);
         assertThat(po.getCreateAt()).isEqualTo(po.getUpdateAt());
     }
 
@@ -82,8 +92,10 @@ class BasicAutoFillHandlerTest {
 
         handler.updateFill(meta);
 
-        // updateFill 无条件刷新 updateAt（区别于 strictUpdateFill 的有值不覆盖）
+        // updateFill 无条件刷新 updateAt（区别于 strictUpdateFill 的有值不覆盖）；
+        // 固定时钟下刷新值精确可断言
         assertThat(po.getUpdateAt()).isNotEqualTo(existing);
+        assertThat(po.getUpdateAt()).isEqualTo(FIXED_NOW);
     }
 
     @Test
@@ -181,7 +193,8 @@ class BasicAutoFillHandlerTest {
         when(objectProvider.getIfAvailable()).thenReturn(provider);
         return new BasicAutoFillHandler(
                 new AuditProperties("createAt", "updateAt", createdBy, updatedBy),
-                objectProvider);
+                objectProvider,
+                FIXED_CLOCK);
     }
 
     @Data

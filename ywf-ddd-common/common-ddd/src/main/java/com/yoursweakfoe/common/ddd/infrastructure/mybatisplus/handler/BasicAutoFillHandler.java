@@ -2,6 +2,7 @@ package com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.config.AuditProperties;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,6 +13,12 @@ import org.springframework.beans.factory.ObjectProvider;
  * <p>本处理器在插入和更新操作时自动填充审计字段，避免在业务代码中手动设置。
  * 时间字段（createAt / updateAt）为 {@code OffsetDateTime}；操作人字段（createdBy / updatedBy）
  * 高度宽松可选——只有配置了字段名 + 容器中存在 {@link CurrentUserProvider} Bean 时才填充。
+ *
+ * <p><strong>时间源注入</strong>：时间取自构造器注入的 {@link java.time.Clock}
+ * （<strong>纯 JDK 类型，非 Spring 类</strong>——不引入任何新依赖）。自动配置提供
+ * {@code @ConditionalOnMissingBean} 的 {@code Clock}（{@code systemDefaultZone}，
+ * 与历史 {@code OffsetDateTime.now()} 行为一致）；业务测试可自定义固定 Clock Bean 覆盖，
+ * 使审计时间断言确定化。
  *
  * <p><strong>填充触发前提（重要）</strong>：MyBatis-Plus 的 {@code MybatisParameterHandler}
  * 仅在 {@code TableInfo.isWithInsertFill()} / {@code isWithUpdateFill()} 为 {@code true} 时才调用
@@ -28,17 +35,20 @@ public class BasicAutoFillHandler implements MetaObjectHandler {
 
     private final AuditProperties auditProperties;
     private final ObjectProvider<CurrentUserProvider> currentUserProvider;
+    private final Clock clock;
 
     public BasicAutoFillHandler(AuditProperties auditProperties,
-                                ObjectProvider<CurrentUserProvider> currentUserProvider) {
+                                ObjectProvider<CurrentUserProvider> currentUserProvider,
+                                Clock clock) {
         this.auditProperties = auditProperties;
         this.currentUserProvider = currentUserProvider;
+        this.clock = clock;
     }
 
     /** 插入时填充创建/更新时间 + 可选操作人（字段名经 ywf.ddd.audit.* 可配置） */
     @Override
     public void insertFill(MetaObject metaObject) {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(clock);
         strictInsertFill(metaObject, auditProperties.createField(), OffsetDateTime.class, now);
         strictInsertFill(metaObject, auditProperties.updateField(), OffsetDateTime.class, now);
         fillUser(metaObject, auditProperties.createdByField());
@@ -54,7 +64,7 @@ public class BasicAutoFillHandler implements MetaObjectHandler {
      */
     @Override
     public void updateFill(MetaObject metaObject) {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(clock);
         setFieldValByName(auditProperties.updateField(), now, metaObject);
         fillUser(metaObject, auditProperties.updatedByField());
     }
