@@ -22,8 +22,10 @@ order.pay() → repository.update(order)
   → MybatisPlusPersistence.updateDomain()
     → updateById(po)  // MyBatis-Plus OptimisticLockerInnerInterceptor
       → UPDATE ... SET version=version+1 WHERE id=? AND version=?
-      → 影响行数 = 0（version 不匹配）
-    → throw IllegalStateException("UPDATE affected 0 rows ...")
+      → 影响行数 = 0（version 不匹配 或 实体已消失）
+    → 失败路径存在性探测分类：
+        实体仍存在 → throw OptimisticLockConflictException   // 可安全重试
+        实体已消失 → throw IllegalStateException(entity not found)  // 重试无意义
   → GlobalRestExceptionHandler 捕获
     → HTTP 409 Conflict（RFC 9457 响应）
 ```
@@ -42,23 +44,29 @@ order.pay() → repository.update(order)
 框架已内置完整的乐观锁冲突处理链：
 
 ```java
-// MybatisPlusPersistence.updateDomain() 内部
-boolean success = updateById(po);
-if (!success) {
-    throw new IllegalStateException(
+// MybatisPlusPersistence.updateDomain() 内部（audit F-01 后的语义分类）
+int rows = baseMapper.updateById(po);
+if (rows == 0) {
+    // 失败路径存在性探测：影响行数为 0 无法区分「版本冲突」与「实体消失」，补一次探测
+    if (existsDomainById(domain.getId())) {
+        throw new OptimisticLockConflictException(   // extends IllegalStateException，可安全重试
+            "UPDATE affected 0 rows for entity ID: " + domain.getId()
+            + " (optimistic lock version conflict)");
+    }
+    throw new IllegalStateException(                 // 重试无意义，勿被重试器吞掉
         "UPDATE affected 0 rows for entity ID: " + domain.getId()
-        + " (possible cause: concurrent modification or entity not found)");
+        + " (entity not found or concurrently deleted)");
 }
 ```
 
-→ `GlobalRestExceptionHandler` 自动映射为 HTTP 409：
+→ `GlobalRestExceptionHandler` 自动映射为 HTTP 409（冲突类型 IS-A IllegalStateException）：
 
 ```json
 {
   "type": "about:blank",
   "title": "Conflict",
   "status": 409,
-  "detail": "UPDATE affected 0 rows for entity ID: 550e8400-... (possible cause: concurrent modification or entity not found)",
+  "detail": "UPDATE affected 0 rows for entity ID: 550e8400-... (optimistic lock version conflict)",
   "instance": "/api/orders/550e8400-..."
 }
 ```
@@ -72,6 +80,8 @@ if (!success) {
 
 ```java
 // application/order/handler/RetryablePayOrderHandler.java
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.OptimisticLockConflictException;
+
 @Component
 public class RetryablePayOrderHandler {
 
@@ -88,9 +98,9 @@ public class RetryablePayOrderHandler {
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 return payOrderHandler.handle(command);
-            } catch (IllegalStateException e) {
-                if (attempt == MAX_RETRIES || !isOptimisticLockConflict(e)) {
-                    throw e;  // 最后一次仍失败，或非乐观锁异常，上抛
+            } catch (OptimisticLockConflictException e) {   // 按类型识别，零消息耦合
+                if (attempt == MAX_RETRIES) {
+                    throw e;  // 最后一次仍冲突，上抛
                 }
                 long delay = BASE_DELAY_MS * (1L << (attempt - 1));  // 指数退避：100ms, 200ms, 400ms
                 log.warn("Optimistic lock conflict, retry {}/{} after {}ms: orderId={}",
@@ -99,10 +109,6 @@ public class RetryablePayOrderHandler {
             }
         }
         throw new IllegalStateException("Unreachable");
-    }
-
-    private boolean isOptimisticLockConflict(IllegalStateException e) {
-        return e.getMessage() != null && e.getMessage().contains("affected 0 rows");
     }
 
     private void sleep(long ms) {
@@ -119,7 +125,7 @@ public class RetryablePayOrderHandler {
 要点：
 - 指数退避（100ms → 200ms → 400ms），避免热重试加剧冲突
 - 最大重试 3 次，超过则上抛（由全局异常处理返回 409）
-- 仅对乐观锁冲突重试（`affected 0 rows`），其他异常直接上抛
+- 仅对乐观锁冲突重试（**按 `OptimisticLockConflictException` 类型识别**）；「实体已删除/不存在」由框架抛普通 `IllegalStateException`，与其他异常一样直接上抛
 - 重试前需**重新加载聚合根**（获取最新 version）——本例中 PayOrderHandler.handle() 内部已有 findById
 
 ## 3. 注意事项
@@ -140,5 +146,7 @@ public class RetryablePayOrderHandler {
 | infrastructure | `MybatisPlusPersistence.updateDomain()` | 冲突检测 + 抛异常（框架内置） |
 | common-exception | `GlobalRestExceptionHandler` | 409 响应翻译（框架内置） |
 
-> 注意：重试识别与 `updateDomain()` 的异常消息契约耦合（`affected 0 rows` 字样）——
-> 框架侧调整消息措辞时需同步 `RetryablePlaceOrderHandler.isOptimisticLockConflict()`。
+> 契约说明：冲突识别为**编译期类型契约**——框架抛
+> `OptimisticLockConflictException extends IllegalStateException`（audit F-01），
+> 消费方按类型捕获即可，无消息文本耦合。历史版本曾以消息含 `affected 0 rows` 判定；
+> 该核心字样在框架侧保留为兼容期过渡，**新代码禁止依赖消息文本做语义判断**。

@@ -266,14 +266,18 @@ public abstract class MybatisPlusPersistence<
      * <p>契约：
      * <ul>
      *   <li>持久化前自动调用 validate()
-     *   <li>乐观锁冲突时抛出 {@link IllegalStateException}
+     *   <li><b>乐观锁版本冲突</b>（实体仍存在、版本不匹配）→ 抛 {@link OptimisticLockConflictException}
+     *       ——调用方（如重试包装器）应按此类型识别可重试冲突，勿依赖消息文本
+     *   <li><b>实体已被删除 / ID 不存在</b> → 抛普通 {@link IllegalStateException}
+     *       （消息含 {@code entity not found}）——重试无意义，语义上区别对待
      *   <li>每次调用均执行 UPDATE（保证 update_time 等审计字段始终刷新）
      * </ul>
      *
      * <p><b>事务说明</b>：本方法不声明 {@code @Transactional}，
      * 事务边界由应用层（Handler）控制。
      *
-     * @throws IllegalStateException UPDATE 影响行数为 0 时（可能原因：乐观锁版本冲突，或实体已被删除/ID 不存在）
+     * @throws OptimisticLockConflictException 乐观锁版本冲突（实体仍存在）
+     * @throws IllegalStateException UPDATE 影响行数为 0 且实体已不存在/被逻辑删除
      */
     public void updateDomain(Domain domain) {
         validateIfAggregate(domain);
@@ -281,12 +285,32 @@ public abstract class MybatisPlusPersistence<
 
         int rows = baseMapper.updateById(po);
         if (rows == 0) {
-            throw new IllegalStateException(
-                    "UPDATE affected 0 rows for entity ID: %s (possible cause: concurrent modification or entity not found)"
-                            .formatted(domain.getId()));
+            throwUpdateFailed(domain);
         }
 
         eventFlusher.publishAndClear(domain);
+    }
+
+    /**
+     * UPDATE 影响行数为 0 的语义分类（audit F-01）。
+     *
+     * <p>影响行数为 0 本身无法区分「版本冲突」与「实体消失」——两者在 SQL 层都表现为
+     * WHERE 未命中。仅在失败路径补一次存在性探测完成分类：该路径罕见，探测开销可忽略。
+     * 存在性探测与分类之间理论上存在并发窗口（探测后即刻被删），按 not-found 处理属安全降级。
+     *
+     * <p>消息兼容期约定：两类消息均保留历史核心字样 {@code affected 0 rows}，
+     * 未迁移到类型判断的旧消费方行为不变；新代码一律按异常类型区分，不匹配文本。
+     */
+    private void throwUpdateFailed(Domain domain) {
+        if (existsDomainById(domain.getId())) {
+            // 实体仍在 → 版本被并发事务推进 → 可安全重试的乐观锁冲突
+            throw new OptimisticLockConflictException(
+                    "UPDATE affected 0 rows for entity ID: %s (optimistic lock version conflict)"
+                            .formatted(domain.getId()));
+        }
+        throw new IllegalStateException(
+                "UPDATE affected 0 rows for entity ID: %s (entity not found or concurrently deleted)"
+                        .formatted(domain.getId()));
     }
 
     /**

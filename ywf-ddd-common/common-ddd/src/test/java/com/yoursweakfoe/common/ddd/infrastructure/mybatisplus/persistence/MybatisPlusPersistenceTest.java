@@ -211,6 +211,29 @@ class MybatisPlusPersistenceTest {
     }
 
     @Test
+    void updateDomain_entityGone_throwsNotFoundSemantics_notConflict() {
+        // audit F-01 分类验证：UPDATE 影响行数为 0 且实体已逻辑删除
+        // → 普通 IllegalStateException（消息含 entity not found），
+        //   绝不能抛成 OptimisticLockConflictException（否则会被重试器盲目重试已删实体）
+        Product product = ProductFixtures.createProduct(100);
+        productRepository.save(product);
+        ProductPO savedPO = productMapper.selectOne(
+                new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"));
+        Long productId = savedPO.getId();
+
+        // 实体在加载后被并发删除（逻辑删除）
+        productRepository.removeDomainById(productId);
+
+        // 持有删除前快照的领域对象仍尝试更新
+        Product ghost = new com.yoursweakfoe.common.ddd.fixtures.converter.ProductConverter()
+                .toDomain(savedPO);
+        assertThatThrownBy(() -> productRepository.updateDomain(ghost))
+                .isInstanceOf(IllegalStateException.class)
+                .isNotInstanceOf(OptimisticLockConflictException.class)
+                .hasMessageContaining("entity not found");
+    }
+
+    @Test
     void updateDomain_validatesBeforeUpdate() {
         Order order = OrderFixtures.createOrder();
         orderRepository.save(order);

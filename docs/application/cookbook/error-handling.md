@@ -141,7 +141,7 @@ Content-Type: application/problem+json
   "type": "about:blank",
   "title": "Conflict",
   "status": 409,
-  "detail": "UPDATE affected 0 rows for entity ID: xxx (possible cause: concurrent modification or entity not found)",
+  "detail": "UPDATE affected 0 rows for entity ID: xxx (optimistic lock version conflict)",
   "instance": "/api/orders/550e8400-e29b-41d4-a716-446655440000/pay"
 }
 ```

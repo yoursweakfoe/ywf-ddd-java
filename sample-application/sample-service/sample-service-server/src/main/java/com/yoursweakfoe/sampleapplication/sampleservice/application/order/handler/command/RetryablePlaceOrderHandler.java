@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.OptimisticLockConflictException;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import lombok.extern.slf4j.Slf4j;
@@ -12,20 +13,20 @@ import org.springframework.stereotype.Component;
  *
  * <p><b>适用场景</b>：高并发下单扣库存。并发事务加载同一 Product（version=N）后先后 UPDATE，
  * 后者影响 0 行 → {@code MybatisPlusPersistence.updateDomain()} 抛
- * {@link IllegalStateException}（消息含 {@code affected 0 rows}）→ 本包装器识别为乐观锁冲突，
+ * {@link OptimisticLockConflictException} → 本包装器按<b>异常类型</b>识别为乐观锁冲突，
  * 指数退避后整单重试。
  *
  * <p><b>为什么整单重试安全</b>：内部 {@link PlaceOrderHandler#handle} 标注
  * {@code @Transactional}——每次 attempt 经代理开启<b>独立事务</b>，冲突抛异常时该次事务已整体回滚，
  * 无部分扣减/无订单残留；重试从头重新加载商品（拿最新 version）与构建订单项。
  *
- * <p><b>不重试的异常</b>：非 {@code affected 0 rows} 的 {@code IllegalStateException}
- * （数据异常等）与其他任何异常直接上抛——业务规则违反（如库存不足 422）不应被重试掩盖。
+ * <p><b>不重试的异常</b>：其余一切异常直接上抛——业务规则违反（如库存不足 422）不应被重试掩盖；
+ * 「实体已被删除/不存在」由框架抛普通 {@link IllegalStateException}（非冲突类型），同样不重试。
  * 重试耗尽仍冲突 → 上抛，由全局异常处理返回 409（前端提示刷新重试）。
  *
- * <p><b>冲突识别的耦合说明</b>：以异常消息含 {@code affected 0 rows} 判定，
- * 与框架 {@code updateDomain()} 的消息契约耦合——这是 cookbook 模板的原样约定；
- * 框架侧若调整消息措辞需同步本方法。
+ * <p><b>契约说明</b>：冲突识别依赖框架类型 {@link OptimisticLockConflictException}
+ * （编译期绑定，无消息文本耦合）；历史版本曾以消息含 {@code affected 0 rows} 判定，
+ * 该字样在框架侧保留仅为兼容期过渡，新代码一律按类型捕获。
  */
 @Slf4j
 @Component
@@ -54,14 +55,15 @@ public class RetryablePlaceOrderHandler {
     /**
      * 执行下单（带乐观锁冲突重试）。
      *
-     * @throws IllegalStateException 重试耗尽仍冲突，或发生非冲突数据异常时原样上抛
+     * @throws OptimisticLockConflictException 重试耗尽仍冲突
+     * @throws IllegalStateException 发生「实体消失」类数据异常时原样上抛
      */
     public OrderDTO handle(PlaceOrderCommand command) {
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 return placeOrderHandler.handle(command);
-            } catch (IllegalStateException e) {
-                if (attempt == maxRetries || !isOptimisticLockConflict(e)) {
+            } catch (OptimisticLockConflictException e) {
+                if (attempt == maxRetries) {
                     throw e;
                 }
                 long delay = baseDelayMs * (1L << (attempt - 1));
@@ -71,11 +73,6 @@ public class RetryablePlaceOrderHandler {
             }
         }
         throw new IllegalStateException("Unreachable");
-    }
-
-    /** 冲突识别：与 MybatisPlusPersistence.updateDomain() 的异常消息契约耦合（见类级说明）。 */
-    private boolean isOptimisticLockConflict(IllegalStateException e) {
-        return e.getMessage() != null && e.getMessage().contains("affected 0 rows");
     }
 
     /** 虚拟线程下 Thread.sleep 不占用载体线程，退避等待无性能顾虑。 */

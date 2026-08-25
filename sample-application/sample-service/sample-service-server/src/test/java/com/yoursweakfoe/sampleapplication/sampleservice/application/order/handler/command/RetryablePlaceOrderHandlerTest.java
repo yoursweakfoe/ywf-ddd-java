@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.OptimisticLockConflictException;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RetryablePlaceOrderHandlerTest {
 
-    private static final IllegalStateException CONFLICT =
-            new IllegalStateException("UPDATE affected 0 rows for entity ID: x (possible cause: concurrent modification)");
+    private static final OptimisticLockConflictException CONFLICT =
+            new OptimisticLockConflictException(
+                    "UPDATE affected 0 rows for entity ID: x (optimistic lock version conflict)");
 
     @Mock private PlaceOrderHandler inner;
 
