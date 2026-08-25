@@ -2,7 +2,10 @@ package com.yoursweakfoe.common.exception.handler;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,11 +23,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST 通道全局异常处理测试 —— MockMvc standalone 管线（真实 DispatcherServlet
- * 异常解析 + ControllerAdvice），验证 RFC 9457 响应格式与迁移前语义一致。
+ * 异常解析 + ControllerAdvice），验证 RFC 9457 响应格式。
+ *
+ * <p>安全契约：技术类异常（IllegalState/IllegalArgument/TypeMismatch）的 detail
+ * 为稳定泛化文案，不回显原始异常消息——原始信息只进服务端日志。
  */
 @DisplayName("GlobalRestExceptionHandler — REST 通道 RFC 9457")
 class GlobalRestExceptionHandlerTest {
@@ -83,6 +92,16 @@ class GlobalRestExceptionHandlerTest {
         @GetMapping("/type-mismatch/{id}")
         public String typeMismatch(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
             return id.toString();
+        }
+
+        @PostMapping("/echo")
+        public String echo(@RequestBody Map<String, Object> body) {
+            return body.toString();
+        }
+
+        @GetMapping("/needs-param")
+        public String needsParam(@RequestParam String q) {
+            return q;
         }
 
         @GetMapping("/unknown")
@@ -159,36 +178,78 @@ class GlobalRestExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("IllegalStateException → 409")
+    @DisplayName("IllegalStateException → 409（detail 稳定泛化，不回显原始消息）")
     void illegalState_returns409() throws Exception {
         mockMvc.perform(get("/illegal-state"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("Conflict"))
-                .andExpect(jsonPath("$.detail").value("Order already confirmed"))
+                .andExpect(jsonPath("$.detail").value("Conflict"))
                 .andExpect(jsonPath("$.instance").value("/illegal-state"));
     }
 
     @Test
-    @DisplayName("IllegalArgumentException → 400")
+    @DisplayName("IllegalArgumentException → 400（detail 稳定泛化，不回显原始消息）")
     void illegalArgument_returns400() throws Exception {
         mockMvc.perform(get("/illegal-argument"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("Bad Request"))
-                .andExpect(jsonPath("$.detail").value("quantity must be positive"));
+                .andExpect(jsonPath("$.detail").value("Bad Request"));
     }
 
     @Test
-    @DisplayName("路径变量类型转换失败（非法 UUID）→ 400 而非兜底 500")
+    @DisplayName("路径变量类型转换失败（非法 UUID）→ 400 而非兜底 500（detail 不含原始值）")
     void typeMismatch_returns400WithParamName() throws Exception {
         mockMvc.perform(get("/type-mismatch/not-a-uuid"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value("Bad Request"))
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.detail").value("Parameter 'id' has invalid value 'not-a-uuid'"))
+                .andExpect(jsonPath("$.detail").value("Parameter 'id' must be of type UUID"))
                 .andExpect(jsonPath("$.instance").value("/type-mismatch/not-a-uuid"));
+    }
+
+    @Test
+    @DisplayName("JSON 请求体畸形 → 400 而非兜底 500")
+    void malformedBody_returns400() throws Exception {
+        mockMvc.perform(post("/echo")
+                        .contentType(APPLICATION_JSON)
+                        .content("{invalid json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.detail").value("Malformed request body"));
+    }
+
+    @Test
+    @DisplayName("缺失必填参数 → 400 而非兜底 500")
+    void missingParameter_returns400() throws Exception {
+        mockMvc.perform(get("/needs-param"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.detail").value("Missing required parameter 'q'"));
+    }
+
+    @Test
+    @DisplayName("HTTP 方法不支持 → 405 而非兜底 500")
+    void methodNotSupported_returns405() throws Exception {
+        mockMvc.perform(get("/echo"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Method Not Allowed"));
+    }
+
+    @Test
+    @DisplayName("媒体类型不支持 → 415 而非兜底 500")
+    void mediaTypeNotSupported_returns415() throws Exception {
+        mockMvc.perform(post("/echo")
+                        .contentType(TEXT_PLAIN)
+                        .content("plain text body"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Unsupported Media Type"));
     }
 
     @Test

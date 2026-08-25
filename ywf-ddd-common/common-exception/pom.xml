@@ -32,6 +32,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- spring-webmvc（optional：NoResourceFoundException 等 MVC 异常翻译所需，与 spring-web 同策略） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Jakarta Servlet API（ControllerAdvice 读取请求 URI，运行时由 Web 容器提供） -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -50,12 +57,6 @@
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- spring-webmvc（测试用：MockMvc standalone 管线验证 ControllerAdvice） -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
