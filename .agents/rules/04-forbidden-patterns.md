@@ -52,10 +52,13 @@
 
 ## 通用禁止
 
-- 禁止 Specification 模式（用显式 if-throw + Policy 替代）
 - 禁止 Mediator 模式（Handler 1:1 对应 CQE，无需中间路由）
 - 禁止在核心代码（src/ / sample-application/）中嵌入 AI 工具专属指令
 - 禁止使用 `LocalDateTime`（统一 `OffsetDateTime`，带时区无歧义）
+
+> 注：Specification 模式已解除禁止（2026-08 决策修订）——common-ddd 提供的最小纯接口
+> 实现为既定采纳项（见 docs/references.md「采纳」表），可用于领域规则的 and/or/not 组合校验；
+> 查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`，简单校验仍优先聚合根内 if-throw。
 
 ## Infrastructure 层最小化原则
 
