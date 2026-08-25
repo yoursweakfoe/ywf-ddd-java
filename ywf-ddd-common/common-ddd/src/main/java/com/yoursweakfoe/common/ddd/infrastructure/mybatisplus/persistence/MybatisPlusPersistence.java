@@ -196,8 +196,10 @@ public abstract class MybatisPlusPersistence<
         try {
             po = baseMapper.selectOne(wrapper);
         } catch (TooManyResultsException e) {
-            throw new IllegalStateException(
-                    "Expected at most one row but found multiple for condition: " + wrapper.getSqlSegment(), e);
+            // 安全约束（audit F-03）：SQL 片段不得进入异常消息——它会经全局异常处理器
+            // 以 409 detail 回显给外部客户端，泄漏表/列结构。条件细节只记服务端日志。
+            log.warn("findDomainOneByCondition matched multiple rows; sqlSegment={}", wrapper.getSqlSegment(), e);
+            throw new IllegalStateException("Expected at most one row but found multiple", e);
         }
         if (po == null) {
             return Optional.empty();
