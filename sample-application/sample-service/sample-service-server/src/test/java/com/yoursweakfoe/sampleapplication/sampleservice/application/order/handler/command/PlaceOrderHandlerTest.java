@@ -22,6 +22,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.In
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +33,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PlaceOrderHandlerTest {
 
+    private static final UUID PRODUCT_ID = UUID.randomUUID();
+    private static final UUID PRODUCT_ID_2 = UUID.randomUUID();
+    private static final UUID MISSING_PRODUCT_ID = UUID.randomUUID();
+
     @Mock private ProductRepository productRepository;
     @Mock private InventoryDomainService inventoryDomainService;
     @Mock private OrderRepository orderRepository;
@@ -41,7 +46,7 @@ class PlaceOrderHandlerTest {
     private OrderFactory orderFactory = new OrderFactory();
     @InjectMocks private PlaceOrderHandler handler;
 
-    private PlaceOrderCommand command(Long productId, int quantity) {
+    private PlaceOrderCommand command(UUID productId, int quantity) {
         PlaceOrderCommand command = new PlaceOrderCommand();
         command.setCustomerId("customer-1");
         PlaceOrderCommand.OrderItemView itemDto = new PlaceOrderCommand.OrderItemView();
@@ -54,11 +59,11 @@ class PlaceOrderHandlerTest {
     @Test
     void handle_shouldCreatePendingOrderWithRealUnitPrice() {
         // 商品单价 25.50，订单项小计应来自商品真实价格而非硬编码
-        Product product = new Product(1L, "Widget", new BigDecimal("25.50"), 100);
-        when(productRepository.findAllById(List.of(1L))).thenReturn(List.of(product));
+        Product product = Product.reconstitute(PRODUCT_ID, "Widget", new BigDecimal("25.50"), 100, null, null, 0);
+        when(productRepository.findAllById(List.of(PRODUCT_ID))).thenReturn(List.of(product));
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
-        OrderDTO result = handler.handle(command(1L, 2));
+        OrderDTO result = handler.handle(command(PRODUCT_ID, 2));
 
         verify(inventoryDomainService).deductStock(any());
         verify(orderRepository).save(argThat((Order order) ->
@@ -70,9 +75,9 @@ class PlaceOrderHandlerTest {
 
     @Test
     void handle_shouldThrowWhenProductNotFound() {
-        when(productRepository.findAllById(List.of(99L))).thenReturn(List.of());
+        when(productRepository.findAllById(List.of(MISSING_PRODUCT_ID))).thenReturn(List.of());
 
-        assertThatThrownBy(() -> handler.handle(command(99L, 1)))
+        assertThatThrownBy(() -> handler.handle(command(MISSING_PRODUCT_ID, 1)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("product:err.notFound");
     }
@@ -80,16 +85,16 @@ class PlaceOrderHandlerTest {
     @Test
     void handle_shouldNotSaveWhenAnyStockInsufficient() {
         // 第二个商品库存不足（DomainService 在事务内抛出）—— 整单原子失败，订单不得落库
-        when(productRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(
-                new Product(1L, "Widget", new BigDecimal("25.50"), 100),
-                new Product(2L, "Gadget", new BigDecimal("10.00"), 1)));
+        when(productRepository.findAllById(any())).thenReturn(List.of(
+                Product.reconstitute(PRODUCT_ID, "Widget", new BigDecimal("25.50"), 100, null, null, 0),
+                Product.reconstitute(PRODUCT_ID_2, "Gadget", new BigDecimal("10.00"), 1, null, null, 0)));
         // deductStock 返回 void —— 打桩必须用 doThrow().when() 形式
         doThrow(new BusinessException("product:err.insufficientStock"))
                 .when(inventoryDomainService).deductStock(any());
 
         PlaceOrderCommand command = new PlaceOrderCommand();
         command.setCustomerId("customer-1");
-        command.setItems(List.of(itemView(1L, 1), itemView(2L, 999)));
+        command.setItems(List.of(itemView(PRODUCT_ID, 1), itemView(PRODUCT_ID_2, 999)));
 
         assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(BusinessException.class)
@@ -99,7 +104,7 @@ class PlaceOrderHandlerTest {
     }
 
     /** 订单项命令 DTO 工厂。 */
-    private PlaceOrderCommand.OrderItemView itemView(Long productId, int quantity) {
+    private PlaceOrderCommand.OrderItemView itemView(UUID productId, int quantity) {
         PlaceOrderCommand.OrderItemView itemDto = new PlaceOrderCommand.OrderItemView();
         itemDto.setProductId(productId);
         itemDto.setQuantity(quantity);

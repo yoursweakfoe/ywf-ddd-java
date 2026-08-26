@@ -18,7 +18,8 @@ import lombok.Data;
 @TableName("orders.orders")
 public class OrderPO {
 
-    @TableId(type = IdType.ASSIGN_UUID)
+    /** 身份由应用侧工厂铸造（UUIDv7），经 Converter 写入 —— IdType.INPUT 表达「调用方提供」 */
+    @TableId(type = IdType.INPUT)
     private String id;
 
     private String status;

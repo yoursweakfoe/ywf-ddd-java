@@ -9,9 +9,11 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +24,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ProductRepositoryImpl
-        extends MybatisPlusPersistence<ProductMapper, ProductPO, Product, Long>
+        extends MybatisPlusPersistence<ProductMapper, ProductPO, Product, UUID>
         implements ProductRepository {
 
     // region 依赖注入
@@ -41,8 +43,20 @@ public class ProductRepositoryImpl
         return converter;
     }
 
+    /**
+     * 领域 UUID → PO String 桥接（audit B-01/F-11 收口配套）。
+     *
+     * <p>Product 领域身份为 {@code UUID}，PO 列为 {@code VARCHAR(36)}。
+     * 覆写此方法完成 UUID → String 的显式转换，使基类的按 ID 查询、
+     * 存在性探测与批量删除均能正确传递参数。
+     */
     @Override
-    public Optional<Product> findById(Long id) {
+    protected Serializable toPersistenceId(UUID id) {
+        return id.toString();
+    }
+
+    @Override
+    public Optional<Product> findById(UUID id) {
         return findDomainById(id);
     }
 
@@ -59,24 +73,17 @@ public class ProductRepositoryImpl
     }
 
     @Override
-    public boolean exists(Long id) {
+    public boolean exists(UUID id) {
         return existsDomainById(id);
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         removeDomainById(id);
     }
 
     @Override
-    public Optional<Product> findByName(String name) {
-        LambdaQueryWrapper<ProductPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductPO::getName, name);
-        return findDomainOneByCondition(wrapper);
-    }
-
-    @Override
-    public List<Product> findAllById(Collection<Long> ids) {
+    public List<Product> findAllById(Collection<UUID> ids) {
         return findDomainsByIds(ids);
     }
 }

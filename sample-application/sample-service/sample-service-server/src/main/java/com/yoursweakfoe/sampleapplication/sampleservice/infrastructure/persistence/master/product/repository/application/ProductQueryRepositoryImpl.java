@@ -5,6 +5,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repo
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,8 +24,8 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
     }
 
     @Override
-    public Optional<ProductViewDTO> findById(Long id) {
-        ProductPO po = productMapper.selectById(id);
+    public Optional<ProductViewDTO> findById(UUID id) {
+        ProductPO po = productMapper.selectById(id.toString());
         if (po == null) {
             return Optional.empty();
         }
@@ -34,7 +35,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
     /** PO → 读 DTO 直接投影（不经过 domain）。 */
     private ProductViewDTO toViewDTO(ProductPO po) {
         ProductViewDTO dto = new ProductViewDTO();
-        dto.setId(po.getId());
+        dto.setId(UUID.fromString(po.getId()));
         dto.setName(po.getName());
         dto.setPrice(po.getPrice());
         dto.setStock(po.getStock() == null ? 0 : po.getStock());

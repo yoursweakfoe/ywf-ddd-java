@@ -11,6 +11,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.com
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ class RestEndpointIntegrationTest {
     @LocalServerPort
     private int port;
 
-    private static Long createdProductId;
+    private static UUID createdProductId;
     private static String createdOrderId;
 
     private RestClient client() {
@@ -93,7 +94,7 @@ class RestEndpointIntegrationTest {
     @Test
     @Order(3)
     void getProduct_notFound_returns422ProblemDetail() {
-        Map<String, Object> body = client().get().uri("/products/99999")
+        Map<String, Object> body = client().get().uri("/products/" + UUID.randomUUID())
                 .retrieve()
                 .onStatus(status -> true, (request, response) -> { })
                 .body(PROBLEM_BODY);
@@ -148,7 +149,7 @@ class RestEndpointIntegrationTest {
     @Order(6)
     void placeOrder_productNotFound_returns422() {
         var command = new PlaceOrderCommand("customer-003",
-                List.of(new PlaceOrderCommand.OrderItemView(99999L, 1)));
+                List.of(new PlaceOrderCommand.OrderItemView(UUID.randomUUID(), 1)));
 
         Map<String, Object> body = client().post().uri("/orders")
                 .body(command)

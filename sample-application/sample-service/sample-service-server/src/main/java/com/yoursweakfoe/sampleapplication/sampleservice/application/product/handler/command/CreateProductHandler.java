@@ -4,6 +4,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.asse
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.ProductFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
 import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +18,14 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
 
     // region 依赖注入
     private final ProductRepository productRepository;
+    private final ProductFactory productFactory;
     private final ProductAssembler productAssembler;
 
     public CreateProductHandler(ProductRepository productRepository,
+                                ProductFactory productFactory,
                                 ProductAssembler productAssembler) {
         this.productRepository = productRepository;
+        this.productFactory = productFactory;
         this.productAssembler = productAssembler;
     }
     // endregion
@@ -29,13 +33,12 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProductDTO handle(CreateProductCommand command) {
-        Product product = new Product(null, command.getName(), command.getPrice(), command.getStock());
+        // 创建即合法：工厂铸造 UUIDv7 身份并完成不变量校验（audit B-01 收口：
+        // 自增反查路径消亡——id 在持久化之前即存在，无需按名回查）
+        Product product = productFactory.create(command.getName(), command.getPrice(), command.getStock());
         productRepository.save(product);
 
-        // 自增 ID 回填在 PO 上，重新查询获取完整实体
-        Product saved = productRepository.findByName(command.getName())
-                .orElseThrow(() -> new IllegalStateException("Product save failed"));
-        log.info("Product created: productId={}", saved.getId());
-        return productAssembler.toDTO(saved);
+        log.info("Product created: productId={}", product.getId());
+        return productAssembler.toDTO(product);
     }
 }

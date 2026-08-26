@@ -20,8 +20,8 @@ import java.util.UUID;
  */
 public final class TestOrders {
 
-    /** 标准订单项：商品 1 × 2 件 × 10.00 = 小计 20.00 */
-    public static final OrderItem ITEM = new OrderItem(1L, 2, BigDecimal.TEN);
+    /** 标准订单项：商品 × 2 件 × 10.00 = 小计 20.00 */
+    public static final OrderItem ITEM = new OrderItem(UUID.randomUUID(), 2, BigDecimal.TEN);
 
     private static final String DEFAULT_CUSTOMER = "customer-1";
 

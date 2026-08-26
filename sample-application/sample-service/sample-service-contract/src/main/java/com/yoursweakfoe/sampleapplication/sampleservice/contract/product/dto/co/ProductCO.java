@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,7 @@ public class ProductCO implements CO, Serializable {
 
     /** 商品 ID */
     @Schema(description = "商品 ID")
-    private Long id;
+    private UUID id;
 
     /** 商品名称 */
     @Schema(description = "商品名称")

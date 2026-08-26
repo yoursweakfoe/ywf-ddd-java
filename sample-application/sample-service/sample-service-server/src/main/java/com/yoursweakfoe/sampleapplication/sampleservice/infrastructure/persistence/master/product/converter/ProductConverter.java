@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persiste
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,14 +19,14 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
 
     @Override
     public Product toDomain(ProductPO po) {
-        return Product.reconstitute(po.getId(), po.getName(), po.getPrice(), po.getStock(),
+        return Product.reconstitute(UUID.fromString(po.getId()), po.getName(), po.getPrice(), po.getStock(),
                 po.getCreateAt(), po.getUpdateAt(), po.getVersion());
     }
 
     @Override
     public ProductPO toPO(Product domain) {
         ProductPO po = new ProductPO();
-        po.setId(domain.getId());
+        po.setId(domain.getId().toString());
         po.setName(domain.getName());
         po.setPrice(domain.getPrice());
         po.setStock(domain.getStock());

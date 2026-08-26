@@ -53,6 +53,9 @@
         <dynamic-datasource-spring-boot4-starter.version>4.5.0</dynamic-datasource-spring-boot4-starter.version>
         <postgresql.version>42.7.13</postgresql.version>
 
+        <!-- ========== 标识生成（common-ddd 消费） ========== -->
+        <java-uuid-generator.version>5.2.0</java-uuid-generator.version>
+
         <!-- ========== 代码生成 / 注解处理器 ========== -->
         <lombok.version>1.18.46</lombok.version>
 
@@ -177,6 +180,14 @@
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
                 <scope>compile</scope>
+            </dependency>
+
+            <!-- ==================== 标识生成（common-ddd 消费） ==================== -->
+            <!-- JUG：RFC 9562 UUIDv7 生成器（FasterXML 出品，Apache-2.0，零传递依赖） -->
+            <dependency>
+                <groupId>com.fasterxml.uuid</groupId>
+                <artifactId>java-uuid-generator</artifactId>
+                <version>${java-uuid-generator.version}</version>
             </dependency>
 
             <!-- ==================== 代码生成 / 注解处理器 ==================== -->

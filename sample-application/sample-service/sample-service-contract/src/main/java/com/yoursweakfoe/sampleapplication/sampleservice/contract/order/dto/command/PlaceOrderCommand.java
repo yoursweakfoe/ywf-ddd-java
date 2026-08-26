@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -46,7 +47,7 @@ public class PlaceOrderCommand implements Command, Serializable {
         /** 商品 ID */
         @NotNull
         @Schema(description = "商品 ID")
-        private Long productId;
+        private UUID productId;
 
         /** 购买数量 */
         @Min(1)

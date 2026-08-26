@@ -6,6 +6,8 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.adapter.rest.ProductController;
+import com.yoursweakfoe.common.contract.dto.query.PageResult;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -29,7 +31,7 @@ public class ProductControllerImpl implements ProductController, RestAdapter {
     }
 
     @Override
-    public ProductCO getProduct(Long productId) {
+    public ProductCO getProduct(UUID productId) {
         return productAppService.getProduct(new GetProductQuery(productId));
     }
 }

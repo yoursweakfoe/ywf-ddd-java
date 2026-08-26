@@ -5,6 +5,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class ProductDTO implements ApplicationDTO, Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 商品 ID */
-    private Long id;
+    private UUID id;
     /** 商品名称 */
     private String name;
     /** 商品单价 */

@@ -24,7 +24,7 @@ class OrderConverterTest {
         OrderPO po = new OrderPO();
         po.setId(UUID.randomUUID().toString());
         po.setStatus("PENDING");
-        po.setItems("[{\"productId\":1,\"quantity\":2,\"unitPrice\":10.00}]");
+        po.setItems("[{\"productId\":\"550e8400-e29b-41d4-a716-446655440000\",\"quantity\":2,\"unitPrice\":10.00}]");
         po.setTotalAmount(new BigDecimal("20.00"));
         po.setCustomerId("customer-1");
         po.setTrackingNumber(null);

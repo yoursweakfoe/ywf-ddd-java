@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,5 @@ public class GetProductQuery implements Query, Serializable {
     /** 商品 ID */
     @NotNull
     @Schema(description = "商品 ID")
-    private Long productId;
+    private UUID productId;
 }

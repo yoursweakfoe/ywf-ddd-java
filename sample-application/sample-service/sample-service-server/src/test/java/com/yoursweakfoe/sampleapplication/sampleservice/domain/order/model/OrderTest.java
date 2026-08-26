@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  */
 class OrderTest {
 
-    private static final OrderItem ITEM = new OrderItem(1L, 2, BigDecimal.TEN);
+    private static final OrderItem ITEM = new OrderItem(UUID.randomUUID(), 2, BigDecimal.TEN);
 
     private Order createPendingOrder() {
         // 惰性重建出「未下单的 PENDING」——聚合自身行为方法的测试入口
@@ -209,8 +209,8 @@ class OrderTest {
 
     @Test
     void factory_shouldCalculateTotalAtCreation() {
-        OrderItem item1 = new OrderItem(1L, 2, BigDecimal.TEN);   // 20
-        OrderItem item2 = new OrderItem(2L, 1, new BigDecimal("5.50"));  // 5.50
+        OrderItem item1 = new OrderItem(UUID.randomUUID(), 2, BigDecimal.TEN);   // 20
+        OrderItem item2 = new OrderItem(UUID.randomUUID(), 1, new BigDecimal("5.50"));  // 5.50
 
         Order order = new OrderFactory().create("customer-1", List.of(item1, item2));
 
@@ -274,7 +274,7 @@ class OrderTest {
 
     @Test
     void orderItem_shouldCalculateSubtotal() {
-        OrderItem item = new OrderItem(1L, 3, new BigDecimal("9.99"));
+        OrderItem item = new OrderItem(UUID.randomUUID(), 3, new BigDecimal("9.99"));
 
         assertThat(item.subtotal()).isEqualByComparingTo(new BigDecimal("29.97"));
     }
@@ -287,7 +287,7 @@ class OrderTest {
 
     @Test
     void orderItem_shouldThrowOnZeroQuantity() {
-        assertThatThrownBy(() -> new OrderItem(1L, 0, BigDecimal.TEN))
+        assertThatThrownBy(() -> new OrderItem(UUID.randomUUID(), 0, BigDecimal.TEN))
                 .isInstanceOf(BusinessException.class);
     }
 

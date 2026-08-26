@@ -8,6 +8,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,7 +66,7 @@ class OptimisticLockConcurrencyTest {
                 .retrieve()
                 .body(ProductCO.class);
         assertThat(product).isNotNull();
-        Long productId = product.getId();
+        UUID productId = product.getId();
 
         // 2. 20 个线程同时下单，每个买 1 件（库存只有 10，必然有冲突）
         int threadCount = 20;

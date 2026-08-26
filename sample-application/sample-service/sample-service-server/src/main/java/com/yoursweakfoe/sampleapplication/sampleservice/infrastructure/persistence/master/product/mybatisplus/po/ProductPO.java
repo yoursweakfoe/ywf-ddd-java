@@ -18,8 +18,9 @@ import lombok.Data;
 @TableName("products.products")
 public class ProductPO {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    /** 身份由应用侧工厂铸造（UUIDv7），经 Converter toString 写入 —— INPUT 表达「调用方提供」 */
+    @TableId(type = IdType.INPUT)
+    private String id;
 
     private String name;
 

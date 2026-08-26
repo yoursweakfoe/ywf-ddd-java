@@ -9,17 +9,21 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 商品聚合根 —— 管理商品基本信息、单价和库存。
  *
  * <p>库存扣减/回补通过行为方法完成，内聚业务校验。
  * 乐观锁由 PO 层 {@code @Version} 保护，领域层无需感知。
+ *
+ * <p>身份铸造收口于 {@link ProductFactory}（应用侧 UUIDv7，创建即合法）；
+ * 业务构造器包私有，「谁能 new 一个商品」由包结构在编译期锁死。
  */
-public class Product extends AggregateRoot<Long> {
+public class Product extends AggregateRoot<UUID> {
 
     // region 字段与构造器
-    private Long id;
+    private UUID id;
     @Getter
     private String name;
     /** 商品单价（下单时订单项单价的唯一来源） */
@@ -34,8 +38,8 @@ public class Product extends AggregateRoot<Long> {
     @Getter
     private Integer version;
 
-    /** 业务构造器（创建新商品） */
-    public Product(Long id, String name, BigDecimal price, int stock) {
+    /** 业务构造器（创建新商品）—— 包私有：创建路径收口于 {@link ProductFactory} */
+    Product(UUID id, String name, BigDecimal price, int stock) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -43,7 +47,7 @@ public class Product extends AggregateRoot<Long> {
     }
 
     /** 重建构造器（持久化层 Converter 使用，跳过校验与事件注册） */
-    public static Product reconstitute(Long id, String name, BigDecimal price, int stock,
+    public static Product reconstitute(UUID id, String name, BigDecimal price, int stock,
                                        OffsetDateTime createAt, OffsetDateTime updateAt,
                                        Integer version) {
         Product product = new Product(id, name, price, stock);
@@ -54,7 +58,7 @@ public class Product extends AggregateRoot<Long> {
     }
 
     @Override
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

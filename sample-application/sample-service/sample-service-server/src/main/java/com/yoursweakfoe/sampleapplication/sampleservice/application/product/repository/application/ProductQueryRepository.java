@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.product.rep
 import com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * 商品读侧查询端口 —— 读路径绕过 domain，PO → DTO 直接投影。
@@ -16,5 +17,5 @@ import java.util.Optional;
 public interface ProductQueryRepository extends QueryRepository {
 
     /** 按 ID 投影商品读 DTO（不存在返回 empty）。 */
-    Optional<ProductViewDTO> findById(Long id);
+    Optional<ProductViewDTO> findById(UUID id);
 }

@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 /**
@@ -46,7 +47,7 @@ public class InventoryDomainService implements DomainService {
      * @throws BusinessException 商品不存在或库存不足时
      */
     public void deductStock(List<OrderItem> items) {
-        Map<Long, Product> products = loadProducts(items);
+        Map<UUID, Product> products = loadProducts(items);
         quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
             Product product = requireProduct(products, productId);
             product.deductStock(totalQuantity);
@@ -61,7 +62,7 @@ public class InventoryDomainService implements DomainService {
      * @throws BusinessException 商品不存在时
      */
     public void replenishStock(List<OrderItem> items) {
-        Map<Long, Product> products = loadProducts(items);
+        Map<UUID, Product> products = loadProducts(items);
         quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
             Product product = requireProduct(products, productId);
             product.restoreStock(totalQuantity);
@@ -72,8 +73,8 @@ public class InventoryDomainService implements DomainService {
     // region 内部方法
 
     /** 按 ID 集合批量加载商品（单次 IN 查询）。 */
-    private Map<Long, Product> loadProducts(List<OrderItem> items) {
-        List<Long> ids = items.stream().map(OrderItem::productId).distinct().toList();
+    private Map<UUID, Product> loadProducts(List<OrderItem> items) {
+        List<UUID> ids = items.stream().map(OrderItem::productId).distinct().toList();
         return productRepository.findAllById(ids).stream()
                 .collect(LinkedHashMap::new, (map, p) -> map.put(p.getId(), p), Map::putAll);
     }
@@ -82,10 +83,11 @@ public class InventoryDomainService implements DomainService {
      * 同商品订单项数量合并，并按 productId <strong>全局升序</strong>排列。
      *
      * <p><b>锁序约定</b>：TreeMap 天然升序迭代，使所有并发事务对 Product 的 UPDATE
-     * 遵循同一加锁顺序（见类级「锁序契约」）。
+     * 遵循同一加锁顺序（见类级「锁序契约」）。UUID 键的 compareTo 为全序一致比较，
+     * 跨事务锁序稳定性不受影响。
      */
-    private Map<Long, Integer> quantitiesByProduct(List<OrderItem> items) {
-        Map<Long, Integer> quantities = new TreeMap<>();
+    private Map<UUID, Integer> quantitiesByProduct(List<OrderItem> items) {
+        Map<UUID, Integer> quantities = new TreeMap<>();
         for (OrderItem item : items) {
             quantities.merge(item.productId(), item.quantity(), Integer::sum);
         }
@@ -97,7 +99,7 @@ public class InventoryDomainService implements DomainService {
      *
      * @throws BusinessException 商品不存在时
      */
-    private Product requireProduct(Map<Long, Product> products, Long productId) {
+    private Product requireProduct(Map<UUID, Product> products, UUID productId) {
         Product product = products.get(productId);
         if (product == null) {
             throw new BusinessException("product:err.notFound");

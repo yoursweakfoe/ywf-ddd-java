@@ -7,6 +7,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -59,7 +60,7 @@ public class OrderCO implements CO, Serializable {
 
         /** 商品 ID */
         @Schema(description = "商品 ID")
-        private Long productId;
+        private UUID productId;
 
         /** 购买数量 */
         @Schema(description = "购买数量")

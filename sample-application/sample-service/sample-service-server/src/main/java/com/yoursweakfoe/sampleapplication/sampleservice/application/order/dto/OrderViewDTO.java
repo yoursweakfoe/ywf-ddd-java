@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -54,7 +55,7 @@ public class OrderViewDTO implements ApplicationDTO, Serializable {
     private static final long serialVersionUID = 1L;
 
         /** 商品 ID */
-        private Long productId;
+        private UUID productId;
         /** 购买数量 */
         private int quantity;
         /** 单价 */

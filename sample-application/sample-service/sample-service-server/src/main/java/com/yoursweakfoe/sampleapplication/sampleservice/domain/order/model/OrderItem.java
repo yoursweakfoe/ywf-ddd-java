@@ -3,12 +3,13 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 import com.yoursweakfoe.common.ddd.domain.model.ValueObject;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * 订单项值对象 —— 描述订单中一条商品明细。
  */
 public record OrderItem(
-        Long productId,
+        UUID productId,
         int quantity,
         BigDecimal unitPrice
 ) implements ValueObject {

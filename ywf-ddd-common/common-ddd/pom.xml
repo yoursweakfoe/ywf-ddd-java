@@ -26,6 +26,13 @@
 
         <!-- ========== 领域层 ========== -->
 
+        <!-- JUG（java-uuid-generator）：RFC 9562 UUIDv7 生成（聚合身份铸造）。
+             纯工具库零传递依赖；版本经父 pom dependencyManagement 统一管理 -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+
         <!-- ========== 基础设施层 ========== -->
         <!-- MyBatis-Plus（Boot 4 专用 starter） -->
         <dependency>

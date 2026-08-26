@@ -14,6 +14,7 @@ import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     @Transactional(rollbackFor = Exception.class)
     public OrderDTO handle(PlaceOrderCommand command) {
         // 1. 批量加载商品（单次 IN 查询），以真实单价构建订单项
-        Map<Long, Product> products = productRepository.findAllById(productIds(command)).stream()
+        Map<UUID, Product> products = productRepository.findAllById(productIds(command)).stream()
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
         List<OrderItem> items = command.getItems().stream()
                 .map(dto -> new OrderItem(dto.getProductId(), dto.getQuantity(),
@@ -79,7 +80,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     // region 内部方法
 
     /** 去重后的商品 ID 集合（单次 IN 查询的输入）。 */
-    private List<Long> productIds(PlaceOrderCommand command) {
+    private List<UUID> productIds(PlaceOrderCommand command) {
         return command.getItems().stream()
                 .map(PlaceOrderCommand.OrderItemView::getProductId)
                 .distinct()
@@ -91,7 +92,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
      *
      * @throws BusinessException 商品不存在时
      */
-    private Product requireProduct(Map<Long, Product> products, Long productId) {
+    private Product requireProduct(Map<UUID, Product> products, UUID productId) {
         Product product = products.get(productId);
         if (product == null) {
             throw new BusinessException("product:err.notFound");
