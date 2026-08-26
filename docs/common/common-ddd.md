@@ -41,7 +41,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 
 Adapter 层入口同样以**空标记**定型角色：
 
-- `RestAdapter`（`common-ddd/adapter/rest/`）—— REST 入口适配器标记。业务 `XxxControllerImpl` 在实现 contract 的 `XxxController` 契约接口之外再实现之（contract 接口承载 HTTP 面，标记声明「adapter 层 REST 入口」身份，供 ArchUnit 识别）。不命名 `Controller`：与 contract 契约接口及 Spring `@Controller` 过宽/易混淆
+- `RestAdapter`（`common-ddd/adapter/rest/controller/`）—— REST 入口适配器标记。业务 `XxxControllerImpl` 在实现 contract 的 `XxxController` 契约接口之外再实现之（contract 接口承载 HTTP 面，标记声明「adapter 层 REST 入口」身份，供 ArchUnit 识别）。不命名 `Controller`：与 contract 契约接口及 Spring `@Controller` 过宽/易混淆。同类标记还有 `ScheduledAdapter`（`adapter/task/scheduler/`，定时任务入口）与 `IntegrationEventConsumer`（`adapter/event/consumer/`，MQ 入站），三者构成「协议伞 / 角色」两级式的对称包结构
 - `IntegrationEventConsumer`（`common-ddd/adapter/event/consumer/`）—— 集成事件入站消费者标记，与 application 层出站 `IntegrationEventPublisher` 对偶。当前为框架预留（common-mq 未建设，无实现类），模板见 `docs/application/cookbook/mq-consumer.md`
 
 ### 对象转换

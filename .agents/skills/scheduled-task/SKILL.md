@@ -12,8 +12,10 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 
 ## 步骤
 
-1. **adapter**：创建 `adapter/{agg}/scheduler/{Agg}{Action}Scheduler.java`
-   - `@Component` + `@Scheduled(cron = "...")`
+1. **adapter**：创建 `adapter/{agg}/task/scheduler/{Agg}{Action}Scheduler.java`
+   - **实现 `ScheduledAdapter` 标记**（`com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter`，
+     规则 R14a/R14b 强制；漏实现会被架构测试拦截）
+   - `@Component` + `@Scheduled(cron = "...")`（或平台化调度注解，如 `@XxlJob`）
    - 构造器注入 `{Agg}AppService`
    - 方法内：日志开始 → 透传 AppService → 日志结束（含处理数量）
    - **禁止**在 Scheduler 内写业务逻辑
@@ -32,13 +34,15 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 |---------|------|
 | 单实例 | 直接 @Scheduled，无需额外处理 |
 | 多实例 | 需分布式锁（ShedLock / Redis SETNX），防止重复执行 |
+| 平台化调度 | XXL-Job / ElasticJob 由调度中心统一触发，天然无重复执行 |
 | 复杂调度 | 考虑 XXL-Job / ElasticJob |
 
 > 框架不内置分布式锁，多实例时由业务自行引入。
 
 ## 验证
 
-- [ ] Scheduler 位于 `adapter/{agg}/scheduler/`
+- [ ] Scheduler 位于 `adapter/{agg}/task/scheduler/`
+- [ ] 实现 `ScheduledAdapter` 标记（R14a/R14b 通过）
 - [ ] 纯透传 AppService（无业务判断）
 - [ ] Handler 有 `@Transactional`
 - [ ] 启动类有 `@EnableScheduling`

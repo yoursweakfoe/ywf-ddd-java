@@ -22,7 +22,7 @@
 
 ```
 REST 请求
-  → adapter/rest/OrderControllerImpl（@RestController，参数包装）
+  → adapter/rest/controller/OrderControllerImpl（@RestController，参数包装）
     → application/order/service/OrderAppService（委托 Handler + Presenter 呈现）
       → application/order/handler/PayOrderHandler（编排领域逻辑）
         → domain/order/model/Order.pay()（业务规则 + 状态变迁）
@@ -69,7 +69,7 @@ public interface OrderController {
     OrderCO payOrder(@PathVariable("orderId") UUID orderId);
 }
 
-// adapter/rest/OrderControllerImpl.java（实现，仅标记协议 + 透传）
+// adapter/rest/controller/OrderControllerImpl.java（实现，仅标记协议 + 透传）
 @RestController
 public class OrderControllerImpl implements OrderController {
 

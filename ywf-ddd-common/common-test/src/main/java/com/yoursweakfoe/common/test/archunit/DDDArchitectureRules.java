@@ -316,14 +316,14 @@ public final class DDDArchitectureRules {
     /**
      * R8a —— 实现 {@code RestAdapter} 标记的类（adapter 层 REST 入口）必须位于 adapter 层。
      *
-     * <p>{@code RestAdapter}（common-ddd/adapter/rest/）为<strong>空标记</strong>，定型「REST
+     * <p>{@code RestAdapter}（common-ddd/adapter/rest/controller/）为<strong>空标记</strong>，定型「REST
      * 入口适配器」角色：纯透传 ApplicationService，不含业务逻辑。本规则保证被标记的组件
      * 不泄漏到其他层。空集时允许通过（业务服务可能暂无 REST 入口——通常不会）。
      */
     public static final ArchRule REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER =
             classes()
                     .that()
-                    .implement("com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter")
+                    .implement("com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter")
                     .should()
                     .resideInAPackage("..adapter..")
                     .allowEmptyShould(true)
@@ -340,7 +340,7 @@ public final class DDDArchitectureRules {
                     .that()
                     .haveSimpleNameEndingWith("ControllerImpl")
                     .should()
-                    .implement("com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter")
+                    .implement("com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter")
                     .allowEmptyShould(true)
                     .as("R8b 类名以 ControllerImpl 结尾的类必须实现 RestAdapter 标记（识别锚点用类型而非名字）");
 
@@ -513,4 +513,38 @@ public final class DDDArchitectureRules {
                     .resideInAPackage("..domain..repository..")
                     .allowEmptyShould(true)
                     .as("R13 QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口）");
+
+    /**
+     * R14a —— 实现 {@code ScheduledAdapter} 标记的类（adapter 层定时任务入口）必须位于 adapter 层。
+     *
+     * <p>{@code ScheduledAdapter}（common-ddd/adapter/task/scheduler/）为<strong>空标记</strong>，
+     * 定型「时间驱动入口」角色：{@code @Scheduled} 触发 → 透传 ApplicationService。
+     * 与 REST（R8）、MQ 入站（R9）并列的第三类 driving adapter。空集时允许通过
+     * （当前示例应用无定时任务实现，标记为框架预留，模板见 cookbook/scheduled-task.md）。
+     */
+    public static final ArchRule SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER =
+            classes()
+                    .that()
+                    .implement("com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter")
+                    .should()
+                    .resideInAPackage("..adapter..")
+                    .allowEmptyShould(true)
+                    .as("R14a 实现 ScheduledAdapter 标记的类必须位于 adapter 层（定时任务入口角色）");
+
+    /**
+     * R14b —— {@code ..scheduler..} 包下的<strong>非接口</strong>类必须实现 {@code ScheduledAdapter} 标记。
+     *
+     * <p>与 R8b/R9b 同理：识别定时任务入口用类型锚点而非包名猜测。排除接口自身
+     * （标记接口位于 {@code ..adapter.task.scheduler..}，接口不实现自己）。
+     */
+    public static final ArchRule SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED =
+            classes()
+                    .that()
+                    .resideInAPackage("..scheduler..")
+                    .and()
+                    .areNotInterfaces()
+                    .should()
+                    .implement("com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter")
+                    .allowEmptyShould(true)
+                    .as("R14b ..scheduler.. 包下的类必须实现 ScheduledAdapter 标记");
 }

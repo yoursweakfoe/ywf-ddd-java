@@ -27,7 +27,7 @@
 
 ```
 REST 请求（PlaceOrderCommand）
-  → adapter/rest/OrderControllerImpl
+  → adapter/rest/controller/OrderControllerImpl
     → application/order/service/OrderAppService
       → application/order/handler/RetryablePlaceOrderHandler（乐观锁冲突重试包装，见 optimistic-lock-retry.md）
         → application/order/handler/PlaceOrderHandler（复杂用例，跨 2 个聚合，@Transactional）

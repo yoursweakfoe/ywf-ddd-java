@@ -21,7 +21,7 @@ CQRS 读写分离：写侧需要聚合根是因为要调用行为方法（`order
 
 ```
 REST 请求
-  → adapter/rest/OrderControllerImpl（参数包装）
+  → adapter/rest/controller/OrderControllerImpl（参数包装）
     → application/order/service/OrderAppService（委托 + 呈现）
   → application/order/handler/GetOrderHandler（查询编排）
     → application/order/repository/application/OrderQueryRepository（读端口）
@@ -87,7 +87,7 @@ public interface OrderController {
     OrderCO getOrder(@PathVariable("orderId") UUID orderId);
 }
 
-// adapter/rest/OrderControllerImpl.java（实现，仅标记协议 + 透传）
+// adapter/rest/controller/OrderControllerImpl.java（实现，仅标记协议 + 透传）
 @RestController
 public class OrderControllerImpl implements OrderController {
 

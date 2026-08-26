@@ -30,7 +30,7 @@ sample-service/
 │       └── dto/event/integration/PaymentCreatedIntegrationEvent.java  ← ⑤ 集成事件（可选）
 │
 └── sample-service-server/src/main/java/.../
-    ├── adapter/rest/
+    ├── adapter/rest/controller/
     │   └── PaymentControllerImpl.java           ← ⑥ Controller 实现（REST 入口）
     ├── application/payment/
     │   ├── PaymentAppService.java               ← ⑦ AppService
@@ -118,7 +118,9 @@ public class PaymentCreatedIntegrationEvent implements IntegrationEvent, Seriali
 ## ⑥ Adapter — Controller 实现
 
 ```java
-// adapter/rest/PaymentControllerImpl.java（实现，仅标记协议 + 透传）
+// adapter/rest/controller/PaymentControllerImpl.java（实现，仅标记协议 + 透传）
+// 注意：实现类需追加实现 ScheduledAdapter 同族的 RestAdapter 标记
+// （com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter，规则 R8a/R8b）
 @RestController
 public class PaymentControllerImpl implements PaymentController {
 

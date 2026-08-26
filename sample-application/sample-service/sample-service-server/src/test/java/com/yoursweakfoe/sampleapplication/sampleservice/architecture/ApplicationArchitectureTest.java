@@ -135,6 +135,16 @@ class ApplicationArchitectureTest {
     static final ArchRule r9b_event_consumer_package_marked =
             DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
 
+    /** R14a —— 实现 ScheduledAdapter 标记的类必须位于 adapter 层。 */
+    @ArchTest
+    static final ArchRule r14a_scheduled_entries_marked_in_adapter =
+            DDDArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+
+    /** R14b —— ..scheduler.. 包下的类必须实现 ScheduledAdapter 标记。 */
+    @ArchTest
+    static final ArchRule r14b_scheduler_package_marked =
+            DDDArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
+
     /** R10a —— 实现 ApplicationDTO 标记的类必须位于 application 层。 */
     @ArchTest
     static final ArchRule r10a_application_dtos_marked_in_application =

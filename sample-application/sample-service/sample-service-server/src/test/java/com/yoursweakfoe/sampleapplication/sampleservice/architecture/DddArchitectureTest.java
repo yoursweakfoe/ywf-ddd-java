@@ -72,4 +72,12 @@ class DddArchitectureTest {
 
     @ArchTest
     static final ArchRule r10b = DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+
+    // 同上：框架包自身无 scheduler 实现类（标记接口位于 common-ddd/adapter/task/scheduler/..），
+    // 挂载以守护「scheduler 包结构 = 标记接口 + 被标记实现」不被破坏。
+    @ArchTest
+    static final ArchRule r14a = DDDArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+
+    @ArchTest
+    static final ArchRule r14b = DDDArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
 }

@@ -18,7 +18,7 @@
 
 ```
 REST 请求（BatchConfirmOrderCommand）
-  → adapter/rest/OrderControllerImpl
+  → adapter/rest/controller/OrderControllerImpl
     → application/order/service/OrderAppService
       → application/order/handler/BatchConfirmOrderHandler
         → 循环：repository.findById → order.confirm()

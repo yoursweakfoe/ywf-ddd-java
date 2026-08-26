@@ -1,6 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest;
+package com.yoursweakfoe.sampleapplication.sampleservice.adapter.rest.controller;
 
-import com.yoursweakfoe.common.ddd.adapter.rest.RestAdapter;
+import com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.service.ProductAppService;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
