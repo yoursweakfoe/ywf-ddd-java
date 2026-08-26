@@ -373,6 +373,10 @@ public abstract class MybatisPlusPersistence<
      * {@link #removeDomainByIds(Collection, Function)} 事件工厂重载。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
+     *
+     * <p><b>删除语义</b>：BEST_EFFORT——部分 ID 不存在时<b>静默跳过</b>（不报错、不发事件），
+     * 仅当全部 ID 均不存在时才抛异常。若需 STRICT 语义（任一不存在即报错），
+     * 请逐条调用 {@link #removeDomainById(Serializable)}。
      */
     public void removeDomainByIds(Collection<ID> ids) {
         if (ids == null || ids.isEmpty()) {
@@ -382,6 +386,10 @@ public abstract class MybatisPlusPersistence<
         int rows = baseMapper.deleteByIds(poIds);
         if (rows == 0) {
             throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + ids);
+        }
+        if (rows < poIds.size()) {
+            log.warn("Batch DELETE partially succeeded: requested={}, deleted={}, skipped={}",
+                    poIds.size(), rows, poIds.size() - rows);
         }
     }
 
