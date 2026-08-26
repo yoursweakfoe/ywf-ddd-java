@@ -21,8 +21,9 @@ import java.util.List;
  * 任何层         → Page（MyBatis-Plus）       ✗ 框架泄漏
  * </pre>
  *
- * <p>本类是不可变容器（record），对内部元素的清洗/转换由 Presenter 负责（逐条 map），
- * 不需要修改容器本身。
+ * <p>本类是不可变容器（record），且该承诺由类型强制：构造时对 {@code records} 做
+ * 防御性拷贝并归一化 null（见紧凑构造器），{@code records()} 返回的列表不可修改。
+ * 对内部元素的清洗/转换由 Presenter 负责（逐条 map），不需要修改容器本身。
  *
  * <h3>使用示例</h3>
  *
@@ -47,22 +48,16 @@ public record PageResult<T>(
         int pageSize
 ) {
 
-    /** 总页数 */
-    public int totalPages() {
-        if (pageSize <= 0) {
-            return 0;
-        }
-        return (int) Math.ceil((double) total / pageSize);
-    }
-
-    /** 是否有下一页 */
-    public boolean hasNext() {
-        return pageNum < totalPages();
-    }
-
-    /** 是否有上一页 */
-    public boolean hasPrevious() {
-        return pageNum > 1;
+    /**
+     * 紧凑构造器 —— 防御性拷贝（audit F-06）：不可变承诺由类型强制，而非调用方约定。
+     *
+     * <p>{@code List.copyOf} 对 JDK 不可变实现（如 {@code Stream.toList()} 产物）
+     * 原样返回自身——现有构造路径零额外分配；仅对可变输入付 O(n) 拷贝
+     * （页大小受 {@link PageableQuery} 上游钳制，量级可忽略）。
+     * null 入参归一为空列表；注意 {@code copyOf} 拒绝 null 元素——分页记录不应包含 null。
+     */
+    public PageResult {
+        records = records == null ? List.of() : List.copyOf(records);
     }
 
     /**

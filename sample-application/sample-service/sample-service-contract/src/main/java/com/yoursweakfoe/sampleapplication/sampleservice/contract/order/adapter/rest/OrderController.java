@@ -127,7 +127,7 @@ public interface OrderController {
      * <p>查询条件经 URL 查询参数绑定（GET 语义友好：可缓存、可书签、对网关/客户端无请求体兼容性问题）。
      *
      * @param query 分页查询条件（status / customerId / pageNum / pageSize 均为可选查询参数）
-     * @return 分页结果（records 为订单概览 + total / pageNum / pageSize / totalPages 分页元数据）
+     * @return 分页结果（records 为订单概览 + total / pageNum / pageSize 分页元数据）
      */
     @Operation(summary = "分页查询订单列表", description = "返回精简字段的订单概览列表（含分页元数据），不含订单项明细")
     @GetMapping("/page")
