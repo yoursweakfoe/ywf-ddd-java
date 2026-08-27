@@ -24,6 +24,11 @@ class DddArchitectureTest {
     /**
      * R1 本地覆写：在标准四层基础上增加 Configuration 层，
      * 容纳 {@code MybatisPlusDddAutoConfiguration} 等根包自动配置类，避免其跨层引用被误报。
+     *
+     * <p>Application 允许被 Infrastructure 访问：与通用 R1 的依赖倒置语义对齐——
+     * 应用层端口由基础设施层实现（读侧 {@code QueryRepository} 先例；全链路 Outbox 后
+     * 新增捕获端口 {@code IntegrationEventOutboxStore}（application/event/outbox）
+     * 由 {@code JdbcIntegrationEventOutboxStore}（infrastructure/event/outbox）实现）。
      */
     @ArchTest
     static final ArchRule r1 = Architectures.layeredArchitecture()
@@ -32,7 +37,8 @@ class DddArchitectureTest {
             .layer("Domain").definedBy("..domain..")
             .layer("Infrastructure").definedBy("..infrastructure..")
             .layer("Configuration").definedBy("com.yoursweakfoe.common.ddd")
-            .whereLayer("Application").mayOnlyBeAccessedByLayers("Configuration")
+            .whereLayer("Application").mayOnlyBeAccessedByLayers(
+                    "Configuration", "Infrastructure")
             .whereLayer("Infrastructure").mayOnlyBeAccessedByLayers(
                     "Application", "Configuration")
             .as("R1 DDD 三层依赖方向 + Configuration 层");

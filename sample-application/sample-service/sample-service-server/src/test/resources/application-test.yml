@@ -28,3 +28,14 @@ mybatis-plus:
       id-type: auto
   configuration:
     map-underscore-to-camel-case: true
+
+# Outbox 排空调度在测试中整体静默：排空一律由测试显式调用 drain(n) 驱动（确定性接缝）。
+# 背景：H2 的 FOR UPDATE SKIP LOCKED 在认领行时会锁住整张表的扫描范围，
+# 后台调度线程与测试线程并发认领会互相饿死；关掉调度后排空单线程串行，行为完全确定。
+# 注：Spring cron 仅支持 6 段；清除计划推到 2 月 29 日（仅闰年存在）≈ 永不触发。
+ywf:
+  ddd:
+    outbox:
+      relay:
+        fixed-delay: 999999999
+        purge-cron: "0 0 3 29 2 *"

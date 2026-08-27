@@ -21,13 +21,15 @@
 | DTO | — | Application 层内部视图对象（`application/{agg}/dto/`），写侧/读侧均实现 `ApplicationDTO` 标记接口（common-ddd），与 contract 层 `CO` 标记对偶（内部可含 version/审计，对外经 Presenter 清洗） |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口与 `RestAdapter` 标记接口（common-ddd），spring-web 注解声明 REST 路径，纯透传 AppService |
 | RestAdapter | — | common-ddd 空标记接口，定型「REST 入口适配器」角色（Ports & Adapters 的 driving adapter），供 ArchUnit R8a/R8b 识别与约束 |
-| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外；经框架 Outbox 在业务事务提交后可靠投递（at-least-once）。"进程内我告诉自己人" |
-| IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它 |
-| DomainEventListener | — | Application 层组件，实现 `DomainEventListener` 标记接口（common-ddd），监听领域事件（@EventListener）执行域内反应。投递发生在业务事务提交后（无活动事务），带库写的副作用自带 `REQUIRES_NEW`。薄编排：接事件 → 加载聚合 → 委托 DomainService/Publisher |
-| IntegrationEventPublisher | — | common-ddd 空标记接口（`application/event/publisher/`），定型「集成事件出站 Publisher」角色，供 ArchUnit R7b/R7c 识别；与 domain 层进程内 `DomainEventPublisher`（带方法签名）划清边界 |
+| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外；强制经框架 Outbox 同事务捕获，由排空器在自有事务内可靠投递（at-least-once，幂等键 = eventId）。"进程内我告诉自己人" |
+| IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它；出站强制经集成 Outbox 捕获后由框架排空器投递（幂等键 = messageId = outbox 行 id） |
+| DomainEventListener | — | Application 层组件，实现 `DomainEventListener` 标记接口（common-ddd），监听领域事件（@EventListener）执行域内反应。投递发生在框架排空器事务内，带库写的副作用用普通 `@Transactional` 加入该事务（禁用 REQUIRES_NEW / @Async）。薄编排：接事件 → 加载聚合 → 委托 DomainService/Publisher |
+| IntegrationEventPublisher | — | common-ddd 空标记接口（`application/event/publisher/`），定型「集成事件出站 Publisher」角色（翻译 + 同事务捕获入集成 Outbox，不直发 MQ），供 ArchUnit R7b/R7c 识别；与 domain 层进程内 `DomainEventPublisher`（带方法签名）划清边界 |
 | ApplicationDTO | — | common-ddd 空标记接口（`application/dto/`），定型「应用层内部视图」角色（写侧 DTO + 读侧 DTO），供 ArchUnit R10a/R10b 识别；与 contract 层 `CO` 标记对偶 |
-| Publisher | — | Application 层组件，将领域事件翻译为集成事件并投递 MQ |
-| Outbox | — | Transactional Outbox（common-ddd `infrastructure/event/outbox/`）：框架只提供捕获契约（`OutboxStore` SPI）+ 编解码工具（`DomainEventCodec`），**无缺省实现**——实现、排空 / 重试 / 死信归业务或生态方案（MQ 事务消息 / CDC / Modulith EPR）。参考表结构 `sql/ddd_outbox.example.sql`。投递语义 at-least-once，消费端按 eventId 幂等。业务未提供 `OutboxStore` 时回退直发路径 |
+| Publisher | — | Application 层组件（`application/{agg}/event/publisher/`），将领域事件翻译为集成事件并经 `IntegrationEventOutboxStore` 同事务捕获入集成 Outbox；不直发 MQ，实际投递归框架排空器 |
+| Outbox | — | Transactional Outbox，全链路 Outbox 可靠性规范（common-ddd `infrastructure/event/outbox/`，ADR-0008）：领域事件与集成事件**强制**经 Outbox 投递。捕获：与业务写入同事务入箱（`ddd_domain_event_outbox` / `ddd_integration_event_outbox` 两张标准表，缺省 JDBC 实现，无 Outbox Bean 时 fail-fast 回滚业务写入）；投递：框架排空器认领 → 派发 → 标记完成，失败退避重投、超限转死信。投递语义 at-least-once，消费端按 eventId / messageId 幂等。不存在直发降级路径 |
+| 排空器（OutboxRelay） | — | 框架排空引擎（common-ddd `infrastructure/event/outbox/scheduler/`）：轮询 outbox 表，每行一个 REQUIRES_NEW 事务——`FOR UPDATE SKIP LOCKED` 认领 → 派发 → `is_delete=TRUE` 标记完成。领域实例经 `DomainEventPublisher` 进程内派发，集成实例经 `IntegrationEventSender` 投 MQ；`OutboxRelayScheduler`（@Scheduled 轮询 + 每日清除）统一驱动，是框架管线而非业务 ScheduledAdapter |
+| IntegrationEventSender | — | 框架 MQ 投递接缝 SPI（common-ddd `infrastructure/event/outbox/`）：集成排空器认领一行后调用实现投递，成功后才标记完成。common-mq 未建设，样例以 `LoggingIntegrationEventSender` 日志占位 |
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
 | PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |

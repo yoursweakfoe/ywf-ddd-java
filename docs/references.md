@@ -41,7 +41,7 @@
 | Customer-Supplier (Evans) | contract jar 是消费方唯一依赖；CO 变更需协调消费方（Breaking Change） |
 | Published Language (Evans) | contract 模块即跨上下文共享语言：CQE / CO / IntegrationEvent 是发布方与消费方的共同词汇表，避免逐点翻译 |
 | Context Map 策略集 | 已知策略显式定档：Shared Kernel（common-contract/ common-ddd）、Customer-Supplier（contract jar）。Conformist（顺从外部模型）/ Open Host Service / Anti-Corruption 的上下文级 Partner 关系**按需在业务上下文引入**（当前无此场景，不预设）；Separate Ways（无协作上下文）默认为未协作服务的常态 |
-| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》「一事务一聚合实例」经验法则：用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast——任一聚合校验失败整体回滚，以 PO `@Version` 乐观锁防超卖替代事件补偿；事后副作用（取消订单回补库存）走提交后最终一致——框架经 Outbox 同事务捕获事件（跨崩溃不丢），投递由业务排空器承担（at-least-once，消费端幂等）。跨服务一致性由 Seata + HTTP 显式调用承担。不采纳「先建单再异步扣库存」：会引入『单建成而库存未扣』的中间态难题，用户体验与实现复杂度双输 |
+| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》「一事务一聚合实例」经验法则：用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast——任一聚合校验失败整体回滚，以 PO `@Version` 乐观锁防超卖替代事件补偿；事后副作用（取消订单回补库存）走最终一致——框架经 Outbox 同事务捕获事件（跨崩溃不丢），框架排空器在自有事务内投递（at-least-once，消费端幂等）。跨服务一致性由 Seata + HTTP 显式调用承担。不采纳「先建单再异步扣库存」：会引入『单建成而库存未扣』的中间态难题，用户体验与实现复杂度双输 |
 
 **未采纳：**
 
@@ -53,7 +53,7 @@
 | 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（ADR-0001）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，cookbook 提供复制粘贴示例 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略，MyBatis-Plus 场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
-| 领域事件异步/跨进程发布 | Axon Framework、EventStoreDB、Kafka + Outbox | 当前为进程内 Spring Event；跨服务通过 Seata + HTTP 显式调用，不引入 MQ 耦合 |
+| 领域事件异步/跨进程发布 | Axon Framework、EventStoreDB、Kafka + Outbox | 领域事件保持进程内（框架 Outbox 同事务捕获 + 排空器在自有事务内进程内派发，见 common-ddd.md ADR-0008）；跨服务经集成事件 + 集成 Outbox（MQ 实现待 common-mq），同步调用走 Seata + HTTP |
 
 ### CQRS 与事件架构
 
@@ -63,6 +63,7 @@
 |------|--------|
 | CQRS (Greg Young) | Command / Query / IntegrationEvent 三通道分离；写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 同居契约层，框架级分页 |
 | Integration Event / EDA | 领域事件（进程内）→ 集成事件（跨服务 MQ）；DomainEvent vs IntegrationEvent 方向对偶 |
+| Outbox 模式（可靠事件发布） | Chris Richardson、Debezium、Microsoft eShop 的标准解法，框架自给全链路管线（全链路 Outbox 可靠性规范，common-ddd.md ADR-0008）：领域 / 集成事件强制同事务捕获入两张标准表，框架排空器（`OutboxRelay`）认领 → 派发 → 标记完成，退避重试 / 死信 / 保留期清除；监听器加入排空事务原子提交；投递语义 at-least-once，消费端按 eventId / messageId 幂等 |
 | 标记接口定型体系 | 空标记接口 + ArchUnit 锚点：RestAdapter / ApplicationDTO / DomainEventListener / IntegrationEventPublisher / IntegrationEventConsumer / QueryRepository 各定型一层角色（REST 入口 / 应用层内部视图 / 域内反应监听器 / 集成事件出站 / 集成事件入站 / 读端口），供架构规则按类型锚点识别与约束（非包名猜测） |
 | Saga / Process Manager | 无主长流程引入独立 Saga 服务，不在业务服务内塞入跨服务编排 |
 
@@ -72,7 +73,7 @@
 |------|---------|----------|
 | Mediator / Dispatcher (MediatR) | MediatR (.NET)、Spring Modulith、COLA ExtensionExecutor | Handler 数量少时直接注入更简单透明；引入 Mediator 增加间接层但无实际收益 |
 | Event Sourcing | Axon Framework、EventStoreDB、Greg Young | 当前业务无审计回放 / 时间旅行需求；CRUD + 乐观锁已满足 |
-| Outbox 模式（可靠事件发布） | Chris Richardson、Debezium、Microsoft eShop | 领域事件为进程内 Spring Event；跨服务通过 Seata + HTTP 调用，无需消息中间件配套 |
+| Outbox 生态替代方案（RocketMQ 事务消息 / Debezium CDC / Modulith EPR） | RocketMQ、Debezium、Spring Modulith | 框架已自给标准表 + 排空器 + SPI 接缝的基线管线（ADR-0008）；生态方案仍是拓扑定型后的可替换选项（经 `@ConditionalOnMissingBean` / SPI 顶替），不作为首发机制 |
 | 读模型投影 / 物化视图 | Greg Young CQRS、EventStoreDB、Axon | CQRS 读侧直接通过 Repository 投影 DTO，数据量未达需要物化视图的规模 |
 | Change Data Capture (CDC) | Debezium、Canal、Maxwell | 无事件溯源 / 实时同步需求，不引入额外中间件 |
 | 事件存储 (Event Store) | EventStoreDB、Axon Server | 非 Event Sourcing 架构，无事件持久化重放需求 |

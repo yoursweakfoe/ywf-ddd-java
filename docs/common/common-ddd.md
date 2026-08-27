@@ -33,7 +33,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `Query` | `QueryHandler<Q, R>` | 请给我这个 | **R** |
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
 
-> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher 投递 MQ。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架提供 `application/event/listener|publisher/` 下的两个**空标记接口**定型该角色（见「领域事件」节）。
+> `IntegrationEvent`（common-contract）在本包无对应 Handler 接口：入站经 adapter 层 Consumer 反序列化 → 构建 Command → 透传 CommandHandler；出站经 application 层 Publisher **翻译 + 同事务捕获入集成 Outbox**，实际投 MQ 由框架集成排空器（`OutboxRelay` 集成实例）承担。领域事件的进程内反应由业务侧 `DomainEventListener`（`@EventListener`）承担，框架提供 `application/event/listener|publisher/` 下的两个**空标记接口**定型该角色（见「领域事件」节）。
 
 `PageResult<T>` 是框架级分页容器（record），定义在 **contract 层**（与 `PageableQuery` 同居 `dto/query`），隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。服务端 application（读端口 / Handler / AppService）与 infrastructure（读实现装填）均使用它，消费方从 common-contract 直接拿到分页元数据（records / total / pageNum / pageSize）。
 
@@ -71,87 +71,102 @@ Adapter 层入口同样以**空标记**定型角色：
 
 - `DomainEvent` — 事件基类（eventId + occurredOn，字段 `private final` 不可变）
 - `DomainEventPublisher` — 发布契约接口
-- `InProcessDomainEventPublisher` — 桥接 Spring `ApplicationEventPublisher`，进程内同步发布（位于 `infrastructure/event/domain/`）
+- `InProcessDomainEventPublisher` — 桥接 Spring `ApplicationEventPublisher`，进程内同步发布（位于 `infrastructure/event/domain/`）；由框架领域排空器在**其自有事务内**调用
 - `DomainEventListener` — application 层域内反应监听器**空标记接口**（`application/event/listener/`）：定型「消费内部领域事件（Spring Event）」的角色，与 adapter 层处理外部集成事件的 Consumer 划清边界
-- `IntegrationEventPublisher` — application 层集成事件出站 Publisher **空标记接口**（`application/event/publisher/`）：定型「翻译领域事件 → 契约 IntegrationEvent → 投递 MQ」的角色，与 domain 层进程内发布的 `DomainEventPublisher` 划清边界
+- `IntegrationEventPublisher` — application 层集成事件出站 Publisher **空标记接口**（`application/event/publisher/`）：定型「翻译领域事件 → 契约 IntegrationEvent → **同事务捕获入集成 Outbox**」的角色（不直发 MQ），与 domain 层进程内发布的 `DomainEventPublisher` 划清边界
 
-事件仅 AggregateRoot 可注册，仓储自动发布（opt-in 点是 `registerEvent()`），先落库后发事件 + 先清后发。
+事件仅 AggregateRoot 可注册，仓储持久化后自动冲刷（opt-in 点是 `registerEvent()`），先落库后冲刷 + 先清后捕，捕获经 Outbox 与业务写入同事务（见下节）。
 
-> **边界**：领域事件仅进程内消费（受众为 `DomainEventListener` 标记的域内反应监听器）。集成事件（IntegrationEvent）的收发不在本模块：出站由 application 层 `IntegrationEventPublisher` 标记的 Publisher 投递 MQ（依赖 common-mq），入站由 adapter 层 Consumer 接收。
+> **边界**：领域事件仅进程内消费（受众为 `DomainEventListener` 标记的域内反应监听器），但捕获与投递的可靠性由本模块的全链路 Outbox 承担。集成事件（IntegrationEvent）的**契约**在 common-contract、**翻译 + 捕获**在 application 层 Publisher，**MQ 投递**由本模块集成排空器经 `IntegrationEventSender` 接缝完成（MQ 实现依赖 common-mq，当前样例日志占位），**入站**由 adapter 层 Consumer 接收。
 
-### 领域事件 Outbox：同事务捕获契约（框架领地）+ 实现与投递全部归业务
+### 全链路 Outbox 可靠性规范：领域事件 + 集成事件强制经 Outbox 投递
 
 进程内直发（发布即弃）无法跨越「提交后进程崩溃 / 监听器失败」的丢失窗口。Transactional
-Outbox 是业界标准解法，但它的两半**可靠性来源完全不同**（audit F-04 收口时据此划定领地）：
+Outbox 是业界标准解法。本框架的定档（audit F-04 收口，ADR-0007 → ADR-0008 反转定稿）：
+**每一条领域事件、每一条集成事件，都强制经 Outbox 投递；捕获与排空的完整管线由框架交付**，
+业务侧只写「域内反应」与「翻译」两段业务语义。
 
-- **捕获（capture）**——事件与业务写入同事务落表。这是 outbox 的可靠性根基，
-  框架只给出**契约**（`OutboxStore` SPI，`infrastructure/event/outbox/`）：
-  「聚合状态已提交 ⇒ 事件必然已落库；业务回滚 ⇒ 事件随行回滚」；
-- **捕获的实现与投递**——表结构、序列化、扫表、认领、派发、重试、死信**全部归业务侧**。
-  框架不提供任何缺省实现、不内置投递器。
+**两段管线**：
 
 ```
-聚合持久化（业务事务内）
-  → DomainEventFlusher 快照事件、清空暂存（先清后发）
-  → OutboxStore.appendAll：业务实现将事件写入自己的消息表（与业务写入同事务——可靠性锚点）
-  ★ 框架领地到此为止（契约 + 编解码工具）
-业务事务提交后（业务领地）
-  → 业务排空器 / 生态方案：认领 → 反序列化并重建事件身份 → 发布
-    → 成功删行；失败不删行（标记重试），重试耗尽转死信留表
+捕获（与业务写入同事务——可靠性锚点）
+  领域事件：聚合 registerEvent → 仓储 save/update → DomainEventFlusher 先清后捕
+            → DomainEventOutboxStore.appendAll → ddd_domain_event_outbox
+  集成事件：DomainEventListener（排空事务内）调用 Publisher 翻译
+            → IntegrationEventOutboxStore.appendAll → ddd_integration_event_outbox
+            （行 id = 新铸 UUID = 未来 MQ messageId；source_event_id = 源领域事件 eventId）
+
+投递（框架排空器，at-least-once）
+  OutboxRelay（每行一个 REQUIRES_NEW 事务）：
+    认领（ORDER BY occurred_on LIMIT 1 FOR UPDATE SKIP LOCKED）
+    → 派发 → UPDATE is_delete=TRUE（标记完成）→ 提交
+  领域实例：经 codec 重建事件身份 → DomainEventPublisher 进程内派发（监听器加入本事务）
+  集成实例：构造 OutboxEnvelope → IntegrationEventSender 投 MQ
+  失败：attempts++、指数退避重投；超限转 DEAD（死信留表）
+  已软删行过保留期后每日物理清除
 ```
 
-**为什么框架连缺省实现都不提供**：
+**fail-fast（事件强制要求 Outbox）**：聚合注册了事件但容器中无 `DomainEventOutboxStore`
+Bean 时，`DomainEventFlusher` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
+要么带上 Outbox。**不存在静默丢弃，也不存在直发降级路径。**
 
-1. 真实业务会按查询效率 / 单表洁净拆出**多张消息表**（按领域、甚至按业务环节），各表列结构
-   与处理机制互不相通——通用缺省表是伪需求，留着只会让人误以为「框架那张表能直接用于生产」；
-2. 投递侧生态已有成熟方案，按拓扑对号入座，自研通用版是最没有价值的一环：
+**两张标准表**（PG 规范 DDL 随框架发行：`common-ddd/src/main/resources/sql/`）：
 
-   | 投递拓扑 | 成熟方案 |
-   |---|---|
-   | MQ 出站（本栈方向） | **RocketMQ 事务消息**（半消息 + 本地事务 + broker 回查，relay 职责被 broker 吞掉） |
-   | Kafka 系 | Debezium / CDC 尾日志（经典 Transactional Outbox 的工业级形态） |
-   | 进程内可靠监听 | Spring Modulith 事件发布注册表（event publication registry） |
-
-3. 本仓 common-mq 未建设、拓扑未定——此刻造实现就是赌未知数（规则 04：「以后可能用到」不是理由）。
-
-**统一信封标准（`DomainEventCodec` 定义的捕获侧约定）**：无论业务的表怎么拆、列怎么设计，
-捕获与投递之间只有一条跨边界约定——信封四元组：
-
-| 元素 | 含义 | 业界对照 |
+| 表 | 信封列 | 其余 |
 |---|---|---|
-| `id` = `eventId` | 幂等键与行身份合一（at-least-once 去重锚点） | Debezium/Apicurio outbox 的 `id`；Modulith 的 publication `id` |
-| `eventType` | 事件类全限定名，反序列化锚点 | Modulith `eventType`；Debezium `type` |
-| `payload` | 事件 JSON 载荷（字段级捕获，不依赖 getter 惯例） | 各家一致的 `payload`/`serializedEvent` 列 |
-| `occurredOn` | 事件发生时间（UTC） | Modulith `publicationDate` |
+| `ddd_domain_event_outbox` | `id = eventId`（幂等键与行身份合一）/ `event_type`（类全限定名）/ `payload`（JSON，TEXT 存储）/ `occurred_on`（UTC） | 簿记列（`attempts`/`next_retry_at`/`status`/`last_error`，形状由 `OutboxRelay` 钉死）+ 本仓标准结构列（`version`/`create_at`/`update_at`/`created_by`/`updated_by`/`is_delete`） |
+| `ddd_integration_event_outbox` | 同上 + `source_event_id`（源领域事件 eventId 血缘；入站再发出为 NULL） | 同上 |
 
-参考表结构随框架发行：`common-ddd/src/main/resources/sql/ddd_outbox.example.sql`
-（注意是 **example**——与本仓表标准对齐：信封列 + 簿记列 + `version`/`create_at`/`update_at`/
-`created_by`/`updated_by`/`is_delete` 标准结构，载荷用原生 `JSONB`，`last_error` 为 `TEXT`，
-认领索引为排除软删行的部分索引；文末附 payload > 2KB 的三种容量策略）。
-簿记列（`attempts`/`next_retry_at`/`status`/`last_error`）**不构成标准**：业界 relay 型表
-普遍携带此类列（认领租约 / 重试计数 / 状态枚举），但具体形状由排空器自定——Modulith 甚至
-按「事件 × 监听器」粒度记录完成状态（`listenerId` + `completionAttempts`），正说明簿记语义
-不该由框架钉死。
+载荷用 `TEXT` 而非 `JSONB`：缺省实现以一条可移植 INSERT 写入（字符串绑定），框架从不
+查询载荷内部字段，跨 H2（测试）/ PostgreSQL（生产）一致；需在库内查询载荷字段时经 SPI
+替换实现（见 DDL 文末说明，含 payload > 2KB 的容量策略）。
 
-**投递语义与监听器契约**：
+**监听器契约（关键反转）**：派发发生在排空器事务内（**有活动事务**），因此——
 
-- **at-least-once**：崩溃恢复 / 并发认领下同一事件可能重复投递，消费端以 `eventId` 幂等去重（固有语义，框架不做 exactly-once）
-- **监听器只在业务事务提交之后执行**（无活动事务）：一律用普通 `@EventListener`，不要用 `@TransactionalEventListener(AFTER_COMMIT)`（无事务可挂靠，默认不执行）；监听器内数据库写入须自带 `@Transactional(propagation = REQUIRES_NEW)`
-- 监听器抛异常不回滚业务事务（已提交）；排空器对失败条目「不删行」即天然重投——补偿型副作用（如取消订单回补库存）不再「失败只落日志」
+- 监听器一律用普通 `@EventListener`；带数据库写入的副作用用普通 `@Transactional`
+  （REQUIRED，**加入**排空事务）——「内部反应 + 集成入箱 + 标记完成」原子提交
+- **禁用 `REQUIRES_NEW` 与 `@Async`**——二者都会撕碎上述原子性，重试时产生双份副作用
+- 监听器不做任何非事务副作用（HTTP 调用 / 直发 MQ）——对外通知一律经集成 Outbox 捕获
+- 监听器抛异常向上传播 → 排空事务回滚 → 行保持待投 → 退避重投；补偿型副作用
+  （如取消订单回补库存）不再「失败只落日志」
+
+**投递语义与身份契约**：
+
+- **at-least-once**：崩溃恢复 / 并发认领下同一事件可能重复投递，消费端按身份幂等去重
+  （领域 = `eventId`，经 codec 身份重建跨重投稳定；集成 = `messageId` = outbox 行 id）。
+  框架不做 exactly-once，跨服务精确性依赖消费端幂等契约
+- **顺序**：尽力 FIFO（按 `occurred_on` 认领）；退避重试可能乱序
 - 业务回滚则入箱事件随行回滚（同事务），绝不会出现「状态未提交而事件已发出」
-- 多实例部署：排空入口的互斥（分布式锁 / 平台化调度单点执行）业务自担，重复投递由消费端幂等兜底
+- 多实例部署：认领经 `FOR UPDATE SKIP LOCKED` 天然互斥（行级），无需分布式锁
 
 **框架交付物**（详见类 Javadoc）：
 
-- `OutboxStore` —— 捕获 SPI，唯一方法 `appendAll(List<DomainEvent>)`，同事务义务写在契约里。业务提供该 Bean 即激活捕获路径（`DomainEventFlusher` 经 `ObjectProvider` 自动接入）；未提供则事件回退直发路径（提交后进程内派发，at-most-once）
-- `DomainEventCodec` —— 载荷格式自持（专用 `JsonMapper`，不随应用级序列化配置漂移），反序列化后以行身份重建 `eventId`/`occurredOn`（幂等键跨重投稳定）；自动配置注册为 Bean，业务的捕获实现与排空器共用。消费方事件重放依赖构造器参数名绑定：编译开启 `-parameters`（spring-boot-starter-parent 默认）或提供 `protected` 无参构造器
-- `sql/ddd_outbox.example.sql` —— 参考表结构（见上）
+- `DomainEventOutboxStore` —— 领域捕获 SPI（唯一方法 `appendAll(List<DomainEvent>)`，
+  同事务义务写在契约里）；缺省实现 `JdbcDomainEventOutboxStore`（经 `JdbcTemplate`
+  复用事务绑定连接写 `ddd_domain_event_outbox`）
+- `IntegrationEventOutboxStore` —— 集成捕获端口，定义在**应用层**（domain 不得依赖
+  contract、infrastructure 不得回调应用组件，与读侧 `QueryRepository` 端口同构）；
+  缺省实现 `JdbcIntegrationEventOutboxStore`（`infrastructure/event/outbox/`）
+- `OutboxRelay` —— 排空引擎（`infrastructure/event/outbox/scheduler/`），
+  `OutboxAutoConfiguration` 装配领域 / 集成两个实例；`OutboxRelayScheduler`
+  （`@Scheduled(fixedDelay)` 轮询 + 每日清除）统一驱动。排空器是框架管线，
+  不实现 `ScheduledAdapter` 业务标记
+- `IntegrationEventSender` —— MQ 投递接缝 SPI：集成排空器认领一行、构造
+  `OutboxEnvelope`（messageId / eventType / payload / occurredOn）、调用实现投递，
+  成功后才标记完成。common-mq 未建设，样例以 `LoggingIntegrationEventSender`
+  （日志占位）接入；接入 RocketMQ / Kafka 时提供实现经 `@ConditionalOnMissingBean`
+  顶替，把 `messageId` 置消息头供消费端去重
+- `DomainEventCodec` —— 载荷格式自持（专用 `JsonMapper`，不随应用级序列化配置漂移），
+  反序列化后以行身份重建 `eventId`/`occurredOn`（幂等键跨重投稳定）。消费方事件重放
+  依赖构造器参数名绑定：编译开启 `-parameters`（spring-boot-starter-parent 默认）
+  或提供 `protected` 无参构造器
+- `sql/ddd_domain_event_outbox.sql`、`sql/ddd_integration_event_outbox.sql` —— 两张表的
+  PG 规范 DDL
 
-**业务侧待办（框架不做）**：实现 `OutboxStore`（含「捕获走事务感知连接 / 排空簿记走独立
-连接」的纪律——提交后回调时机复用事务绑定连接会写入僵尸事务，簿记被回滚、条目反复重投）；
-实现排空器（定时入口 + 认领/发布/标记）；决定重试 / 死信 / 多实例互斥策略，或直接选用生态方案。
-
-**配置**：仅 `ywf.ddd.outbox.enabled`（默认 `true`；`false` 时 codec 装配退位）。
+**配置**（`ywf.ddd.outbox.*`）：`enabled`（总开关，默认 `true`；`false` 时自动配置整体
+退位——聚合一旦注册事件即 fail-fast）；`relay.fixed-delay`（轮询间隔，默认 1000ms）/
+`relay.batch-size`（50）/ `relay.max-attempts`（10）/ `relay.max-backoff`（5m）/
+`relay.retention-days`（7）/ `relay.purge-cron`（`0 0 3 * * *`）。
 
 ### MyBatis-Plus 自动配置
 
@@ -234,10 +249,9 @@ public class OrderRepositoryImpl
     private final OrderConverter converter;
 
     public OrderRepositoryImpl(OrderMapper mapper,
-                               ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
-                               ObjectProvider<OutboxStore> outboxStoreProvider,
+                               ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
                                OrderConverter converter) {
-        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
+        super(mapper, outboxStoreProvider);
         this.converter = converter;
     }
 
@@ -299,19 +313,19 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 ```java
 @Component
 public class OrderDomainEventListener implements DomainEventListener {  // 实现空标记：定型「域内反应」角色
-    // 投递已在业务事务提交后发生（Outbox）：普通 @EventListener 即可，
-    // 不要用 @TransactionalEventListener(AFTER_COMMIT)（无事务可挂靠，默认不执行）
+    // 投递发生在框架排空器（OutboxRelay）的自有事务内：普通 @EventListener 即可
     @EventListener
     public void onOrderPaid(OrderPaidEvent event) { /* 处理逻辑 */ }
 
-    // 带数据库写入的副作用：自带独立事务（派发时无活动事务）
+    // 带数据库写入的副作用：普通 @Transactional（REQUIRED，加入排空事务，原子提交）
+    // 禁用 REQUIRES_NEW / @Async —— 会撕碎「副作用 + 集成入箱 + 标记完成」的原子性
     @EventListener
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public void onOrderCancelled(OrderCancelledEvent event) { /* 补偿写入，如库存回补 */ }
 }
 ```
 
-出站 Publisher 同理：`public class OrderEventPublisher implements IntegrationEventPublisher { ... }`（翻译领域事件 → 契约 IntegrationEvent → 投递 MQ，见 `docs/application/cookbook/event-flow.md`）。
+出站 Publisher 同理：`public class OrderEventPublisher implements IntegrationEventPublisher { ... }`（翻译领域事件 → 契约 IntegrationEvent → 经 `IntegrationEventOutboxStore` 同事务捕获入集成 Outbox，**不直发 MQ**——投递归框架集成排空器，见 `docs/application/cookbook/event-flow.md`）。
 
 完整示例见 `docs/application/cookbook/write-path.md`。
 
@@ -333,8 +347,8 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
-- **领域事件先清后发 + Outbox 捕获契约**：持久化后冲刷、先清后发，避免监听器异常导致重复发布；业务提供 `OutboxStore` 实现时事件与业务同事务入箱（跨崩溃不丢），投递归业务排空器（at-least-once，监听器只在提交后执行）；未提供时回退直发路径
-- **`@ConditionalOnMissingBean`**：MyBatis-Plus 插件 / Outbox 存储均允许业务项目完全自定义覆盖
+- **全链路 Outbox 可靠性规范**：领域事件与集成事件强制经 Outbox 投递——持久化后冲刷、先清后捕（快照 + 清空暂存，下游异常不重复捕获），捕获与业务写入同事务（提交 ⇒ 落库，跨崩溃不丢），框架排空器（`OutboxRelay`）在自有事务内派发（内部反应 + 集成入箱 + 标记完成原子提交，at-least-once）；无 Outbox Bean 时 fail-fast 回滚业务写入，不存在直发降级
+- **`@ConditionalOnMissingBean`**：MyBatis-Plus 插件 / Outbox 捕获实现均允许业务项目完全自定义覆盖
 
 ## 6. 设计决策
 
@@ -372,9 +386,9 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 - 手动发布：易遗忘
 - 仓储自动发布（有则发，无则静默）
 
-**决策**：选仓储自动发布。opt-in 点是 `registerEvent()`，先落库后发事件 + 先清后发（与 Spring Data `@DomainEvents` 同模式）。事件仅 AggregateRoot 可注册（一致性边界 = 事件唯一出口）。逃生门：Handler 注入 `DomainEventPublisher` 手动发 / `clearDomainEvents()` 抑制。
+**决策**：选仓储自动发布。opt-in 点是 `registerEvent()`，先落库后冲刷 + 先清后捕（与 Spring Data `@DomainEvents` 同模式），捕获入 Outbox 后由框架排空器派发（见 ADR-0008）。事件仅 AggregateRoot 可注册（一致性边界 = 事件唯一出口）。逃生门：Handler 注入 `DomainEventPublisher` 手动发 / `clearDomainEvents()` 抑制。
 
-**后果**：跨服务通信仍走 Seata + HTTP 显式调用；可靠化已由框架层 Outbox 承担（见 ADR-0007），`DomainEventPublisher` 契约保持不变。
+**后果**：跨服务通信仍走 Seata + HTTP 显式调用；可靠化已由框架全链路 Outbox 承担（见 ADR-0007 → ADR-0008），`DomainEventPublisher` 契约保持不变。
 
 **确认**：`InProcessDomainEventPublisher` + `MybatisPlusPersistence` 自动发布。
 
@@ -408,9 +422,9 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **确认**：`removeDomainById(id, eventFactory)` / `removeDomainByIds(ids, eventFactory)` 重载存在，save/update 无对应重载。
 
-### ADR-0007 领域事件 Outbox：框架只担保同事务捕获，投递归业务
+### ADR-0007 领域事件 Outbox：框架只担保同事务捕获，投递归业务（已被 ADR-0008 反转）
 
-- 状态：accepted（2026-08，audit F-04 收口；领地收缩定稿）
+- 状态：superseded（2026-08 accepted，audit F-04 收口、领地收缩定稿；同月被 ADR-0008 反转——框架改为交付全链路管线）
 
 **背景**：进程内直发在「提交后崩溃 / 监听器失败」下永久丢事件（F-04）。Transactional Outbox 是标准解法，但需划定框架做到哪一步。
 
@@ -427,7 +441,26 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **后果**：监听器契约变更——只在提交后执行、无活动事务，一律 `@EventListener` + 写入自带 `REQUIRES_NEW`；`@TransactionalEventListener(AFTER_COMMIT)` 不再适用。业务未提供 `OutboxStore` Bean 时事件回退直发路径（提交后进程内派发，at-most-once）。实现、排空、重试/死信/多实例互斥全部由业务按真实考验落地或直接选用生态方案（RocketMQ 事务消息 / Debezium CDC / Modulith EPR）。F-04 担保收窄为「捕获契约 + 业务实现/排空的最小 at-least-once 责任」。
 
-**确认**：`OutboxStore`（SPI）/ `DomainEventCodec` / `DomainEventFlusher` 编排 + `sql/ddd_outbox.example.sql` 参考 DDL。
+**确认**：`OutboxStore`（SPI）/ `DomainEventCodec` / `DomainEventFlusher` 编排 + `sql/ddd_outbox.example.sql` 参考 DDL。（以上为历史记录，下述 ADR-0008 已反转。）
+
+### ADR-0008 全链路 Outbox：框架交付捕获 + 排空完整管线（反转 ADR-0007）
+
+- 状态：accepted（2026-08，audit F-04 最终收口）
+
+**背景**：ADR-0007 将领地收缩为「捕获契约 + 编解码工具」，实现与投递归业务。但样例始终无人实现捕获与排空，事件实际走在无持久化锚点的路径上，F-04 担保悬空；同时集成事件出站若由 Publisher 直发 MQ，「领域事件已派发 → 集成事件投 MQ」之间存在 dual-write 窗口。
+
+**决策**：反转领地划分——**每一条领域事件、每一条集成事件强制经 Outbox 投递，框架交付完整管线**：
+
+1. **捕获**：领域侧 `DomainEventOutboxStore` SPI + 缺省 `JdbcDomainEventOutboxStore`（`ddd_domain_event_outbox`）；集成侧应用层端口 `IntegrationEventOutboxStore` + 缺省 `JdbcIntegrationEventOutboxStore`（`ddd_integration_event_outbox`，行 id = 未来 MQ messageId，`source_event_id` 记录源领域事件血缘）。捕获一律与业务写入同事务。
+2. **投递**：`OutboxRelay` 排空引擎（每行一个 REQUIRES_NEW 事务：`FOR UPDATE SKIP LOCKED` 认领 → 派发 → 软删标记完成），领域实例进程内派发、集成实例经 `IntegrationEventSender` SPI 投 MQ；失败指数退避重投，超限转死信，软删行过保留期物理清除。`OutboxRelayScheduler` 为框架管线（不实现 `ScheduledAdapter`）。
+3. **fail-fast**：聚合注册事件但无捕获 Bean 时抛错回滚业务写入——要么不用事件，要么带上 Outbox，不存在直发降级。
+4. **监听器契约反转**：派发在排空事务内执行，监听器用普通 `@EventListener` + 普通 `@Transactional`（加入排空事务），「内部反应 + 集成入箱 + 标记完成」原子提交；`REQUIRES_NEW` / `@Async` 禁用（撕碎原子性，重试产生双份副作用）；监听器不做非事务副作用，对外通知一律经集成 Outbox 捕获。
+
+**反转理由**：① 捕获与排空是「机制」而非「策略」——两张标准表的形状由框架钉死后，排空器反而是最可复用、最不该让每个业务重写的一环；② ADR-0007 担心的「多张结构各异的消息表」并未出现，真实需求是统一的标准表 + 可替换接缝（`@ConditionalOnMissingBean` / SPI）；③ 生态方案（RocketMQ 事务消息 / CDC）仍是未来可选项，但框架先给出一条开箱即用的基线，业务拓扑定型后再整体替换，成本低于从零自建。
+
+**后果**：`DomainEventPublisher` 契约不变（改由排空器调用）；仓储构造器收为 `(Mapper, ObjectProvider<DomainEventOutboxStore>)`；ADR-0007 的「业务侧待办」全部由框架承接；集成事件 MQ 投递在 common-mq 建设前以样例 `LoggingIntegrationEventSender` 日志占位。
+
+**确认**：`DomainEventOutboxStore` / `JdbcDomainEventOutboxStore` / `IntegrationEventOutboxStore` / `JdbcIntegrationEventOutboxStore` / `OutboxRelay` / `OutboxRelayScheduler` / `IntegrationEventSender` / `DomainEventCodec` / `DomainEventFlusher`（fail-fast）+ `sql/ddd_domain_event_outbox.sql`、`sql/ddd_integration_event_outbox.sql` 规范 DDL。
 
 ## 7. 职责边界与技术债
 
@@ -435,5 +468,5 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 |---|---|
 | 边界：聚合根 ID 自动生成策略 | ID 生成与业务强相关，由子类构造器自行决定 |
 | 边界：脏检查 / 变更追踪 | 全量 UPDATE 策略已覆盖 |
-| 边界：领域事件异步 / 跨进程发布 | 进程内可靠化由业务按 Outbox 捕获契约实现（ADR-0007，框架只给 SPI + codec）；跨服务经集成事件 + MQ（二期），当前仍走 Seata + HTTP 显式调用 |
+| 边界：领域事件异步 / 跨进程发布 | 进程内可靠投递由框架全链路 Outbox 承担（ADR-0008：捕获 + 排空完整管线）；跨服务经集成事件 + 集成 Outbox + `IntegrationEventSender` 接缝，MQ 实现待 common-mq 建设（当前样例日志占位），东西向同步调用仍走 Seata + HTTP |
 | 边界：Specification 模式 | 采纳为纯接口（可选工具）：领域规则 and/or/not 组合表达，供复杂校验场景；查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`，简单校验仍用聚合根 if-throw |

@@ -66,19 +66,27 @@ public void cancelOrder(CancelOrderCommand command) {
 - **禁止**定义具名领域异常（如 `InsufficientStockException`）
 - Domain 层**不设** `exception/` 包
 
-## 领域事件
+## 领域事件（全链路 Outbox 可靠性规范）
 
 - 聚合根内 `registerEvent(new XxxEvent(...))`（暂存）
-- Repository 持久化成功后经 `DomainEventFlusher` 冲刷（先清后发）；业务提供 `OutboxStore`
-  实现时经 Outbox 与业务同事务入箱（提交 ⇒ 落库，跨崩溃不丢），入箱后的排空 / 重试 / 死信
-  归业务排空器（框架只给捕获契约 + 编解码工具，无缺省实现；仅进程内，at-least-once）；
-  未提供时回退直发路径（提交后进程内派发，at-most-once）
+- Repository 持久化成功后经 `DomainEventFlusher` 冲刷（先清后捕），**强制**经
+  `DomainEventOutboxStore` 与业务同事务入箱 `ddd_domain_event_outbox`（提交 ⇒ 落库，
+  跨崩溃不丢）；聚合注册了事件但无 `DomainEventOutboxStore` Bean 时 fail-fast 抛错
+  回滚业务写入——要么不用事件，要么带上 Outbox，**不存在直发降级路径**
+- 入箱后由框架排空器 `OutboxRelay`（领域实例）在自有事务内认领 → 派发 → 标记完成
+  （at-least-once，失败退避重投，超限转死信）
 - DomainEvent 不可变（所有字段 final）
-- 域内反应监听器（DomainEventListener）位于 `application/{agg}/event/listener/`，标注 `@EventListener`；
-  投递发生在业务事务提交后（无活动事务）——禁用 `@TransactionalEventListener(AFTER_COMMIT)`，
-  监听器内数据库写入须自带 `@Transactional(propagation = REQUIRES_NEW)`；
+- 域内反应监听器（DomainEventListener）位于 `application/{agg}/event/listener/`：
+  投递发生在**排空器事务内**——一律 `@EventListener`；带数据库写入的副作用用普通
+  `@Transactional`（REQUIRED，加入排空事务，「内部反应 + 集成入箱 + 标记完成」原子提交）；
+  **禁用 `REQUIRES_NEW` 与 `@Async`**（撕碎原子性，重试产生双份副作用）；
+  监听器不做非事务副作用（HTTP / 直发 MQ），对外通知一律经集成 Outbox 捕获；
   薄编排：接事件 → 加载聚合 → 委托 DomainService / Publisher；逻辑按 `eventId` 幂等
-- 集成事件（跨服务）：Publisher 翻译为 contract 中的 IntegrationEvent → MQ
+- 集成事件（跨服务）：Publisher（`application/{agg}/event/publisher/`）翻译为 contract
+  中的 IntegrationEvent，经 `IntegrationEventOutboxStore` 同事务捕获入
+  `ddd_integration_event_outbox`（行 id = 未来 MQ messageId，`source_event_id` = 源领域
+  事件 eventId）；**Publisher 不投 MQ**——投递由框架集成排空器经 `IntegrationEventSender`
+  完成
 
 ## 命名规范
 
@@ -102,7 +110,7 @@ public void cancelOrder(CancelOrderCommand command) {
 
 - 接口：`Repository<Domain, ID>`（domain 层）
 - 实现：继承 `MybatisPlusPersistence<Mapper, PO, Domain, ID>`（infrastructure 层），
-  构造器注入 `Mapper` + `ObjectProvider<DomainEventPublisher>` + `ObjectProvider<OutboxStore>` + Converter；
+  构造器注入 `Mapper` + `ObjectProvider<DomainEventOutboxStore>` + Converter；
   领域 ID 与 PO 主键类型不一致时覆写 `toPersistenceId(ID)`
 - Converter：实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
 

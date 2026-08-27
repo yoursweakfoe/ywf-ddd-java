@@ -286,10 +286,9 @@ public class OrderRepositoryImpl
     private final OrderConverter converter;
 
     public OrderRepositoryImpl(OrderMapper mapper,
-                               ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
-                               ObjectProvider<OutboxStore> outboxStoreProvider,
+                               ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
                                OrderConverter converter) {
-        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
+        super(mapper, outboxStoreProvider);
         this.converter = converter;
     }
 
@@ -305,10 +304,12 @@ public class OrderRepositoryImpl
 }
 ```
 
-> 领域事件随持久化经框架 Outbox 捕获契约交付（`OutboxStore` SPI，见
-> `docs/common/common-ddd.md` Outbox 节），仓储构造注入的 `OutboxStore`
-> Provider 即捕获的接线点；框架不提供缺省实现——业务提供 Store Bean 时激活捕获，
-> 入箱后的投递归业务排空器，未提供时自动回退直发路径。
+> 领域事件随持久化强制经 Outbox 同事务捕获（全链路 Outbox 可靠性规范，见
+> `docs/common/common-ddd.md` Outbox 节），仓储构造注入的
+> `ObjectProvider<DomainEventOutboxStore>` 即捕获的接线点；框架提供缺省实现
+> `JdbcDomainEventOutboxStore`（`ddd_domain_event_outbox`），入箱后由框架排空器
+> `OutboxRelay` 在自有事务内派发（at-least-once）。无 Outbox Bean 时冲刷 fail-fast
+> 回滚业务写入——要么不用事件，要么带上 Outbox，不存在直发降级。
 
 ## 完整文件清单
 

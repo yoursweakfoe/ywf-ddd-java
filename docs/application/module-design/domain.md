@@ -101,14 +101,14 @@ adapter ──→ application ──→ domain ←── infrastructure
 | 方向 | 由内向外（聚合根 → 进程内） | 双向（出站 + 入站） |
 | 产生者 | 本服务聚合根 | 本服务 Publisher（出站）/ 其他微服务（入站） |
 | 所在层 | domain 层 | contract 模块（跨服务契约） |
-| 发布机制 | 仓储持久化后 → Spring Event（进程内） | Publisher 投递 MQ（出站）/ 外部消息到达 → Adapter Consumer（入站） |
+| 发布机制 | Outbox 同事务捕获 → 框架排空器在排空事务内派发（Spring Event，进程内） | Publisher 翻译 + Outbox 同事务捕获 → 框架排空器经 `IntegrationEventSender` 投 MQ（出站）/ 外部消息到达 → Adapter Consumer（入站） |
 | 典型例子 | `OrderPlacedEvent`（我下单了） | `OrderPlacedIntegrationEvent`（我通知外界） |
 
 简记：**DomainEvent 是"进程内我告诉自己人"，IntegrationEvent 是"跨服务我告诉别人 / 别人告诉我"**。
 
 #### 事件监听原理（Spring 机制）
 
-聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `DomainEventFlusher` 冲刷（先清后发）→ 业务提供 `OutboxStore` 时经 **Outbox** 与业务同事务入箱（投递由业务排空器在**提交后**承担）；未提供时走直发降级路径（提交后经 `DomainEventPublisher` 进程内派发）→ 最终经 `DomainEventPublisher` 桥接 Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法。
+聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `DomainEventFlusher` 冲刷（先清后捕）→ 经 `DomainEventOutboxStore` 与业务写入**同事务**入箱 `ddd_domain_event_outbox`（无 Outbox Bean 时 fail-fast 回滚业务写入，不存在直发路径）→ 业务事务提交后，框架排空器 `OutboxRelay`（领域实例）在**自有事务内**认领该行 → 经 `DomainEventCodec` 重建事件身份 → `DomainEventPublisher` 桥接 Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法（监听器加入排空事务）→ 标记完成、原子提交。
 
 `DomainEvent` 不需要实现任何 Spring 接口（Spring 4.2+ 的 `publishEvent` 接受任意 Object），领域层保持零框架依赖。
 
@@ -116,7 +116,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 #### 事件发布通道（谁来发、什么时候发）
 
-唯一的 opt-in 点是 `AggregateRoot.registerEvent()`，仓储只是可靠的投递机制（保证先持久化成功后冲刷 + 先清后发 + Outbox at-least-once），不是策略决定者：
+唯一的 opt-in 点是 `AggregateRoot.registerEvent()`，仓储只是可靠的捕获机制（保证先持久化成功后冲刷 + 先清后捕 + Outbox 同事务入箱），不是策略决定者：
 
 | 场景 | 通道 |
 |------|------|
@@ -134,25 +134,25 @@ adapter ──→ application ──→ domain ←── infrastructure
 | **领域事件** | `domain/{aggregate}/event/domain/` | Spring `@EventListener`（进程内） | 不对外 |
 | **集成事件** | `contract/{aggregate}/dto/event/integration/` | MQ / RPC（跨服务） | 对外发布 |
 
-微服务拆分时：领域事件仍留在服务内部；需要跨服务通知时，由 application 层将领域事件转换为集成事件发布到 MQ。
+微服务拆分时：领域事件仍留在服务内部；需要跨服务通知时，由 application 层 Publisher 将领域事件翻译为集成事件并捕获入集成 Outbox，框架排空器负责投递 MQ。
 
 #### 事件监听器事务传播
 
-领域事件经 Outbox 同事务捕获、由业务排空器在业务事务**提交之后**投递（详见
-[common-ddd.md Outbox 节](../../common/common-ddd.md)）——监听器执行时**无活动事务**，
-「提交后才执行」由捕获+排空机制保证，不再由监听器注解表达：
+领域事件经 Outbox 同事务捕获、由框架排空器（`OutboxRelay` 领域实例）在**其自有事务内**
+派发（详见 [common-ddd.md Outbox 节](../../common/common-ddd.md)）——监听器执行时
+**有活动事务**（排空事务），「内部反应 + 集成入箱 + 标记完成」原子提交：
 
 | 注解 | 线程 | 事务 | 监听器异常的影响 |
 |------|------|------|----------------|
-| `@EventListener`（域内反应默认） | 同线程（排空线程） | **无**（已提交；写入须自带事务） | 原始业务事务不受影响；排空器标记失败后重投（策略由排空器定） |
-| `@EventListener + @Transactional(REQUIRES_NEW)` | 同线程 | **独立新事务** | 新事务回滚；排空器重投 |
-| `@Async @EventListener` | 新线程 | **无** | 完全隔离（注意丢失 Outbox 重投兜底） |
+| `@EventListener`（域内反应默认） | 同线程（排空线程） | **加入排空事务**（无库写时无需注解） | 排空事务回滚 → 行保持待投 → 退避重投 |
+| `@EventListener + @Transactional`（REQUIRED，带库写副作用） | 同线程 | **加入排空事务**，副作用与标记完成原子提交 | 同上，副作用随回滚不产生双份 |
+| `REQUIRES_NEW` / `@Async` | — | **禁用** | 撕碎「副作用 + 集成入箱 + 标记完成」原子性，重试时产生双份副作用 |
 
 选择原则：
-- 纯反应（日志 / 出站翻译）→ `@EventListener`
-- 带数据库写入的补偿副作用 → `@EventListener` + `@Transactional(REQUIRES_NEW)`
-- 完全异步不关心结果 → `@Async @EventListener`
-- **禁用** `@TransactionalEventListener(AFTER_COMMIT)`：投递时无事务可挂靠，默认不执行
+- 纯反应（日志 / 出站翻译捕获）→ `@EventListener`
+- 带数据库写入的补偿副作用 → `@EventListener` + 普通 `@Transactional`（加入排空事务）
+- 对外通知 → 委托 Publisher 翻译 + 集成 Outbox 捕获（仍在排空事务内），**禁止**监听器直接 HTTP / 发 MQ
+- **禁用** `@TransactionalEventListener`：派发由排空器驱动，不依赖 Spring 事务阶段回调
 
 ### 多数据源策略
 

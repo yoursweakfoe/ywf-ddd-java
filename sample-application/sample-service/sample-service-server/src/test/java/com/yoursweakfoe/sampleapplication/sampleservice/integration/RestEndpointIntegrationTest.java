@@ -2,6 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.scheduler.OutboxRelay;
 import com.yoursweakfoe.sampleapplication.sampleservice.Application;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
@@ -49,6 +51,15 @@ class RestEndpointIntegrationTest {
 
     @LocalServerPort
     private int port;
+
+    /**
+     * 领域排空引擎（确定性测试接缝）—— 全链路 Outbox 下，领域事件在业务事务内只被捕获入箱，
+     * 进程内派发（含取消订单的库存回补反应）只在排空时发生。测试显式 {@code drain(n)} 驱动，
+     * 不依赖后台轮询（测试 profile 已将调度周期推到极远）。
+     */
+    @Autowired
+    @Qualifier("domainEventOutboxRelay")
+    private OutboxRelay domainEventOutboxRelay;
 
     private static UUID createdProductId;
     private static String createdOrderId;
@@ -248,8 +259,11 @@ class RestEndpointIntegrationTest {
     void afterCancelOrder_stockReplenished() {
         assertThat(createdProductId).isNotNull();
         // 初始 100，下单扣 2，取消回补 2 → 应该回到 100。
-        // 本样例未提供 OutboxStore Bean：事件走直发路径（业务事务提交后同步派发），
-        // 监听器回补在请求返回前已完成。业务接入 Outbox 后此处应改为轮询/异步断言。
+        // 全链路 Outbox 语义：取消事件在业务事务内只被捕获入箱，监听器的库存回补
+        // 只在领域排空器排空时（排空事务内）发生——显式 drain 驱动，断言前完成投递。
+        // （此处排空同时投递早先的下单事件，出站监听器随之把集成事件捕获入集成 outbox。）
+        domainEventOutboxRelay.drain(50);
+
         ProductCO dto = client().get().uri("/products/" + createdProductId)
                 .retrieve()
                 .body(ProductCO.class);

@@ -66,7 +66,7 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 
 ### Publisher（集成事件出站）
 
-位于 `event/publisher/`，被 CommandHandler 或 DomainEventListener 显式调用，将领域事件翻译为契约 IntegrationEvent 并投递到 MQ。
+位于 `event/publisher/`，被 CommandHandler 或 DomainEventListener 显式调用，将领域事件翻译为契约 IntegrationEvent 并经 `IntegrationEventOutboxStore` 同事务捕获入集成 Outbox（实际投 MQ 由框架集成排空器承担，见 event-flow.md）。
 AppService 不直接依赖 publisher。
 
 ## 协作关系

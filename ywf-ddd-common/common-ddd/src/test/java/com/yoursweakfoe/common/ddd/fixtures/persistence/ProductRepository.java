@@ -4,10 +4,9 @@ import com.yoursweakfoe.common.ddd.fixtures.converter.ProductConverter;
 import com.yoursweakfoe.common.ddd.fixtures.mapper.ProductMapper;
 import com.yoursweakfoe.common.ddd.fixtures.model.Product;
 import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
-import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.OutboxStore;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
@@ -21,10 +20,9 @@ public class ProductRepository extends MybatisPlusPersistence<ProductMapper, Pro
     private final ProductConverter converter;
 
     public ProductRepository(ProductMapper mapper,
-                             ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
-                             ObjectProvider<OutboxStore> outboxStoreProvider,
+                             ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
                              ProductConverter converter) {
-        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
+        super(mapper, outboxStoreProvider);
         this.converter = converter;
     }
 

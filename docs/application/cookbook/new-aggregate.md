@@ -379,10 +379,9 @@ public class PaymentRepositoryImpl
     private final PaymentConverter converter;
 
     public PaymentRepositoryImpl(PaymentMapper mapper,
-                                 ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
-                                 ObjectProvider<OutboxStore> outboxStoreProvider,
+                                 ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
                                  PaymentConverter converter) {
-        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
+        super(mapper, outboxStoreProvider);
         this.converter = converter;
     }
 
@@ -398,8 +397,9 @@ public class PaymentRepositoryImpl
 }
 ```
 
-> 构造器注入的 `OutboxStore` Provider 是领域事件 Outbox 捕获的接线点
-> （框架不提供缺省实现：业务提供 `OutboxStore` Bean 时激活捕获，入箱后的投递归业务排空器；未提供时回退直发路径）。
+> 构造器注入的 `ObjectProvider<DomainEventOutboxStore>` 是领域事件 Outbox 捕获的接线点
+> （全链路 Outbox 可靠性规范：框架提供缺省实现 `JdbcDomainEventOutboxStore`，事件与业务同事务入箱，
+> 框架排空器 `OutboxRelay` 投递；无 Outbox Bean 时冲刷 fail-fast 回滚业务写入，不存在直发降级）。
 
 ## 创建顺序建议
 
@@ -417,4 +417,4 @@ public class PaymentRepositoryImpl
 - [ ] `@TableName` 包含 schema 前缀
 - [ ] PO 有 `@Version`（乐观锁）和 `@TableLogic`（逻辑删除）
 - [ ] Converter.toDomain 使用 `reconstitute()` 重建
-- [ ] RepositoryImpl 构造器注入 `ObjectProvider<DomainEventPublisher>`
+- [ ] RepositoryImpl 构造器注入 `ObjectProvider<DomainEventOutboxStore>`
