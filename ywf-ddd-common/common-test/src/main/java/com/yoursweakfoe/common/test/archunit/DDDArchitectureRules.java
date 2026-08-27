@@ -541,19 +541,27 @@ public final class DDDArchitectureRules {
                     .as("R14a 实现 ScheduledAdapter 标记的类必须位于 adapter 层（定时任务入口角色）");
 
     /**
-     * R14b —— {@code ..scheduler..} 包下的<strong>非接口</strong>类必须实现 {@code ScheduledAdapter} 标记。
+     * R14b —— <strong>业务服务</strong> {@code ..adapter..scheduler..} 包下的<strong>非接口</strong>类必须实现
+     * {@code ScheduledAdapter} 标记。
      *
      * <p>与 R8b/R9b 同理：识别定时任务入口用类型锚点而非包名猜测。排除接口自身
      * （标记接口位于 {@code ..adapter.task.scheduler..}，接口不实现自己）。
+     *
+     * <p><strong>主语收窄至 {@code ..adapter..scheduler..}</strong>：本规则只约束业务服务的时间驱动
+     * <strong>入口</strong>（driving adapter，经 AppService 驱动用例）。<strong>框架管线排空器不受其约束</strong>——
+     * common-ddd 的 {@code OutboxRelayScheduler} 位于 {@code infrastructure.event.outbox.scheduler}
+     * （基础设施自驱、不含业务编排、不实现 {@code ScheduledAdapter}），属有意豁免：
+     * ArchUnit 守护业务分层，不反向约束框架内部结构。
      */
     public static final ArchRule SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED =
             classes()
                     .that()
-                    .resideInAPackage("..scheduler..")
+                    .resideInAPackage("..adapter..scheduler..")
                     .and()
                     .areNotInterfaces()
                     .should()
                     .implement("com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter")
                     .allowEmptyShould(true)
-                    .as("R14b ..scheduler.. 包下的类必须实现 ScheduledAdapter 标记");
+                    .as("R14b 业务 ..adapter..scheduler.. 包下的类必须实现 ScheduledAdapter 标记"
+                            + "（框架管线排空器豁免，见规则 Javadoc）");
 }
