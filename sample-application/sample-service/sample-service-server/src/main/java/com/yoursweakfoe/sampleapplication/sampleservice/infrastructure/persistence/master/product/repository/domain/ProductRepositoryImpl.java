@@ -6,9 +6,8 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repositor
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter.ProductConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
-import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.OutboxStore;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Collection;
@@ -32,10 +31,9 @@ public class ProductRepositoryImpl
     private final ProductConverter converter;
 
     public ProductRepositoryImpl(ProductMapper mapper,
-                                 ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
-                                 ObjectProvider<OutboxStore> outboxStoreProvider,
+                                 ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
                                  ProductConverter converter) {
-        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
+        super(mapper, outboxStoreProvider);
         this.converter = converter;
     }
     // endregion

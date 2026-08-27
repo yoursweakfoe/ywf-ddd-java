@@ -16,7 +16,6 @@ import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -25,16 +24,17 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>薄编排契约：方法体只做「接事件 → 加载聚合 → 委托 DomainService / Publisher」，
  * 业务规则在 DomainService 与聚合根内，本类不含 if-else 业务判断。
  *
- * <p>监听器选型约定（投递时序：事件在业务事务提交后投递——本样例未提供
- * {@code OutboxStore}，走直发降级路径（afterCommit 进程内派发）；业务接入 Outbox 后
- * 由排空器投递。派发时无活动事务——见 common-ddd {@code DomainEventFlusher}）：
+ * <p>监听器选型约定（全链路 Outbox 规范：投递发生在框架排空器 {@code OutboxRelay} 领域实例
+ * 的自有事务内——排空器认领 {@code ddd_domain_event_outbox} 行后于该事务中派发，
+ * 监听器副作用 / 集成入箱 / 领域行标记完成三者原子提交）：
  * <ul>
- *   <li>一律使用普通 {@code @EventListener}——「提交后才执行」已由捕获+排空机制保证，
- *       不应使用 {@code @TransactionalEventListener(AFTER_COMMIT)}（无事务可挂靠，默认不执行）</li>
- *   <li>带数据库写入的副作用（如补偿回补）追加 {@code @Transactional(REQUIRES_NEW)}
- *       自带独立事务——派发时无活动事务，写入不会自动提交</li>
- *   <li>监听器抛异常不影响已提交的业务事务；业务接入 Outbox 后排空器可标记失败并重投
- *       （策略由排空器定）——补偿失败不再只靠静默吞掉</li>
+ *   <li>一律使用普通 {@code @EventListener}；带数据库写入的副作用用普通 {@code @Transactional}
+ *       （<strong>加入</strong>排空器事务）——<strong>禁用</strong> {@code REQUIRES_NEW} 与 {@code @Async}，
+ *       二者都会撕碎「副作用 + 集成入箱 + 标记完成」的原子性，重试时产生双份副作用</li>
+ *   <li>监听器不做任何非事务副作用（HTTP / 直发 MQ）——对外通知一律经集成 Outbox 捕获
+ *       （见 {@link #onOrderPlacedOutbound}）</li>
+ *   <li>监听器抛异常向上传播 → 排空器事务回滚 → 行保持待投 → 退避重投（策略由排空器定），
+ *       消费端以 {@code eventId} 幂等去重（at-least-once）</li>
  * </ul>
  */
 @Slf4j
@@ -62,7 +62,8 @@ public class OrderDomainEventListener implements DomainEventListener {
     }
 
     /**
-     * 下单后出站通知：投递已在业务事务提交后发生，直接翻译为集成事件并投递 MQ。
+     * 下单后出站通知：在排空器事务内把领域事件翻译为集成事件并经集成 Outbox 捕获
+     * （与「领域行标记完成」原子入箱），实际投 MQ 由框架集成排空器完成——关闭 dual-write 窗口。
      */
     @EventListener
     public void onOrderPlacedOutbound(OrderPlacedEvent event) {
@@ -98,13 +99,13 @@ public class OrderDomainEventListener implements DomainEventListener {
     /**
      * 订单取消后回补库存（补偿型副作用）。
      *
-     * <p>投递已在取消事务提交后发生（直发路径 / 业务接入 Outbox 后为排空器触发），
-     * 回补失败不会回滚已取消的订单；
-     * {@code REQUIRES_NEW}：派发时无活动事务，库存写入须自带独立事务才能提交；
-     * 回补抛异常时：直发路径仅记日志；接入 Outbox 后由业务排空器重投（策略由排空器定）。
+     * <p>投递发生在排空器事务内，本方法以普通 {@code @Transactional}（REQUIRED）
+     * <strong>加入</strong>该事务——回补写入与「（可能的集成入箱）+ 领域行标记完成」原子提交；
+     * 回补失败 → 排空器事务回滚 → 行保持待投 → 退避重投，不再静默吞掉。
+     * <strong>禁用</strong> {@code REQUIRES_NEW}（会撕碎原子性，重试时产生双份回补）。
      */
     @EventListener
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public void onOrderCancelled(OrderCancelledEvent event) {
         log.info("Order cancelled: orderId={}, reason={}",
                 event.getOrderId(), event.getReason());

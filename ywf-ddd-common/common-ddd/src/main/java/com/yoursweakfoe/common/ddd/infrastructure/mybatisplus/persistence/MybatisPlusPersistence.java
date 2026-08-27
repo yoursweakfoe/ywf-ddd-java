@@ -6,12 +6,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
-import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.event.domain.DomainEventFlusher;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.OutboxStore;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -43,14 +42,13 @@ import org.springframework.core.GenericTypeResolver;
  * <ul>
  *   <li>save/update 前自动调用 {@code AggregateRoot.validate()}
  *   <li>update/delete 失败时抛出 {@link IllegalStateException}（不静默失败）
- *   <li>领域事件在持久化成功后冲刷（先清后发，保证原子性）——冲刷逻辑委托 {@link DomainEventFlusher}
- *   <li><b>事件事务语义</b>：事件经 Outbox 捕获（默认）——与业务写入同事务入箱，
- *       「状态已提交 ⇒ 事件必然已落库」，业务回滚则事件随行回滚；入箱后的投递由
- *       业务侧排空器承担（投递发生在提交后、无活动事务的上下文）。监听器用普通
- *       {@code @EventListener}（不要用 {@code @TransactionalEventListener(AFTER_COMMIT)}），
- *       内部数据库写入须自带 {@code @Transactional(propagation = REQUIRES_NEW)}。
- *       投递语义 at-least-once，消费端以 {@code DomainEvent.eventId} 幂等去重。
- *       详见 {@code DomainEventFlusher}
+ *   <li>领域事件在持久化成功后冲刷（先清后入箱，保证原子性）——冲刷逻辑委托 {@link DomainEventFlusher}
+ *   <li><b>事件事务语义（全链路 Outbox 规范）</b>：领域事件强制经 Outbox 捕获——与业务写入
+ *       <strong>同事务</strong>入箱，「状态已提交 ⇒ 事件必然已落库」，业务回滚则事件随行回滚；
+ *       入箱后由框架排空器（{@code OutboxRelay}）在自有事务内派发，监听器<strong>加入</strong>排空器事务
+ *       （普通 {@code @EventListener} + 普通 {@code @Transactional}，禁用 {@code REQUIRES_NEW}/{@code @Async}）。
+ *       有事件但无 Outbox 时 fail-fast 抛错回滚。投递语义 at-least-once，消费端以
+ *       {@code DomainEvent.eventId} 幂等去重。详见 {@code DomainEventFlusher}
  *   <li>删除同样覆盖事件：实体删除发布聚合已注册事件，按 ID 删除通过事件工厂重载发布；
  *       带事件的批量删除（{@code removeDomainByIds(ids, factory)} / {@code removeDomains(list)}）
  *       先预查真实存在的 ID，<b>仅为实际删除的实体发布事件</b>——请求中不存在的 ID 静默跳过不报错
@@ -125,16 +123,15 @@ public abstract class MybatisPlusPersistence<
     // region 依赖注入
     /**
      * @param baseMapper MyBatis-Plus Mapper 实例（由子类构造器注入具体 Mapper 类型）
-     * @param domainEventPublisherProvider 领域事件发布者（可选，容器中无此 Bean 时为 null，事件将被丢弃并记录警告）
-     * @param outboxStoreProvider Outbox 捕获存储（可选——存在时事件走「同事务捕获」路径，
-     *        后续投递归业务排空器；缺省时走直发降级路径，见 {@link DomainEventFlusher}）
+     * @param outboxStoreProvider 领域事件 Outbox 捕获存储（全链路 Outbox 规范：有事件时强制要求；
+     *        容器中无此 Bean 且聚合注册了事件时，冲刷将 fail-fast 抛错回滚业务写入，
+     *        见 {@link DomainEventFlusher}）
      */
     @SuppressWarnings("unchecked")
     protected MybatisPlusPersistence(Mapper baseMapper,
-                                     ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
-                                     ObjectProvider<OutboxStore> outboxStoreProvider) {
+                                     ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
         this.baseMapper = baseMapper;
-        this.eventFlusher = new DomainEventFlusher(domainEventPublisherProvider, outboxStoreProvider);
+        this.eventFlusher = new DomainEventFlusher(outboxStoreProvider);
         this.poClass = (Class<PO>) GenericTypeResolver
                 .resolveTypeArguments(getClass(), MybatisPlusPersistence.class)[1];
     }
