@@ -15,7 +15,7 @@ import lombok.Getter;
  *
  * <p><strong>边界</strong>：领域事件<strong>仅在进程内</strong>消费，受众是 application 层的域内反应监听器
  * （{@code @EventListener}），不对外、不做跨服务序列化。需要跨服务通知时，由 application 层 Publisher
- * 将领域事件翻译为集成事件（IntegrationEvent）后投递 MQ。
+ * 将领域事件翻译为集成事件（IntegrationEvent）并捕获入集成 Outbox，由框架集成排空器投递。
  *
  * <p>每个事件包含：
  *
