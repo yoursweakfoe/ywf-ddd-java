@@ -22,6 +22,7 @@ import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.OrderRepository;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
 import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.scheduler.OutboxRelay;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -67,7 +69,13 @@ class MybatisPlusPersistenceTest {
         }
     }
 
-    /** Captures domain events published via Spring ApplicationEventPublisher */
+    /**
+     * Captures domain events dispatched via Spring ApplicationEventPublisher.
+     *
+     * <p>全链路 Outbox 语义：聚合持久化时事件只被捕获入 {@code ddd_domain_event_outbox}
+     * （与业务同事务），进程内派发只在排空器（{@code domainEventOutboxRelay}）drain 时发生。
+     * 因此事件断言统一为：save/update/remove → {@code drain(n)} → 断言 captured。
+     */
     static class TestEventCapture {
         final List<DomainEvent> captured = new ArrayList<>();
 
@@ -83,6 +91,7 @@ class MybatisPlusPersistenceTest {
     private final ProductMapper productMapper;
     private final TestEventCapture eventCapture;
     private final JdbcTemplate jdbcTemplate;
+    private final OutboxRelay domainEventOutboxRelay;
 
     @Autowired
     MybatisPlusPersistenceTest(OrderRepository orderRepository,
@@ -90,13 +99,15 @@ class MybatisPlusPersistenceTest {
                                  OrderMapper orderMapper,
                                  ProductMapper productMapper,
                                  TestEventCapture eventCapture,
-                                 JdbcTemplate jdbcTemplate) {
+                                 JdbcTemplate jdbcTemplate,
+                                 @Qualifier("domainEventOutboxRelay") OutboxRelay domainEventOutboxRelay) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.orderMapper = orderMapper;
         this.productMapper = productMapper;
         this.eventCapture = eventCapture;
         this.jdbcTemplate = jdbcTemplate;
+        this.domainEventOutboxRelay = domainEventOutboxRelay;
     }
 
     @BeforeEach
@@ -104,6 +115,9 @@ class MybatisPlusPersistenceTest {
         // BlockAttackInnerInterceptor 禁止全表删除，通过 JDBC 绕过拦截器
         jdbcTemplate.execute("DELETE FROM orders.orders");
         jdbcTemplate.execute("DELETE FROM products.products");
+        // Outbox 表同样逐测试清空，避免残留行污染 drain 断言
+        jdbcTemplate.execute("DELETE FROM ddd_domain_event_outbox");
+        jdbcTemplate.execute("DELETE FROM ddd_integration_event_outbox");
         eventCapture.captured.clear();
     }
 
@@ -113,16 +127,20 @@ class MybatisPlusPersistenceTest {
     void saveDomain_insertsAndPublishesEvents() {
         Order order = OrderFixtures.createOrder();
         order.place(); // registers OrderPlacedEvent
+        UUID originalEventId = order.getDomainEvents().get(0).getEventId();
 
         orderRepository.save(order);
 
         // DB has record
         assertThat(orderRepository.findById(order.getId())).isPresent();
-        // Event was published
+        // Event was captured into outbox at save time; dispatch happens only when the relay drains
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(1);
         assertThat(eventCapture.captured)
                 .hasSize(1)
                 .first()
                 .isInstanceOf(OrderPlacedEvent.class);
+        // 事件身份经 outbox 行重建：eventId 跨序列化/重投保持稳定（幂等键契约）
+        assertThat(eventCapture.captured.get(0).getEventId()).isEqualTo(originalEventId);
         // Events cleared on aggregate
         assertThat(order.getDomainEvents()).isEmpty();
     }
@@ -260,6 +278,8 @@ class MybatisPlusPersistenceTest {
         savedProduct.deductStock(10); // registers StockDeductedEvent
         productRepository.update(savedProduct);
 
+        // 事件随更新同事务入箱，排空后才进程内派发
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(1);
         assertThat(eventCapture.captured)
                 .hasSize(1)
                 .first()
@@ -354,6 +374,8 @@ class MybatisPlusPersistenceTest {
                 id -> new OrderCancelledEvent(id, "deleted"));
 
         assertThat(orderRepository.findById(order.getId())).isEmpty();
+        // 删除工厂事件同事务入箱，排空后派发
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(1);
         assertThat(eventCapture.captured)
                 .hasSize(1)
                 .first()
@@ -368,6 +390,8 @@ class MybatisPlusPersistenceTest {
                 id -> new OrderCancelledEvent(id, "deleted")))
                 .isInstanceOf(IllegalStateException.class);
 
+        // 删除失败 → 无事件入箱 → 排空无可认领行、无派发
+        assertThat(domainEventOutboxRelay.drain(10)).isZero();
         assertThat(eventCapture.captured).isEmpty();
     }
 
@@ -385,6 +409,7 @@ class MybatisPlusPersistenceTest {
 
         assertThat(orderRepository.findById(o1.getId())).isEmpty();
         assertThat(orderRepository.findById(o2.getId())).isEmpty();
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(2);
         assertThat(eventCapture.captured)
                 .hasSize(2)
                 .allMatch(OrderCancelledEvent.class::isInstance);
@@ -409,6 +434,7 @@ class MybatisPlusPersistenceTest {
 
         assertThat(orderRepository.findById(o1.getId())).isEmpty();
         assertThat(orderRepository.findById(o2.getId())).isEmpty();
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(2);
         assertThat(eventCapture.captured)
                 .hasSize(2)
                 .allMatch(OrderCancelledEvent.class::isInstance);
@@ -426,6 +452,8 @@ class MybatisPlusPersistenceTest {
                 id -> new OrderCancelledEvent(id, "deleted")))
                 .isInstanceOf(IllegalStateException.class);
 
+        // 无删除成功 → 无事件入箱 → 排空无可认领行、无派发
+        assertThat(domainEventOutboxRelay.drain(10)).isZero();
         assertThat(eventCapture.captured).isEmpty();
     }
 
@@ -444,6 +472,7 @@ class MybatisPlusPersistenceTest {
         productRepository.removeDomain(saved);
 
         assertThat(productRepository.findById(saved.getId())).isEmpty();
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(1);
         assertThat(eventCapture.captured)
                 .hasSize(1)
                 .first()
@@ -467,6 +496,7 @@ class MybatisPlusPersistenceTest {
         productRepository.removeDomains(savedList);
 
         assertThat(productRepository.findDomainsByIds(ids)).isEmpty();
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(2);
         assertThat(eventCapture.captured)
                 .hasSize(2)
                 .allMatch(StockDeductedEvent.class::isInstance);
@@ -498,6 +528,7 @@ class MybatisPlusPersistenceTest {
         productRepository.removeDomains(mixed);
 
         assertThat(productRepository.findDomainsByIds(ids)).isEmpty();
+        assertThat(domainEventOutboxRelay.drain(10)).isEqualTo(2);
         assertThat(eventCapture.captured)
                 .hasSize(2) // 仅两个真实存在的聚合发事件，幻影不发
                 .allMatch(StockDeductedEvent.class::isInstance);
