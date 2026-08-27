@@ -41,14 +41,17 @@ class OrderDomainEventListenerTest {
     }
 
     @Test
-    void onOrderCancelled_shouldNotThrowWhenReplenishFails() {
+    void onOrderCancelled_replenishFailure_propagates() {
         UUID orderId = UUID.randomUUID();
         Order order = TestOrders.rebuilt(orderId, OrderStatus.PENDING);
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         doThrow(new RuntimeException("DB down")).when(inventoryDomainService).replenishStock(any());
 
-        // 不应抛异常（AFTER_COMMIT 语义：补偿失败仅记日志）
-        listener.onOrderCancelled(new OrderCancelledEvent(orderId, "reason"));
+        // 补偿失败向上抛（REQUIRES_NEW 事务随之回滚）：业务接入 Outbox 后排空器可据此重投；
+        // 不再静默吞掉（历史行为「仅记日志」会让回补永久丢失且无任何重试线索）
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> listener.onOrderCancelled(new OrderCancelledEvent(orderId, "reason")))
+                .isInstanceOf(RuntimeException.class);
 
         verify(inventoryDomainService).replenishStock(any());
     }

@@ -28,7 +28,11 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 - 位置：`application/{agg}/event/listener/{Agg}DomainEventListener.java`
 - 标注 `@Component`
-- 方法标注 `@EventListener`（同事务）或 `@TransactionalEventListener(phase = AFTER_COMMIT)`（尽力而为）
+- 方法标注 `@EventListener`——事件在业务事务**提交后**投递（直发路径 = afterCommit 派发；
+  业务接 Outbox 后 = 排空器投递），无活动事务，不要用
+  `@TransactionalEventListener(AFTER_COMMIT)`（无事务可挂靠，默认不执行）
+- 监听器内有数据库写入时追加 `@Transactional(propagation = REQUIRES_NEW, rollbackFor = Exception.class)`
+- 投递语义 at-least-once：监听器逻辑按 `eventId` 幂等（重复投递不产生重复副作用）
 - 方法签名：`public void on{Agg}{Action}({Agg}{Action}Event event)`
 - 薄编排：接事件 → 加载聚合 → 委托 DomainService（不含 if-else 业务判断）
 
@@ -51,10 +55,11 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 - [ ] DomainEvent 所有字段 final（不可变）
 - [ ] 事件注册在状态变迁之后
-- [ ] DomainEventListener 事务注解选择正确：
-  - 同生共死 → `@EventListener`
-  - 尽力而为 → `@TransactionalEventListener(AFTER_COMMIT)`
+- [ ] DomainEventListener 注解选择正确（投递已在提交后发生）：
+  - 一律 `@EventListener`（不要用 `@TransactionalEventListener(AFTER_COMMIT)`）
+  - 带数据库写入 → 追加 `@Transactional(propagation = REQUIRES_NEW)`
   - 完全异步 → `@Async @EventListener`
+- [ ] 监听器逻辑按 `eventId` 幂等（Outbox at-least-once 重投契约）
 - [ ] 集成事件在 contract 模块（不在 server）
 - [ ] Publisher 不被 AppService 直接调用（由 CommandHandler/DomainEventListener 调用）
 

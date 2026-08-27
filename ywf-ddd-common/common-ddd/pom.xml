@@ -53,6 +53,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Jackson 3（Outbox 载荷 JSON 序列化；统一到 Spring Boot 4 基线，版本随 BOM） -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
         <!-- ========== 测试 ========== -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
@@ -64,12 +70,6 @@
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-pg</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- Jackson 3（测试 fixtures 中 JSON 序列化用；统一到 Spring Boot 4 基线） -->
-        <dependency>
-            <groupId>tools.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- H2 内存数据库（MybatisPlusPersistenceTest 用） -->

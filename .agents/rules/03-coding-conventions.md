@@ -69,9 +69,15 @@ public void cancelOrder(CancelOrderCommand command) {
 ## 领域事件
 
 - 聚合根内 `registerEvent(new XxxEvent(...))`（暂存）
-- Repository 持久化成功后自动 `publishAndClearEvents()`（Spring Event，仅进程内）
+- Repository 持久化成功后经 `DomainEventFlusher` 冲刷（先清后发）；业务提供 `OutboxStore`
+  实现时经 Outbox 与业务同事务入箱（提交 ⇒ 落库，跨崩溃不丢），入箱后的排空 / 重试 / 死信
+  归业务排空器（框架只给捕获契约 + 编解码工具，无缺省实现；仅进程内，at-least-once）；
+  未提供时回退直发路径（提交后进程内派发，at-most-once）
 - DomainEvent 不可变（所有字段 final）
-- 域内反应监听器（DomainEventListener）位于 `application/{agg}/event/listener/`，标注 `@EventListener`；薄编排：接事件 → 加载聚合 → 委托 DomainService / Publisher
+- 域内反应监听器（DomainEventListener）位于 `application/{agg}/event/listener/`，标注 `@EventListener`；
+  投递发生在业务事务提交后（无活动事务）——禁用 `@TransactionalEventListener(AFTER_COMMIT)`，
+  监听器内数据库写入须自带 `@Transactional(propagation = REQUIRES_NEW)`；
+  薄编排：接事件 → 加载聚合 → 委托 DomainService / Publisher；逻辑按 `eventId` 幂等
 - 集成事件（跨服务）：Publisher 翻译为 contract 中的 IntegrationEvent → MQ
 
 ## 命名规范
@@ -95,7 +101,9 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Repository 泛型
 
 - 接口：`Repository<Domain, ID>`（domain 层）
-- 实现：继承 `MybatisPlusPersistence<Mapper, PO, Domain>`（infrastructure 层）
+- 实现：继承 `MybatisPlusPersistence<Mapper, PO, Domain, ID>`（infrastructure 层），
+  构造器注入 `Mapper` + `ObjectProvider<DomainEventPublisher>` + `ObjectProvider<OutboxStore>` + Converter；
+  领域 ID 与 PO 主键类型不一致时覆写 `toPersistenceId(ID)`
 - Converter：实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
 
 ## Domain Service（跨聚合协调）

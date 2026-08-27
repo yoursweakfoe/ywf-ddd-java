@@ -280,26 +280,35 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
 
 @Component
 public class OrderRepositoryImpl
-        extends MybatisPlusPersistence<OrderMapper, OrderPO, Order>
+        extends MybatisPlusPersistence<OrderMapper, OrderPO, Order, UUID>
         implements OrderRepository {
 
     private final OrderConverter converter;
 
-    public OrderRepositoryImpl(ObjectProvider<DomainEventPublisher> provider, OrderConverter converter) {
-        super(provider);
+    public OrderRepositoryImpl(OrderMapper mapper,
+                               ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+                               ObjectProvider<OutboxStore> outboxStoreProvider,
+                               OrderConverter converter) {
+        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
         this.converter = converter;
     }
 
     @Override protected BasicConverter<Order, OrderPO> getConverter() { return converter; }
-    @Override public Optional<Order> findById(UUID id) { return findDomainById(id.toString()); }
+    @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
+    @Override public Optional<Order> findById(UUID id) { return findDomainById(id); }
     @Override @Transactional(rollbackFor = Exception.class)
     public void save(Order domain) { saveDomain(domain); }
     @Override @Transactional(rollbackFor = Exception.class)
     public void update(Order domain) { updateDomain(domain); }
-    @Override public boolean exists(UUID id) { return existsDomainById(id.toString()); }
-    @Override public void deleteById(UUID id) { removeDomainById(id.toString()); }
+    @Override public boolean exists(UUID id) { return existsDomainById(id); }
+    @Override public void deleteById(UUID id) { removeDomainById(id); }
 }
 ```
+
+> 领域事件随持久化经框架 Outbox 捕获契约交付（`OutboxStore` SPI，见
+> `docs/common/common-ddd.md` Outbox 节），仓储构造注入的 `OutboxStore`
+> Provider 即捕获的接线点；框架不提供缺省实现——业务提供 Store Bean 时激活捕获，
+> 入箱后的投递归业务排空器，未提供时自动回退直发路径。
 
 ## 完整文件清单
 

@@ -247,7 +247,9 @@ class RestEndpointIntegrationTest {
     @Order(11)
     void afterCancelOrder_stockReplenished() {
         assertThat(createdProductId).isNotNull();
-        // 初始 100，下单扣 2，取消回补 2 → 应该回到 100
+        // 初始 100，下单扣 2，取消回补 2 → 应该回到 100。
+        // 本样例未提供 OutboxStore Bean：事件走直发路径（业务事务提交后同步派发），
+        // 监听器回补在请求返回前已完成。业务接入 Outbox 后此处应改为轮询/异步断言。
         ProductCO dto = client().get().uri("/products/" + createdProductId)
                 .retrieve()
                 .body(ProductCO.class);

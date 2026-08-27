@@ -373,27 +373,33 @@ public interface PaymentMapper extends BaseMapper<PaymentPO> {}
 
 @Component
 public class PaymentRepositoryImpl
-        extends MybatisPlusPersistence<PaymentMapper, PaymentPO, Payment>
+        extends MybatisPlusPersistence<PaymentMapper, PaymentPO, Payment, UUID>
         implements PaymentRepository {
 
     private final PaymentConverter converter;
 
-    public PaymentRepositoryImpl(ObjectProvider<DomainEventPublisher> provider,
+    public PaymentRepositoryImpl(PaymentMapper mapper,
+                                 ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+                                 ObjectProvider<OutboxStore> outboxStoreProvider,
                                  PaymentConverter converter) {
-        super(provider);
+        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
         this.converter = converter;
     }
 
     @Override protected BasicConverter<Payment, PaymentPO> getConverter() { return converter; }
-    @Override public Optional<Payment> findById(UUID id) { return findDomainById(id.toString()); }
+    @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
+    @Override public Optional<Payment> findById(UUID id) { return findDomainById(id); }
     @Override @Transactional(rollbackFor = Exception.class)
     public void save(Payment domain) { saveDomain(domain); }
     @Override @Transactional(rollbackFor = Exception.class)
     public void update(Payment domain) { updateDomain(domain); }
-    @Override public boolean exists(UUID id) { return existsDomainById(id.toString()); }
-    @Override public void deleteById(UUID id) { removeDomainById(id.toString()); }
+    @Override public boolean exists(UUID id) { return existsDomainById(id); }
+    @Override public void deleteById(UUID id) { removeDomainById(id); }
 }
 ```
+
+> 构造器注入的 `OutboxStore` Provider 是领域事件 Outbox 捕获的接线点
+> （框架不提供缺省实现：业务提供 `OutboxStore` Bean 时激活捕获，入箱后的投递归业务排空器；未提供时回退直发路径）。
 
 ## 创建顺序建议
 

@@ -7,6 +7,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.OutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Optional;
@@ -32,8 +33,9 @@ public class OrderRepositoryImpl
 
     public OrderRepositoryImpl(OrderMapper mapper,
                                ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+                               ObjectProvider<OutboxStore> outboxStoreProvider,
                                OrderConverter converter) {
-        super(mapper, domainEventPublisherProvider);
+        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
         this.converter = converter;
     }
     // endregion

@@ -21,12 +21,13 @@
 | DTO | — | Application 层内部视图对象（`application/{agg}/dto/`），写侧/读侧均实现 `ApplicationDTO` 标记接口（common-ddd），与 contract 层 `CO` 标记对偶（内部可含 version/审计，对外经 Presenter 清洗） |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口与 `RestAdapter` 标记接口（common-ddd），spring-web 注解声明 REST 路径，纯透传 AppService |
 | RestAdapter | — | common-ddd 空标记接口，定型「REST 入口适配器」角色（Ports & Adapters 的 driving adapter），供 ArchUnit R8a/R8b 识别与约束 |
-| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外。"进程内我告诉自己人" |
+| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外；经框架 Outbox 在业务事务提交后可靠投递（at-least-once）。"进程内我告诉自己人" |
 | IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它 |
-| DomainEventListener | — | Application 层组件，实现 `DomainEventListener` 标记接口（common-ddd），监听领域事件（@EventListener）执行域内反应。薄编排：接事件 → 加载聚合 → 委托 DomainService/Publisher |
+| DomainEventListener | — | Application 层组件，实现 `DomainEventListener` 标记接口（common-ddd），监听领域事件（@EventListener）执行域内反应。投递发生在业务事务提交后（无活动事务），带库写的副作用自带 `REQUIRES_NEW`。薄编排：接事件 → 加载聚合 → 委托 DomainService/Publisher |
 | IntegrationEventPublisher | — | common-ddd 空标记接口（`application/event/publisher/`），定型「集成事件出站 Publisher」角色，供 ArchUnit R7b/R7c 识别；与 domain 层进程内 `DomainEventPublisher`（带方法签名）划清边界 |
 | ApplicationDTO | — | common-ddd 空标记接口（`application/dto/`），定型「应用层内部视图」角色（写侧 DTO + 读侧 DTO），供 ArchUnit R10a/R10b 识别；与 contract 层 `CO` 标记对偶 |
 | Publisher | — | Application 层组件，将领域事件翻译为集成事件并投递 MQ |
+| Outbox | — | Transactional Outbox（common-ddd `infrastructure/event/outbox/`）：框架只提供捕获契约（`OutboxStore` SPI）+ 编解码工具（`DomainEventCodec`），**无缺省实现**——实现、排空 / 重试 / 死信归业务或生态方案（MQ 事务消息 / CDC / Modulith EPR）。参考表结构 `sql/ddd_outbox.example.sql`。投递语义 at-least-once，消费端按 eventId 幂等。业务未提供 `OutboxStore` 时回退直发路径 |
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
 | PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |

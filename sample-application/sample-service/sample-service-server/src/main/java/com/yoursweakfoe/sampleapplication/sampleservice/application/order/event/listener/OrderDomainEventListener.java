@@ -18,8 +18,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * 订单领域事件监听器（域内反应）—— 对订单聚合的领域事件作出进程内反应。
@@ -27,12 +25,16 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <p>薄编排契约：方法体只做「接事件 → 加载聚合 → 委托 DomainService / Publisher」，
  * 业务规则在 DomainService 与聚合根内，本类不含 if-else 业务判断。
  *
- * <p>监听器选型约定：
+ * <p>监听器选型约定（投递时序：事件在业务事务提交后投递——本样例未提供
+ * {@code OutboxStore}，走直发降级路径（afterCommit 进程内派发）；业务接入 Outbox 后
+ * 由排空器投递。派发时无活动事务——见 common-ddd {@code DomainEventFlusher}）：
  * <ul>
- *   <li>纯日志等无副作用监听 —— {@code @EventListener}（事务内同步，开销可忽略）
- *   <li>出站通知 —— {@code @TransactionalEventListener(AFTER_COMMIT)}（尽力而为，不阻断主事务）
- *   <li>补偿型副作用（如取消后回补库存）—— {@code @TransactionalEventListener(AFTER_COMMIT)}
- *       + {@code REQUIRES_NEW}：主事务（取消订单）不被副作用失败阻断，副作用失败记录 ERROR 日志供人工对账
+ *   <li>一律使用普通 {@code @EventListener}——「提交后才执行」已由捕获+排空机制保证，
+ *       不应使用 {@code @TransactionalEventListener(AFTER_COMMIT)}（无事务可挂靠，默认不执行）</li>
+ *   <li>带数据库写入的副作用（如补偿回补）追加 {@code @Transactional(REQUIRES_NEW)}
+ *       自带独立事务——派发时无活动事务，写入不会自动提交</li>
+ *   <li>监听器抛异常不影响已提交的业务事务；业务接入 Outbox 后排空器可标记失败并重投
+ *       （策略由排空器定）——补偿失败不再只靠静默吞掉</li>
  * </ul>
  */
 @Slf4j
@@ -60,9 +62,9 @@ public class OrderDomainEventListener implements DomainEventListener {
     }
 
     /**
-     * 下单后出站通知（尽力而为）：事务提交后翻译为集成事件并投递 MQ。
+     * 下单后出站通知：投递已在业务事务提交后发生，直接翻译为集成事件并投递 MQ。
      */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void onOrderPlacedOutbound(OrderPlacedEvent event) {
         orderEventPublisher.publishOrderPlaced(event);
     }
@@ -96,11 +98,12 @@ public class OrderDomainEventListener implements DomainEventListener {
     /**
      * 订单取消后回补库存（补偿型副作用）。
      *
-     * <p>{@code AFTER_COMMIT}：取消事务提交后才执行，回补失败不会回滚已取消的订单；
-     * {@code REQUIRES_NEW}：原事务已完成，库存写入必须开启新事务才能提交；
-     * 回补失败仅记录携带明细的 ERROR 日志（人工对账），不影响已提交的取消结果。
+     * <p>投递已在取消事务提交后发生（直发路径 / 业务接入 Outbox 后为排空器触发），
+     * 回补失败不会回滚已取消的订单；
+     * {@code REQUIRES_NEW}：派发时无活动事务，库存写入须自带独立事务才能提交；
+     * 回补抛异常时：直发路径仅记日志；接入 Outbox 后由业务排空器重投（策略由排空器定）。
      */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void onOrderCancelled(OrderCancelledEvent event) {
         log.info("Order cancelled: orderId={}, reason={}",
@@ -116,12 +119,6 @@ public class OrderDomainEventListener implements DomainEventListener {
                     event.getOrderId(), e);
             return;
         }
-        try {
-            inventoryDomainService.replenishStock(order.getItems());
-        } catch (Exception e) {
-            // 补偿失败不向上抛（主事务已提交）；携带完整明细落日志供人工对账（无 outbox，本日志即唯一线索）
-            log.error("Stock replenish failed after order cancelled: orderId={}, items={}",
-                    event.getOrderId(), order.getItems(), e);
-        }
+        inventoryDomainService.replenishStock(order.getItems());
     }
 }

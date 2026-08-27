@@ -108,15 +108,15 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 #### 事件监听原理（Spring 机制）
 
-聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `publishAndClearEvents()` → Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法。
+聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `DomainEventFlusher` 冲刷（先清后发）→ 业务提供 `OutboxStore` 时经 **Outbox** 与业务同事务入箱（投递由业务排空器在**提交后**承担）；未提供时走直发降级路径（提交后经 `DomainEventPublisher` 进程内派发）→ 最终经 `DomainEventPublisher` 桥接 Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法。
 
 `DomainEvent` 不需要实现任何 Spring 接口（Spring 4.2+ 的 `publishEvent` 接受任意 Object），领域层保持零框架依赖。
 
-→ 完整链路代码见 [cookbook/event-flow.md](../cookbook/event-flow.md)
+→ 完整链路代码见 [cookbook/event-flow.md](../cookbook/event-flow.md)；Outbox 可靠性语义见 [common-ddd.md Outbox 节](../../common/common-ddd.md)
 
 #### 事件发布通道（谁来发、什么时候发）
 
-唯一的 opt-in 点是 `AggregateRoot.registerEvent()`，仓储只是可靠的投递机制（保证先持久化成功后发 + 先清后发），不是策略决定者：
+唯一的 opt-in 点是 `AggregateRoot.registerEvent()`，仓储只是可靠的投递机制（保证先持久化成功后冲刷 + 先清后发 + Outbox at-least-once），不是策略决定者：
 
 | 场景 | 通道 |
 |------|------|
@@ -138,16 +138,21 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 #### 事件监听器事务传播
 
+领域事件经 Outbox 同事务捕获、由业务排空器在业务事务**提交之后**投递（详见
+[common-ddd.md Outbox 节](../../common/common-ddd.md)）——监听器执行时**无活动事务**，
+「提交后才执行」由捕获+排空机制保证，不再由监听器注解表达：
+
 | 注解 | 线程 | 事务 | 监听器异常的影响 |
 |------|------|------|----------------|
-| `@EventListener` | 同线程 | **传播**（在同一事务内） | 整个事务回滚（包括原始 save） |
-| `@TransactionalEventListener(AFTER_COMMIT)` | 同线程 | **断开**（事务已提交） | 原始 save 不受影响 |
-| `@Async @EventListener` | 新线程 | **断开**（事务绑定 ThreadLocal） | 完全隔离 |
+| `@EventListener`（域内反应默认） | 同线程（排空线程） | **无**（已提交；写入须自带事务） | 原始业务事务不受影响；排空器标记失败后重投（策略由排空器定） |
+| `@EventListener + @Transactional(REQUIRES_NEW)` | 同线程 | **独立新事务** | 新事务回滚；排空器重投 |
+| `@Async @EventListener` | 新线程 | **无** | 完全隔离（注意丢失 Outbox 重投兜底） |
 
 选择原则：
-- 需要和主操作同生共死 → `@EventListener`
-- 主操作成功后尽力而为 → `@TransactionalEventListener(AFTER_COMMIT)`
+- 纯反应（日志 / 出站翻译）→ `@EventListener`
+- 带数据库写入的补偿副作用 → `@EventListener` + `@Transactional(REQUIRES_NEW)`
 - 完全异步不关心结果 → `@Async @EventListener`
+- **禁用** `@TransactionalEventListener(AFTER_COMMIT)`：投递时无事务可挂靠，默认不执行
 
 ### 多数据源策略
 

@@ -207,11 +207,20 @@ public final class DDDArchitectureRules {
      * <p>注意：ArchUnit 包匹配按「段」精确匹配（非子串），{@code ..application..} 只匹配
      * 包段名恰为 {@code application} 的包，不会误伤 {@code sampleapplication} 这类
      * 仅含 "application" 子串的根包。
+     *
+     * <p><strong>段匹配碰撞内置排除</strong>：{@code ..domain..} 按包段匹配，会同时命中
+     * 其它层内部以 {@code domain} 命名的子包——本框架惯例用 {@code .domain} 后缀表达
+     * 「某关注点的领域侧/领域对象」，如 infrastructure 下的
+     * {@code ..repository.domain..}（仓储实现）、{@code ..event.domain..}（事件冲刷）。
+     * 这些类按更深前缀归属于其所在层（受 R1b 等该层规则管辖），不属于本规则的域层主语——
+     * 故主语谓词显式排除任何位于 application / infrastructure / adapter 包下的类。
      */
     public static final ArchRule DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS =
             noClasses()
-                    .that()
-                    .resideInAPackage("..domain..")
+                    .that(resideInAPackage("..domain..")
+                            .and(not(resideInAPackage("..infrastructure..")))
+                            .and(not(resideInAPackage("..application..")))
+                            .and(not(resideInAPackage("..adapter.."))))
                     .should()
                     .dependOnClassesThat()
                     .resideInAnyPackage("..application..", "..infrastructure..", "..adapter..", "..contract..")

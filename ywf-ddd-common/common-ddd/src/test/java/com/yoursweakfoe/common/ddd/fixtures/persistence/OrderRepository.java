@@ -7,6 +7,7 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.event.publisher.DomainEventPublisher;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.OutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Optional;
@@ -23,8 +24,9 @@ public class OrderRepository extends MybatisPlusPersistence<OrderMapper, OrderPO
 
     public OrderRepository(OrderMapper mapper,
                            ObjectProvider<DomainEventPublisher> domainEventPublisherProvider,
+                           ObjectProvider<OutboxStore> outboxStoreProvider,
                            OrderConverter converter) {
-        super(mapper, domainEventPublisherProvider);
+        super(mapper, domainEventPublisherProvider, outboxStoreProvider);
         this.converter = converter;
     }
 
