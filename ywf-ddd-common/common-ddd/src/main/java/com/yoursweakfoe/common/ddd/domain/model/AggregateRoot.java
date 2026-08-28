@@ -10,16 +10,17 @@ import java.util.List;
  * <p>职责：
  * <ul>
  *   <li>维护业务不变量（{@link #validate()} 模板方法，持久化前自动调用）
- *   <li>管理领域事件（{@link #registerEvent(DomainEvent)}，持久化后统一发布）
+ *   <li>管理领域事件（{@link #registerEvent(DomainEvent)}，持久化后统一入箱）
  *   <li>控制子实体生命周期
  * </ul>
  *
- * <p>事件机制：业务方法内 registerEvent → 仓储持久化成功 → DomainEventPublisher 发布 → clearDomainEvents。
+ * <p>事件机制：业务方法内 registerEvent → 仓储持久化成功 → DomainEventOutboxCapture 先清后入箱
+ * （与业务同事务）→（异步）领域排空器 → InProcessDomainEventPublisher 派发。
  *
  * <p><strong>序列化注意</strong>：{@code domainEvents} 为 {@code transient} 字段，
  * Java 序列化（Redis / Session / 分布式缓存）后已注册事件将丢失。
- * 请确保在 {@code registerEvent()} 后尽快调用仓储的 save/update 完成事件发布，
- * 避免在事件未发布前将聚合根序列化。
+ * 请确保在 {@code registerEvent()} 后尽快调用仓储的 save/update 完成事件入箱，
+ * 避免在事件未入箱前将聚合根序列化。
  *
  * <p><strong>线程安全约束</strong>：{@code domainEvents} 使用非线程安全的 {@code ArrayList}。
  * 聚合根实例设计为<strong>单请求、单线程</strong>使用（一次 HTTP/RPC 请求内加载、操作、持久化），
@@ -33,7 +34,7 @@ import java.util.List;
 public abstract class AggregateRoot<ID> extends Entity<ID> {
 
     /**
-     * 领域事件暂存列表（持久化成功后由基础设施发布并清空）。
+     * 领域事件暂存列表（持久化成功后由基础设施先清后捕入箱）。
      *
      * <p>非线程安全 —— 依赖「单请求单实例」约束（见类级 Javadoc）。
      */
@@ -42,7 +43,7 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
     // ==================== 领域事件管理 ====================
 
     /**
-     * 注册领域事件（不能为 null），持久化成功后统一发布。
+     * 注册领域事件（不能为 null），持久化成功后统一入箱。
      */
     protected void registerEvent(DomainEvent event) {
         if (event == null) {
@@ -59,7 +60,7 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
         return List.copyOf(domainEvents);
     }
 
-    /** 清空事件（由仓储层在发布后调用，业务代码不应直接调用） */
+    /** 清空事件（由仓储层在捕获入箱后调用，业务代码不应直接调用） */
     public void clearDomainEvents() {
         this.domainEvents.clear();
     }

@@ -29,8 +29,9 @@ adapter 层共有三类 driving adapter（协议适配入口），Scheduler 是�
 
 > 注意区分：框架的 Outbox 排空调度器（`OutboxRelayScheduler`，common-ddd
 > `infrastructure/event/outbox/scheduler/`）也用 `@Scheduled`，但它是**框架管线**
-> （基础设施自驱排空 `ddd_domain_event_outbox` / `ddd_integration_event_outbox`，
-> 不含业务编排），**不实现** `ScheduledAdapter` 标记，不属于本文的业务定时入口
+> （基础设施自驱排空 outbox 表——参考表 `ddd_domain_event_outbox` /
+> `ddd_integration_event_outbox`，实现归使用方，不含业务编排），**不实现**
+> `ScheduledAdapter` 标记，不属于本文的业务定时入口
 > （见 [event-flow.md](event-flow.md) 排空器节）。
 
 ## 链路全景

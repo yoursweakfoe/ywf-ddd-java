@@ -44,8 +44,9 @@ CREATE TABLE IF NOT EXISTS products.products (
 CREATE INDEX IF NOT EXISTS idx_products_name ON products.products (name);
 
 -- ============================================================================
--- Outbox 缺省表（全链路 Outbox 可靠性规范；此处为 H2 测试形态）
---   与框架 resources/sql/ddd_*_event_outbox.sql 的 PG 规范结构一致，差异：
+-- Outbox 参考表（全链路 Outbox 可靠性规范；此处为 H2 测试形态）
+--   与本服务 src/main/resources/sql/ddd_*_event_outbox.sql 的 PG 规范结构一致
+--   （框架 SPI-only 零 SQL，标准表结构归 sample 参考实现所有），差异：
 --   payload 用 TEXT（H2 无 JSONB）；索引用普通索引（H2 不支持部分索引）。
 --   落默认 PUBLIC schema（JdbcTemplate 无 schema 前缀写入）。
 -- ============================================================================

@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.event.outbox;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.event.outbox;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent;
@@ -14,7 +14,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * 集成事件 Outbox 缺省捕获实现 —— 标准表 {@code ddd_integration_event_outbox} 的 JDBC 写入。
+ * 集成事件 Outbox 捕获参考实现（原框架缺省实现外移）—— 标准表
+ * {@code ddd_integration_event_outbox} 的 JDBC 写入。框架 SPI-only（零 SQL），实现归使用方；
+ * 本类即样例工程给出的参考写法，业务项目可直接照搬或按需替换。
  *
  * <p><strong>行身份 = MQ messageId</strong>：集成事件是 contract 层纯 POJO（无框架身份字段），
  * 行主键在捕获时铸造新 UUID，即后续投递的信封 {@code messageId}——跨重投稳定（它就是行本身），
@@ -31,7 +33,7 @@ import tools.jackson.databind.json.JsonMapper;
  * <p>线程安全：{@link JdbcTemplate} 与 {@link JsonMapper} 均线程安全。
  *
  * @see IntegrationEventOutboxStore
- * @see IntegrationEventSender
+ * @see com.yoursweakfoe.common.ddd.infrastructure.event.outbox.IntegrationEventSender
  */
 public class JdbcIntegrationEventOutboxStore implements IntegrationEventOutboxStore {
 

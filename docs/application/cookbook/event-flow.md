@@ -19,9 +19,22 @@
 ## 全链路 Outbox 可靠性规范
 
 **每一条领域事件、每一条集成事件，都强制经 Transactional Outbox 投递**——框架
-（common-ddd）提供完整管线：捕获（同事务入箱）+ 排空（认领 → 派发 → 标记完成）+
-重试 / 死信 / 清除。**不存在直发路径，也不存在静默丢弃**：聚合注册了事件但容器中无
-Outbox 捕获 Bean 时，冲刷直接抛错回滚业务写入——要么不用事件，要么带上 Outbox。
+（common-ddd）定**契约与策略**：捕获契约（`DomainEventOutboxStore` /
+`IntegrationEventOutboxStore` SPI）+ 排空策略管线（认领 → 派发 → 标记完成 +
+重试 / 死信）；**持久化实现归使用方（SPI-only，框架零 SQL，不提供缺省实现）**。
+**不存在直发路径，也不存在静默丢弃**：聚合注册了事件但容器中无 Outbox 捕获 Bean 时，
+捕获直接抛错回滚业务写入——要么不用事件，要么带上 Outbox。
+
+**使用前必备**（业务服务接入清单）：
+
+- [ ] 实现 `DomainEventOutboxStore`（领域捕获，同事务入箱）并注册为 Bean
+- [ ] 实现 `OutboxRowAccess`（`kind() = DOMAIN`）并注册为 Bean（集成排空按需再加一个
+      `kind() = INTEGRATION`）；全部方法加入调用方事务、认领并发安全
+- [ ] （有 INTEGRATION 行访问时）提供 `IntegrationEventSender` Bean——缺失则启动 fail-fast
+- [ ] 按**参考 DDL** 建 outbox 表（sample 持有：
+      `sample-application/sample-service/sample-service-server/src/main/resources/sql/`）；
+      参考实现模板：sample 包
+      `com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.event.outbox`
 
 ## 事件流全景
 
@@ -31,32 +44,33 @@ Outbox 捕获 Bean 时，冲刷直接抛错回滚业务写入——要么不用�
 
 Repository.update(order)（业务事务内）
   → updateDomain(order)                            ② 先落库（UPDATE，乐观锁）
-  → DomainEventFlusher 先清后捕                    ③ 快照事件、清空暂存
-  → DomainEventOutboxStore.appendAll               ④ 同事务写 ddd_domain_event_outbox
+  → DomainEventOutboxCapture 先清后入箱            ③ 快照事件、清空暂存
+  → DomainEventOutboxStore.appendAll（SPI）        ④ 同事务写领域 outbox 表（参考表 ddd_domain_event_outbox）
                                                    （可靠性锚点：提交 ⇒ 落库；回滚 ⇒ 随行）
 业务事务提交 ─────────────────────────────────────────────────────────────
 
 框架排空器 OutboxRelay（领域实例，@Scheduled 轮询）
   → 每行一个 REQUIRES_NEW 事务：
-    认领（ORDER BY occurred_on … FOR UPDATE SKIP LOCKED）
+    claimOne 认领（经 OutboxRowAccess SPI；实现须并发安全，参考实现用 SKIP LOCKED 行锁）
     → codec 重建事件身份（eventId 跨重投稳定）
     → DomainEventPublisher.publish                 ⑤ 排空事务内进程内派发
       → DomainEventListener.onOrderCancelled()     ⑥ @EventListener 加入排空事务
         → inventoryDomainService.replenishStock()  ⑦ 普通 @Transactional 加入同一事务
-      →（出站）Publisher 翻译 → IntegrationEventOutboxStore.appendAll
-                                                   ⑧ 同事务写 ddd_integration_event_outbox
-    → UPDATE is_delete=TRUE（标记完成）→ 提交      ⑨ 内部反应 + 集成入箱 + 标记完成原子
+      →（出站）Capture 翻译 → IntegrationEventOutboxStore.appendAll
+                                                   ⑧ 同事务写集成 outbox 表（参考表 ddd_integration_event_outbox）
+    → markDone 标记完成 → 提交                      ⑨ 内部反应 + 集成入箱 + 标记完成原子
 
 框架排空器 OutboxRelay（集成实例）
   → 认领 → IntegrationEventSender.send(envelope)   ⑩ 投递 MQ（messageId = 行 id；
                                                      样例为日志占位，待 common-mq）
   → 标记完成 → 提交
-  → 失败：attempts++、指数退避重投；超限转 DEAD（死信留表）
-  → 已软删行过保留期后每日物理清除
+  → 失败：attempts++、指数退避重投；超限转 DEAD（死信留表，需人工介入）
+  → 已完成行软删留痕（is_delete=TRUE），框架不删除——搬运 / 归档归数据抽取层
 ```
 
 > 可靠性语义（audit F-04 收口定稿，详见 `docs/common/common-ddd.md` Outbox 节）：
-> 捕获与排空全部由框架交付（缺省 JDBC 实现 + `OutboxRelay`），投递语义
+> 捕获契约与排空策略由框架交付（捕获 SPI + `OutboxRelay` 纯策略引擎；持久化实现归使用方，
+> 参考实现见 sample），投递语义
 > **at-least-once**——崩溃恢复 / 并发认领下同一事件可能重复投递，消费端按身份幂等去重
 > （领域事件 = `eventId`，集成事件 = `messageId`）。
 
@@ -73,15 +87,15 @@ graph TB
     AS --> RH[Handler<br/>@Transactional]
 
     RH --> AGG[聚合行为<br/>registerEvent]
-    AGG --> REPO[Repository save/update<br/>先落库后冲刷]
+    AGG --> REPO[Repository save/update<br/>先落库后捕获]
     REPO --> DOX[(ddd_domain_event_outbox<br/>同事务捕获)]
 
     DOX --> RELAY1[OutboxRelay 领域实例<br/>认领 → 派发 → 标记完成]
     RELAY1 -->|排空事务内 @EventListener| EL[DomainEventListener<br/>域内反应]
 
     EL -->|仅域内处理| DONE[完成]
-    EL -->|需要通知外部| PUB[IntegrationEventPublisher<br/>翻译 + 同事务捕获]
-    PUB --> IOX[(ddd_integration_event_outbox<br/>同事务捕获)]
+    EL -->|需要通知外部| CAP[IntegrationEventCapture<br/>翻译 + 同事务捕获]
+    CAP --> IOX[(ddd_integration_event_outbox<br/>同事务捕获)]
 
     IOX --> RELAY2[OutboxRelay 集成实例]
     RELAY2 -->|IntegrationEventSender| MQ[MQ 出站<br/>messageId = 行 id]
@@ -94,12 +108,12 @@ graph TB
 | 环节 | 状态 | 落地位置 |
 |------|------|---------|
 | 领域事件定义 + 聚合根注册 | ✅ 已实现 | `domain/{agg}/event/domain/` + `registerEvent()` |
-| 仓储持久化后冲刷（先清后捕） | ✅ 已实现 | `MybatisPlusPersistence` → `DomainEventFlusher` |
-| 领域事件 Outbox 捕获 | ✅ 已实现 | 框架缺省 `JdbcDomainEventOutboxStore` → `ddd_domain_event_outbox`（SPI `DomainEventOutboxStore`；PG DDL `sql/ddd_domain_event_outbox.sql`） |
-| 领域事件排空投递 | ✅ 已实现 | 框架 `OutboxRelay`（领域实例）+ `OutboxRelayScheduler`（`infrastructure/event/outbox/scheduler/`），排空事务内经 `DomainEventPublisher` 进程内派发 |
+| 持久化成功后先清后入箱（同事务捕获） | ✅ 已实现 | `MybatisPlusPersistence` → `DomainEventOutboxCapture` |
+| 领域事件 Outbox 捕获 | ✅ 已实现 | SPI `DomainEventOutboxStore`（框架契约）+ sample 参考实现（`infrastructure/event/outbox/`）；参考 DDL `src/main/resources/sql/`（均在 sample-service-server） |
+| 领域事件排空投递 | ✅ 已实现 | 框架 `OutboxRelay`（领域实例，纯策略）+ `OutboxRelayScheduler`（`infrastructure/event/outbox/scheduler/`），行访问经 `OutboxRowAccess` SPI，排空事务内经 `DomainEventPublisher` 进程内派发 |
 | 域内反应（DomainEventListener） | ✅ 已实现 | `application/{agg}/event/listener/`（`@EventListener` 加入排空事务） |
 | 集成事件契约 | ✅ 已实现 | `contract/{agg}/dto/event/integration/` |
-| 集成事件翻译 + 捕获 | ✅ 已实现 | `application/{agg}/event/publisher/` → 应用层端口 `IntegrationEventOutboxStore`（缺省 `JdbcIntegrationEventOutboxStore` → `ddd_integration_event_outbox`） |
+| 集成事件翻译 + 捕获 | ✅ 已实现 | `application/{agg}/event/capture/` → 应用层端口 `IntegrationEventOutboxStore`（框架 SPI；sample 参考实现 → 参考表 `ddd_integration_event_outbox`） |
 | 集成事件排空 → MQ | ⚠️ 日志占位 | 框架 `OutboxRelay`（集成实例）已装配；样例以 `LoggingIntegrationEventSender`（`infrastructure/mq/`，日志占位）实现 `IntegrationEventSender` SPI，待 common-mq 提供真实 MQ 实现顶替 |
 | Consumer 入站 | ⛔ 未实现 | `adapter/event/consumer/`，设计见 [mq-consumer.md](mq-consumer.md) |
 
@@ -131,7 +145,7 @@ public void cancel(String reason) {
 }
 ```
 
-## 2. Infrastructure — 仓储触发冲刷 + Outbox 同事务捕获
+## 2. Infrastructure — 仓储触发捕获 + Outbox 同事务入箱
 
 ```java
 // MybatisPlusPersistence 内部逻辑（common-ddd 框架代码）
@@ -140,22 +154,22 @@ public void updateDomain(Domain domain) {
     PO po = getConverter().toPO(domain);
     int rows = baseMapper.updateById(po);       // ② UPDATE（乐观锁）
     if (rows == 0) throw ...;
-    eventFlusher.publishAndClear(domain);       // ③ 先清后捕 → 同事务写 outbox 表
+    outboxCapture.captureAndClear(domain);      // ③ 先清后捕 → 同事务写 outbox 表
 }
 ```
 
 关键契约：
 
-- **先落库，后冲刷**；**先清后捕**（快照 + 清空暂存，下游抛异常也不会重复捕获）
+- **先落库，后捕获**；**先清后捕**（快照 + 清空暂存，下游抛异常也不会重复捕获）
 - **捕获与业务写入同事务**——「聚合状态已提交 ⇒ 事件必然已落库；业务回滚 ⇒ 事件随行回滚」
 - **fail-fast**：聚合注册了事件但容器中无 `DomainEventOutboxStore` Bean 时，
-  `DomainEventFlusher` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
+  `DomainEventOutboxCapture` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
   要么带上 Outbox，不存在静默丢弃，也不存在直发降级
 
-缺省捕获实现 `JdbcDomainEventOutboxStore` 经 `JdbcTemplate` 复用事务绑定连接写入
-`ddd_domain_event_outbox`（信封列：`id = eventId` / `event_type` / `payload` /
-`occurred_on`；簿记列与标准结构列见 DDL）。`OutboxAutoConfiguration` 在存在
-`DataSource` 时自动装配，`@ConditionalOnMissingBean` 允许业务整体替换。
+捕获实现归使用方：实现 `DomainEventOutboxStore` 并注册为 Bean（**框架不提供缺省实现**），
+同事务义务写在契约里——实现复用当前事务绑定连接写入领域 outbox 表（参考表信封列：
+`id = eventId` / `event_type` / `payload` / `occurred_on`；簿记列与标准结构列见参考 DDL，
+由 sample 持有）。参考实现模板：sample `infrastructure/event/outbox/`。
 
 ## 3. 框架排空投递 + DomainEventListener 监听
 
@@ -163,13 +177,14 @@ public void updateDomain(Domain domain) {
 REQUIRES_NEW 事务**：
 
 ```
-认领：SELECT id, event_type, payload, occurred_on, attempts FROM ddd_domain_event_outbox
-      WHERE is_delete = FALSE AND status = 0 AND (next_retry_at IS NULL OR next_retry_at <= ?)
-      ORDER BY occurred_on LIMIT 1 FOR UPDATE SKIP LOCKED
+认领：claimOne(dueBefore) —— 经 OutboxRowAccess SPI 取一行待投行（PENDING 且 next_retry_at
+      到期；尽力按 occurred_on FIFO，实现必须多实例并发安全，参考实现用 SKIP LOCKED 行锁）
 派发：codec 反序列化并以行身份重建 eventId/occurredOn → DomainEventPublisher.publish
       → Spring 按类型路由到 @EventListener 方法（监听器加入本事务）
-标记：UPDATE … SET is_delete = TRUE（软删留痕，过保留期后物理清除）
+标记：markDone(id, completedAt) —— 标记完成（参考表结构中为软删留痕 is_delete=TRUE，框架不删除）
 提交：内部反应 + 集成入箱 + 标记完成三者原子
+失败：recordFailure(id, attempts, nextRetryAt, lastError, dead, now) —— 独立 REQUIRES_NEW
+      事务持久化框架算好的簿记（指数退避 / 死信判定全在框架，实现纯持久化）
 ```
 
 ```java
@@ -199,10 +214,10 @@ public class OrderDomainEventListener implements DomainEventListener {
         log.info("Order placed: orderId={}", event.getOrderId());
     }
 
-    /** 出站通知：委托 Publisher 翻译 + 集成 Outbox 捕获（仍在排空事务内） */
+    /** 出站通知：委托 Capture 翻译 + 集成 Outbox 捕获（仍在排空事务内） */
     @EventListener
     public void onOrderPlacedOutbound(OrderPlacedEvent event) {
-        orderEventPublisher.publishOrderPlaced(event);
+        orderIntegrationEventCapture.publishOrderPlaced(event);
     }
 }
 ```
@@ -219,25 +234,27 @@ public class OrderDomainEventListener implements DomainEventListener {
 
 ## 3.5 框架排空器（OutboxRelay）与运行参数
 
-排空引擎 `OutboxRelay`（`infrastructure/event/outbox/scheduler/`）由
-`OutboxAutoConfiguration` 装配为两个实例，`OutboxRelayScheduler` 统一驱动：
+排空引擎 `OutboxRelay`（`infrastructure/event/outbox/scheduler/`，纯 Java 策略骨架，零 SQL）
+由 `OutboxAutoConfiguration` 按**全部已注册的 `OutboxRowAccess` Bean** 各装配一个引擎
+（同类多个实现 = 分表各自独立引擎），`OutboxRelayScheduler` 统一驱动：
 
-| 实例 | 排空表 | 派发动作 | 装配条件 |
+| 引擎 | 排空行来源 | 派发动作 | 装配条件 |
 |------|--------|---------|---------|
-| 领域（`domainEventOutboxRelay`） | `ddd_domain_event_outbox` | codec 重建身份 → `DomainEventPublisher` 进程内派发 | DataSource + 事务管理器 |
-| 集成（`integrationEventOutboxRelay`） | `ddd_integration_event_outbox` | 构造 `OutboxEnvelope` → `IntegrationEventSender` 投 MQ | 上述 + 存在 `IntegrationEventSender` Bean |
+| 领域（每 DOMAIN 行访问一个） | 该行访问对应的 outbox 表（参考表 `ddd_domain_event_outbox`） | codec 重建身份 → `DomainEventPublisher` 进程内派发 | `OutboxRowAccess` Bean + 事务管理器（未注册行访问则排空装配整体静默跳过） |
+| 集成（每 INTEGRATION 行访问一个） | 该行访问对应的 outbox 表（参考表 `ddd_integration_event_outbox`） | 构造 `OutboxEnvelope` → `IntegrationEventSender` 投 MQ | 上述 + 存在 `IntegrationEventSender` Bean（缺失则启动 fail-fast） |
 
 - **每行一个事务**（REQUIRES_NEW）：认领 → 派发 → 标记完成 → 提交；行与行互不牵连
-- **失败簿记**：派发抛异常 → `attempts++`、记 `last_error`、按指数退避
-  （`min(2^attempts 秒, max-backoff)`）设置 `next_retry_at`；达到 `max-attempts`
-  转死信（`status=1`，留表待人工处置）
+- **失败簿记**：派发抛异常 → 框架计算 `attempts+1`、`last_error`、按指数退避
+  （`min(2^attempts 秒, max-backoff)`）的 `next_retry_at`、是否达 `max-attempts` 转死信，
+  经 `recordFailure` 独立事务持久化（簿记列形为参考约定，如 `status=1` 表死信；框架不感知具体列）
 - **顺序**：尽力 FIFO（按 `occurred_on` 认领）；退避重试可能乱序，消费端不应依赖严格顺序
 - **身份 / 幂等**：领域 `eventId` 经 codec 身份重建跨重投稳定；集成 `messageId` = 行 id
   （捕获时铸造的新 UUID）。消费端按它们去重
-- **清除**：投递完成 = `is_delete=TRUE` 软删留痕，过 `retention-days` 后由每日
-  `purge-cron` 物理清除
-- **调度入口**：`OutboxRelayScheduler` 是框架管线（`@Scheduled(fixedDelay)` 轮询 +
-  每日清除），**不实现** `ScheduledAdapter` 标记——排空器是基础设施自驱，不是业务定时入口
+- **不删除**：框架只捕获与排空、绝不删除事件行（ADR-0010）——投递完成后软删留痕
+  （`is_delete=TRUE`），历史条目的搬运 / 归档由数据抽取层按自身节奏处理（建表样例
+  `docs/sql/event.example.sql`）；死信行（`status=1`）需人工介入，不属于框架自动化范围
+- **调度入口**：`OutboxRelayScheduler` 是框架管线（`@Scheduled(fixedDelay)` 轮询），
+  **不实现** `ScheduledAdapter` 标记——排空器是基础设施自驱，不是业务定时入口
 
 配置（`ywf.ddd.outbox.*`）：
 
@@ -248,10 +265,8 @@ public class OrderDomainEventListener implements DomainEventListener {
 | `relay.batch-size` | `50` | 单轮排空行数上限 |
 | `relay.max-attempts` | `10` | 单行最大重试次数，达到后转死信 |
 | `relay.max-backoff` | `5m` | 指数退避封顶 |
-| `relay.retention-days` | `7` | 已软删行保留天数 |
-| `relay.purge-cron` | `0 0 3 * * *` | 每日物理清除 cron |
 
-## 4. Contract + Publisher — 集成事件翻译 + 捕获
+## 4. Contract + Capture — 集成事件翻译 + 捕获
 
 ```java
 // contract/order/dto/event/integration/OrderPlacedIntegrationEvent.java
@@ -262,17 +277,17 @@ public class OrderPlacedIntegrationEvent implements IntegrationEvent, Serializab
     private String customerId;
 }
 
-// application/order/event/publisher/OrderEventPublisher.java
+// application/order/event/capture/OrderIntegrationEventCapture.java
 @Component
-public class OrderEventPublisher implements IntegrationEventPublisher {
+public class OrderIntegrationEventCapture implements IntegrationEventCapture {
 
     private final IntegrationEventOutboxStore integrationEventOutboxStore;
 
-    public OrderEventPublisher(IntegrationEventOutboxStore integrationEventOutboxStore) {
+    public OrderIntegrationEventCapture(IntegrationEventOutboxStore integrationEventOutboxStore) {
         this.integrationEventOutboxStore = integrationEventOutboxStore;
     }
 
-    /** 翻译领域事件 → 集成事件，在调用方事务内捕获入集成 Outbox（不直发 MQ） */
+    /** 翻译领域事件 → 集成事件，在调用方事务内捕获入集成 Outbox（不投递——出站投递归框架集成排空器） */
     public void publishOrderPlaced(OrderPlacedEvent domainEvent) {
         OrderPlacedIntegrationEvent ie = new OrderPlacedIntegrationEvent(
                 domainEvent.getOrderId().toString(), domainEvent.getCustomerId());
@@ -281,10 +296,10 @@ public class OrderEventPublisher implements IntegrationEventPublisher {
 }
 ```
 
-**Publisher 契约（职责重定义）**：
+**Capture 契约（职责正名）**：
 
 - 只做**翻译 + 同事务捕获**，不直接投 MQ——实际投递由框架集成排空器经
-  `IntegrationEventSender` 完成。集成 outbox → MQ 的排空是框架职责，不是 Publisher 职责
+  `IntegrationEventSender` 完成。集成 outbox → MQ 的排空是框架职责，不是 Capture 职责
 - 由域内反应监听器（在排空事务内）或 Handler 显式调用，不被 AppService 直接调用
 - 一个领域事件可 fan-out 为 1..N 个集成事件；集成行 id 是捕获时铸造的新 UUID，
   即未来 MQ 消息的 `messageId`；`source_event_id` 记录源领域事件的 `eventId`
@@ -293,15 +308,15 @@ public class OrderEventPublisher implements IntegrationEventPublisher {
   dual-write 窗口
 
 集成侧捕获端口 `IntegrationEventOutboxStore` 定义在**应用层**（domain 不得依赖
-contract、infrastructure 不得回调应用组件，故端口在应用层、缺省实现
-`JdbcIntegrationEventOutboxStore` 在基础设施层，与读侧 `QueryRepository` 端口同构）。
+contract、infrastructure 不得回调应用组件，故端口在应用层、实现归使用方基础设施层，
+与读侧 `QueryRepository` 端口同构；框架不提供缺省实现，参考实现见 sample）。
 
 ## 5. 三个角色 + 框架排空
 
 | 角色 | 位置 | 职责 |
 |------|------|------|
 | `DomainEventListener` | `application/{agg}/event/listener/` | 消费领域事件（域内反应），可触发出站翻译 |
-| `IntegrationEventPublisher` | `application/{agg}/event/publisher/` | 翻译领域事件 → 集成事件并捕获入集成 Outbox（**不是** MQ 排空器） |
+| `IntegrationEventCapture` | `application/{agg}/event/capture/` | 翻译领域事件 → 集成事件并捕获入集成 Outbox（**不是** MQ 排空器） |
 | `IntegrationEventConsumer` | `adapter/event/consumer/` | 入站集成事件（MQ → Command → Handler），见 [mq-consumer.md](mq-consumer.md) |
 | `OutboxRelay` + `IntegrationEventSender` | 框架 `infrastructure/event/outbox/` | 集成 Outbox → MQ 的排空与投递（框架职责） |
 
@@ -321,20 +336,22 @@ contract、infrastructure 不得回调应用组件，故端口在应用层、缺
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| common-ddd | `infrastructure/event/outbox/DomainEventOutboxStore.java` | 领域捕获 SPI（同事务义务） |
-| common-ddd | `infrastructure/event/outbox/JdbcDomainEventOutboxStore.java` | 领域缺省捕获（`ddd_domain_event_outbox`） |
-| common-ddd | `application/event/outbox/IntegrationEventOutboxStore.java` | 集成捕获端口（应用层） |
-| common-ddd | `infrastructure/event/outbox/JdbcIntegrationEventOutboxStore.java` | 集成缺省捕获（`ddd_integration_event_outbox`） |
+| common-ddd | `infrastructure/event/outbox/DomainEventOutboxStore.java` | 领域捕获 SPI（同事务义务；实现归使用方） |
+| common-ddd | `application/event/outbox/IntegrationEventOutboxStore.java` | 集成捕获端口（应用层；实现归使用方） |
+| common-ddd | `infrastructure/event/outbox/scheduler/OutboxRowAccess.java` | 排空侧行访问 SPI（认领 / 标记 / 失败簿记；实现归使用方） |
+| common-ddd | `infrastructure/event/outbox/OutboxRow.java` | 认领行载体 record（信封 + 重试计数） |
+| common-ddd | `infrastructure/event/outbox/scheduler/OutboxKind.java` | 行类别枚举（DOMAIN / INTEGRATION），派发走向锚点 |
 | common-ddd | `infrastructure/event/outbox/DomainEventCodec.java` | 载荷编解码 + 身份重建 |
 | common-ddd | `infrastructure/event/outbox/IntegrationEventSender.java` | MQ 投递接缝 SPI |
-| common-ddd | `infrastructure/event/outbox/scheduler/OutboxRelay.java` | 排空引擎（认领 / 派发 / 标记 / 重试 / 死信 / 清除） |
+| common-ddd | `infrastructure/event/outbox/scheduler/OutboxRelay.java` | 排空引擎（纯 Java 策略：认领 / 派发 / 标记 / 重试 / 死信，零 SQL） |
 | common-ddd | `infrastructure/event/outbox/scheduler/OutboxRelayScheduler.java` | 排空调度入口（框架管线） |
-| common-ddd | `resources/sql/ddd_domain_event_outbox.sql`、`ddd_integration_event_outbox.sql` | 两张 outbox 表的 PG 标准 DDL |
+| sample（参考） | `sample-service-server/` 包 `...sampleservice.infrastructure.event.outbox` | 捕获 + 行访问的参考实现（框架不提供缺省实现） |
+| sample（参考） | `sample-service-server/src/main/resources/sql/ddd_domain_event_outbox.sql`、`ddd_integration_event_outbox.sql` | 两张 outbox 表的参考 DDL（参考约定，非框架强制） |
 | domain | `event/domain/OrderCancelledEvent.java` | 领域事件定义 |
 | domain | `model/Order.java` | registerEvent() 注册 |
-| infrastructure | `repository/OrderRepositoryImpl.java` | 持久化后触发冲刷捕获 |
+| infrastructure | `repository/OrderRepositoryImpl.java` | 持久化成功后触发捕获 |
 | application | `event/listener/OrderDomainEventListener.java` | @EventListener 监听（域内反应，加入排空事务） |
-| application | `event/publisher/OrderEventPublisher.java` | 集成事件翻译 + 捕获 |
+| application | `event/capture/OrderIntegrationEventCapture.java` | 集成事件翻译 + 捕获 |
 | contract | `dto/event/integration/OrderPlacedIntegrationEvent.java` | 跨服务契约 |
 | infrastructure（样例） | `mq/LoggingIntegrationEventSender.java` | `IntegrationEventSender` 日志占位实现（待 common-mq 顶替） |
 | adapter | `event/consumer/` ⛔ | 入站 Consumer（未实现，待 common-mq，见 [mq-consumer.md](mq-consumer.md)） |

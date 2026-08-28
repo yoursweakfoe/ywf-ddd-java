@@ -27,8 +27,8 @@ class DddArchitectureTest {
      *
      * <p>Application 允许被 Infrastructure 访问：与通用 R1 的依赖倒置语义对齐——
      * 应用层端口由基础设施层实现（读侧 {@code QueryRepository} 先例；全链路 Outbox 后
-     * 新增捕获端口 {@code IntegrationEventOutboxStore}（application/event/outbox）
-     * 由 {@code JdbcIntegrationEventOutboxStore}（infrastructure/event/outbox）实现）。
+     * 新增捕获端口 {@code IntegrationEventOutboxStore}（application/event/outbox），
+     * 参考实现位于 sample-application 的 infrastructure/event/outbox 包）。
      */
     @ArchTest
     static final ArchRule r1 = Architectures.layeredArchitecture()

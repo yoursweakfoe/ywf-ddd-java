@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.listener;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher.OrderEventPublisher;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.capture.OrderIntegrationEventCapture;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCancelledEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCompletedEvent;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 订单领域事件监听器（域内反应）—— 对订单聚合的领域事件作出进程内反应。
  *
- * <p>薄编排契约：方法体只做「接事件 → 加载聚合 → 委托 DomainService / Publisher」，
+ * <p>薄编排契约：方法体只做「接事件 → 加载聚合 → 委托 DomainService / Capture」，
  * 业务规则在 DomainService 与聚合根内，本类不含 if-else 业务判断。
  *
  * <p>监听器选型约定（全链路 Outbox 规范：投递发生在框架排空器 {@code OutboxRelay} 领域实例
@@ -44,14 +44,14 @@ public class OrderDomainEventListener implements DomainEventListener {
     // region 依赖注入
     private final OrderRepository orderRepository;
     private final InventoryDomainService inventoryDomainService;
-    private final OrderEventPublisher orderEventPublisher;
+    private final OrderIntegrationEventCapture orderIntegrationEventCapture;
 
     public OrderDomainEventListener(OrderRepository orderRepository,
                                     InventoryDomainService inventoryDomainService,
-                                    OrderEventPublisher orderEventPublisher) {
+                                    OrderIntegrationEventCapture orderIntegrationEventCapture) {
         this.orderRepository = orderRepository;
         this.inventoryDomainService = inventoryDomainService;
-        this.orderEventPublisher = orderEventPublisher;
+        this.orderIntegrationEventCapture = orderIntegrationEventCapture;
     }
     // endregion
 
@@ -67,7 +67,7 @@ public class OrderDomainEventListener implements DomainEventListener {
      */
     @EventListener
     public void onOrderPlacedOutbound(OrderPlacedEvent event) {
-        orderEventPublisher.publishOrderPlaced(event);
+        orderIntegrationEventCapture.publishOrderPlaced(event);
     }
 
     @EventListener

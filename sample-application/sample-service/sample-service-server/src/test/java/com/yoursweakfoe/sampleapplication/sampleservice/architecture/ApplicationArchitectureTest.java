@@ -1,15 +1,21 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.architecture;
 
 import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.assignableTo;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
+import com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO;
+import com.yoursweakfoe.common.ddd.application.event.outbox.IntegrationEventOutboxStore;
+import com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository;
 import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
@@ -47,10 +53,44 @@ class ApplicationArchitectureTest {
             .as("R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；"
                     + "读侧例外：infrastructure 读实现可访问 application 读端口");
 
-    /** R1b —— 收窄 R1 读侧例外：Infrastructure 对 Application 的访问仅限读端口类型锚点。 */
+    /**
+     * R1b —— 收窄 Infrastructure 对 Application 的访问白名单：读端口类型锚点 + 集成事件捕获端口。
+     *
+     * <p>与 common-test 通用规则（{@code INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES}）
+     * 同构的本地覆写，仅扩展一类锚点：全链路 Outbox 的应用层捕获端口
+     * {@code IntegrationEventOutboxStore}（application/event/outbox）由基础设施参考实现
+     * {@code JdbcIntegrationEventOutboxStore}（infrastructure/event/outbox）实现——依赖倒置，
+     * 与读侧 {@code QueryRepository} 先例同构（框架自身 DddArchitectureTest 同款先例），
+     * 捕获装配 {@code OutboxReferenceConfig} 的 @Bean 签名亦引用该端口类型。
+     * Handler / AppService / Assembler / Presenter 等其余 application 组件对
+     * infrastructure 一律不可见。
+     */
     @ArchTest
-    static final ArchRule r1b_infra_access_application_only_read_ports =
-            DDDArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
+    static final ArchRule r1b_infra_access_application_only_ports = noClasses()
+            .that()
+            .resideInAPackage("..infrastructure..")
+            .should()
+            .dependOnClassesThat(
+                    resideInAPackage("..application..")
+                            .and(not(resideInAPackage("..infrastructure..")))
+                            .and(not(assignableTo(QueryRepository.class)
+                                    .or(assignableTo(ApplicationDTO.class))
+                                    .or(assignableTo(IntegrationEventOutboxStore.class))
+                                    .or(nestedClassOfApplicationDtoImpl()))))
+            .allowEmptyShould(true)
+            .as("R1b Infrastructure 对 Application 的访问仅限读端口类型与集成事件捕获端口"
+                    + "（QueryRepository 实现 / ApplicationDTO 及其嵌套类 / 捕获端口），其余一律禁止");
+
+    /** ApplicationDTO 实现类的嵌套类（嵌套 DTO 随外层定型，见 R10b 约定，字节码上不携带标记）。 */
+    private static DescribedPredicate<JavaClass> nestedClassOfApplicationDtoImpl() {
+        return new DescribedPredicate<>("nested class of an ApplicationDTO implementation") {
+            @Override
+            public boolean test(JavaClass candidate) {
+                JavaClass enclosing = candidate.getEnclosingClass().orElse(null);
+                return enclosing != null && enclosing.isAssignableTo(ApplicationDTO.class);
+            }
+        };
+    }
 
     /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。 */
     @ArchTest
@@ -106,14 +146,14 @@ class ApplicationArchitectureTest {
     @ArchTest
     static final ArchRule r7a_event_listeners_marked = DDDArchitectureRules.EVENT_LISTENERS_ARE_MARKED;
 
-    /** R7b —— 集成事件出站 Publisher 必须实现 IntegrationEventPublisher 标记。 */
+    /** R7b —— 集成事件出站捕获器必须实现 IntegrationEventCapture 标记。 */
     @ArchTest
-    static final ArchRule r7b_event_publishers_marked = DDDArchitectureRules.EVENT_PUBLISHERS_ARE_MARKED;
+    static final ArchRule r7b_event_captures_marked = DDDArchitectureRules.EVENT_CAPTURES_ARE_MARKED;
 
-    /** R7c —— AppService 不得直接依赖集成事件出站 Publisher。 */
+    /** R7c —— AppService 不得直接依赖集成事件出站捕获器。 */
     @ArchTest
-    static final ArchRule r7c_app_service_no_direct_publisher =
-            DDDArchitectureRules.APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_PUBLISHER;
+    static final ArchRule r7c_app_service_no_direct_capture =
+            DDDArchitectureRules.APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_CAPTURE;
 
     /** R8a —— 实现 RestAdapter 标记的类必须位于 adapter 层。 */
     @ArchTest

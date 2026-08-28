@@ -1,6 +1,8 @@
-package com.yoursweakfoe.common.ddd.infrastructure.event.outbox;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.event.outbox;
 
 import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventCodec;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -9,7 +11,9 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * 领域事件 Outbox 缺省捕获实现 —— 标准表 {@code ddd_domain_event_outbox} 的 JDBC 写入。
+ * 领域事件 Outbox 捕获参考实现（原框架缺省实现外移）—— 标准表
+ * {@code ddd_domain_event_outbox} 的 JDBC 写入。框架 SPI-only（零 SQL），实现归使用方；
+ * 本类即样例工程给出的参考写法，业务项目可直接照搬或按需替换。
  *
  * <p><strong>同事务捕获（可靠性锚点）</strong>：经 {@link JdbcTemplate} 写入，底层
  * {@code DataSourceUtils} 复用<strong>当前业务事务绑定的连接</strong>——本实现不自行开启事务，
@@ -22,7 +26,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * <p>信封四元组（{@link DomainEventCodec}）：{@code id = eventId}、{@code event_type = 类全限定名}、
  * {@code payload = codec.write(event)}、{@code occurred_on}；簿记列（attempts/status/…）置初始值，
- * 排空由 {@code OutboxRelay} 领域实例承担。审计时间（create_at/update_at）取自注入 {@link Clock}。
+ * 排空由框架排空引擎（{@code OutboxRelay}，经 {@code OutboxRowAccess} 行访问 SPI 读写本表）承担。
+ * 审计时间（create_at/update_at）取自注入 {@link Clock}。
  *
  * <p>线程安全：{@link JdbcTemplate} 与 {@link DomainEventCodec} 均线程安全。
  *

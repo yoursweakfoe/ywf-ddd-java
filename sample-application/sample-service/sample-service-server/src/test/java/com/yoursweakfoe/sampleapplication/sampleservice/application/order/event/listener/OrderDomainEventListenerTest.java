@@ -6,7 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher.OrderEventPublisher;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.capture.OrderIntegrationEventCapture;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCancelledEvent;
@@ -28,7 +28,7 @@ class OrderDomainEventListenerTest {
 
     @Mock private OrderRepository orderRepository;
     @Mock private InventoryDomainService inventoryDomainService;
-    @Mock private OrderEventPublisher orderEventPublisher;
+    @Mock private OrderIntegrationEventCapture orderIntegrationEventCapture;
     @InjectMocks private OrderDomainEventListener listener;
 
     @Test
@@ -70,13 +70,13 @@ class OrderDomainEventListenerTest {
         verify(inventoryDomainService, never()).replenishStock(any());
     }
 
-    /** 出站反应：下单事件翻译为集成事件并经集成 Outbox 捕获（委托 Publisher，不直发 MQ）。 */
+    /** 出站反应：下单事件翻译为集成事件并经集成 Outbox 捕获（委托 Capture，不直发 MQ）。 */
     @Test
-    void onOrderPlacedOutbound_delegatesToPublisher() {
+    void onOrderPlacedOutbound_delegatesToCapture() {
         OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.TEN, "customer-1");
 
         listener.onOrderPlacedOutbound(event);
 
-        verify(orderEventPublisher).publishOrderPlaced(event);
+        verify(orderIntegrationEventCapture).publishOrderPlaced(event);
     }
 }

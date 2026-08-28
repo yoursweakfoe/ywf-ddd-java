@@ -12,6 +12,16 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 ## 步骤
 
+### 0. 前置检查：Outbox 捕获与排空就绪
+
+- 事件强制经 Outbox 投递：服务必须已注册 `DomainEventOutboxStore` Bean（**框架不提供
+  缺省实现**）——缺失时聚合一旦注册事件，捕获 fail-fast 抛错回滚业务写入
+- 排空侧需已注册 `OutboxRowAccess` Bean（`kind() = DOMAIN`；集成排空按需再加
+  `kind() = INTEGRATION` + `IntegrationEventSender` Bean——缺失则启动 fail-fast）
+- 服务尚未接入时，按 sample 参考实现落地：`sample-application/sample-service/
+  sample-service-server` 包 `com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.event.outbox`，
+  参考 DDL 在其 `src/main/resources/sql/`（outbox 表结构为参考约定，非框架强制）
+
 ### 1. 定义领域事件
 
 - 位置：`domain/{agg}/event/domain/{Agg}{Action}Event.java`
@@ -35,22 +45,22 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
   副作用失败 → 排空事务回滚 → 行保持待投 → 退避重投
 - **禁用 `REQUIRES_NEW` 与 `@Async`**——二者撕碎上述原子性，重试时产生双份副作用
 - 监听器不做任何非事务副作用（HTTP 调用 / 直发 MQ）——对外通知一律经集成 Outbox 捕获
-  （委托 Publisher，见步骤 4）
+  （委托 Capture，见步骤 4）
 - 投递语义 at-least-once：监听器逻辑按 `eventId` 幂等（重复投递不产生重复副作用）
 - 方法签名：`public void on{Agg}{Action}({Agg}{Action}Event event)`
 - 薄编排：接事件 → 加载聚合 → 委托 DomainService（不含 if-else 业务判断）
 
-### 4.（可选）创建 Publisher + 集成事件
+### 4.（可选）创建出站捕获 Capture + 集成事件
 
 仅当需要通知外部服务时：
 
 - 集成事件：`contract/{agg}/dto/event/integration/{Agg}{Action}IntegrationEvent.java`
   - 实现 `IntegrationEvent` 标记接口
-- Publisher：`application/{agg}/event/publisher/{Agg}EventPublisher.java`
-  - 实现 `IntegrationEventPublisher` 标记接口，注入 `IntegrationEventOutboxStore`
+- 出站捕获 Capture：`application/{agg}/event/capture/{Agg}IntegrationEventCapture.java`
+  - 实现 `IntegrationEventCapture` 标记接口，注入 `IntegrationEventOutboxStore`
   - 翻译领域事件 → 1..N 个集成事件 → `appendAll(source, events)` **同事务捕获入
-    集成 Outbox**（`ddd_integration_event_outbox`）；**不直发 MQ**——实际投递由
-    框架集成排空器经 `IntegrationEventSender` 完成（messageId = outbox 行 id）
+    集成 Outbox**（参考表 `ddd_integration_event_outbox`，实现归使用方）；**不直发 MQ**——
+    实际投递由框架集成排空器经 `IntegrationEventSender` 完成（messageId = outbox 行 id）
   - 被 DomainEventListener（排空事务内）或 CommandHandler 显式调用，不被 AppService 直接调用
 
 ### 5.（可选）外部消费方
@@ -60,17 +70,19 @@ description: 为已有聚合新增领域事件，可选添加监听器和集成�
 
 ## 验证
 
+- [ ] 服务已注册 `DomainEventOutboxStore` + `OutboxRowAccess`（DOMAIN）Bean（缺失则捕获 fail-fast）
 - [ ] DomainEvent 所有字段 final（不可变）
 - [ ] 事件注册在状态变迁之后
 - [ ] DomainEventListener 注解选择正确（投递发生在排空器事务内）：
   - 一律 `@EventListener`
   - 带数据库写入 → 追加普通 `@Transactional(rollbackFor = Exception.class)`（加入排空事务）
   - **禁用** `REQUIRES_NEW` / `@Async`（撕碎「副作用 + 集成入箱 + 标记完成」原子性）
-- [ ] 监听器无非事务副作用（HTTP / 直发 MQ），对外通知经 Publisher 捕获入集成 Outbox
+- [ ] 监听器无非事务副作用（HTTP / 直发 MQ），对外通知经 Capture 捕获入集成 Outbox
 - [ ] 监听器逻辑按 `eventId` 幂等（Outbox at-least-once 重投契约）
 - [ ] 集成事件在 contract 模块（不在 server）
-- [ ] Publisher 只做翻译 + 同事务捕获（`IntegrationEventOutboxStore.appendAll`），不直发 MQ
-- [ ] Publisher 不被 AppService 直接调用（由 CommandHandler/DomainEventListener 调用）
+- [ ] Capture 只做翻译 + 同事务捕获（`IntegrationEventOutboxStore.appendAll`），不投递
+  ——出站投递由框架集成排空器经 `IntegrationEventSender` 完成
+- [ ] Capture 不被 AppService 直接调用（由 CommandHandler/DomainEventListener 调用）
 
 ## 文档同步
 

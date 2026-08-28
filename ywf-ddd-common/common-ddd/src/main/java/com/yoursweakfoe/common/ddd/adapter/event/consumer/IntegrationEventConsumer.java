@@ -7,8 +7,9 @@ package com.yoursweakfoe.common.ddd.adapter.event.consumer;
  * {@code @RocketMQMessageListener} 标注在方法上），接收外部服务投递的集成事件 → 反序列化 →
  * 构建 Command → 透传 ApplicationService 用例方法（与 REST 入口同构，纯入口）。本标记将这类
  * 组件显式定型为<strong>集成事件入站</strong>，与 application 层出站
- * {@code IntegrationEventPublisher} 划清边界：本标记组件接收<strong>外部</strong>集成事件（MQ），
- * 后者翻译领域事件为集成事件并<strong>投递</strong> MQ。
+ * {@code IntegrationEventCapture} 划清边界：本标记组件接收<strong>外部</strong>集成事件（MQ），
+ * 后者翻译领域事件为集成事件并同事务捕获入集成 Outbox（跨服务投递由框架集成排空器经
+ * {@code IntegrationEventSender} 完成）。
  *
  * <p>本接口为<strong>空标记</strong>：价值在「标识入站消费者身份」（供架构规则/ArchUnit 识别），
  * 而非约束方法签名——消费方法签名（{@code onXxx(String messageBody)} / {@code onXxx(IntegrationEvent)}）
@@ -19,7 +20,7 @@ package com.yoursweakfoe.common.ddd.adapter.event.consumer;
  * <table>
  *   <tr><th>类型</th><th>层级</th><th>方向</th></tr>
  *   <tr><td>{@code IntegrationEventConsumer}（本接口）</td><td>adapter/event/consumer</td><td>集成事件入（MQ 接收）</td></tr>
- *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher}</td><td>application/event/publisher</td><td>集成事件出（MQ 投递）</td></tr>
+ *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture}</td><td>application/event/capture</td><td>集成事件出（翻译 + 同事务入箱）</td></tr>
  *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener}</td><td>application/event/listener</td><td>内部领域事件入（进程内）</td></tr>
  *   <tr><td>{@code IntegrationEvent}（common-contract）</td><td>contract/dto/event/integration</td><td>跨服务契约（本接口实现类反序列化之）</td></tr>
  * </table>
@@ -29,7 +30,7 @@ package com.yoursweakfoe.common.ddd.adapter.event.consumer;
  * 落地后按模板补全 {@code adapter/event/consumer/} 下实现类并实现本标记。
  *
  * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
- * @see com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher
+ * @see com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture
  * @see com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener
  */
 public interface IntegrationEventConsumer {

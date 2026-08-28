@@ -22,6 +22,6 @@ adapter/
 | 目录 | 职责 |
 |------|------|
 | `rest/controller/` | @RestController 实现 contract 的 Controller 契约接口 + `RestAdapter` 标记（common-ddd/adapter/rest/controller/）（路径/语义/签名在接口声明，纯透传至 AppService） |
-| `event/consumer/` | 接收外部服务 MQ Integration Event → 反序列化 → 透传 AppService 用例方法（与 rest 同构，纯入口）。实现 `IntegrationEventConsumer` 标记（common-ddd/adapter/event/consumer/），与 application 层出站 `IntegrationEventPublisher` 对偶 |
+| `event/consumer/` | 接收外部服务 MQ Integration Event → 反序列化 → 透传 AppService 用例方法（与 rest 同构，纯入口）。实现 `IntegrationEventConsumer` 标记（common-ddd/adapter/event/consumer/），与 application 层出站捕获 `IntegrationEventCapture` 对偶 |
 | `task/scheduler/` | 定时任务入口。实现 `ScheduledAdapter` 标记（common-ddd/adapter/task/scheduler/），规则 R14a/R14b 守护；模板见 [cookbook/scheduled-task.md](../../cookbook/scheduled-task.md) |
 | `shared/` | 跨聚合/系统级入口（如有） |

@@ -2,26 +2,16 @@ package com.yoursweakfoe.common.ddd.domain.event.publisher;
 
 import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 
-import java.util.List;
-
 /**
- * 领域事件发布者接口 —— 定义领域事件发布的契约。
+ * 领域事件发布者接口 —— 定义领域事件进程内派发的契约。
  *
- * <p>在 DDD 架构中，领域事件在聚合根内部注册， 在仓储层持久化成功后由 {@code DomainEventPublisher} 统一发布。 这确保了"先持久化，后发事件"的可靠顺序。
+ * <p><strong>调用时机（全链路 Outbox 规范）</strong>：本端口仅由框架领域排空器
+ * （{@code OutboxRelay} 领域实例）在排空事务内调用；事件先经
+ * {@code DomainEventOutboxCapture} 与业务同事务入箱，此处是投递时刻而非捕获时刻。
  *
- * <p><strong>边界</strong>：本接口仅定义领域事件的<strong>进程内</strong>发布契约。集成事件（IntegrationEvent）
- * 的收发不经过本接口：出站由 application 层 Publisher 翻译并经集成 Outbox 捕获、框架集成排空器投递，
- * 入站由 adapter 层 Consumer 接收。
- *
- * <p>
- *
- * <h3>扩展点</h3>
- *
- * <ul>
- *   <li>进程内同步发布：使用 Spring {@code ApplicationEventPublisher}（默认实现）
- *   <li>异步发布：配合 {@code @Async} 或消息队列（Kafka / RabbitMQ）
- *   <li>事件存储：先写入事件表再发布，实现可靠事件溯源
- * </ul>
+ * <p><strong>边界</strong>：本接口仅定义领域事件的<strong>进程内</strong>派发契约。
+ * 集成事件（IntegrationEvent）的收发不经过本接口：出站由 application 层 Capture
+ * 翻译并经集成 Outbox 捕获、框架集成排空器投递，入站由 adapter 层 Consumer 接收。
  *
  * @see DomainEvent
  * @see com.yoursweakfoe.common.ddd.domain.model.AggregateRoot
@@ -34,17 +24,4 @@ public interface DomainEventPublisher {
      * @param event 要发布的领域事件
      */
     void publish(DomainEvent event);
-
-    /**
-     * 批量发布领域事件。
-     *
-     * <p>默认实现逐个调用 {@link #publish(DomainEvent)}， 子类可覆写以实现批量优化。
-     *
-     * @param events 要发布的领域事件列表
-     */
-    default void publishAll(List<DomainEvent> events) {
-        if (events != null) {
-            events.forEach(this::publish);
-        }
-    }
 }

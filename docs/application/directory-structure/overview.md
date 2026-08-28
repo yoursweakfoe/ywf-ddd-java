@@ -58,7 +58,7 @@ server/
 │       │   └── query/                 # QueryHandler（读用例）
 │       ├── event/                     # 事件处理【按需】
 │       │   ├── listener/              # DomainEventListener（域内反应）
-│       │   └── publisher/             # Publisher（出站投递）
+│       │   └── capture/               # Capture（出站捕获）
 │       ├── assembler/                 # Domain → DTO（手写显式映射）
 │       ├── presenter/                 # DTO → CO（手写显式映射）
 │       ├── dto/                       # 内部视图

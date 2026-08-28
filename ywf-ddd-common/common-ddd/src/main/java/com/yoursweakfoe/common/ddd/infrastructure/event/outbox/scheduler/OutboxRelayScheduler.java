@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
  * （该标记定型「业务时间驱动入口经 AppService 驱动用例」，排空器是基础设施自驱、不含业务编排）；
  * {@code R14b} 已相应收紧为仅约束业务服务的 {@code ..scheduler..} 组件，ArchUnit 不反向约束框架。
  *
- * <p>持有 {@code OutboxAutoConfiguration} 装配的全部排空引擎（{@link OutboxRelay}）：
- * 领域实例（排空 {@code ddd_domain_event_outbox}、进程内派发）恒在；集成实例
- * （排空 {@code ddd_integration_event_outbox}、经 {@code IntegrationEventSender} 投 MQ）
- * 仅在存在 {@code IntegrationEventSender} Bean 时装配——故以 {@link List} 持有、逐个驱动，
- * 不硬依赖两者俱在。
+ * <p>持有 {@code OutboxAutoConfiguration} 按行访问 SPI（{@link OutboxRowAccess}）装配的全部
+ * 排空引擎（{@link OutboxRelay}）：每个已注册的行访问各自独立一个引擎——领域（进程内派发）/
+ * 集成（经 {@code IntegrationEventSender} 投 MQ）、分表皆然——故以 {@link List} 持有、
+ * 逐个驱动，排空各自行访问所辖的 outbox 行集。职责仅排空（认领 → 派发 → 标记完成）；
+ * 已投递行软删留痕，框架不做清除，历史条目的搬运 / 归档归使用方数据抽取层。
  *
  * <p><strong>优雅停机</strong>：每行一个短事务，上下文关闭停掉轮询、在途事务自然完成，无需额外钩子。
  * 测试不 sleep 等轮询——直接注入 {@link OutboxRelay} 调 {@code drain(n)}（确定性接缝）。
@@ -36,14 +36,6 @@ public class OutboxRelayScheduler {
     public void drainOutboxes() {
         for (OutboxRelay relay : relays) {
             relay.drain(batchSize);
-        }
-    }
-
-    /** 每日物理清除已软删且过保留期的行（框架管线无审计诉求）。 */
-    @Scheduled(cron = "${ywf.ddd.outbox.relay.purge-cron:0 0 3 * * *}")
-    public void purgeOutboxes() {
-        for (OutboxRelay relay : relays) {
-            relay.purge();
         }
     }
 }

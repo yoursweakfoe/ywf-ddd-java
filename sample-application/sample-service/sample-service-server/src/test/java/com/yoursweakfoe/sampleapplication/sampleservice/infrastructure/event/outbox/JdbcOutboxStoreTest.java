@@ -1,11 +1,14 @@
-package com.yoursweakfoe.common.ddd.infrastructure.event.outbox;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.event.outbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import com.yoursweakfoe.common.ddd.application.event.outbox.IntegrationEventOutboxStore;
-import com.yoursweakfoe.common.ddd.fixtures.event.OrderPlacedEvent;
-import com.yoursweakfoe.common.ddd.fixtures.event.StockDeductedIntegrationEvent;
+import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
+import com.yoursweakfoe.sampleapplication.sampleservice.Application;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event.integration.OrderPlacedIntegrationEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPlacedEvent;
+import com.yoursweakfoe.sampleapplication.sampleservice.integration.TestSecurityConfiguration;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,16 +22,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * JDBC Outbox 捕获存储测试 —— 钉死「同事务捕获」可靠性锚点：
+ * JDBC Outbox 捕获存储测试（参考实现随框架 SPI-only 化外移至样例工程）——
+ * 钉死「同事务捕获」可靠性锚点：
  * ① 领域存储：捕获行信封四元组（id=eventId / event_type / payload / occurred_on）+ 簿记初始值；
  *    提交则行落库、回滚则行随之消失（与业务写入同提交 / 同回滚）；
  * ② 集成存储：行身份为铸造的新 UUID（= 未来 MQ messageId）、source_event_id 溯源血缘
@@ -37,15 +40,11 @@ import org.springframework.transaction.support.TransactionTemplate;
  * <p>全部基于真实 H2（MODE=PostgreSQL）数据源与真实事务（{@link TransactionTemplate}），
  * 行检查用 {@link JdbcTemplate} 直查。
  */
-@SpringBootTest(classes = JdbcOutboxStoreTest.TestConfig.class)
+@SpringBootTest(classes = Application.class)
 @ActiveProfiles("test")
+@Import(TestSecurityConfiguration.class)
 @DisplayName("JdbcOutboxStore —— 领域/集成事件同事务捕获（提交落库、回滚消失）")
 class JdbcOutboxStoreTest {
-
-    @Configuration
-    @SpringBootApplication
-    static class TestConfig {
-    }
 
     private final DomainEventOutboxStore domainEventOutboxStore;
     private final IntegrationEventOutboxStore integrationEventOutboxStore;
@@ -85,7 +84,7 @@ class JdbcOutboxStoreTest {
     @Test
     @DisplayName("提交：捕获行落库 —— 信封四元组正确，簿记列为初始值")
     void domainStore_commit_persistsRowWithEnvelopeAndBookkeeping() {
-        OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), new BigDecimal("59.98"));
+        OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), new BigDecimal("59.98"), "customer-1");
 
         txTemplate.executeWithoutResult(status -> domainEventOutboxStore.appendAll(List.of(event)));
 
@@ -114,7 +113,7 @@ class JdbcOutboxStoreTest {
     @Test
     @DisplayName("回滚：事务内可见的捕获行随事务回滚而消失（与业务同回滚）")
     void domainStore_rollback_rowRolledBack() {
-        OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.TEN);
+        OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.TEN, "customer-1");
         String rowId = event.getEventId().toString();
 
         txTemplate.executeWithoutResult(status -> {
@@ -133,9 +132,9 @@ class JdbcOutboxStoreTest {
     @Test
     @DisplayName("fan-out 捕获：两个集成事件各铸新 UUID 行身份，source_event_id 记录源领域事件")
     void integrationStore_twoEvents_twoRowsWithFreshIdsAndSourceLineage() {
-        OrderPlacedEvent source = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.TEN);
-        StockDeductedIntegrationEvent ie1 = new StockDeductedIntegrationEvent("prod-1", 3);
-        StockDeductedIntegrationEvent ie2 = new StockDeductedIntegrationEvent("prod-2", 5);
+        OrderPlacedEvent source = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.TEN, "customer-1");
+        OrderPlacedIntegrationEvent ie1 = new OrderPlacedIntegrationEvent("order-1", "customer-1");
+        OrderPlacedIntegrationEvent ie2 = new OrderPlacedIntegrationEvent("order-2", "customer-2");
 
         txTemplate.executeWithoutResult(status ->
                 integrationEventOutboxStore.appendAll(source, List.of(ie1, ie2)));
@@ -151,7 +150,7 @@ class JdbcOutboxStoreTest {
             assertThat(row.id).isNotEqualTo(source.getEventId().toString());
             UUID.fromString(row.id); // 合法 UUID
             assertThat(row.sourceEventId).isEqualTo(source.getEventId().toString());
-            assertThat(row.eventType).isEqualTo(StockDeductedIntegrationEvent.class.getName());
+            assertThat(row.eventType).isEqualTo(OrderPlacedIntegrationEvent.class.getName());
             assertThat(row.attempts).isZero();
             assertThat(row.status).isZero();
             assertThat(row.isDelete).isFalse();
@@ -160,19 +159,19 @@ class JdbcOutboxStoreTest {
         // 载荷按声明字段捕获（纯 POJO 字段级序列化）
         assertThat(rows).extracting(r -> r.payload)
                 .anySatisfy(payload -> {
-                    assertThat(payload).contains("prod-1");
-                    assertThat(payload).contains("3");
+                    assertThat(payload).contains("order-1");
+                    assertThat(payload).contains("customer-1");
                 })
                 .anySatisfy(payload -> {
-                    assertThat(payload).contains("prod-2");
-                    assertThat(payload).contains("5");
+                    assertThat(payload).contains("order-2");
+                    assertThat(payload).contains("customer-2");
                 });
     }
 
     @Test
     @DisplayName("入站再发出（source==null）：source_event_id 为 NULL")
     void integrationStore_nullSource_sourceEventIdIsNull() {
-        StockDeductedIntegrationEvent ie = new StockDeductedIntegrationEvent("prod-9", 1);
+        OrderPlacedIntegrationEvent ie = new OrderPlacedIntegrationEvent("order-9", "customer-9");
 
         txTemplate.executeWithoutResult(status ->
                 integrationEventOutboxStore.appendAll(null, List.of(ie)));

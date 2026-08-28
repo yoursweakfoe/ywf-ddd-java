@@ -1,7 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.publisher;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.order.event.capture;
 
+import com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture;
 import com.yoursweakfoe.common.ddd.application.event.outbox.IntegrationEventOutboxStore;
-import com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.event.integration.OrderPlacedIntegrationEvent;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPlacedEvent;
 import java.util.List;
@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * 订单事件出站 Publisher —— 将领域事件翻译为集成事件并捕获入集成 Outbox。
+ * 订单集成事件出站捕获器 —— 将领域事件翻译为集成事件并同事务捕获入集成 Outbox。
  *
  * <p><strong>全链路 Outbox 规范（职责重定义）</strong>：本组件只做
  * <strong>翻译 + 同事务捕获</strong>，不直接投 MQ——由域内反应监听器在
@@ -25,16 +25,16 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class OrderEventPublisher implements IntegrationEventPublisher {
+public class OrderIntegrationEventCapture implements IntegrationEventCapture {
 
     private final IntegrationEventOutboxStore integrationEventOutboxStore;
 
-    public OrderEventPublisher(IntegrationEventOutboxStore integrationEventOutboxStore) {
+    public OrderIntegrationEventCapture(IntegrationEventOutboxStore integrationEventOutboxStore) {
         this.integrationEventOutboxStore = integrationEventOutboxStore;
     }
 
     /**
-     * 发布「订单已下单」集成事件 —— 翻译并捕获入集成 Outbox（调用方事务内）。
+     * 捕获「订单已下单」集成事件 —— 翻译并同事务捕获入集成 Outbox（调用方事务内）。
      *
      * @param domainEvent 领域事件（订单已下单），作为集成事件的溯源血缘（source_event_id）
      */

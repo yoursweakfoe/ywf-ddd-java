@@ -63,8 +63,8 @@
 |------|--------|
 | CQRS (Greg Young) | Command / Query / IntegrationEvent 三通道分离；写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 同居契约层，框架级分页 |
 | Integration Event / EDA | 领域事件（进程内）→ 集成事件（跨服务 MQ）；DomainEvent vs IntegrationEvent 方向对偶 |
-| Outbox 模式（可靠事件发布） | Chris Richardson、Debezium、Microsoft eShop 的标准解法，框架自给全链路管线（全链路 Outbox 可靠性规范，common-ddd.md ADR-0008）：领域 / 集成事件强制同事务捕获入两张标准表，框架排空器（`OutboxRelay`）认领 → 派发 → 标记完成，退避重试 / 死信 / 保留期清除；监听器加入排空事务原子提交；投递语义 at-least-once，消费端按 eventId / messageId 幂等 |
-| 标记接口定型体系 | 空标记接口 + ArchUnit 锚点：RestAdapter / ApplicationDTO / DomainEventListener / IntegrationEventPublisher / IntegrationEventConsumer / QueryRepository 各定型一层角色（REST 入口 / 应用层内部视图 / 域内反应监听器 / 集成事件出站 / 集成事件入站 / 读端口），供架构规则按类型锚点识别与约束（非包名猜测） |
+| Outbox 模式（可靠事件发布） | Chris Richardson、Debezium、Microsoft eShop 的标准解法，框架自给全链路管线（全链路 Outbox 可靠性规范，common-ddd.md ADR-0008）：领域 / 集成事件强制同事务捕获入两张标准表，框架排空器（`OutboxRelay`）认领 → 派发 → 标记完成，退避重试 / 死信，不删除事件行（已完成行软删留痕，搬运 / 归档归数据抽取层，ADR-0010）；监听器加入排空事务原子提交；投递语义 at-least-once，消费端按 eventId / messageId 幂等 |
+| 标记接口定型体系 | 空标记接口 + ArchUnit 锚点：RestAdapter / ApplicationDTO / DomainEventListener / IntegrationEventCapture / IntegrationEventConsumer / QueryRepository 各定型一层角色（REST 入口 / 应用层内部视图 / 域内反应监听器 / 集成事件出站捕获 / 集成事件入站 / 读端口），供架构规则按类型锚点识别与约束（非包名猜测） |
 | Saga / Process Manager | 无主长流程引入独立 Saga 服务，不在业务服务内塞入跨服务编排 |
 
 **未采纳：**

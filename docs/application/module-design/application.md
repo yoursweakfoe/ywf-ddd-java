@@ -61,13 +61,13 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 ### DomainEventListener（域内反应）
 
 位于 `event/listener/`，监听领域事件并编排后续业务（如：取消订单 → 回补库存）。
-薄编排：接事件 → 加载聚合 → 委托 DomainService / Publisher，不含 if-else 业务判断。
+薄编排：接事件 → 加载聚合 → 委托 DomainService / Capture，不含 if-else 业务判断。
 与 adapter 层 consumer 的区别：DomainEventListener 处理**内部**领域事件（Spring Event），adapter consumer 处理**外部**集成事件（MQ/Webhook）。
 
-### Publisher（集成事件出站）
+### Capture（集成事件出站捕获）
 
-位于 `event/publisher/`，被 CommandHandler 或 DomainEventListener 显式调用，将领域事件翻译为契约 IntegrationEvent 并经 `IntegrationEventOutboxStore` 同事务捕获入集成 Outbox（实际投 MQ 由框架集成排空器承担，见 event-flow.md）。
-AppService 不直接依赖 publisher。
+位于 `event/capture/`，实现 `IntegrationEventCapture` 标记接口，被 CommandHandler 或 DomainEventListener 显式调用，将领域事件翻译为契约 IntegrationEvent 并经 `IntegrationEventOutboxStore` 同事务捕获入集成 Outbox（实际投 MQ 由框架集成排空器承担，见 event-flow.md）。
+AppService 不直接依赖 capture。
 
 ## 协作关系
 
@@ -132,6 +132,6 @@ application/order/handler/PlaceOrderHandler.java
 | QueryHandler 调用 Repository 读优化方法投影 DTO | Handler 直接使用 Mapper / PO（破坏依赖方向） |
 | Handler 调用 Assembler 转 DTO | AppService 包含编排逻辑 |
 | AppService 调用 Presenter 转 CO | 包含 if-else 业务判断 |
-| 发布/订阅领域事件 | Handler 返回 CO（应返回 DTO） |
+| 注册/监听领域事件（经 Outbox 捕获） | Handler 返回 CO（应返回 DTO） |
 | AppService 返回 CO | CO 暴露内部实现细节 |
 | DTO 携带内部字段 | |

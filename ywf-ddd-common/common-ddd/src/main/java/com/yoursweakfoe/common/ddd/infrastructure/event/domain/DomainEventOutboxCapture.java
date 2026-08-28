@@ -9,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * 领域事件冲刷器 —— 在聚合持久化成功后，把聚合根暂存的领域事件「先清后入箱」地冲刷出去。
+ * 领域事件 Outbox 捕获器 —— 在聚合持久化成功后，把聚合根暂存的领域事件「先清后入箱」地捕获。
  *
- * <p>从 {@code MybatisPlusPersistence} 抽出，承担事件冲刷的单一职责：聚合根持久化成功后，
+ * <p>从 {@code MybatisPlusPersistence} 抽出，承担事件捕获的单一职责：聚合根持久化成功后，
  * 由本类快照其已注册的领域事件、清空暂存、再捕获入 Outbox（先清后捕，保证即使下游抛异常也不会重复捕获）。
  *
  * <p><strong>全链路 Outbox 可靠性规范</strong>：领域事件强制经 Outbox 捕获
@@ -33,47 +33,47 @@ import org.springframework.beans.factory.ObjectProvider;
  * </ul>
  *
  * <p><strong>边界</strong>：本类仅负责领域事件的<strong>同事务捕获</strong>，派发归排空器；
- * 集成事件的收发不在此包：出站由 application 层 {@code Publisher} 翻译 + 集成 Outbox 捕获，
+ * 集成事件的收发不在此包：出站由 application 层 {@code Capture} 翻译 + 集成 Outbox 捕获，
  * 入站由 adapter 层 {@code Consumer} 接收。
  */
 @Slf4j
-public class DomainEventFlusher {
+public class DomainEventOutboxCapture {
 
     /** 领域事件 Outbox 捕获存储（可能为 null —— 无 Outbox 时 fail-fast） */
     private final DomainEventOutboxStore outboxStore;
 
-    public DomainEventFlusher(ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
+    public DomainEventOutboxCapture(ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
         this.outboxStore = outboxStoreProvider != null ? outboxStoreProvider.getIfAvailable() : null;
     }
 
     /**
-     * 冲刷聚合根已注册的领域事件（先清后入箱）。
+     * 捕获聚合根已注册的领域事件（先清后入箱）。
      *
      * <p>若 domain 不是聚合根（无事件暂存）或无已注册事件，静默无操作。
      *
      * @throws IllegalStateException 有事件但无 {@link DomainEventOutboxStore}（fail-fast，回滚业务写入）
      */
-    public void publishAndClear(Identifiable<?> domain) {
+    public void captureAndClear(Identifiable<?> domain) {
         if (domain instanceof AggregateRoot<?> aggregateRoot) {
             List<DomainEvent> events = aggregateRoot.getDomainEvents();
             if (!events.isEmpty()) {
                 List<DomainEvent> snapshot = List.copyOf(events);
                 aggregateRoot.clearDomainEvents();
-                deliver(snapshot);
+                capture(snapshot);
             }
         }
     }
 
     /**
-     * 冲刷外部构造的领域事件列表（按 ID 删除的事件工厂路径使用）。
+     * 捕获外部构造的领域事件列表（按 ID 删除的事件工厂路径使用）。
      *
      * @throws IllegalStateException 有事件但无 {@link DomainEventOutboxStore}（fail-fast，回滚业务写入）
      */
-    public void publishAll(List<DomainEvent> events) {
+    public void captureAll(List<DomainEvent> events) {
         if (events == null || events.isEmpty()) {
             return;
         }
-        deliver(events);
+        capture(events);
     }
 
     // ==================== 内部实现 ====================
@@ -81,12 +81,12 @@ public class DomainEventFlusher {
     /**
      * Outbox 同事务捕获。无 Outbox 但有事件 → 抛错回滚业务写入（用事件必须配 Outbox）。
      */
-    private void deliver(List<DomainEvent> snapshot) {
+    private void capture(List<DomainEvent> snapshot) {
         if (outboxStore == null) {
             throw new IllegalStateException(
                     "Domain event(s) registered but no DomainEventOutboxStore bean is available. "
-                            + "Events mandate Outbox reliability: either configure the Outbox "
-                            + "(provide a DataSource / keep ywf.ddd.outbox.enabled=true) or do not register events. "
+                            + "Events mandate Outbox reliability: either register a DomainEventOutboxStore bean "
+                            + "(reference implementation: sample-application) or do not register events. "
                             + "Discarded event count: " + snapshot.size());
         }
         outboxStore.appendAll(snapshot);

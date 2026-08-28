@@ -5,7 +5,7 @@ package com.yoursweakfoe.common.ddd.application.event.listener;
  *
  * <p>位于 {@code application/{aggregate}/event/listener/}，用 {@code @EventListener} /
  * {@code @TransactionalEventListener} 监听 Spring 进程内事件并按「接事件 → 加载聚合 →
- * 委托 DomainService / Publisher」的薄编排契约作出反应。本标记将这类组件显式定型为
+ * 委托 DomainService / Capture」的薄编排契约作出反应。本标记将这类组件显式定型为
  * <strong>域内反应</strong>，与 adapter 层处理外部集成事件的 Consumer 划清边界：
  * 本标记组件消费<strong>内部</strong>领域事件（Spring Event），adapter Consumer 消费
  * <strong>外部</strong>集成事件（MQ / Webhook）。
@@ -26,13 +26,13 @@ package com.yoursweakfoe.common.ddd.application.event.listener;
  * <table>
  *   <tr><th>类型</th><th>层级</th><th>方向</th></tr>
  *   <tr><td>{@code DomainEventListener}（本接口）</td><td>application/event/listener</td><td>内部领域事件入（消费）</td></tr>
- *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher}</td><td>application/event/publisher</td><td>集成事件出（投递）</td></tr>
+ *   <tr><td>{@link com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture}</td><td>application/event/capture</td><td>集成事件出（翻译 + 同事务入箱）</td></tr>
  *   <tr><td>{@code DomainEventPublisher}</td><td>domain/event（接口）→ infrastructure 实现</td><td>领域事件进程内发布（框架自动）</td></tr>
  *   <tr><td>adapter Consumer</td><td>adapter/event/consumer</td><td>集成事件入（MQ）</td></tr>
  * </table>
  *
  * @see com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent
- * @see com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher
+ * @see com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture
  */
 public interface DomainEventListener {
 }

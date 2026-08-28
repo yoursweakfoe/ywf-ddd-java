@@ -6,6 +6,8 @@
 docs/
 ├── glossary.md                          # 项目术语表
 ├── references.md                        # 架构理论参考（采纳 / 未采纳及原因）
+├── sql/
+│   └── event.example.sql                # 事件表建表样例（供数据抽取层，搬运/归档指引）
 └── application/
     ├── module-design/                   # 应用架构设计（分层职责、组件、规则）
     │   ├── contract.md

@@ -79,8 +79,8 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下</li>
  *   <li>R6 —— domain 不依赖 common-security（领域模型不感知认证上下文）</li>
  *   <li>R7a —— 域内反应监听器必须实现 {@code DomainEventListener} 标记（定型 application 层域内反应角色）</li>
- *   <li>R7b —— 集成事件出站 Publisher 必须实现 {@code IntegrationEventPublisher} 标记（定型 application 层出站角色）</li>
- *   <li>R7c —— AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）</li>
+ *   <li>R7b —— 集成事件出站捕获器必须实现 {@code IntegrationEventCapture} 标记（定型 application 层出站角色）</li>
+ *   <li>R7c —— AppService 不得直接依赖集成事件出站捕获器（捕获只经 CommandHandler / DomainEventListener）</li>
  *   <li>R8a —— 实现 {@code RestAdapter} 标记的类必须位于 adapter 层（定型 REST 入口角色）</li>
  *   <li>R8b —— 类名以 ControllerImpl 结尾的类必须实现 {@code RestAdapter} 标记（堵命名漂移）</li>
  *   <li>R9a —— 实现 {@code IntegrationEventConsumer} 标记的类必须位于 adapter 层（定型 MQ 入站角色）</li>
@@ -288,39 +288,39 @@ public final class DDDArchitectureRules {
                     .as("R7a 域内反应监听器必须实现 DomainEventListener 标记（..event.listener.. 包下）");
 
     /**
-     * R7b —— 集成事件出站 Publisher（{@code ..event.publisher..} 包下）必须实现
-     * {@code IntegrationEventPublisher} 标记接口。
+     * R7b —— 集成事件出站捕获器（{@code ..event.capture..} 包下）必须实现
+     * {@code IntegrationEventCapture} 标记接口。
      *
-     * <p>{@code IntegrationEventPublisher}（common-ddd/application/event/publisher/）为<strong>空标记</strong>，
-     * 价值在定型「application 层集成事件出站」角色：消费领域事件、翻译为契约 IntegrationEvent
-     * 并跨服务投递 MQ，与 domain 层进程内发布的 {@code DomainEventPublisher} 划清边界。
-     * 空集时允许通过（业务服务可能暂无出站 Publisher）。
+     * <p>{@code IntegrationEventCapture}（common-ddd/application/event/capture/）为<strong>空标记</strong>，
+     * 价值在定型「application 层集成事件出站捕获」角色：消费领域事件、翻译为契约 IntegrationEvent
+     * 并同事务捕获入集成 Outbox，与 domain 层进程内派发的 {@code DomainEventPublisher} 划清边界。
+     * 空集时允许通过（业务服务可能暂无出站捕获器）。
      */
-    public static final ArchRule EVENT_PUBLISHERS_ARE_MARKED =
+    public static final ArchRule EVENT_CAPTURES_ARE_MARKED =
             classes()
                     .that()
-                    .resideInAPackage("..event.publisher..")
+                    .resideInAPackage("..event.capture..")
                     .should()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher")
+                    .implement("com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture")
                     .allowEmptyShould(true)
-                    .as("R7b 集成事件出站 Publisher 必须实现 IntegrationEventPublisher 标记（..event.publisher.. 包下）");
+                    .as("R7b 集成事件出站捕获器必须实现 IntegrationEventCapture 标记（..event.capture.. 包下）");
 
     /**
-     * R7c —— AppService 不得直接依赖集成事件出站 Publisher。
+     * R7c —— AppService 不得直接依赖集成事件出站捕获器。
      *
      * <p>文档契约（module-design/application.md）：「AppService 不直接依赖 publisher」——
-     * 出站发布只经 CommandHandler 或 DomainEventListener 显式调用。本规则以
-     * {@code IntegrationEventPublisher} 标记为锚点，将该约束从文档变为可强制执行的架构规则。
+     * 出站捕获只经 CommandHandler 或 DomainEventListener 显式调用。本规则以
+     * {@code IntegrationEventCapture} 标记为锚点，将该约束从文档变为可强制执行的架构规则。
      */
-    public static final ArchRule APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_PUBLISHER =
+    public static final ArchRule APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_CAPTURE =
             noClasses()
                     .that()
                     .haveSimpleNameEndingWith("AppService")
                     .should()
                     .dependOnClassesThat()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.publisher.IntegrationEventPublisher")
+                    .implement("com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture")
                     .allowEmptyShould(true)
-                    .as("R7c AppService 不得直接依赖集成事件出站 Publisher（发布只经 CommandHandler / DomainEventListener）");
+                    .as("R7c AppService 不得直接依赖集成事件出站捕获器（捕获只经 CommandHandler / DomainEventListener）");
 
     /**
      * R8a —— 实现 {@code RestAdapter} 标记的类（adapter 层 REST 入口）必须位于 adapter 层。
@@ -358,7 +358,7 @@ public final class DDDArchitectureRules {
      *
      * <p>{@code IntegrationEventConsumer}（common-ddd/adapter/event/consumer/）为<strong>空标记</strong>，
      * 定型「集成事件入站」角色：接收 MQ 集成事件 → 反序列化 → 透传 ApplicationService。
-     * 与 application 层出站 {@code IntegrationEventPublisher} 对偶。空集时允许通过
+     * 与 application 层出站 {@code IntegrationEventCapture} 对偶。空集时允许通过
      * （当前 common-mq 未建设，无实现类，标记为框架预留）。
      */
     public static final ArchRule EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER =

@@ -21,9 +21,8 @@ import java.util.List;
  * <p><strong>同事务义务</strong>：实现必须保证 {@link #appendAll} 与调用方事务共享同一事务边界
  * （由调用方在事务内调用、实现不自行开启新事务）；调用方回滚则集成事件随行回滚。
  *
- * <p><strong>缺省实现</strong>：{@code JdbcIntegrationEventOutboxStore}（标准表
- * {@code ddd_integration_event_outbox}），由 {@code OutboxAutoConfiguration} 在存在
- * {@code DataSource} 时自动装配（{@code @ConditionalOnMissingBean}，业务可整体替换）。
+ * <p><strong>框架不提供缺省实现</strong>：使用方按本契约自行实现（参考实现见 sample-application）；
+ * 标准 outbox 表结构为参考约定而非框架强制。
  *
  * <p>线程安全要求：实现必须支持多线程并发调用。
  *

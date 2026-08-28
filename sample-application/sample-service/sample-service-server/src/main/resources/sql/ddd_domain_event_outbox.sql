@@ -1,24 +1,26 @@
 -- ============================================================================
--- ddd_domain_event_outbox.sql —— 领域事件 Outbox 缺省表（PostgreSQL）
+-- ddd_domain_event_outbox.sql —— 领域事件 Outbox 参考表（PostgreSQL）
 --
--- 全链路 Outbox 可靠性规范的领域侧标准表：框架缺省实现
--- （JdbcDomainEventOutboxStore 捕获 / OutboxRelay 领域实例排空）直接读写本表。
+-- 全链路 Outbox 可靠性规范的领域侧参考表：sample 参考实现
+-- （JdbcDomainEventOutboxStore 捕获 / JdbcOutboxRowAccess 领域实例排空）直接读写本表；
+-- 框架 SPI-only（零 SQL），本表结构为参考约定而非框架强制。
 -- 领域事件与业务写入【同事务】入箱——「聚合状态已提交 ⇒ 事件必然已落库」；
 -- 业务回滚则事件随行回滚。入箱后由排空器在自有事务内派发（先清后发不再适用，
--- 派发 / 内部反应 / 标记完成三者原子，见 OutboxRelay）。
+-- 派发 / 内部反应 / 标记完成三者原子，见框架排空引擎 OutboxRelay）。
 --
 -- 信封列（捕获与投递之间唯一的跨边界约定）：
 --   id          = DomainEvent.eventId（幂等键与行身份合一）
 --   event_type  = 领域事件类全限定名（反序列化锚点）
 --   payload     = 领域事件 JSON 载荷（TEXT 存储，跨 H2/PG 可移植）
 --   occurred_on = 事件发生时间（UTC，规则 09）
--- 簿记列（排空器重试 / 死信，形状由 OutboxRelay 钉死）：
+-- 簿记列（排空器重试 / 死信；框架经行访问 SPI 原样落库）：
 --   attempts / next_retry_at / status / last_error
 -- 标准结构列（与本仓所有业务表一致，见 .agents/rules/04）：
 --   version / create_at / update_at / created_by / updated_by / is_delete
 --   —— create_at/update_at 无默认值：捕获时由 JdbcDomainEventOutboxStore 填充，
---      排空簿记由 OutboxRelay 填充；投递完成 = is_delete=TRUE（软删留痕），
---      保留期（默认 7 天）后由 purge 物理清除。
+--      排空簿记由 JdbcOutboxRowAccess 填充；投递完成 = is_delete=TRUE 软删留痕，
+--      供审计与下游数据抽取层搬运。框架只写不清——不设保留期、不做清除，
+--      历史条目的搬运 / 归档由使用方数据抽取层按自身节奏处理。
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ddd_domain_event_outbox (
@@ -52,10 +54,10 @@ CREATE INDEX IF NOT EXISTS idx_domain_event_outbox_due
 
 -- ============================================================================
 -- payload 列类型说明：
---   缺省 JdbcDomainEventOutboxStore 以一条可移植 INSERT 写入（字符串绑定），
+--   参考实现 JdbcDomainEventOutboxStore 以一条可移植 INSERT 写入（字符串绑定），
 --   框架从不查询载荷内部字段，故用 TEXT 即可跨 H2（测试）/PostgreSQL（生产）。
 --   PG 侧若需在库内直接查询/过滤载荷字段，可将本列改为 JSONB，
---   并自行提供 DomainEventOutboxStore 实现（写入时 ?::jsonb，经 SPI 替换缺省实现）。
+--   并自行提供 DomainEventOutboxStore 实现（写入时 ?::jsonb，经 SPI 替换参考实现）。
 -- 载荷容量策略（平均 payload > 2KB 时评估）：
 --   1. 压缩 —— 应用层 gzip + base64，牺牲 CPU 换 I/O
 --   2. 拆分 —— outbox 仅存元数据 + 引用键，载荷存独立表 / OSS

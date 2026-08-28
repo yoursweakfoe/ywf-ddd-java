@@ -11,11 +11,11 @@ import org.springframework.context.ApplicationEventPublisher;
  * <p>将领域事件桥接到 Spring 事件机制，使得 {@code @EventListener} 注解的方法能够接收和处理领域事件。
  *
  * <p><strong>边界</strong>：本包（{@code infrastructure.event.domain}）仅负责<strong>领域事件</strong>的
- * 进程内投递。集成事件（IntegrationEvent）的收发不在此包：出站由 application 层 {@code Publisher}
+ * 进程内投递。集成事件（IntegrationEvent）的收发不在此包：出站由 application 层 {@code Capture}
  * 翻译并经集成 Outbox 捕获、框架集成排空器投递（依赖 common-mq 时），入站由 adapter 层 {@code Consumer} 接收。
  *
  * <p><strong>投递时序（全链路 Outbox 规范）</strong>：本类由框架领域排空器（{@code OutboxRelay} 领域实例）
- * 在<strong>其自有事务内</strong>调用——事件从 {@code ddd_domain_event_outbox} 认领后于该事务中派发，
+ * 在<strong>其自有事务内</strong>调用——事件从 outbox 行认领后于该事务中派发，
  * 监听器副作用 / 集成入箱 / 领域行标记完成三者原子提交。
  *
  * <p>
@@ -44,10 +44,11 @@ import org.springframework.context.ApplicationEventPublisher;
  *
  * <p>
  *
- * <h3>扩展</h3>
+ * <h3>扩展边界</h3>
  *
- * <p>跨进程（MQ）发布请替换本实现为基于消息队列的 {@link DomainEventPublisher}（契约不变）。
- * 可靠化无需在此扩展——全链路 Transactional Outbox 的捕获与排空由
+ * <p>默认实现即唯一受支持形态，不提供跨进程扩展——跨服务边界一律经集成 Outbox
+ * （{@code IntegrationEventOutboxStore} + 框架集成排空器）。可靠化无需在此扩展——
+ * 全链路 Transactional Outbox 的捕获与排空由
  * {@code infrastructure.event.outbox} 包提供（领域/集成两侧同事务入箱 + 框架排空器投递），对本类透明。
  * 监听器副作用须保持事务内，<strong>禁用</strong> {@code @Async}（会脱离排空器事务、撕碎原子性）。
  *

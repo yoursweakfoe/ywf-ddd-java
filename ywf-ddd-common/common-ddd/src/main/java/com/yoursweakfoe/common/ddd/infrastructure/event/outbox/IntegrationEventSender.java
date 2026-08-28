@@ -3,8 +3,8 @@ package com.yoursweakfoe.common.ddd.infrastructure.event.outbox;
 /**
  * 集成事件投递者 SPI —— 框架排空器与具体 MQ 之间的接缝。
  *
- * <p>框架集成排空器（{@code OutboxRelay} 集成实例）从 {@code ddd_integration_event_outbox}
- * 认领一行、构造 {@link OutboxEnvelope}、调用本接口投递，<strong>投递成功后才标记该行完成</strong>
+ * <p>框架集成排空器（{@code OutboxRelay} 集成实例）从集成 outbox 行集认领一行、构造
+ * {@link OutboxEnvelope}、调用本接口投递，<strong>投递成功后才标记该行完成</strong>
  * （at-least-once）。本接口只回答「把信封送到外部」，不关心认领 / 重试 / 死信（归排空器）。
  *
  * <p><strong>框架不内置 MQ 实现</strong>：common-mq 模块尚未建设，样例以日志占位实现

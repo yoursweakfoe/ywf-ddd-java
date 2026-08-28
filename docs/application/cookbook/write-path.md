@@ -306,9 +306,9 @@ public class OrderRepositoryImpl
 
 > 领域事件随持久化强制经 Outbox 同事务捕获（全链路 Outbox 可靠性规范，见
 > `docs/common/common-ddd.md` Outbox 节），仓储构造注入的
-> `ObjectProvider<DomainEventOutboxStore>` 即捕获的接线点；框架提供缺省实现
-> `JdbcDomainEventOutboxStore`（`ddd_domain_event_outbox`），入箱后由框架排空器
-> `OutboxRelay` 在自有事务内派发（at-least-once）。无 Outbox Bean 时冲刷 fail-fast
+> `ObjectProvider<DomainEventOutboxStore>` 即捕获的接线点；捕获实现归使用方
+>（SPI-only，框架不提供缺省实现，参考实现见 sample），入箱后由框架排空器
+> `OutboxRelay` 在自有事务内派发（at-least-once）。无 Outbox Bean 时捕获 fail-fast
 > 回滚业务写入——要么不用事件，要么带上 Outbox，不存在直发降级。
 
 ## 完整文件清单

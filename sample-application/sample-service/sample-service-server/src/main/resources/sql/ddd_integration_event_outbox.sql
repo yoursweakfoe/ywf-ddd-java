@@ -1,8 +1,9 @@
 -- ============================================================================
--- ddd_integration_event_outbox.sql —— 集成事件 Outbox 缺省表（PostgreSQL）
+-- ddd_integration_event_outbox.sql —— 集成事件 Outbox 参考表（PostgreSQL）
 --
--- 全链路 Outbox 可靠性规范的集成侧标准表：框架缺省实现
--- （JdbcIntegrationEventOutboxStore 捕获 / OutboxRelay 集成实例排空）直接读写本表。
+-- 全链路 Outbox 可靠性规范的集成侧参考表：sample 参考实现
+-- （JdbcIntegrationEventOutboxStore 捕获 / JdbcOutboxRowAccess 集成实例排空）直接读写本表；
+-- 框架 SPI-only（零 SQL），本表结构为参考约定而非框架强制。
 -- 集成事件（最终 MQ 载荷）由应用层 Publisher 在【领域排空事务内】翻译并捕获入箱，
 -- 关闭「领域事件已派发 → 集成事件投 MQ」之间的 dual-write 窗口；
 -- 随后由集成排空器经 IntegrationEventSender 投递 MQ（messageId = 本表行 id）。
@@ -16,19 +17,20 @@
 -- 溯源列：
 --   source_event_id = 产生本集成事件的领域事件 eventId（一对一 / 一对多 fan-out 的血缘）；
 --                     入站集成事件再发出（无领域来源）时为 NULL
--- 簿记列（排空器重试 / 死信，形状由 OutboxRelay 钉死）：
+-- 簿记列（排空器重试 / 死信；框架经行访问 SPI 原样落库）：
 --   attempts / next_retry_at / status / last_error
 -- 标准结构列（与本仓所有业务表一致，见 .agents/rules/04）：
 --   version / create_at / update_at / created_by / updated_by / is_delete
 --   —— create_at/update_at 无默认值：捕获时由 JdbcIntegrationEventOutboxStore 填充；
---      投递完成 = is_delete=TRUE（软删留痕），保留期（默认 7 天）后由 purge 物理清除。
+--      投递完成 = is_delete=TRUE 软删留痕，供审计与下游数据抽取层搬运。
+--      框架只写不清——不设保留期、不做清除，历史条目的搬运 / 归档由使用方数据抽取层按自身节奏处理。
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ddd_integration_event_outbox (
     -- ── 信封 ────────────────────────────────────────────────────────────────
     id              VARCHAR(36) PRIMARY KEY,              -- 集成事件行身份（= MQ messageId）
     event_type      VARCHAR(500) NOT NULL,                -- 集成事件类全限定名
-    payload         TEXT NOT NULL,                        -- 集成事件 JSON 载荷（TEXT 可移植，见文末说明）
+    payload         TEXT NOT NULL,                        -- 集成事件 JSON 载荷（最终 MQ 载荷；TEXT 可移植，见文末说明）
     occurred_on     TIMESTAMP WITH TIME ZONE NOT NULL,    -- 捕获时间（UTC）
 
     -- ── 溯源 ────────────────────────────────────────────────────────────────
@@ -57,10 +59,10 @@ CREATE INDEX IF NOT EXISTS idx_integration_event_outbox_due
 
 -- ============================================================================
 -- payload 列类型说明：
---   缺省 JdbcIntegrationEventOutboxStore 以一条可移植 INSERT 写入（字符串绑定），
+--   参考实现 JdbcIntegrationEventOutboxStore 以一条可移植 INSERT 写入（字符串绑定），
 --   框架从不查询载荷内部字段，故用 TEXT 即可跨 H2（测试）/PostgreSQL（生产）。
 --   PG 侧若需在库内直接查询/过滤载荷字段，可将本列改为 JSONB，
---   并自行提供 IntegrationEventOutboxStore 实现（写入时 ?::jsonb，经 SPI 替换缺省实现）。
+--   并自行提供 IntegrationEventOutboxStore 实现（写入时 ?::jsonb，经 SPI 替换参考实现）。
 -- 载荷容量策略（平均 payload > 2KB 时评估）：
 --   1. 压缩 —— 应用层 gzip + base64，牺牲 CPU 换 I/O
 --   2. 拆分 —— outbox 仅存元数据 + 引用键，载荷存独立表 / OSS

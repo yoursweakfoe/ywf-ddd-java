@@ -1,15 +1,12 @@
 package com.yoursweakfoe.common.ddd.infrastructure.event.domain;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
 import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,25 +32,8 @@ class InProcessDomainEventPublisherTest {
     }
 
     @Test
-    void publishAll_iteratesAndPublishes() {
-        DomainEvent event1 = new TestDomainEvent();
-        DomainEvent event2 = new TestDomainEvent();
-        publisher.publishAll(List.of(event1, event2));
-
-        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-        verify(applicationEventPublisher, times(2)).publishEvent(captor.capture());
-        assertThat(captor.getAllValues()).containsExactly(event1, event2);
-    }
-
-    @Test
     void publish_null_silentlyIgnored() {
         assertThatCode(() -> publisher.publish(null)).doesNotThrowAnyException();
-        verifyNoInteractions(applicationEventPublisher);
-    }
-
-    @Test
-    void publishAll_null_silentlyIgnored() {
-        assertThatCode(() -> publisher.publishAll(null)).doesNotThrowAnyException();
         verifyNoInteractions(applicationEventPublisher);
     }
 

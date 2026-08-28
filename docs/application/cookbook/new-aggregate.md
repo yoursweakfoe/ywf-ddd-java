@@ -398,8 +398,9 @@ public class PaymentRepositoryImpl
 ```
 
 > 构造器注入的 `ObjectProvider<DomainEventOutboxStore>` 是领域事件 Outbox 捕获的接线点
-> （全链路 Outbox 可靠性规范：框架提供缺省实现 `JdbcDomainEventOutboxStore`，事件与业务同事务入箱，
-> 框架排空器 `OutboxRelay` 投递；无 Outbox Bean 时冲刷 fail-fast 回滚业务写入，不存在直发降级）。
+> （全链路 Outbox 可靠性规范：捕获实现归使用方——SPI-only，框架不提供缺省实现，
+> 参考实现见 sample；事件与业务同事务入箱，框架排空器 `OutboxRelay` 投递；
+> 无 Outbox Bean 时捕获 fail-fast 回滚业务写入，不存在直发降级）。
 
 ## 创建顺序建议
 

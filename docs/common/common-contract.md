@@ -58,8 +58,8 @@ com.yoursweakfoe.common.contract
 | | IntegrationEvent（本模块） | DomainEvent（common-ddd） |
 |---|---|---|
 | 来源 | 跨服务边界（MQ / RPC），出入站均为它 | 领域内部产生（聚合根注册） |
-| 发布方 | 本服务 Publisher（出站）/ 外部系统（入站） | 本进程 Spring Event |
-| 处理入口 | adapter 层 Consumer（入站）/ Publisher（出站，翻译 + Outbox 捕获） | `@EventListener`（框架排空事务内派发，见 common-ddd.md Outbox 节） |
+| 发布方 | 本服务 Capture（出站）/ 外部系统（入站） | 本进程 Spring Event |
+| 处理入口 | adapter 层 Consumer（入站）/ Capture（出站，翻译 + Outbox 捕获） | `@EventListener`（框架排空事务内派发，见 common-ddd.md Outbox 节） |
 
 ## 3. 使用方式
 

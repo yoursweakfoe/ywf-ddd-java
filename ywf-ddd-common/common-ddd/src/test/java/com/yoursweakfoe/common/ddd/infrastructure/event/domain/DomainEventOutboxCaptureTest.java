@@ -21,14 +21,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * DomainEventFlusher 测试 —— 全链路 Outbox 规范的交付语义：
+ * DomainEventOutboxCapture 测试 —— 全链路 Outbox 规范的捕获语义：
  * ① 有 Outbox 只捕获（先清后捕，不做进程内派发）；② 无 Outbox 但有事件 → fail-fast 抛错；
  * ③ 无事件（非聚合 / 空列表）静默无操作。
  */
-@DisplayName("DomainEventFlusher — 全链路 Outbox 捕获（事件强制要求 Outbox，无直发降级）")
-class DomainEventFlusherTest {
+@DisplayName("DomainEventOutboxCapture — 全链路 Outbox 捕获（事件强制要求 Outbox，无直发降级）")
+class DomainEventOutboxCaptureTest {
 
-    /** 记录型 DomainEventOutboxStore 测试替身：验证冲刷编排（捕获语义） */
+    /** 记录型 DomainEventOutboxStore 测试替身：验证捕获编排（先清后捕语义） */
     static final class RecordingDomainEventOutboxStore implements DomainEventOutboxStore {
         final List<DomainEvent> captured = new ArrayList<>();
 
@@ -63,12 +63,12 @@ class DomainEventFlusherTest {
     @DisplayName("有 Outbox：只捕获（先清后捕），不做任何进程内派发")
     void outboxPresent_capturesOnly() {
         RecordingDomainEventOutboxStore store = new RecordingDomainEventOutboxStore();
-        DomainEventFlusher flusher = new DomainEventFlusher(storeProvider(store));
+        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(store));
 
         Order order = orderWithPlacedEvent();
         UUID originalEventId = order.getDomainEvents().get(0).getEventId();
 
-        flusher.publishAndClear(order);
+        capture.captureAndClear(order);
 
         assertThat(order.getDomainEvents()).isEmpty();              // 先清后捕
         assertThat(store.captured).hasSize(1);                      // 已同事务捕获（锚点由实现担保）
@@ -77,12 +77,12 @@ class DomainEventFlusherTest {
 
     @Test
     @DisplayName("外部事件列表（删除工厂路径）：同样只捕获入箱")
-    void publishAll_outboxPresent_capturesOnly() {
+    void captureAll_outboxPresent_capturesOnly() {
         RecordingDomainEventOutboxStore store = new RecordingDomainEventOutboxStore();
-        DomainEventFlusher flusher = new DomainEventFlusher(storeProvider(store));
+        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(store));
         OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.ONE);
 
-        flusher.publishAll(List.of(event));
+        capture.captureAll(List.of(event));
 
         assertThat(store.captured).containsExactly(event);
     }
@@ -90,27 +90,27 @@ class DomainEventFlusherTest {
     @Test
     @DisplayName("fail-fast：无 Outbox 但有事件 → 抛 IllegalStateException（回滚业务写入）")
     void noOutbox_withEvents_throws() {
-        DomainEventFlusher flusher = new DomainEventFlusher(storeProvider(null));
+        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(null));
 
-        assertThatThrownBy(() -> flusher.publishAndClear(orderWithPlacedEvent()))
+        assertThatThrownBy(() -> capture.captureAndClear(orderWithPlacedEvent()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("DomainEventOutboxStore");
 
         OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.ONE);
-        assertThatThrownBy(() -> flusher.publishAll(List.of(event)))
+        assertThatThrownBy(() -> capture.captureAll(List.of(event)))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     @DisplayName("无事件（聚合无已注册事件 / 空列表 / null）：静默无操作，不抛异常")
     void noEvents_noOp_evenWithoutOutbox() {
-        DomainEventFlusher flusher = new DomainEventFlusher(storeProvider(null));
+        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(null));
 
-        assertThatCode(() -> flusher.publishAndClear(orderWithoutEvents()))
+        assertThatCode(() -> capture.captureAndClear(orderWithoutEvents()))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> flusher.publishAll(List.of()))
+        assertThatCode(() -> capture.captureAll(List.of()))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> flusher.publishAll(null))
+        assertThatCode(() -> capture.captureAll(null))
                 .doesNotThrowAnyException();
     }
 }
