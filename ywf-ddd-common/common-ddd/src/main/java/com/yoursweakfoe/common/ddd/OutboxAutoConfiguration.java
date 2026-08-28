@@ -45,7 +45,7 @@ import org.springframework.transaction.PlatformTransactionManager;
  * <p><strong>装配门控与逃生门</strong>：
  * <ul>
  *   <li>总开关 {@code ywf.ddd.outbox.enabled=false} → 本配置整体退位；退位后聚合一旦注册事件，
- *       {@code DomainEventOutboxCapture} fail-fast 抛错（要么不用事件，要么带上 Outbox）</li>
+ *       {@code DomainEventCapture} fail-fast 抛错（要么不用事件，要么带上 Outbox）</li>
  *   <li>排空装配门控 {@code @ConditionalOnBean(OutboxRowAccess + PlatformTransactionManager)}：
  *       使用方注册了行访问（且存在事务管理器）即自动获得排空；否则整体静默跳过</li>
  *   <li>每个行访问各装配一个排空引擎（同类多个实现 = 分表各自独立引擎），按 {@link OutboxKind}

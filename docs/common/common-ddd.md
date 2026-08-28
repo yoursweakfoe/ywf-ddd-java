@@ -100,7 +100,7 @@ Outbox 是业界标准解法。本框架的定档（audit F-04 收口，ADR-0007
 
 ```
 捕获（与业务写入同事务——可靠性锚点；SPI 契约归框架，实现归使用方）
-  领域事件：聚合 registerEvent → 仓储 save/update → DomainEventOutboxCapture 先清后入箱
+  领域事件：聚合 registerEvent → 仓储 save/update → DomainEventCapture 先清后入箱
             → DomainEventOutboxStore.appendAll（SPI）→ 领域 outbox 表（参考表 ddd_domain_event_outbox）
   集成事件：DomainEventListener（排空事务内）调用 Capture 翻译
             → IntegrationEventOutboxStore.appendAll（应用层端口）→ 集成 outbox 表（参考表 ddd_integration_event_outbox）
@@ -118,7 +118,7 @@ Outbox 是业界标准解法。本框架的定档（audit F-04 收口，ADR-0007
 ```
 
 **fail-fast（事件强制要求 Outbox）**：聚合注册了事件但容器中无 `DomainEventOutboxStore`
-Bean 时，`DomainEventOutboxCapture` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
+Bean 时，`DomainEventCapture` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
 要么带上 Outbox。**不存在静默丢弃，也不存在直发降级路径。**
 
 **两张标准表**（**参考约定，非框架强制**；参考 DDL 由 sample 持有：
@@ -487,7 +487,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **后果**：监听器契约变更——只在提交后执行、无活动事务，一律 `@EventListener` + 写入自带 `REQUIRES_NEW`；`@TransactionalEventListener(AFTER_COMMIT)` 不再适用。业务未提供 `OutboxStore` Bean 时事件回退直发路径（提交后进程内派发，at-most-once）。实现、排空、重试/死信/多实例互斥全部由业务按真实考验落地或直接选用生态方案（RocketMQ 事务消息 / Debezium CDC / Modulith EPR）。F-04 担保收窄为「捕获契约 + 业务实现/排空的最小 at-least-once 责任」。
 
-**确认**：`OutboxStore`（SPI）/ `DomainEventCodec` / `DomainEventOutboxCapture`（ADR-0011 更名）编排 + `sql/ddd_outbox.example.sql` 参考 DDL。（以上为历史记录，下述 ADR-0008 已反转。）
+**确认**：`OutboxStore`（SPI）/ `DomainEventCodec` / `DomainEventCapture`（ADR-0011 更名）编排 + `sql/ddd_outbox.example.sql` 参考 DDL。（以上为历史记录，下述 ADR-0008 已反转。）
 
 ### ADR-0008 全链路 Outbox：框架交付捕获 + 排空完整管线（反转 ADR-0007）
 
@@ -506,7 +506,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **后果**：`DomainEventPublisher` 契约不变（改由排空器调用）；仓储构造器收为 `(Mapper, ObjectProvider<DomainEventOutboxStore>)`；ADR-0007 的「业务侧待办」全部由框架承接；集成事件 MQ 投递在 common-mq 建设前以样例 `LoggingIntegrationEventSender` 日志占位。
 
-**确认**：`DomainEventOutboxStore` / `JdbcDomainEventOutboxStore` / `IntegrationEventOutboxStore` / `JdbcIntegrationEventOutboxStore` / `OutboxRelay` / `OutboxRelayScheduler` / `IntegrationEventSender` / `DomainEventCodec` / `DomainEventOutboxCapture`（fail-fast，ADR-0011 更名）+ `sql/ddd_domain_event_outbox.sql`、`sql/ddd_integration_event_outbox.sql` 规范 DDL。（以上为历史记录，下述 ADR-0009 已将缺省实现与规范 DDL 外移 sample。）
+**确认**：`DomainEventOutboxStore` / `JdbcDomainEventOutboxStore` / `IntegrationEventOutboxStore` / `JdbcIntegrationEventOutboxStore` / `OutboxRelay` / `OutboxRelayScheduler` / `IntegrationEventSender` / `DomainEventCodec` / `DomainEventCapture`（fail-fast，ADR-0011 更名）+ `sql/ddd_domain_event_outbox.sql`、`sql/ddd_integration_event_outbox.sql` 规范 DDL。（以上为历史记录，下述 ADR-0009 已将缺省实现与规范 DDL 外移 sample。）
 
 ### ADR-0009 Outbox 收归 SPI-only：框架零 SQL，缺省实现外移 sample（收敛 ADR-0008）
 
@@ -523,7 +523,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **后果**：Breaking change——升级使用方必须自行实现捕获 + 行访问 SPI 并建表（参考 sample 模板）；排空装配门控改为 `@ConditionalOnBean(OutboxRowAccess + PlatformTransactionManager)`，注册 INTEGRATION 行访问而无 `IntegrationEventSender` Bean 时启动 fail-fast。可靠性语义不变：同事务捕获、fail-fast、at-least-once + 幂等去重、监听器契约、事件流拓扑均维持 ADR-0008 定稿。
 
-**确认**：`DomainEventOutboxStore` / `IntegrationEventOutboxStore` / `OutboxRowAccess` / `OutboxRow` / `OutboxKind` / `OutboxRelay`（纯策略）/ `OutboxRelayScheduler` / `IntegrationEventSender` / `DomainEventCodec` / `DomainEventOutboxCapture`（fail-fast，ADR-0011 更名）；参考实现与参考 DDL 见 sample-application。（以上为历史记录，下述 ADR-0010 已移除保留期清除职责。）
+**确认**：`DomainEventOutboxStore` / `IntegrationEventOutboxStore` / `OutboxRowAccess` / `OutboxRow` / `OutboxKind` / `OutboxRelay`（纯策略）/ `OutboxRelayScheduler` / `IntegrationEventSender` / `DomainEventCodec` / `DomainEventCapture`（fail-fast，ADR-0011 更名）；参考实现与参考 DDL 见 sample-application。（以上为历史记录，下述 ADR-0010 已移除保留期清除职责。）
 
 ### ADR-0010 Outbox 不删除事件行：框架只捕获与排空，搬运归数据抽取层（收敛 ADR-0009）
 
@@ -545,6 +545,8 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 ### ADR-0011 事件组件正名：Flusher / Publisher 更名 Capture（读名字即知职责）
 
+> **补遗（对称对齐）**：本 ADR 初版将领域侧捕获组件记为 `DomainEventOutboxCapture`，后经对称对齐简化为 `DomainEventCapture`（与 `IntegrationEventCapture` 对仗——两侧同叫 `XxxCapture`，outbox 含义统一由各自 `*OutboxStore` 表达）。最终名以本文其余处为准。
+
 - 状态：accepted（2026-08）
 
 **背景**：多轮重构（进程内直发 → 过渡 Outbox → 全链路 Outbox（ADR-0008）→ SPI 化（ADR-0009）→ 移除清除（ADR-0010））后，前 outbox 时代的命名残留导致职责与名字错位——「Publisher 不投递、Flusher 不发布」，阅读主链路时产生认知错位。
@@ -553,7 +555,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 | 旧名 | 新名 | 说明 |
 |---|---|---|
-| `DomainEventFlusher`（`infrastructure/event/domain/`） | `DomainEventOutboxCapture` | 方法 `publishAndClear` → `captureAndClear`、`publishAll` → `captureAll`。职责正名：不做发布，只做「快照 → 清空 → 同事务捕获入 Outbox」 |
+| `DomainEventFlusher`（`infrastructure/event/domain/`） | `DomainEventCapture` | 方法 `publishAndClear` → `captureAndClear`、`publishAll` → `captureAll`。职责正名：不做发布，只做「快照 → 清空 → 同事务捕获入 Outbox」 |
 | `IntegrationEventPublisher`（application 层空标记，`application/event/publisher/`） | `IntegrationEventCapture`（`application/event/capture/`） | 职责正名：翻译 + 同事务入箱，**不投递**——出站投递由框架集成排空器经 `IntegrationEventSender` 完成。模式术语「出站 Publisher」统一改为「出站捕获」 |
 | sample `OrderEventPublisher`（`application/order/event/publisher/`） | `OrderIntegrationEventCapture`（`application/order/event/capture/`） | 业务侧跟随标记接口与包名更名 |
 
@@ -565,7 +567,7 @@ common-ddd → common-contract（Command / Query / IntegrationEvent 标记接口
 
 **后果**：纯改名 + 死 API 删除，管线拓扑与可靠性语义不变（ADR-0008 / ADR-0009 / ADR-0010 定稿维持）；Breaking change——升级使用方按上表替换类名 / 方法名 / 包名。
 
-**确认**：`DomainEventOutboxCapture`（`captureAndClear` / `captureAll`）/ `IntegrationEventCapture`（`application/event/capture/`）/ `DomainEventPublisher`（无 `publishAll`）。
+**确认**：`DomainEventCapture`（`captureAndClear` / `captureAll`）/ `IntegrationEventCapture`（`application/event/capture/`）/ `DomainEventPublisher`（无 `publishAll`）。
 
 ## 7. 职责边界与技术债
 

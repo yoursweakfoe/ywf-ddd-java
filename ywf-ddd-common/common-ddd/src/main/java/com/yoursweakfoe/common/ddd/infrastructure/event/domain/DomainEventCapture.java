@@ -37,12 +37,12 @@ import org.springframework.beans.factory.ObjectProvider;
  * 入站由 adapter 层 {@code Consumer} 接收。
  */
 @Slf4j
-public class DomainEventOutboxCapture {
+public class DomainEventCapture {
 
     /** 领域事件 Outbox 捕获存储（可能为 null —— 无 Outbox 时 fail-fast） */
     private final DomainEventOutboxStore outboxStore;
 
-    public DomainEventOutboxCapture(ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
+    public DomainEventCapture(ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
         this.outboxStore = outboxStoreProvider != null ? outboxStoreProvider.getIfAvailable() : null;
     }
 

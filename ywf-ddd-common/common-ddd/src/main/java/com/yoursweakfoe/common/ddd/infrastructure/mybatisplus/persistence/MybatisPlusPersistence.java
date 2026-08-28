@@ -9,7 +9,7 @@ import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.domain.DomainEventOutboxCapture;
+import com.yoursweakfoe.common.ddd.infrastructure.event.domain.DomainEventCapture;
 import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import java.io.Serializable;
 import java.util.Collection;
@@ -42,13 +42,13 @@ import org.springframework.core.GenericTypeResolver;
  * <ul>
  *   <li>save/update 前自动调用 {@code AggregateRoot.validate()}
  *   <li>update/delete 失败时抛出 {@link IllegalStateException}（不静默失败）
- *   <li>领域事件在持久化成功后捕获入箱（先清后捕，保证原子性）——捕获逻辑委托 {@link DomainEventOutboxCapture}
+ *   <li>领域事件在持久化成功后捕获入箱（先清后捕，保证原子性）——捕获逻辑委托 {@link DomainEventCapture}
  *   <li><b>事件事务语义（全链路 Outbox 规范）</b>：领域事件强制经 Outbox 捕获——与业务写入
  *       <strong>同事务</strong>入箱，「状态已提交 ⇒ 事件必然已落库」，业务回滚则事件随行回滚；
  *       入箱后由框架排空器（{@code OutboxRelay}）在自有事务内派发，监听器<strong>加入</strong>排空器事务
  *       （普通 {@code @EventListener} + 普通 {@code @Transactional}，禁用 {@code REQUIRES_NEW}/{@code @Async}）。
  *       有事件但无 Outbox 时 fail-fast 抛错回滚。投递语义 at-least-once，消费端以
- *       {@code DomainEvent.eventId} 幂等去重。详见 {@code DomainEventOutboxCapture}
+ *       {@code DomainEvent.eventId} 幂等去重。详见 {@code DomainEventCapture}
  *   <li>删除同样覆盖事件：实体删除发布聚合已注册事件，按 ID 删除通过事件工厂重载发布；
  *       带事件的批量删除（{@code removeDomainByIds(ids, factory)} / {@code removeDomains(list)}）
  *       先预查真实存在的 ID，<b>仅为实际删除的实体发布事件</b>——请求中不存在的 ID 静默跳过不报错
@@ -115,7 +115,7 @@ public abstract class MybatisPlusPersistence<
     protected final Mapper baseMapper;
 
     /** 领域事件捕获器（先清后捕契约，委托独立组件以保持本类单一职责） */
-    private final DomainEventOutboxCapture outboxCapture;
+    private final DomainEventCapture domainEventCapture;
 
     /** PO 类型（构造期经泛型解析固化，供主键列名反射） */
     private final Class<PO> poClass;
@@ -125,13 +125,13 @@ public abstract class MybatisPlusPersistence<
      * @param baseMapper MyBatis-Plus Mapper 实例（由子类构造器注入具体 Mapper 类型）
      * @param outboxStoreProvider 领域事件 Outbox 捕获存储（全链路 Outbox 规范：有事件时强制要求；
      *        容器中无此 Bean 且聚合注册了事件时，捕获将 fail-fast 抛错回滚业务写入，
-     *        见 {@link DomainEventOutboxCapture}）
+     *        见 {@link DomainEventCapture}）
      */
     @SuppressWarnings("unchecked")
     protected MybatisPlusPersistence(Mapper baseMapper,
                                      ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
         this.baseMapper = baseMapper;
-        this.outboxCapture = new DomainEventOutboxCapture(outboxStoreProvider);
+        this.domainEventCapture = new DomainEventCapture(outboxStoreProvider);
         this.poClass = (Class<PO>) GenericTypeResolver
                 .resolveTypeArguments(getClass(), MybatisPlusPersistence.class)[1];
     }
@@ -239,7 +239,7 @@ public abstract class MybatisPlusPersistence<
         if (rows == 0) {
             throw new IllegalStateException("INSERT failed for entity ID: " + domain.getId());
         }
-        outboxCapture.captureAndClear(domain);
+        domainEventCapture.captureAndClear(domain);
     }
 
     /**
@@ -291,7 +291,7 @@ public abstract class MybatisPlusPersistence<
             throwUpdateFailed(domain);
         }
 
-        outboxCapture.captureAndClear(domain);
+        domainEventCapture.captureAndClear(domain);
     }
 
     /**
@@ -365,7 +365,7 @@ public abstract class MybatisPlusPersistence<
      */
     public void removeDomainById(ID id, Function<? super ID, ? extends DomainEvent> eventFactory) {
         removeDomainById(id);
-        outboxCapture.captureAll(List.of(Objects.requireNonNull(
+        domainEventCapture.captureAll(List.of(Objects.requireNonNull(
                 eventFactory.apply(id), "eventFactory must not return null")));
     }
 
@@ -424,7 +424,7 @@ public abstract class MybatisPlusPersistence<
             throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + ids);
         }
         removeDomainByIds(existingIds);
-        outboxCapture.captureAll(existingIds.stream()
+        domainEventCapture.captureAll(existingIds.stream()
                 .<DomainEvent>map(id -> Objects.requireNonNull(
                         eventFactory.apply(id), "eventFactory must not return null"))
                 .toList());
@@ -440,7 +440,7 @@ public abstract class MybatisPlusPersistence<
      */
     public void removeDomain(Domain domain) {
         removeDomainById(domain.getId());
-        outboxCapture.captureAndClear(domain);
+        domainEventCapture.captureAndClear(domain);
     }
 
     /**
@@ -466,7 +466,7 @@ public abstract class MybatisPlusPersistence<
             if (domain.getId() == null || !existingIds.contains(domain.getId())) {
                 continue; // 无 ID（从未持久化）或预查不存在的聚合：未删除，不发事件
             }
-            outboxCapture.captureAndClear(domain);
+            domainEventCapture.captureAndClear(domain);
         }
     }
 

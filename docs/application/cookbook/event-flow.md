@@ -44,7 +44,7 @@
 
 Repository.update(order)（业务事务内）
   → updateDomain(order)                            ② 先落库（UPDATE，乐观锁）
-  → DomainEventOutboxCapture 先清后入箱            ③ 快照事件、清空暂存
+  → DomainEventCapture 先清后入箱            ③ 快照事件、清空暂存
   → DomainEventOutboxStore.appendAll（SPI）        ④ 同事务写领域 outbox 表（参考表 ddd_domain_event_outbox）
                                                    （可靠性锚点：提交 ⇒ 落库；回滚 ⇒ 随行）
 业务事务提交 ─────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ graph TB
 | 环节 | 状态 | 落地位置 |
 |------|------|---------|
 | 领域事件定义 + 聚合根注册 | ✅ 已实现 | `domain/{agg}/event/domain/` + `registerEvent()` |
-| 持久化成功后先清后入箱（同事务捕获） | ✅ 已实现 | `MybatisPlusPersistence` → `DomainEventOutboxCapture` |
+| 持久化成功后先清后入箱（同事务捕获） | ✅ 已实现 | `MybatisPlusPersistence` → `DomainEventCapture` |
 | 领域事件 Outbox 捕获 | ✅ 已实现 | SPI `DomainEventOutboxStore`（框架契约）+ sample 参考实现（`infrastructure/event/outbox/`）；参考 DDL `src/main/resources/sql/`（均在 sample-service-server） |
 | 领域事件排空投递 | ✅ 已实现 | 框架 `OutboxRelay`（领域实例，纯策略）+ `OutboxRelayScheduler`（`infrastructure/event/outbox/scheduler/`），行访问经 `OutboxRowAccess` SPI，排空事务内经 `DomainEventPublisher` 进程内派发 |
 | 域内反应（DomainEventListener） | ✅ 已实现 | `application/{agg}/event/listener/`（`@EventListener` 加入排空事务） |
@@ -163,7 +163,7 @@ public void updateDomain(Domain domain) {
 - **先落库，后捕获**；**先清后捕**（快照 + 清空暂存，下游抛异常也不会重复捕获）
 - **捕获与业务写入同事务**——「聚合状态已提交 ⇒ 事件必然已落库；业务回滚 ⇒ 事件随行回滚」
 - **fail-fast**：聚合注册了事件但容器中无 `DomainEventOutboxStore` Bean 时，
-  `DomainEventOutboxCapture` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
+  `DomainEventCapture` 抛 `IllegalStateException` 回滚业务写入——要么不用事件，
   要么带上 Outbox，不存在静默丢弃，也不存在直发降级
 
 捕获实现归使用方：实现 `DomainEventOutboxStore` 并注册为 Bean（**框架不提供缺省实现**），

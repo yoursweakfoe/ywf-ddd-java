@@ -11,7 +11,7 @@ import java.util.List;
  * 「聚合状态已提交 ⇒ 事件必然已落库」；业务回滚则事件随行回滚），随后由框架排空器
  * （{@code OutboxRelay} 领域实例）在自有事务内派发给域内反应监听器。
  * <strong>事件与 Outbox 强绑定</strong>：聚合注册了事件但容器中无 {@link DomainEventOutboxStore}
- * Bean 时，{@code DomainEventOutboxCapture} 直接抛错回滚业务写入——要么不用事件，要么带上 Outbox，
+ * Bean 时，{@code DomainEventCapture} 直接抛错回滚业务写入——要么不用事件，要么带上 Outbox，
  * 不存在静默丢弃。
  *
  * <p><strong>框架不提供缺省实现</strong>：使用方按本契约自行实现（参考实现见 sample-application）；

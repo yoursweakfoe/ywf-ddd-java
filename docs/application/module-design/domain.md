@@ -108,7 +108,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 #### 事件监听原理（Spring 机制）
 
-聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `DomainEventOutboxCapture` 先清后入箱（同事务捕获）→ 经 `DomainEventOutboxStore`（SPI，使用方实现，参考实现见 sample）与业务写入**同事务**入箱领域 outbox 表（参考表 `ddd_domain_event_outbox`；无 Outbox Bean 时 fail-fast 回滚业务写入，不存在直发路径）→ 业务事务提交后，框架排空器 `OutboxRelay`（领域实例，纯策略骨架）在**自有事务内**经 `OutboxRowAccess` SPI 认领该行 → 经 `DomainEventCodec` 重建事件身份 → `DomainEventPublisher` 桥接 Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法（监听器加入排空事务）→ 标记完成、原子提交。
+聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `DomainEventCapture` 先清后入箱（同事务捕获）→ 经 `DomainEventOutboxStore`（SPI，使用方实现，参考实现见 sample）与业务写入**同事务**入箱领域 outbox 表（参考表 `ddd_domain_event_outbox`；无 Outbox Bean 时 fail-fast 回滚业务写入，不存在直发路径）→ 业务事务提交后，框架排空器 `OutboxRelay`（领域实例，纯策略骨架）在**自有事务内**经 `OutboxRowAccess` SPI 认领该行 → 经 `DomainEventCodec` 重建事件身份 → `DomainEventPublisher` 桥接 Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法（监听器加入排空事务）→ 标记完成、原子提交。
 
 `DomainEvent` 不需要实现任何 Spring 接口（Spring 4.2+ 的 `publishEvent` 接受任意 Object），领域层保持零框架依赖。
 

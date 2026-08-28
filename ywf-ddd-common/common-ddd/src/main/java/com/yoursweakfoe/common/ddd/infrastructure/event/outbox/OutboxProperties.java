@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p><strong>总开关</strong>：{@code enabled=false} 时 {@code OutboxAutoConfiguration} 整体退位
  * （不装配 codec / store / relay / scheduler）。注意：退位后聚合一旦注册事件，
- * {@code DomainEventOutboxCapture} 将 fail-fast 抛错——要么不用事件，要么开启 Outbox。
+ * {@code DomainEventCapture} 将 fail-fast 抛错——要么不用事件，要么开启 Outbox。
  *
  * @see OutboxAutoConfiguration
  */

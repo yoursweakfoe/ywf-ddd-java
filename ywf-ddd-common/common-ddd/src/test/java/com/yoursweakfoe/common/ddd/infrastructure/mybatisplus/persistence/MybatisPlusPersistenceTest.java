@@ -83,7 +83,7 @@ class MybatisPlusPersistenceTest {
      * Captures domain events dispatched via Spring ApplicationEventPublisher.
      *
      * <p>全链路 Outbox 语义：聚合持久化时事件只被捕获入内存 outbox（与业务同事务语义由
-     * {@code DomainEventOutboxCapture} 编排担保），进程内派发只在排空器 drain 时发生。
+     * {@code DomainEventCapture} 编排担保），进程内派发只在排空器 drain 时发生。
      * 因此事件断言统一为：save/update/remove → {@code drain(n)} → 断言 captured。
      */
     static class TestEventCapture {

@@ -14,7 +14,7 @@ import java.util.List;
  *   <li>控制子实体生命周期
  * </ul>
  *
- * <p>事件机制：业务方法内 registerEvent → 仓储持久化成功 → DomainEventOutboxCapture 先清后入箱
+ * <p>事件机制：业务方法内 registerEvent → 仓储持久化成功 → DomainEventCapture 先清后入箱
  * （与业务同事务）→（异步）领域排空器 → InProcessDomainEventPublisher 派发。
  *
  * <p><strong>序列化注意</strong>：{@code domainEvents} 为 {@code transient} 字段，

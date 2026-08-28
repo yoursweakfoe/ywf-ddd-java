@@ -69,7 +69,7 @@ public void cancelOrder(CancelOrderCommand command) {
 ## 领域事件（全链路 Outbox 可靠性规范）
 
 - 聚合根内 `registerEvent(new XxxEvent(...))`（暂存）
-- Repository 持久化成功后经 `DomainEventOutboxCapture` 先清后入箱，**强制**经
+- Repository 持久化成功后经 `DomainEventCapture` 先清后入箱，**强制**经
   `DomainEventOutboxStore` 与业务同事务入箱领域 outbox 表（参考表
   `ddd_domain_event_outbox`，提交 ⇒ 落库，跨崩溃不丢）；聚合注册了事件但无
   `DomainEventOutboxStore` Bean 时 fail-fast 抛错回滚业务写入——要么不用事件，

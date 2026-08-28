@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * DomainEventOutboxCapture 测试 —— 全链路 Outbox 规范的捕获语义：
+ * DomainEventCapture 测试 —— 全链路 Outbox 规范的捕获语义：
  * ① 有 Outbox 只捕获（先清后捕，不做进程内派发）；② 无 Outbox 但有事件 → fail-fast 抛错；
  * ③ 无事件（非聚合 / 空列表）静默无操作。
  */
-@DisplayName("DomainEventOutboxCapture — 全链路 Outbox 捕获（事件强制要求 Outbox，无直发降级）")
-class DomainEventOutboxCaptureTest {
+@DisplayName("DomainEventCapture — 全链路 Outbox 捕获（事件强制要求 Outbox，无直发降级）")
+class DomainEventCaptureTest {
 
     /** 记录型 DomainEventOutboxStore 测试替身：验证捕获编排（先清后捕语义） */
     static final class RecordingDomainEventOutboxStore implements DomainEventOutboxStore {
@@ -63,7 +63,7 @@ class DomainEventOutboxCaptureTest {
     @DisplayName("有 Outbox：只捕获（先清后捕），不做任何进程内派发")
     void outboxPresent_capturesOnly() {
         RecordingDomainEventOutboxStore store = new RecordingDomainEventOutboxStore();
-        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(store));
+        DomainEventCapture capture = new DomainEventCapture(storeProvider(store));
 
         Order order = orderWithPlacedEvent();
         UUID originalEventId = order.getDomainEvents().get(0).getEventId();
@@ -79,7 +79,7 @@ class DomainEventOutboxCaptureTest {
     @DisplayName("外部事件列表（删除工厂路径）：同样只捕获入箱")
     void captureAll_outboxPresent_capturesOnly() {
         RecordingDomainEventOutboxStore store = new RecordingDomainEventOutboxStore();
-        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(store));
+        DomainEventCapture capture = new DomainEventCapture(storeProvider(store));
         OrderPlacedEvent event = new OrderPlacedEvent(UUID.randomUUID(), BigDecimal.ONE);
 
         capture.captureAll(List.of(event));
@@ -90,7 +90,7 @@ class DomainEventOutboxCaptureTest {
     @Test
     @DisplayName("fail-fast：无 Outbox 但有事件 → 抛 IllegalStateException（回滚业务写入）")
     void noOutbox_withEvents_throws() {
-        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(null));
+        DomainEventCapture capture = new DomainEventCapture(storeProvider(null));
 
         assertThatThrownBy(() -> capture.captureAndClear(orderWithPlacedEvent()))
                 .isInstanceOf(IllegalStateException.class)
@@ -104,7 +104,7 @@ class DomainEventOutboxCaptureTest {
     @Test
     @DisplayName("无事件（聚合无已注册事件 / 空列表 / null）：静默无操作，不抛异常")
     void noEvents_noOp_evenWithoutOutbox() {
-        DomainEventOutboxCapture capture = new DomainEventOutboxCapture(storeProvider(null));
+        DomainEventCapture capture = new DomainEventCapture(storeProvider(null));
 
         assertThatCode(() -> capture.captureAndClear(orderWithoutEvents()))
                 .doesNotThrowAnyException();
