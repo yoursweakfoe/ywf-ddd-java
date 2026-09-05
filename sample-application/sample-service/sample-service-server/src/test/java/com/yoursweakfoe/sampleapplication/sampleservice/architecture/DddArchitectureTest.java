@@ -8,13 +8,22 @@ import com.tngtech.archunit.library.Architectures;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
 /**
- * DDD 分层架构守护测试 —— 对 common-ddd 框架包执行 R1-R5b 规则校验。
+ * 框架侧架构扫描 —— 对 common-ddd 框架包自身（扫描根 {@code com.yoursweakfoe.common.ddd}）
+ * 执行架构教义校验：框架要求业务遵守的每一条，框架自己先遵守。
  *
- * <p>{@code com.yoursweakfoe.common.ddd} 包含标准 DDD 分层（domain / application / infrastructure），
- * 所有规则均可有效校验。
+ * <p>subject 实际非空、真正起守护作用的规则：r2（adapter 标记接口包）、r3 / r4
+ * （common-ddd 自有 domain 包）。其余标记类规则（r8a / r8b / r10a / r10b / r14a / r14b）
+ * 在此扫描为<strong>空集通过</strong>——挂载意义是守护「标记接口所在包结构不被破坏」
+ * （common-ddd 的 adapter.rest.controller / application.dto / adapter.task.scheduler 包
+ * 即标记接口之家），属 {@code DDDArchitectureRules} 类头「空集通过警示」登记的教义例外。
  *
- * <p>R1 覆写：新增 Configuration 层（{@code MybatisDddAutoConfiguration} 等根包类）以允许框架
- * 自动配置类跨层引用基础设施组件。
+ * <p>R1 本地覆写：新增 Configuration 层（{@code MybatisDddAutoConfiguration} 等根包类）以允许框架
+ * 自动配置类跨层引用基础设施组件；共享 LAYERED_ARCHITECTURE 因此在本仓两扫描均未挂载（退役说明见其 javadoc）。
+ *
+ * <p>挂载原则（本版本接线修复）：不新增、不保留结构性空转挂载——原 r5b 框架挂载已撤销
+ * （common-ddd 无任何 *RepositoryImpl 类：仓储实现由各业务服务继承 {@code MybatisPersistence}
+ * 支撑类自行完成，框架包内不存在该命名形态的类，挂载永空集），R5b 的真实守护点在业务扫描。
+ * 原 R15（com.baomidou 全仓禁令）连同规则本体已删除：规则库不为「项目选择不用的库」立特别法。
  */
 @AnalyzeClasses(
         packages = "com.yoursweakfoe.common.ddd",
@@ -41,24 +50,24 @@ class DddArchitectureTest {
                     "Application", "Configuration")
             .as("R1 DDD 三层依赖方向 + Configuration 层");
 
+    /** R2 —— adapter 标记接口（RestAdapter / ScheduledAdapter）不得触碰 domain / infrastructure。 */
     @ArchTest
     static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
 
+    /** R3 —— 框架 domain 骨架（AggregateRoot / Repository 接口等）不依赖任何外层。 */
     @ArchTest
     static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
 
+    /**
+     * R4 —— 框架 domain 骨架框架中立（零 Spring import，教义自证）。
+     * 业务扫描挂载同一常量守护 sample 的 stereotype 白名单边界，双向分发（审计 §6.2-7 修复项）。
+     */
     @ArchTest
-    static final ArchRule r4 = DDDArchitectureRules.DOMAIN_MODEL_IS_PURE;
+    static final ArchRule r4 = DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
 
+    /** R5a —— 框架写端口（domain.repository.domain.Repository 等）必须是 interface。 */
     @ArchTest
     static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
-
-    @ArchTest
-    static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
-
-    // 框架自身必须零 com.baomidou 依赖（MyBatis-Plus 已剥离，ADR-0007；dynamic-datasource 仅 test scope，不在此扫描范围）
-    @ArchTest
-    static final ArchRule r15 = DDDArchitectureRules.MYBATIS_PLUS_BANNED;
 
     // 框架包自身无 adapter 层组件（标记接口位于 common-ddd/adapter/..，规则按空集通过），
     // 挂载以守护「标记接口所在的包结构不被破坏」。
