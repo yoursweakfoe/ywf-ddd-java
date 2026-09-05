@@ -3,6 +3,7 @@ package com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.yoursweakfoe.common.ddd.fixtures.OrderFixtures;
 import com.yoursweakfoe.common.ddd.fixtures.ProductFixtures;
 import com.yoursweakfoe.common.ddd.fixtures.converter.OrderConverter;
@@ -516,5 +517,32 @@ class MybatisPersistenceTest {
         assertThat(deleted).isTrue();               // 逻辑删除标记已置位
         assertThat(after).isNotNull();              // updateAt 仍非空
         assertThat(after).isAfter(before);          // 严格大于：证明 update_at 确实被刷新（而非保留旧值）
+    }
+
+    // ==================== 多数据源路由 ====================
+
+    /**
+     * 路由真实生效证明（audit C7① —— 根治「两源同 URL」幻影）：master 与 second 现为
+     * 两个独立 H2 实例，schema 仅经 INIT 脚本落在 master。同一语句在 push("second") 后
+     * 必须失败（表不存在）、poll() 恢复路由后必须成功——若路由不咬，两侧行为恒等，
+     * 本双向断言无从成立。test-scope 引入 dynamic-datasource 的工具类不触任何架构禁则。
+     */
+    @Test
+    void dynamicRouting_secondSourceIsBare_masterHasSchema() {
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM orders.orders", Integer.class))
+                .isNotNull();                                       // master：表在场
+
+        DynamicDataSourceContextHolder.push("second");
+        try {
+            assertThatThrownBy(() -> jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM orders.orders", Integer.class))
+                    .isInstanceOf(org.springframework.dao.DataAccessException.class); // second：无此表
+        } finally {
+            DynamicDataSourceContextHolder.poll();
+        }
+
+        // poll 后线程路由栈回到 master——同一语句再次成功（证明上下文干净恢复）
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM orders.orders", Integer.class))
+                .isNotNull();
     }
 }

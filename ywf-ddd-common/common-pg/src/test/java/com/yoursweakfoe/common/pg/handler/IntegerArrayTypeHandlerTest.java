@@ -56,6 +56,18 @@ class IntegerArrayTypeHandlerTest {
         assertThat(handler.getNullableResult(rs, "col")).isNull();
     }
 
+    /** byColumnIndex 变体（AbstractArrayTypeHandler 的共享索引路径，镜像 StringArray 测试样式）。 */
+    @Test
+    void getNullableResult_byColumnIndex_shouldReturnArray() throws SQLException {
+        Integer[] expected = {7, Integer.MIN_VALUE};
+        when(rs.getArray(1)).thenReturn(sqlArray);
+        when(sqlArray.getArray()).thenReturn(expected);
+
+        Integer[] result = handler.getNullableResult(rs, 1);
+
+        assertThat(result).containsExactly(7, Integer.MIN_VALUE);
+    }
+
     @Test
     void setNonNullParameter_emptyArray() throws SQLException {
         Integer[] values = {};

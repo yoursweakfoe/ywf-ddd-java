@@ -13,6 +13,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderForm;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.adapter.rest.controller.OrderController;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import java.util.UUID;
@@ -49,8 +50,9 @@ public class OrderControllerImpl implements OrderController, RestAdapter {
     }
 
     @Override
-    public OrderCO shipOrder(UUID orderId, String trackingNumber) {
-        return orderAppService.shipOrder(new ShipOrderCommand(orderId, trackingNumber));
+    public OrderCO shipOrder(UUID orderId, ShipOrderForm form) {
+        // 绑定载体（查询参数）+ 路径 ID → 完整命令（CQE 组装是 Adapter 职责）
+        return orderAppService.shipOrder(new ShipOrderCommand(orderId, form.trackingNumber()));
     }
 
     @Override
@@ -66,7 +68,7 @@ public class OrderControllerImpl implements OrderController, RestAdapter {
     @Override
     public void cancelOrder(UUID orderId, CancelOrderCommand command) {
         // 订单 ID 唯一事实源是路径参数，此处组装完整命令（与 pay/confirm 等端点同模式）
-        orderAppService.cancelOrder(new CancelOrderCommand(orderId.toString(), command.getReason()));
+        orderAppService.cancelOrder(new CancelOrderCommand(orderId, command.getReason()));
     }
 
     @Override

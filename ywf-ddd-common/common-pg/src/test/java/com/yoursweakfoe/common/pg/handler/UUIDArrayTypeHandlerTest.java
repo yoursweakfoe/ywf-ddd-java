@@ -58,4 +58,17 @@ class UUIDArrayTypeHandlerTest {
 
         assertThat(handler.getNullableResult(rs, "related_ids")).isNull();
     }
+
+    /** byColumnIndex 变体（AbstractArrayTypeHandler 的共享索引路径，镜像 StringArray 测试样式）。 */
+    @Test
+    void getNullableResult_byColumnIndex_shouldReturnArray() throws SQLException {
+        UUID id = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+        UUID[] expected = {id};
+        when(rs.getArray(1)).thenReturn(sqlArray);
+        when(sqlArray.getArray()).thenReturn(expected);
+
+        UUID[] result = handler.getNullableResult(rs, 1);
+
+        assertThat(result).containsExactly(id);
+    }
 }

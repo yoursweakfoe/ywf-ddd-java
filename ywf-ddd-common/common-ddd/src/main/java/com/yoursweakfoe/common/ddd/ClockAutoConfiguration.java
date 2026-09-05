@@ -20,19 +20,20 @@ import org.springframework.context.annotation.Bean;
  * <strong>不设应用级配置属性</strong>以免各服务各自为政。
  *
  * <h3>覆盖方式</h3>
- * <p>业务定义自己的 {@code Clock} Bean 即可使本配置整体退位
- * （类级 {@code @ConditionalOnMissingBean(Clock.class)}）——典型场景：
+ * <p>业务定义自己的 {@code Clock} Bean 即可使本配置退位——{@code @ConditionalOnMissingBean(Clock.class)}
+ * 挂在 {@code @Bean} 方法上（Boot 正统姿势：类级条件会依据「不可靠的求值顺序」误判，
+ * 方法级精确绑定到该 Bean 本身）——典型场景：
  * 集成测试注册 {@code Clock.fixed(...)} 使时间断言确定化。这已是 Spring 原生语义
  * （Bean 即配置），无需额外属性命名空间。
  *
  * <p>消费方注入示例：{@code AuditFieldFiller}（经构造器注入）。
  */
 @AutoConfiguration
-@ConditionalOnMissingBean(Clock.class)
 public class ClockAutoConfiguration {
 
-    /** 框架统一时间源 —— 固定 UTC 时区 */
+    /** 框架统一时间源 —— 固定 UTC 时区；消费方自备 Clock 时此 Bean 退位 */
     @Bean
+    @ConditionalOnMissingBean(Clock.class)
     public Clock clock() {
         return Clock.systemUTC();
     }

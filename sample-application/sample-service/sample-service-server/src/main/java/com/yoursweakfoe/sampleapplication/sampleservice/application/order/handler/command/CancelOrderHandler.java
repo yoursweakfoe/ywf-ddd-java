@@ -6,7 +6,6 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +34,7 @@ public class CancelOrderHandler implements CommandHandler<CancelOrderCommand, Vo
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Void handle(CancelOrderCommand command) {
-        Order order = orderRepository.findById(UUID.fromString(command.getOrderId()))
+        Order order = orderRepository.findById(command.getOrderId())
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         order.cancel(command.getReason());
         orderRepository.update(order);

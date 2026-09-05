@@ -328,4 +328,60 @@ class RestEndpointIntegrationTest {
         assertThat(completed).isNotNull();
         assertThat(completed.getStatus()).isEqualTo(OrderStatus.COMPLETED);
     }
+
+    // ==================== C2：入口边界校验（上界对齐 DB 列宽，audit C2） ====================
+
+    /** tracking_number VARCHAR(100)：101 字符必须停在绑定层（ShipOrderForm @Size），与订单存在性无关。 */
+    @Test
+    @Order(90)
+    void shipOversizedTrackingNumber_returns400_noPayloadEcho() {
+        String oversized = "T".repeat(101);
+
+        String body = client().put()
+                .uri("/orders/" + UUID.randomUUID() + "/ship?trackingNumber=" + oversized)
+                .retrieve()
+                .onStatus(status -> true, (request, response) -> { })
+                .body(String.class);
+
+        assertThat(body).contains("trackingNumber");
+        assertThat(body).doesNotContain(oversized);
+        assertThat(body).hasSizeLessThan(2000);
+    }
+
+    /** cancel_reason VARCHAR(500)：501 字符 → @Valid @RequestBody → 400 fieldErrors。 */
+    @Test
+    @Order(91)
+    void cancelOversizedReason_returns400_noPayloadEcho() {
+        String oversized = "r".repeat(501);
+
+        String body = client().put()
+                .uri("/orders/" + UUID.randomUUID() + "/cancel")
+                .body(new CancelOrderCommand(null, oversized))
+                .retrieve()
+                .onStatus(status -> true, (request, response) -> { })
+                .body(String.class);
+
+        assertThat(body).contains("reason");
+        assertThat(body).doesNotContain(oversized);
+        assertThat(body).hasSizeLessThan(2000);
+    }
+
+    /** customer_id VARCHAR(50)：51 字符 → 400；失败先于任何库存触碰（纯绑定层拦截）。 */
+    @Test
+    @Order(92)
+    void placeOversizedCustomerId_returns400_noPayloadEcho() {
+        String oversized = "c".repeat(51);
+
+        String body = client().post()
+                .uri("/orders")
+                .body(new PlaceOrderCommand(oversized,
+                        List.of(new PlaceOrderCommand.OrderItemView(UUID.randomUUID(), 1))))
+                .retrieve()
+                .onStatus(status -> true, (request, response) -> { })
+                .body(String.class);
+
+        assertThat(body).contains("customerId");
+        assertThat(body).doesNotContain(oversized);
+        assertThat(body).hasSizeLessThan(2000);
+    }
 }

@@ -29,7 +29,7 @@ public class OrderFactory implements Factory {
      *
      * @param customerId 客户 ID
      * @param items      已定价订单项（单价来自商品聚合）
-     * @return 通过校验、状态 PENDING、携带 OrderPlacedEvent 的订单
+     * @return 通过校验、状态已推进为 PENDING 的订单
      * @throws com.yoursweakfoe.common.exception.type.BusinessException 不变量违反时
      *         （订单项为空 / 客户 ID 缺失 / 总金额非正）
      */

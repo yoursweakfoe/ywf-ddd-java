@@ -4,6 +4,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.Or
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderForm;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,12 +13,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 订单 REST 端点契约 —— 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源）。
@@ -66,15 +67,19 @@ public interface OrderController {
     /**
      * 发货。
      *
-     * @param orderId        订单 ID
-     * @param trackingNumber 物流单号
+     * <p>物流单号经查询参数绑定到 {@link ShipOrderForm}（wire 形态不变：
+     * {@code PUT /orders/{orderId}/ship?trackingNumber=...}）；@Valid 在绑定层拦截
+     * 超长/空白输入（400 + fieldErrors），不再穿透至 DB。
+     *
+     * @param orderId 订单 ID
+     * @param form    发货表单（物流单号，≤100 字符对齐 DB 列宽）
      * @return 发货后的订单信息
      */
     @Operation(summary = "发货", description = "商家发货并填写物流单号")
     @PutMapping("/{orderId}/ship")
     OrderCO shipOrder(
             @PathVariable("orderId") @Parameter(description = "订单 ID") UUID orderId,
-            @RequestParam("trackingNumber") @Parameter(description = "物流单号") String trackingNumber);
+            @Valid @ModelAttribute ShipOrderForm form);
 
     /**
      * 签收。

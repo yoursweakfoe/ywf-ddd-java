@@ -3,9 +3,11 @@ package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.comm
 import com.yoursweakfoe.common.contract.dto.command.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,10 +29,11 @@ public class CancelOrderCommand implements Command, Serializable {
 
     /** 订单 ID（由 Adapter 从路径参数注入，客户端无需传递） */
     @Schema(hidden = true)
-    private String orderId;
+    private UUID orderId;
 
-    /** 取消原因 */
+    /** 取消原因（上界对齐 orders.orders.cancel_reason VARCHAR(500)） */
     @NotBlank
-    @Schema(description = "取消原因")
+    @Size(max = 500)
+    @Schema(description = "取消原因（≤500 字符）")
     private String reason;
 }

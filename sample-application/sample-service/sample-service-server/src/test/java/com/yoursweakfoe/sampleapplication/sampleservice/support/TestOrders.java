@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.support;
 
+import com.yoursweakfoe.common.ddd.domain.model.AggregateIds;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
@@ -28,9 +29,9 @@ public final class TestOrders {
     private TestOrders() {
     }
 
-    /** 随机 ID、指定状态的惰性重建订单。 */
+    /** 铸造 ID（与生产同用的 v7 策略）、指定状态的惰性重建订单。 */
     public static Order rebuilt(OrderStatus status) {
-        return rebuilt(UUID.randomUUID(), status);
+        return rebuilt(AggregateIds.mint(), status);
     }
 
     /** 指定 ID、指定状态的惰性重建订单。 */
@@ -40,7 +41,7 @@ public final class TestOrders {
                 null, null, null, null, 0);
     }
 
-    /** 经工厂创建的全新已下单订单（携带 OrderPlacedEvent）。 */
+    /** 经工厂创建的全新已下单订单（创建即合法：校验 + place() 状态机推进）。 */
     public static Order placed() {
         return new OrderFactory().create(DEFAULT_CUSTOMER, List.of(ITEM));
     }

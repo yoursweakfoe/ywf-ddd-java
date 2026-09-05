@@ -27,7 +27,7 @@ package com.yoursweakfoe.common.ddd.domain.factory;
  * public class OrderFactory implements Factory {
  *     public Order create(List<OrderItem> items, CustomerId customerId) {
  *         // 复杂校验 + 多步组装
- *         return new Order(UUID.randomUUID(), items, customerId);
+ *         return new Order(AggregateIds.mint(), items, customerId);
  *     }
  * }
  *

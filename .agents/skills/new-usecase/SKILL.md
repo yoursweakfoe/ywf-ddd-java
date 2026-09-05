@@ -16,6 +16,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 1. **contract**：创建 `contract/{agg}/dto/command/{Action}{Agg}Command.java`
    - 实现 `Command` 标记接口
    - 字段 + `@Schema` / 校验注解（声明于契约数据类，`@Valid` 在契约接口触发）
+   - 文本/数值字段一律带对齐 schema 列宽的输入上界（`@Size(max=列宽)` / `@Digits`）——超长/超界在绑定层拦成 400，不穿透到 DB 变 500 噪音
 2. **contract**：在 `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` 契约接口新增方法签名（HTTP 映射注解同处声明）
 3. **application**：创建 `application/{agg}/handler/command/{Action}{Agg}Handler.java`
    - 实现 `CommandHandler<{Action}{Agg}Command, {Agg}DTO>`

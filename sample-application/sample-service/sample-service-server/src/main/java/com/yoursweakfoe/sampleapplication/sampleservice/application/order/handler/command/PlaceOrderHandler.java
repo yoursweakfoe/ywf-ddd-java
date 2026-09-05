@@ -68,7 +68,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
         // 2. 扣减库存（跨聚合协调；DomainService 内部批量加载，同商品数量自动合并）
         inventoryDomainService.deductStock(items);
 
-        // 3. 创建订单（工厂保证创建即合法：校验 + OrderPlacedEvent 注册）
+        // 3. 创建订单（工厂保证创建即合法：校验 + place() 状态机推进）
         Order order = orderFactory.create(command.getCustomerId(), items);
         orderRepository.save(order);
         log.info("Order placed: orderId={}, customerId={}", order.getId(), command.getCustomerId());

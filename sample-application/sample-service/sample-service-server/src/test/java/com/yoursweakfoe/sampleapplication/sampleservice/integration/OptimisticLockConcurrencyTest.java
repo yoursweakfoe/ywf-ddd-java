@@ -75,6 +75,7 @@ class OptimisticLockConcurrencyTest {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger conflictCount = new AtomicInteger();
         AtomicInteger businessErrorCount = new AtomicInteger();
+        AtomicInteger failedCount = new AtomicInteger();   // 传输级异常（连接重置/超时等），不再静默吞掉
 
         for (int i = 0; i < threadCount; i++) {
             final int idx = i;
@@ -93,9 +94,12 @@ class OptimisticLockConcurrencyTest {
                         conflictCount.incrementAndGet();
                     } else if (status == 422 || status == 500) {
                         businessErrorCount.incrementAndGet();
+                    } else {
+                        // 未知状态码也计入 failed——守恒断言不留统计死角
+                        failedCount.incrementAndGet();
                     }
                 } catch (Exception e) {
-                    // 忽略
+                    failedCount.incrementAndGet();
                 }
             });
         }
@@ -116,9 +120,13 @@ class OptimisticLockConcurrencyTest {
         assertThat(successCount.get()).isLessThanOrEqualTo(10);
         // 守恒：成功数 + 剩余库存 = 初始库存
         assertThat(successCount.get() + remainingStock).isEqualTo(10);
+        // 守恒（C7③）：每个请求都必须被归类——传输失败/未知状态不再隐身
+        assertThat(successCount.get() + conflictCount.get()
+                + businessErrorCount.get() + failedCount.get()).isEqualTo(threadCount);
 
         // 4. 输出统计（SLF4J；断言已在上方守恒）
-        log.info("[Stress] success={}, conflict(409)={}, businessError(422/500)={}, remainingStock={}",
-                successCount.get(), conflictCount.get(), businessErrorCount.get(), remainingStock);
+        log.info("[Stress] success={}, conflict(409)={}, businessError(422/500)={}, failed={}, remainingStock={}",
+                successCount.get(), conflictCount.get(), businessErrorCount.get(),
+                failedCount.get(), remainingStock);
     }
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -25,9 +26,10 @@ public class PlaceOrderCommand implements Command, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 客户 ID */
+    /** 客户 ID（上界对齐 orders.orders.customer_id VARCHAR(50)） */
     @NotBlank
-    @Schema(description = "客户 ID")
+    @Size(max = 50)
+    @Schema(description = "客户 ID（≤50 字符）")
     private String customerId;
 
     /** 订单项列表 */

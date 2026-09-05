@@ -14,6 +14,10 @@ package com.yoursweakfoe.common.contract.dto.event;
  *   <li>IntegrationEvent（本接口） —— 跨服务边界，经消息中间件传输，出入站均为它
  * </ul>
  *
+ * <p>本接口是<strong>纯类型锚点</strong>（空标记）：它只定义载荷契约；经何种消息中间件投递、
+ * 发布/订阅组件的身份定型，由接入方自持（common-ddd 侧以 {@code IntegrationEventPublisher} /
+ * {@code IntegrationEventSubscriber} 空标记发行角色词汇），框架不内置任何投递机制。
+ *
  * <p>实现类应命名为 {@code XxxIntegrationEvent}，位于 {@code contract/{agg}/dto/event/}，
  * 如 {@code PaymentCompletedIntegrationEvent}；载荷字段视为长期对外契约，增删须考虑兼容性。
  *

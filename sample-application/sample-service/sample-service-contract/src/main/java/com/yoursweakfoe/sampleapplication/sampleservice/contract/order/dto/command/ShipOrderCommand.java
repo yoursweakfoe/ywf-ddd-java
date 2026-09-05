@@ -4,6 +4,7 @@ import com.yoursweakfoe.common.contract.dto.command.Command;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -26,8 +27,9 @@ public class ShipOrderCommand implements Command, Serializable {
     @Schema(description = "订单 ID")
     private UUID orderId;
 
-    /** 物流单号 */
+    /** 物流单号（上界对齐 orders.orders.tracking_number VARCHAR(100)） */
     @NotBlank
-    @Schema(description = "物流单号")
+    @Size(max = 100)
+    @Schema(description = "物流单号（≤100 字符）")
     private String trackingNumber;
 }
