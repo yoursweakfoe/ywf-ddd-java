@@ -65,7 +65,7 @@
 - 禁止 PO 携带任何 ORM 注解——PO 为纯 `@Data` POJO，全部持久化语义（表名 / 主键 / 版本条件 / 逻辑删除）由手写 XML 的 SQL 文本承担
 - 禁止 Wrapper 式动态条件——查询条件一律落成具名 Mapper 方法 + 具名 XML 语句（`<sql>` 片段复用防语句漂移）
 - 建表 DDL **默认含两列**：`version INT NOT NULL DEFAULT 0`（乐观锁）与 `is_delete BOOLEAN NOT NULL DEFAULT FALSE`（逻辑删除），PO 声明对应 `version`（Integer）与 `isDelete`（Boolean）字段；聚合显式豁免时，XML 省略对应条件（见下两条）
-- 手写 XML 的 `updateById` 语句（有版本列的聚合）**必须**携带乐观锁条件：`SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false`——**无任何运行时拦截器织入**，版本条件缺失即并发缺陷（防超卖依赖它，行为由 sample `OptimisticLockConcurrencyTest` 实证）；影响行数 0 由 `MybatisPersistence` 经存在性探测分类为 `OptimisticLockConflictException`（可重试）或 `IllegalStateException`（实体已消失）；无版本列的聚合在 XML 省略版本条件即可
+- 手写 XML 的 `updateById` 语句（有版本列的聚合）**必须**携带乐观锁条件：`SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false`——**无任何运行时拦截器织入**，版本条件缺失即并发缺陷（防超卖依赖它，行为由 sample `OptimisticLockConcurrencyTest` 实证）；影响行数 0 由 `MybatisPersistence` 经存在性探测分类为 `OptimisticLockConflictException`（可重试）或 `IllegalStateException`（实体已消失，业务竞态走 409）；INSERT/DELETE 影响 0 行是第三通道——`SilentWriteLossException`（写丢失级不可能状态，500+ERROR 告警、勿重试，分界见该类 javadoc）；无版本列的聚合在 XML 省略版本条件即可
 - 逻辑删除聚合的每条 select / update / delete 语句**必须**显式携带 `AND is_delete = false` 过滤——漏写一处即数据泄漏；不需要逻辑删除的聚合在 XML 写物理 `DELETE`
 
 ## Infrastructure 层最小化原则

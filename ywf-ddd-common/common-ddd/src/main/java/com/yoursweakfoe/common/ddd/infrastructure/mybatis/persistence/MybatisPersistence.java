@@ -8,6 +8,7 @@ import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.AuditFieldFill
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.CurrentUserProvider;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.mapper.DddMapper;
 import com.yoursweakfoe.common.exception.type.OptimisticLockConflictException;
+import com.yoursweakfoe.common.exception.type.SilentWriteLossException;
 import java.io.Serializable;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -37,7 +38,10 @@ import org.springframework.beans.factory.ObjectProvider;
  *   <li>save/update 前自动调用 {@code AggregateRoot.validate()}
  *   <li>save/update 前自动经 {@link AuditFieldFiller} 显式填充审计字段
  *       （createAt / updateAt / createdBy / updatedBy，触发链透明可见）
- *   <li>update/delete 失败时抛出 {@link IllegalStateException}（不静默失败）
+ *   <li>写失败按语义三分通道抛异常（绝不静默失败）：乐观锁版本冲突 →
+ *       {@link OptimisticLockConflictException}（可重试）；更新目标已并发消失 →
+ *       {@link IllegalStateException}（业务竞态，409 可辩护）；INSERT/DELETE 影响 0 行 →
+ *       {@link SilentWriteLossException}（写丢失级不可能状态，500+ERROR 告警通道，勿重试）
  *   <li>每次 update 均执行全量 UPDATE（保证 update_at 等审计字段始终刷新）
  *   <li>逻辑删除的审计刷新：{@code deleteById} / {@code deleteByIds} 的 SQL 参数携带
  *       {@code now}（经注入 Clock）与 {@code updatedBy}（经 {@link CurrentUserProvider} 宽松解析），
@@ -200,6 +204,9 @@ public abstract class MybatisPersistence<
      *
      * <p><b>事务说明</b>：本方法不声明 {@code @Transactional}，
      * 事务边界由应用层（Handler）控制。
+     *
+     * @throws SilentWriteLossException INSERT 影响行数为 0——合法 INSERT 必落一行，
+     *         0 行即写丢失/schema 事故的不可能状态，500+ERROR 告警通道，勿重试
      */
     public void saveDomain(Domain domain) {
         validateIfAggregate(domain);
@@ -207,7 +214,8 @@ public abstract class MybatisPersistence<
         auditFieldFiller.fillInsert(po);
         int rows = mapper.insert(po);
         if (rows == 0) {
-            throw new IllegalStateException("INSERT failed for entity ID: " + domain.getId());
+            throw new SilentWriteLossException(
+                    "INSERT affected 0 rows for entity ID: " + domain.getId());
         }
     }
 
@@ -221,6 +229,11 @@ public abstract class MybatisPersistence<
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方
      * （Handler）在入口方法标注 {@code @Transactional} 保证。未包裹事务时，逐条 INSERT
      * 各自提交，中途失败不回滚已插入的记录。
+     *
+     * <p><b>消费契约（分片责任在调用方）</b>：循环逐条意味着耗时与连接占用线性于批量大小——
+     * 调用方<strong>必须自行分片（建议 ≤500 条/批）</strong>。框架刻意不设行数护栏：
+     * 批大小上限属业务容量策略（不同聚合行宽、事务预算差异大），写死数字是业务规则渗入
+     * 技术骨架（.agents/rules/04「Common 模块约束」零业务逻辑戒律）——以文档即契约约束调用方。
      */
     public void saveDomainBatch(List<Domain> domainList) {
         for (Domain domain : domainList) {
@@ -243,7 +256,11 @@ public abstract class MybatisPersistence<
      *       未命中）→ 抛 {@link OptimisticLockConflictException}
      *       ——调用方（如重试包装器）应按此类型识别可重试冲突，勿依赖消息文本
      *   <li><b>实体已被删除 / ID 不存在</b> → 抛普通 {@link IllegalStateException}
-     *       （消息含 {@code entity not found}）——重试无意义，语义上区别对待
+     *       （消息含 {@code entity not found}）——重试无意义，语义上区别对待。
+     *       <strong>范围围栏</strong>：此路径刻意<strong>不</strong>升级为
+     *       {@link SilentWriteLossException}——「加载后被并发删除」属业务竞态
+     *       （并发用户各自合法，409 冲突可辩护）；SilentWriteLoss 保留给
+     *       INSERT/DELETE 影响 0 行的写丢失级不可能状态
      *   <li>每次调用均执行全量 UPDATE（保证 update_at 等审计字段始终刷新）
      * </ul>
      *
@@ -293,6 +310,9 @@ public abstract class MybatisPersistence<
      * {@code validate()}，多行 UPDATE 无法触发逐聚合行为。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
+     *
+     * <p><b>消费契约</b>：与 {@link #saveDomainBatch(List)} 同一分片纪律（≤500 条/批，
+     * 护栏责任在调用方，框架不设行数上限的理由见彼处）。
      */
     public void updateDomainBatch(List<Domain> domainList) {
         for (Domain domain : domainList) {
@@ -310,12 +330,13 @@ public abstract class MybatisPersistence<
      * <p>逻辑删除聚合：SQL 为 {@code UPDATE ... SET deleted = true, update_at = #{now}}；
      * 物理删除聚合：SQL 为 {@code DELETE}。审计参数由本类统一生成并传入，SQL 是否消费由聚合决定。
      *
-     * @throws IllegalStateException 删除影响行数为 0 时（ID 不存在）
+     * @throws SilentWriteLossException 删除影响行数为 0（按存在的 ID 删除却未命中——写丢失级
+     *         不可能状态；ID 是否曾存在属调用链上游职责，非本方法可分说的业务竞态）
      */
     public void removeDomainById(ID id) {
         int rows = mapper.deleteById(toPersistenceId(id), deleteNow(), deleteUpdatedBy());
         if (rows == 0) {
-            throw new IllegalStateException("DELETE affected 0 rows for entity ID: " + id);
+            throw new SilentWriteLossException("DELETE affected 0 rows for entity ID: " + id);
         }
     }
 
@@ -325,7 +346,8 @@ public abstract class MybatisPersistence<
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      *
      * <p><b>删除语义</b>：BEST_EFFORT——部分 ID 不存在时<b>静默跳过</b>（不报错），
-     * 仅当全部 ID 均不存在时才抛异常。若需 STRICT 语义（任一不存在即报错），
+     * 仅当全部 ID 均不存在时才抛 {@link SilentWriteLossException}（整批 0 命中即写丢失级
+     * 不可能状态，与单条删除同一告警通道）。若需 STRICT 语义（任一不存在即报错），
      * 请逐条调用 {@link #removeDomainById(Serializable)}。
      */
     public void removeDomainByIds(Collection<ID> ids) {
@@ -335,7 +357,7 @@ public abstract class MybatisPersistence<
         List<Serializable> poIds = ids.stream().map(this::toPersistenceId).toList();
         int rows = mapper.deleteByIds(poIds, deleteNow(), deleteUpdatedBy());
         if (rows == 0) {
-            throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + ids);
+            throw new SilentWriteLossException("Batch DELETE affected 0 rows for IDs: " + ids);
         }
         if (rows < poIds.size()) {
             log.warn("Batch DELETE partially succeeded: requested={}, deleted={}, skipped={}",
@@ -346,7 +368,7 @@ public abstract class MybatisPersistence<
     /**
      * 删除领域实体（传入实体对象，内部提取 ID）。
      *
-     * @throws IllegalStateException 删除影响行数为 0 时
+     * @throws SilentWriteLossException 删除影响行数为 0 时
      */
     public void removeDomain(Domain domain) {
         removeDomainById(domain.getId());

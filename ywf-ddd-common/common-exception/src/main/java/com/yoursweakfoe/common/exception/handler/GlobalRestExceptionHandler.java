@@ -1,6 +1,7 @@
 package com.yoursweakfoe.common.exception.handler;
 
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.common.exception.type.SilentWriteLossException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
@@ -71,6 +72,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
  *   <tr><td>HttpRequestMethodNotSupportedException</td><td>405</td><td>HTTP 方法不支持</td></tr>
  *   <tr><td>HttpMediaTypeNotSupportedException</td><td>415</td><td>媒体类型不支持</td></tr>
  *   <tr><td>IllegalStateException</td><td>409</td><td>状态冲突（含乐观锁冲突）</td></tr>
+ *   <tr><td>SilentWriteLossException</td><td>500 + ERROR 日志</td><td>写丢失级不可能状态（INSERT/DELETE 0 影响行），显式告警通道</td></tr>
  *   <tr><td>BusinessException</td><td>业务指定或缺省 422</td><td>领域规则违反</td></tr>
  *   <tr><td>Exception（兜底）</td><td>500</td><td>未预期异常，泛化标题不泄内部信息</td></tr>
  * </table>
@@ -219,6 +221,21 @@ public class GlobalRestExceptionHandler {
         log.warn("Illegal state: {}", e.getMessage());
         return problem(problemDetail(request, TITLE_CONFLICT, HttpStatus.CONFLICT.value(), DETAIL_CONFLICT),
                 HttpStatus.CONFLICT.value());
+    }
+
+    /**
+     * 静默写丢失（INSERT/DELETE 影响 0 行的不可能状态）——显式告警通道：ERROR 日志（带栈，
+     * 运维告警的抓取信号）+ 对外泛化 500。刻意置于 ISE 的 409 通道之前说明分界：
+     * 写丢失重试无意义、必须吵醒人，不得混入按 WARN 记账的状态冲突类。
+     * 原始消息（含实体 ID / SQL 语义字样）只进日志，响应回稳定泛化文案。
+     */
+    @ExceptionHandler(SilentWriteLossException.class)
+    public ResponseEntity<ProblemDetail> handleSilentWriteLoss(SilentWriteLossException e,
+                                                               HttpServletRequest request) {
+        log.error("Silent write loss: {}", e.getMessage(), e);
+        return problem(problemDetail(request, TITLE_INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR.value(), TITLE_INTERNAL_ERROR),
+                HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

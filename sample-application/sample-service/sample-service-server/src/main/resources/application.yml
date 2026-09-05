@@ -17,9 +17,10 @@ server:
 spring:
   application:
     name: service
-  profiles:
-    # 激活 profile：优先读环境变量，未设置则默认 dev
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+  # 刻意不声明 spring.profiles.active：SPRING_PROFILES_ACTIVE 环境变量由 Boot 原生消费
+  # （docker-compose / ide-dev.env 均已显式注入）。曾写的 `${SPRING_PROFILES_ACTIVE:dev}`
+  # 把「未设置」重新解读为「dev」——部署漏配会被静默套上本地开发画像；删除后未设置
+  # 即无激活 profile，本文件无默认值占位符随即启动失败（fail-fast，见 §datasource 注释）。
   threads:
     # JDK 21 虚拟线程：Tomcat 请求处理、Spring 异步任务、定时任务均使用虚拟线程
     # 无 synchronized 块（零 pinning），SecurityContextHolder 等 ThreadLocal 均已有 finally 清理
@@ -38,9 +39,18 @@ spring:
   # ----------------------------------------------------------------------------
   datasource:
     driver-class-name: org.postgresql.Driver
+    # 消费方提供的 URL 必须自带 connectTimeout / socketTimeout / tcpKeepAlive
+    # 三参数（模板示范见 application-dev.yml）——缺 socketTimeout 的挂死连接
+    # 会无限占用请求线程与池位
     url: ${DB_MASTER_URL}
     username: ${DB_MASTER_USER}
     password: ${DB_MASTER_PASSWORD}
+    hikari:
+      # 虚拟线程解除的是入口并发上限，≠ 数据库容量：池大小按 DB 核数定
+      # （经验式 cores*2 + spindles），20 为模板单实例 PG 的保守缺省；
+      # 排队 10s 快速失败远优于 Boot 缺省 30s 的假等待
+      maximum-pool-size: 20
+      connection-timeout: 10000
 
 # ----------------------------------------------------------------------------
 # MyBatis（纯 MyBatis + 手写 XML SQL——每条语句可见、可 grep、可 review）
@@ -55,8 +65,21 @@ mybatis:
   configuration:
     # 下划线列名自动映射驼峰属性（user_name -> userName）
     map-underscore-to-camel-case: true
-    # SQL 日志统一走 SLF4J → Logback（保证 trace_id / 级别控制一致）
+    # 单语句执行超时（秒）：挂死查询不再无限占用连接与请求线程
+    # （虚拟线程不改变 JDBC socket 语义，与 pgjdbc socketTimeout 互为兜底）
+    default-statement-timeout: 30
+    # SQL 日志走 SLF4J → Logback：级别由 profile 的 logging.level 控制
+    # （dev 已对 mapper 所在 infra 包开 DEBUG，见 application-dev.yml；prod 保持 INFO 静默）
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# ----------------------------------------------------------------------------
+# 日志关联：OTel Agent 以 snake_case 键（trace_id / span_id）写 MDC，
+# Boot 默认 pattern 只读 camelCase 键——显式改写 level 令牌渲染之。
+# 未挂 Agent 时两键为空串（行式不变，grep 形态一致）；挂上 Agent 即得非空值。
+# ----------------------------------------------------------------------------
+logging:
+  pattern:
+    level: "%5p [trace_id=%X{trace_id:-}, span_id=%X{span_id:-}]"
 
 # ----------------------------------------------------------------------------
 # Actuator 可观测性端点

@@ -16,14 +16,19 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.OrderRepository;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import com.yoursweakfoe.common.exception.type.OptimisticLockConflictException;
+import com.yoursweakfoe.common.exception.type.SilentWriteLossException;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -307,10 +312,43 @@ class MybatisPersistenceTest {
         assertThat(orderRepository.findById(order.getId())).isEmpty();
     }
 
+    /**
+     * INSERT 影响 0 行 = 不可能状态（audit B4：旧版裸 ISE 混入 409/WARN 通道藏匿告警）。
+     * H2 真库无法自然造出 insert-0，此处 Mockito 收口 mapper 返回值——
+     * 断言类型与「affected 0 rows」兼容字样双锁。
+     */
     @Test
-    void removeDomainById_notExists_throwsIllegalState() {
+    @SuppressWarnings("unchecked")
+    void saveDomain_insertZeroRows_throwsSilentWriteLoss() {
+        OrderMapper zeroRowMapper = Mockito.mock(OrderMapper.class);
+        Mockito.when(zeroRowMapper.insert(Mockito.any())).thenReturn(0);
+        OrderRepository zeroRepo = new OrderRepository(zeroRowMapper, new OrderConverter(),
+                Clock.systemUTC(),
+                new AuditProperties("createAt", "updateAt", "createdBy", "updatedBy"),
+                Mockito.mock(ObjectProvider.class));
+
+        Order order = OrderFixtures.createOrder();
+        order.place();
+
+        assertThatThrownBy(() -> zeroRepo.saveDomain(order))
+                .isInstanceOf(SilentWriteLossException.class)
+                .hasMessageContaining("INSERT affected 0 rows");
+    }
+
+    @Test
+    void removeDomainById_notExists_throwsSilentWriteLoss() {
         assertThatThrownBy(() -> orderRepository.removeDomainById(UUID.randomUUID()))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(SilentWriteLossException.class)
+                .hasMessageContaining("DELETE affected 0 rows");
+    }
+
+    /** BEST_EFFORT 批删的边界：全部 ID 不存在（整批 0 命中）同样升级为写丢失告警通道。 */
+    @Test
+    void removeDomainByIds_allMissing_throwsSilentWriteLoss() {
+        assertThatThrownBy(() -> orderRepository.removeDomainByIds(
+                List.of(UUID.randomUUID(), UUID.randomUUID())))
+                .isInstanceOf(SilentWriteLossException.class)
+                .hasMessageContaining("Batch DELETE affected 0 rows");
     }
 
     @Test

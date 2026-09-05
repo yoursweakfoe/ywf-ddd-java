@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.common.exception.type.SilentWriteLossException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
@@ -82,6 +83,11 @@ class GlobalRestExceptionHandlerTest {
         @GetMapping("/illegal-state")
         public String illegalState() {
             throw new IllegalStateException("Order already confirmed");
+        }
+
+        @GetMapping("/silent-write-loss")
+        public String silentWriteLoss() {
+            throw new SilentWriteLossException("INSERT affected 0 rows for entity ID: 42");
         }
 
         @GetMapping("/illegal-argument")
@@ -186,6 +192,18 @@ class GlobalRestExceptionHandlerTest {
                 .andExpect(jsonPath("$.title").value("Conflict"))
                 .andExpect(jsonPath("$.detail").value("Conflict"))
                 .andExpect(jsonPath("$.instance").value("/illegal-state"));
+    }
+
+    @Test
+    @DisplayName("SilentWriteLossException → 500（写丢失显式告警通道；detail 泛化，不回显 affected/实体 ID 字样）")
+    void silentWriteLoss_returns500WithoutLeak() throws Exception {
+        mockMvc.perform(get("/silent-write-loss"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Internal Server Error"))
+                .andExpect(jsonPath("$.detail").value("Internal Server Error"))
+                .andExpect(jsonPath("$.instance").value("/silent-write-loss"));
     }
 
     @Test

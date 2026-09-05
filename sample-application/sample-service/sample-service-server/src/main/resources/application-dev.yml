@@ -9,11 +9,18 @@
 # ============================================================================
 
 spring:
-  # 单数据源本地默认值（driver-class-name 继承主配置；可被同名环境变量覆盖）
+  # 单数据源本地默认值（driver-class-name 继承主配置；可被同名环境变量覆盖）。
+  # pgjdbc 超时三参数随模板 URL 给出（主配置占位符处已立规：消费方 URL 必须自带）
   datasource:
-    url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/app_master}
+    url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/app_master?connectTimeout=10&socketTimeout=60&tcpKeepAlive=true}
     username: ${DB_MASTER_USER:postgres}
     password: ${DB_MASTER_PASSWORD:postgres}
+
+# MyBatis Slf4jImpl 的 SQL 输出条件：mapper 所在 infrastructure 包（含其 logger 名）开 DEBUG
+# 才真正打印每条语句；仅 dev——prod 保持 INFO 防线洪（配置键见主 yml log-impl 注释）
+logging:
+  level:
+    com.yoursweakfoe.sampleapplication.sampleservice.infrastructure: DEBUG
 
 # Nacos 配置中心（二期恢复；部署多服务时启用，本地开发无需开启）
 # spring:
