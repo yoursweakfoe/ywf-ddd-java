@@ -1,7 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository.domain;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter.ProductConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.po.ProductPO;

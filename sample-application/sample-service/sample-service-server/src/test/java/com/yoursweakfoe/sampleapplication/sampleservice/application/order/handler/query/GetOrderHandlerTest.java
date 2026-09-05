@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.application.OrderQueryRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderQuery;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.Optional;

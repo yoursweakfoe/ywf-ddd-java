@@ -56,7 +56,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 4. 依赖 `common-contract`（标记接口 + OpenAPI 注解）
 5. 创建包结构：
    ```
-   contract/{agg}/adapter/rest/   → Controller 契约接口（HTTP 映射 + 校验注解声明于此）
+   contract/{agg}/adapter/rest/controller/ → Controller 契约接口（HTTP 映射 + 校验注解声明于此）
    contract/{agg}/dto/command/    → Command
    contract/{agg}/dto/query/      → Query
    contract/{agg}/dto/co/         → CO（契约输出）
@@ -76,10 +76,10 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 7. 创建分层包结构：
    ```
    adapter/rest/controller/（ControllerImpl；东西向同样经 HTTP 消费契约接口，一期 RestClient 直连）
-   application/{agg}/service/ + handler/command/ + handler/query/ + assembler/ + presenter/ + dto/ + repository/application/
-   domain/{agg}/model/ + repository/domain/ + portal/
+   application/{agg}/service/ + handler/command/ + handler/query/ + assembler/ + presenter/ + dto/ + repository/（读端口）
+   domain/{agg}/model/ + repository/（写端口）+ portal/
    domain/shared/service/
-   infrastructure/persistence/master/{agg}/mybatis/po/ + mybatis/mapper/ + converter/ + repository/domain/ + repository/application/
+   infrastructure/persistence/master/{agg}/mybatis/po/ + mybatis/mapper/ + converter/ + repository/（RepositoryImpl + QueryRepositoryImpl 同包）
     （SQL 手写 XML 归 resources/mapper/{agg}/）
    infrastructure/gateway/
    infrastructure/config/

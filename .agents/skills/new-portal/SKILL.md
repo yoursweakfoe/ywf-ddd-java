@@ -62,7 +62,7 @@ public class AlipayPaymentGateway implements PaymentPortal {
 ### 4. 调用方
 
 - Domain Service 或 Handler 通过 Portal 接口调用（依赖倒置）
-- 禁止在 Domain 层 `@Autowired`（统一构造器注入；Gateway 经 `@Component` 组件扫描注册，DomainService 经 `@Service` stereotype 注册即 A2 白名单允许）
+- 禁止在 Domain 层 `@Autowired`（统一构造器注入；Gateway 经 `@Component` 组件扫描注册，DomainService 经 `@Service` stereotype 注册即 R4 白名单允许）
 
 ## 验证
 

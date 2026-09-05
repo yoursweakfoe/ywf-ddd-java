@@ -1,7 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.application;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository;
 
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
-import com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository;
+import com.yoursweakfoe.common.ddd.application.repository.QueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
 import java.util.Optional;

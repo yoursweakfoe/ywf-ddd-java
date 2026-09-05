@@ -83,13 +83,13 @@ public void cancelOrder(CancelOrderCommand command) {
 
 ## Repository 泛型
 
-- 接口 `Repository<Domain, ID>`（`domain/{agg}/repository/domain/`）；实现继承 `MybatisPersistence<Mapper, PO, Domain, ID>`（`infrastructure/persistence/**/repository/domain/`）
+- 写端口接口 `Repository<Domain, ID>`（`domain/{agg}/repository/`）；实现继承 `MybatisPersistence<Mapper, PO, Domain, ID>`（`infrastructure/persistence/{ds}/{agg}/repository/`，与读端口 Impl 同包）
 - Mapper `XxxMapper extends DddMapper<XxxPO>`（标注 `@Mapper`）；PO 纯 `@Data` POJO 零 ORM 注解；Converter 实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
 - → 构造器注入清单、`toPersistenceId` 覆写、七语句契约见 `docs/common/common-ddd.md` §2 与 `docs/application/cookbook/new-aggregate.md`
 
 ## Domain Service（跨聚合协调）
 
-- 位置 `domain/shared/service/`，实现 `DomainService` 标记接口并标注 `@Service`（A2 stereotype 白名单例外）
+- 位置 `domain/shared/service/`，实现 `DomainService` 标记接口并标注 `@Service`（R4 stereotype 白名单例外）
 - 协调多个聚合的操作（不归属任何单一聚合），可调用 Repository、可修改实体状态
 - → 边界论证与示例（`InventoryDomainService`）见 `docs/application/module-design/domain.md`
 

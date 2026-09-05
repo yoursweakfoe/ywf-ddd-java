@@ -1,34 +1,39 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-import com.tngtech.archunit.library.Architectures;
 import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
-import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
+import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 
 /**
  * 业务侧架构扫描 —— 对 {@code com.yoursweakfoe.sampleapplication.sampleservice} 执行架构合规性校验。
  *
- * <p><strong>本地覆写规则（仅这四条）</strong>：R1 / R3 / R6 使用<b>精确包前缀</b>
- * （{@code com.yoursweakfoe.sampleapplication.sampleservice.}）而非通用 {@code ..domain..} 段匹配——
- * 因为 infra 层存在 {@code repository.domain} / {@code repository.application} 子包
- * （按"实现哪个层的接口"命名），若用段匹配会把它们误判成 domain/application 层主语。
- * R1 覆写另因：共享 LAYERED_ARCHITECTURE 的四层段划分会把 {@code ...repository.domain.OrderRepositoryImpl}
- * 同时吞入 Domain 与 Infrastructure 两「层」，其依赖 Mapper/PO 即成「Domain 依赖 Infrastructure」冤案。
- * 其余规则（R1b / R4 / R5a / R5b / C1 / R8 / R10 / R11 / R12 / R13 / R14 / A3 / A4）直接挂载
- * common-test 共享常量或本类独有教义。
+ * <p><strong>历史：BASE 覆写四件套已随包命名税迁移退役，全部回归共享挂载。</strong>
+ * 旧版本因框架惯例「按实现的接口归属为子包命名」（{@code repository.domain} /
+ * {@code repository.application} 借用保留段），R1 / R1b / R3 / R6 不得不以精确包前缀
+ * （{@code com.yoursweakfoe.sampleapplication.sampleservice.}）本地覆写，否则段匹配会把
+ * infra 子包误判成 domain/application 层主语。2026-09-05 迁移（阶段一）根除了保留段借用、
+ * 规则合并（阶段二）删除了全部排除谓词后，本地覆写失去存在理由：
+ * <ul>
+ *   <li>R1b —— 上一版本已与共享常量逐段同构，直接挂载；</li>
+ *   <li>R1 / R3 / R6 —— 本版本删除本地 BASE 版，挂载
+ *       {@code DDDArchitectureRules.LAYERED_ARCHITECTURE} /
+ *       {@code DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS} /
+ *       {@code DOMAIN_DOES_NOT_DEPEND_ON_SECURITY}（共享常量就此获得本仓首次真实挂载）。</li>
+ * </ul>
+ * 契约接口（{@code contract.{agg}.adapter.rest.controller}，与框架
+ * {@code RestAdapter} 坐标精确对偶）按段匹配成为 R1 的 Adapter 层成员——
+ * {@code ControllerImpl→契约接口} 属同层访问，分层 DSL 不禁同层，语义自洽（实证于本扫描绿）。
  *
- * <p>历史本地副本去向（本版本收口，勿再复制粘贴）：
+ * <p>其余历史本地副本去向（勿再复制粘贴）：
  * <ul>
  *   <li>A2（domain 禁 Spring 运行时、白名单 stereotype）→ 已上收进共享库并重写为 R4
  *       {@code DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE}（见下方 r4 挂载），本类不再保有副本。</li>
- *   <li>R1b 本地实现 → 谓词与共享常量完全同构（当年即照着共享常量抄的），现直接挂载共享常量。</li>
  *   <li>R15（com.baomidou 全仓禁令）→ 规则本体已删除（规则库不为「项目选择不用的库」立特别法；
  *       dynamic-datasource 经 BOM 显式推荐，{@code @DS} 不再触任何红线）。</li>
  * </ul>
@@ -38,33 +43,20 @@ import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
         importOptions = ImportOption.DoNotIncludeTests.class)
 class ApplicationArchitectureTest {
 
-    /** 本应用根包前缀（用于精确匹配顶层分层，避免误伤 infra 下的 repository.domain/application 子包） */
-    private static final String BASE = "com.yoursweakfoe.sampleapplication.sampleservice.";
+    // ── 共享规则挂载（2026-09-05 命名税迁移后零本地谓词） ──
 
-    // ── 精确包前缀覆写（因 repository.domain / repository.application 子包命名碰撞） ──
-
-    /** R1 —— DDD 四层依赖方向（依赖倒置）。 */
+    /**
+     * R1 —— DDD 四层依赖方向（依赖倒置）。本版本由 BASE 本地覆写转正为共享挂载：
+     * 迁移后包名不再存在会让段匹配两层歧义的保留段借用（见类头与规则库类头不变量）。
+     */
     @ArchTest
-    static final ArchRule r1_layered_dependency = Architectures.layeredArchitecture()
-            .consideringAllDependencies()
-            .layer("Adapter").definedBy(BASE + "adapter..")
-            .layer("Application").definedBy(BASE + "application..")
-            .layer("Domain").definedBy(BASE + "domain..")
-            .layer("Infrastructure").definedBy(BASE + "infrastructure..")
-            .whereLayer("Adapter").mayNotBeAccessedByAnyLayer()
-            .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter", "Infrastructure")
-            .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure")
-            .whereLayer("Infrastructure").mayNotBeAccessedByAnyLayer()
-            .as("R1 DDD 四层依赖方向：adapter → application → domain ← infrastructure；"
-                    + "读侧例外：infrastructure 读实现可访问 application 读端口");
+    static final ArchRule r1_layered_dependency = DDDArchitectureRules.LAYERED_ARCHITECTURE;
 
     /**
      * R1b —— 收窄 Infrastructure 对 Application 的访问白名单：仅读端口类型锚点
      * （QueryRepository 实现 / ApplicationDTO 及其嵌套类）。
      *
-     * <p>共享常量即为本仓 sample 场景设计（其 {@code not(resideInAPackage("..infrastructure.."))}
-     * 已内置处理 {@code repository.application} 子包碰撞），此前本地副本与共享谓词逐段同构——
-     * 现直接挂载共享常量，消除「共享规则无人接线、无声腐烂」的缺口（审计 §6.2-5）。
+     * <p>共享常量即本仓 sample 场景的定型形态（其旧内置的 infra 排除已随命名迁移删除），
      * Handler / AppService / Assembler / Presenter 等其余 application 组件对
      * infrastructure 一律不可见。
      */
@@ -72,31 +64,15 @@ class ApplicationArchitectureTest {
     static final ArchRule r1b_infra_access_application_only_ports =
             DDDArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
 
-    /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。 */
+    /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。本版本 BASE 覆写退役。 */
     @ArchTest
-    static final ArchRule r3_domain_no_outer = noClasses()
-            .that()
-            .resideInAPackage(BASE + "domain..")
-            .should()
-            .dependOnClassesThat()
-            .resideInAnyPackage(
-                    BASE + "application..",
-                    BASE + "infrastructure..",
-                    BASE + "adapter..",
-                    BASE + "contract..")
-            .as("R3 Domain 不依赖 application/infrastructure/adapter/contract");
+    static final ArchRule r3_domain_no_outer =
+            DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
 
-    /** R6 —— Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）。 */
+    /** R6 —— Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）。本版本 BASE 覆写退役。 */
     @ArchTest
-    static final ArchRule r6_domain_no_security = noClasses()
-            .that()
-            .resideInAPackage(BASE + "domain..")
-            .should()
-            .dependOnClassesThat()
-            .resideInAPackage("com.yoursweakfoe.common.security..")
-            .as("R6 Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）");
-
-    // ── 复用 DDDArchitectureRules 共享规则 ──
+    static final ArchRule r6_domain_no_security =
+            DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_SECURITY;
 
     /**
      * R4 —— Domain 框架中立：禁 Spring 运行时依赖（org.springframework.stereotype 装配注解
@@ -116,9 +92,8 @@ class ApplicationArchitectureTest {
 
     /**
      * R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下。
-     * 本版本新挂载（审计 §6.2-6 接线修复）：sample 的 order/product × 写/读 共 4 个 Impl
-     * 真实命中 subject——此前该规则只挂在框架扫描（框架无 Impl 类、恒空转），
-     * 业务服务把 Impl 放错层可过关。
+     * 上一版本新挂载（审计 §6.2-6 接线修复）：sample 的 order/product × 写/读 共 4 个 Impl
+     * 真实命中 subject（迁移后并级于 {@code ...master.{agg}.repository}，规则宾语照常命中）。
      */
     @ArchTest
     static final ArchRule r5b_repository_impl_in_infra =
@@ -168,7 +143,7 @@ class ApplicationArchitectureTest {
     static final ArchRule r12_domain_no_public_setters =
             DDDArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
 
-    /** R13 —— QueryHandler 禁止触碰写侧仓储（CQRS 读写隔离）。 */
+    /** R13 —— QueryHandler 禁止依赖任何 Repository 类型（CQRS 读写隔离，类型锚点识别）。 */
     @ArchTest
     static final ArchRule r13_query_handlers_no_write_repository =
             DDDArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;

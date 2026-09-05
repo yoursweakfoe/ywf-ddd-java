@@ -28,7 +28,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 
 每次交互必须遵守的硬约束（完整法条见 `.agents/rules/`）：
 
-1. 分层依赖单向：`adapter → application → domain ← infrastructure`；domain 零框架依赖（纯 Java + common-ddd）
+1. 分层依赖单向：`adapter → application → domain ← infrastructure`；domain 零框架**运行时**依赖（stereotype 豁免；纯 Java + common-ddd）
 2. Handler 返回 DTO，AppService 返回 CO，Adapter 纯透传
 3. 写侧：load → 聚合行为 → save → toDTO（Handler 标 `@Transactional`）；读侧绕过聚合根投影 DTO
 4. 业务规则封装在聚合根内，Handler 不含 if-else 判断

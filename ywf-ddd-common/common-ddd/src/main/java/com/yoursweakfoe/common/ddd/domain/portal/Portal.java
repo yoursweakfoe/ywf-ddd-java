@@ -54,7 +54,7 @@ package com.yoursweakfoe.common.ddd.domain.portal;
  *   <li>Repository 实现 → infrastructure/persistence
  * </ul>
  *
- * @see com.yoursweakfoe.common.ddd.domain.repository.domain.Repository
+ * @see com.yoursweakfoe.common.ddd.domain.repository.Repository
  */
 public interface Portal {
 }

@@ -4,7 +4,7 @@ import com.yoursweakfoe.common.ddd.fixtures.converter.OrderConverter;
 import com.yoursweakfoe.common.ddd.fixtures.mapper.OrderMapper;
 import com.yoursweakfoe.common.ddd.fixtures.model.Order;
 import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
-import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
+import com.yoursweakfoe.common.ddd.domain.repository.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.CurrentUserProvider;

@@ -1,8 +1,8 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository.application;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository;
 
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.application.OrderQueryRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.mapper.OrderMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO;

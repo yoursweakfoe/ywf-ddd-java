@@ -11,7 +11,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.ProductFactory;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

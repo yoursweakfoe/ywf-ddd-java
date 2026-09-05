@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.product.handler.query;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.application.ProductQueryRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.ProductQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
 import com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;

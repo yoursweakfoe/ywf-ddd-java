@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.application.repository.application;
+package com.yoursweakfoe.common.ddd.application.repository;
 
 /**
  * 读模型（查询）仓储标记接口 —— 标识 CQRS 读侧的查询端口，与写侧 {@code domain/repository/Repository} 对偶。
@@ -32,7 +32,7 @@ package com.yoursweakfoe.common.ddd.application.repository.application;
  *   <tr><td>实现在</td><td>infrastructure/persistence</td><td>infrastructure/persistence</td></tr>
  * </table>
  *
- * @see com.yoursweakfoe.common.ddd.domain.repository.domain.Repository
+ * @see com.yoursweakfoe.common.ddd.domain.repository.Repository
  * @see com.yoursweakfoe.common.contract.dto.query.PageableQuery
  * @see com.yoursweakfoe.common.contract.dto.query.PageResult
  */

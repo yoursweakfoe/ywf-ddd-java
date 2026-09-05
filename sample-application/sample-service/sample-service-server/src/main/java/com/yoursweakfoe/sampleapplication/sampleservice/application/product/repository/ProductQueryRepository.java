@@ -1,6 +1,6 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.application;
+package com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository;
 
-import com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository;
+import com.yoursweakfoe.common.ddd.application.repository.QueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
 import java.util.Optional;
 import java.util.UUID;

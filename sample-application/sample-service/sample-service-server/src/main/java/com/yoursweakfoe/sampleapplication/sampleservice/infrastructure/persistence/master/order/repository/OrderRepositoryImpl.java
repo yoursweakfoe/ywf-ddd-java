@@ -1,7 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository.domain;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter.OrderConverter;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.mapper.OrderMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO;

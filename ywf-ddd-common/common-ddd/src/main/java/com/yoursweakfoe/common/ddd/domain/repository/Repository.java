@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.domain.repository.domain;
+package com.yoursweakfoe.common.ddd.domain.repository;
 
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;
 import java.util.Optional;

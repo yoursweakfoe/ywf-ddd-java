@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.sampleapplication.sampleservice.support.TestOrders;
 import com.yoursweakfoe.common.exception.type.BusinessException;

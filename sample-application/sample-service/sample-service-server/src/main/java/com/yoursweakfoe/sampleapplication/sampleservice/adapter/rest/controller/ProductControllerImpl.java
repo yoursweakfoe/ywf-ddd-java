@@ -5,7 +5,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.serv
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.query.GetProductQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.adapter.rest.ProductController;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.adapter.rest.controller.ProductController;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;

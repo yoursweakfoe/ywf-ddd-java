@@ -4,7 +4,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assemb
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ConfirmOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.extern.slf4j.Slf4j;

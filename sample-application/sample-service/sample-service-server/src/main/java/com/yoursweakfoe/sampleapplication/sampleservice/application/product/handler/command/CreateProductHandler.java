@@ -5,7 +5,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.ProductFactory;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.domain.ProductRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

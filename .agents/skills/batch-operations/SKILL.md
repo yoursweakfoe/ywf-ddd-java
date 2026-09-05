@@ -16,7 +16,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
    - 实现 `Command` 标记接口
    - 核心字段：`List<String> ids`（或 `List<{Xxx}Item> items`）
    - `@Schema` 注解
-2. **contract**：在 `contract/{agg}/adapter/rest/{Agg}Controller.java` 契约接口新增方法签名
+2. **contract**：在 `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` 契约接口新增方法签名
 3. **application**：创建 `application/{agg}/handler/command/Batch{Action}{Agg}Handler.java`
    - 实现 `CommandHandler<Batch{Action}{Agg}Command, List<{Agg}DTO>>`
    - 全批原子策略时标注 `@Transactional(rollbackFor = Exception.class)`（R11）

@@ -30,7 +30,7 @@ import com.tngtech.archunit.library.Architectures;
  * <ul>
  *   <li><strong>块1 层间依赖方向</strong> —— 谁能依赖谁：R1 / R1b / R2 / R3</li>
  *   <li><strong>块2 领域纯净</strong> —— domain 内部不许出现什么：R4 / R6 / R12</li>
- *   <li><strong>块3 装配位置契约</strong> —— 实现类与事务边界放哪：R5a / R5b / R11 / R13</li>
+ *   <li><strong>块3 装配位置契约</strong> —— 实现类与读写边界放哪：R5a / R5b / R11 / R13</li>
  *   <li><strong>块4 注解与标记契约</strong> —— 类型锚点（标记接口）与命名对偶：R8a / R8b / R10a / R10b / R14a / R14b</li>
  *   <li><strong>块5 契约模块</strong> —— contract 独立性：C1</li>
  * </ul>
@@ -39,41 +39,60 @@ import com.tngtech.archunit.library.Architectures;
  * <ul>
  *   <li><strong>框架扫描</strong> {@code DddArchitectureTest}
  *       （packages = {@code com.yoursweakfoe.common.ddd}）：让框架自己先过一遍教义。
- *       R1 在此被覆写为「四层 + Configuration 层」（框架自动配置类跨层装配所需）。</li>
+ *       R1 在此被覆写为「三层 + Configuration 层」（框架自动配置类跨层装配所需，
+ *       框架无 adapter 业务组件与 contract 包，且根包自动配置类必须有一个合法归属层）。</li>
  *   <li><strong>业务扫描</strong> {@code ApplicationArchitectureTest}
  *       （packages = {@code com.yoursweakfoe.sampleapplication.sampleservice}）：
- *       R1 / R1b / R3 / R6 使用 {@code BASE} 精确包前缀覆写（见下方「包段碰撞」），
- *       其余直接挂载本库常量。</li>
+ *       <strong>全部挂载本库共享常量，零本地谓词覆写</strong>（2026-09-05 包命名税迁移后
+ *       收回，见下方「包命名税已根治」节）。</li>
  *   <li><strong>负证明</strong> {@code DomainPurityRuleProofTest}：证明 R4 会失败而非恒真
  *       （配套夹具 {@code com.yoursweakfoe.archproof.domain.FrameworkLeakProbe}，
  *       位于两个扫描根之外，不污染任何 {@code @ArchTest}）。</li>
  * </ul>
  *
- * <h3>包段碰撞（本库谓词普遍带排除列表的根因）</h3>
+ * <h3>包命名税已根治（2026-09-05 迁移）—— 读规则前先立此存照</h3>
  *
- * <p>本框架惯例「按实现的接口归属」为子包命名：infrastructure 下存在
- * {@code ..repository.domain..}（写仓储实现）、application 下存在 {@code ..repository.application..}
- * （读端口定义）。ArchUnit 的 {@code ..domain..} / {@code ..application..} 按<strong>包段</strong>
- * 匹配（段名精确、位置任意、不相邻不匹配），这些子包会被误认为「属于 domain / application 层」。
- * 因此凡主语取 {@code ..domain..} 的规则都必须显式排除位于 infrastructure / application /
- * adapter 段下的类（见 {@link #PURE_DOMAIN_CLASSES}）；消费方若包结构更规整可用段匹配，
- * 否则参照 sample 用精确根包前缀覆写。彻底解法（规则工厂参数化根包）登记在案的演进方向，本版本未实施。
+ * <p><strong>不变量（保留段唯一语义）</strong>：{@code adapter / application / domain /
+ * infrastructure / contract} 五个保留段，<strong>只允许出现在其真实层的位置上</strong>；
+ * 任何子包不得借用保留段表达「接口归属侧」（历史上 {@code repository.domain} /
+ * {@code repository.application} 正是这种借用）。读写/接口的归属改由<strong>类名后缀 +
+ * 实现的标记接口</strong>表达（{@code {Agg}Repository} vs {@code {Agg}QueryRepository}；
+ * 框架侧 {@code Repository} vs {@code QueryRepository} marker）。分层因此可被段匹配规则
+ * <strong>无歧义</strong>识别——本文件所有 {@code ..domain..} / {@code ..application..}
+ * 段谓词不再需要任何层排除。这是「命名惯例 + 规则集」共同强制的一对：破坏此不变量，
+ * 规则成片误报或成片漏网（旧空文 R4 与 BASE 覆写四件套都是命名税的利息）。
+ *
+ * <p>迁移坐标对照（旧 → 新，git rename 保留历史）：
+ * <table>
+ *   <tr><th>旧坐标</th><th>新坐标</th></tr>
+ *   <tr><td>{@code common.ddd.domain.repository.domain.Repository}</td><td>{@code common.ddd.domain.repository.Repository}</td></tr>
+ *   <tr><td>{@code common.ddd.application.repository.application.QueryRepository}</td><td>{@code common.ddd.application.repository.QueryRepository}</td></tr>
+ *   <tr><td>{@code common.ddd.domain.event.domain.DomainEvent}</td><td>{@code common.ddd.domain.event.DomainEvent}</td></tr>
+ *   <tr><td>{@code common.contract.dto.event.integration.IntegrationEvent}</td><td>{@code common.contract.dto.event.IntegrationEvent}</td></tr>
+ *   <tr><td>{@code sampleservice.domain.{agg}.repository.domain.{Agg}Repository}</td><td>{@code sampleservice.domain.{agg}.repository.{Agg}Repository}</td></tr>
+ *   <tr><td>{@code sampleservice.application.{agg}.repository.application.{Agg}QueryRepository}</td><td>{@code sampleservice.application.{agg}.repository.{Agg}QueryRepository}</td></tr>
+ *   <tr><td>{@code sampleservice.infrastructure.persistence.master.{agg}.repository.{domain|application}.*Impl}</td><td>{@code …master.{agg}.repository.*Impl}（读写四实现并级）</td></tr>
+ *   <tr><td>{@code sampleservice.contract.{agg}.adapter.rest.{Agg}Controller}</td><td>{@code sampleservice.contract.{agg}.adapter.rest.controller.{Agg}Controller}——与框架标记 {@code common.ddd.adapter.rest.controller.RestAdapter} 精确对偶（server 实现 {@code sampleservice.adapter.rest.controller.{Agg}ControllerImpl} 镜像同一坐标）</td></tr>
+ * </table>
  *
  * <h3>空集通过（vacuous pass）警示 —— 读本文件必须知道的结构性弱点</h3>
  *
  * <p>消费方测试类路径中的 {@code archunit.properties} 全局声明
  * {@code archRule.failOnEmptyShould=false}，且多数常量额外写了 {@code allowEmptyShould(true)}：
- * <strong>规则匹配不到任何类时无声通过</strong>。「零命中」与「规则写错成永不为假」在结果上不可区分
- * ——旧 R4（{@code ..domain.model..} 相邻匹配，永不命中规范布局 {@code domain.{agg}.model}）
- * 正是被此机制掩护的空文（见变更记录）。现状：
+ * <strong>规则匹配不到任何类时无声通过</strong>。「零命中」与「规则写错成永不为假」在结果上
+ * 不可区分——旧 R4（{@code ..domain.model..} 相邻匹配，对规范布局 {@code domain.{agg}.model}
+ * 永不命中）正是被此机制掩护的空文（见变更记录）。现状：
  * <ul>
- *   <li>有负证明的规则：<strong>仅 R4</strong>（DomainPurityRuleProofTest，违例必失败 +
- *       真实 stereotype 载体必通过，双向锁死）。</li>
- *   <li>其余禁则类规则（R1b / R2 / R3 / R6 / R13）的「非空转」依赖两个扫描的挂载：
- *       框架扫描的 subject 集（common-ddd 的 domain / adapter 类）恒非空，业务扫描的
- *       subject 集（sample 聚合类）随业务增长非空——subject 为空时它们退化为空集通过。</li>
- *   <li>为「包结构锚点」而挂载的空集 {@code @ArchTest}（框架扫描的 r8a / r8b / r10a / r10b /
- *       r14a / r14b）守护的是「标记接口所在包结构不被破坏」，属既定教义例外，挂载处有逐条注释。</li>
+ *   <li>有负证明的规则：<strong>仅 R4</strong>（DomainPurityRuleProofTest：违例必失败 +
+ *       真实 stereotype 载体必通过 + 迁移后布局的 domain 写端口必被评估，双向锁死）。</li>
+ *   <li>其余禁则类规则的非空转来源：R1 / R1b / R2 / R3 / R6 / R10 / R11 / R12 / R13 在
+ *       业务扫描 subject 真实非空（sample 分层类齐全）；R5b 业务扫描真实命中 4 个 Impl；
+ *       R5a / R2 在框架扫描真实开火（框架 domain / adapter 包非空）。</li>
+ *   <li>已知真实空转点（诚实登记）：R5a 在<strong>业务</strong>扫描为空集——相邻谓词
+ *       {@code ..domain.repository..} 对嵌套布局 {@code domain.{agg}.repository} 永不相邻
+ *       （其守护实际由框架扫描 + sample 本地 A3 类型锚点分担）；R8a/R8b/R10a/R10b/
+ *       R14a/R14b 在框架扫描为空集——守护「标记接口所在包结构不被破坏」，属教义例外，
+ *       挂载处逐条注释。</li>
  * </ul>
  *
  * <h3>已知缺口（登记，本文件不实现）</h3>
@@ -95,16 +114,33 @@ import com.tngtech.archunit.library.Architectures;
  *
  * <h3>变更记录</h3>
  * <ul>
- *   <li><strong>本版本 · R15（全仓禁 {@code com.baomidou..} 禁令）删除</strong>
+ *   <li><strong>本版本 · 包命名税迁移（阶段一，纯包移动）</strong>：框架 marker 去重侧段
+ *       （{@code repository.domain.Repository→repository.Repository}、
+ *       {@code repository.application.QueryRepository→repository.QueryRepository}、
+ *       {@code event.domain.DomainEvent→event.DomainEvent}、
+ *       {@code dto.event.integration.IntegrationEvent→dto.event.IntegrationEvent}）；
+ *       业务包随 ddd/contract 层级变更对偶迁移（contract REST 面不删 adapter 段、加深为
+ *       {@code adapter.rest.controller} 与框架 marker 精确对偶；infra 读写四实现并级）。
+ *       本阶段规则谓词不动，仅同步被移动 marker 的 FQN 字符串引用（R1b 锚点）。</li>
+ *   <li><strong>本版本 · 规则合并（阶段二，退税）</strong>：删除 {@code PURE_DOMAIN_CLASSES}
+ *       排除辅助谓词，R3/R4 主语回归裸 {@code ..domain..}；R1b 宾语删除
+ *       {@code not(resideInAPackage("..infrastructure.."))} 历史排除；R13 宾语从段匹配
+ *       {@code ..domain..repository..}（迁移后静默失去对实现类的识别力）切换为
+ *       <strong>类型锚点 {@code assignableTo(Repository)}</strong>（块4 类型锚点哲学，
+ *       布局无关，接口/实现/未来形态全覆盖）；业务扫描退役 BASE 精确前缀覆写中的
+ *       R1/R3/R6 三条（R1b 已于上一版本共享化），改挂共享常量——{@code LAYERED_ARCHITECTURE}
+ *       与 {@code DOMAIN_DOES_NOT_DEPEND_ON_SECURITY} 就此结束「下发件退役」状态，
+ *       获得本仓首次真实挂载。</li>
+ *   <li><strong>上一版本 · R15（全仓禁 {@code com.baomidou..} 禁令）删除</strong>
  *       ——规则库不为「项目选择不用的库」立特别法；多数据源库（dynamic-datasource）经 BOM 显式推荐，
  *       使用 {@code @DS} 不再触任何红线。连带删除其负证明夹具体系（sample 测试侧）。</li>
- *   <li><strong>本版本 · R4 重写</strong>：旧谓词 {@code ..domain.model..} 为相邻段匹配，
+ *   <li><strong>上一版本 · R4 重写</strong>：旧谓词 {@code ..domain.model..} 为相邻段匹配，
  *       对规范布局 {@code domain.{agg}.model} 永不相邻 = 空文（审计 §6.1-1）；
  *       且旧禁令连 {@code org.springframework.stereotype} 一并禁，与既有教义例外
- *       （原 sample 本地 A2 白名单）三方矛盾（审计 §6.1-2）。新 R4 主语改 {@code ..domain..}
- *       段匹配（带层排除），白名单 stereotype、禁其余 Spring 运行时与 JPA；
+ *       （原 sample 本地 A2 白名单）三方矛盾（审计 §6.1-2）。新 R4 主语 {@code ..domain..}
+ *       段匹配，白名单 stereotype、禁其余 Spring 运行时与 JPA；
  *       A2 上收进本库（审计 §6.2-7），sample 本地副本随之删除。</li>
- *   <li><strong>本版本 · 接线修复</strong>：R1b 共享常量原为零挂载死规则，sample 本地副本
+ *   <li><strong>上一版本 · 接线修复</strong>：R1b 共享常量原为零挂载死规则，sample 本地副本
  *       与其谓词完全同构，现改挂载共享常量；R5b 原仅挂框架扫描（框架无 *RepositoryImpl，
  *       恒空转），现挂载业务扫描（真实命中 4 个 Impl 类）、框架扫描挂载撤销。</li>
  * </ul>
@@ -131,13 +167,17 @@ import com.tngtech.archunit.library.Architectures;
  *     static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
  *
  *     @ArchTest
- *     static final ArchRule r4 = DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
+ *     static final ArchRule r4 =
+ *             DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
  *
  *     @ArchTest
  *     static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
  *
  *     @ArchTest
  *     static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+ *
+ *     @ArchTest
+ *     static final ArchRule r6 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_SECURITY;
  *
  *     @ArchTest
  *     static final ArchRule r8a = DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
@@ -188,7 +228,7 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R10b —— {@code ..application..dto..} 包下的顶层类必须实现 {@code ApplicationDTO} 标记</li>
  *   <li>R11 —— CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制）</li>
  *   <li>R12 —— Domain 层禁止 public setter（守护充血模型不变量）</li>
- *   <li>R13 —— QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口）</li>
+ *   <li>R13 —— QueryHandler 禁止依赖任何 Repository 类型（CQRS 读侧只走 QueryRepository 读端口）</li>
  *   <li>R14a —— 实现 {@code ScheduledAdapter} 标记的类必须位于 adapter 层（定时任务入口角色）</li>
  *   <li>R14b —— {@code ..adapter..scheduler..} 包下非接口类必须实现 {@code ScheduledAdapter} 标记</li>
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 四层及 Spring 运行时基础设施</li>
@@ -215,19 +255,23 @@ public final class DDDArchitectureRules {
      *
      * <p><strong>怎么判</strong>：{@code layeredArchitecture().consideringAllDependencies()}
      * 按四层包段（{@code ..adapter..} 等）划层，声明每层「允许被谁访问」；任何跨层字段/方法/
-     * 继承/注解依赖反向即违例。
+     * 继承/注解依赖反向即违例。<strong>段语义无歧义的前提是「保留段唯一语义」不变量</strong>
+     * （见类头「包命名税已根治」节）：迁移前 infra 的 {@code repository.domain} 子包会被
+     * 同时吞入 Domain 与 Infrastructure 两层、其依赖 Mapper 即成「Domain 依赖 Infrastructure」
+     * 冤案——该风险已由包迁移根治，本常量因此可被业务扫描直接挂载。契约接口
+     * （{@code contract.{agg}.adapter.rest.controller}）依裁决保留 {@code adapter} 段、按段匹配
+     * 成为 Adapter 层成员——{@code ControllerImpl→契约接口} 属<strong>同层</strong>访问，
+     * 分层 DSL 不禁同层依赖，语义自洽（已实证）。
      *
      * <p><strong>读侧例外</strong>：CQRS 读端口（XxxQueryRepository）定义在 application、
      * 由 infrastructure 实现（PO → DTO 直接投影，绕过聚合根），构成写侧倒置的读侧镜像
      * 「infrastructure → application」，故 Application 额外允许被 Infrastructure 访问。
      * 该整层放行由 R1b 收窄到类型锚点白名单。
      *
-     * <p><strong>局限与本仓挂载状态（已退役为纯下发件）</strong>：本常量在本仓两个扫描中
-     * <strong>均未挂载</strong>——框架扫描覆写「+Configuration 层」（根包自动配置类跨层装配），
-     * 业务扫描覆写精确 {@code BASE} 前缀（infrastructure 下 {@code ..repository.domain..}
-     * 子包会被 {@code ..domain..} 段匹配吞入 Domain 层，其依赖 PO/Mapper 即成「Domain 依赖
-     * Infrastructure」冤案）。挂载一份在任一扫描都必然失败或空转，故仅对包命名无碰撞的
-     * 外部消费方下发。教义见 .agents/rules/02。
+     * <p><strong>挂载（本版本转正）</strong>：业务扫描 {@code ApplicationArchitectureTest#r1}
+     * ——首挂；此前因包命名税被迫用 BASE 精确前缀本地覆写（已退役）。框架扫描仍用
+     * 「+Configuration 层」覆写版：common-ddd 根包自动配置类（{@code MybatisDddAutoConfiguration}）
+     * 跨层装配基础设施，需要一个合法归属层，共享四层切分容纳不了它。
      */
     public static final ArchRule LAYERED_ARCHITECTURE =
             Architectures.layeredArchitecture()
@@ -255,7 +299,7 @@ public final class DDDArchitectureRules {
 
     /** R1b 白名单锚点①：application 层读端口接口（CQRS 读侧的入口类型）。 */
     private static final String QUERY_REPOSITORY_TYPE =
-            "com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository";
+            "com.yoursweakfoe.common.ddd.application.repository.QueryRepository";
 
     /** R1b 白名单锚点②：应用层内部视图标记（读 DTO 的定型接口）。 */
     private static final String APPLICATION_DTO_TYPE =
@@ -297,16 +341,17 @@ public final class DDDArchitectureRules {
      * Presenter 呈现），形成 application ⇄ infrastructure 循环依赖，读侧捷径沦为通用后门。
      *
      * <p><strong>怎么判</strong>：主语 {@code ..infrastructure..} 段；宾语取
-     * {@code ..application..} 段再减去两类白名单与「实际位于 infrastructure 下的类」。
+     * {@code ..application..} 段再减去白名单。
      *
-     * <p><strong>段匹配碰撞内置排除</strong>：{@code ..application..} 按包段匹配，会同时命中
-     * infrastructure 下 {@code ..repository.application..} 子包（读实现及其匿名类所在包，
-     * 如 {@code infrastructure.persistence.master.order.repository.application}）。那是
-     * infra 的内部自依赖（实现类引用自己的匿名类），不属于跨层访问，故宾语显式
-     * {@code and(not(resideInAPackage("..infrastructure..")))} 排除。
+     * <p><strong>历史碰撞已随命名迁移消除（本版本退税）</strong>：旧宾语曾带
+     * {@code and(not(resideInAPackage("..infrastructure..")))} 排除——因旧坐标
+     * {@code infrastructure...repository.application}（读实现子包）同时命中
+     * {@code ..application..} 与 {@code ..infrastructure..} 两段，infra 内部自依赖
+     * （实现类引用自己包的接口/匿名类）会被误判成跨层访问。2026-09-05 迁移把读实现并入
+     * {@code infrastructure...repository}（包名不再含 {@code application} 段）后，该排除
+     * 永无命中可能，已删除；由「保留段唯一语义」不变量（见类头）接管防误报职责。
      *
-     * <p><strong>挂载</strong>：业务扫描 {@code ApplicationArchitectureTest#r1b}（sample 本地
-     * 精确覆写版历史上与本常量谓词完全同构，已改为直接挂载本常量）。框架扫描不挂载：
+     * <p><strong>挂载</strong>：业务扫描 {@code ApplicationArchitectureTest#r1b}。框架扫描不挂载：
      * common-ddd 的 infrastructure 对 application 零依赖，挂载即空转。
      *
      * <p><strong>局限</strong>：{@code allowEmptyShould(true)} + 全局 failOnEmptyShould=false
@@ -320,7 +365,6 @@ public final class DDDArchitectureRules {
                     .should()
                     .dependOnClassesThat(
                             resideInAPackage("..application..")
-                                    .and(not(resideInAPackage("..infrastructure..")))
                                     .and(not(READ_PORT_TYPE_ANCHORS)))
                     .allowEmptyShould(true)
                     .as("R1b Infrastructure 对 Application 的访问仅限读端口类型"
@@ -337,12 +381,13 @@ public final class DDDArchitectureRules {
      * <p><strong>怎么判</strong>：主语 {@code ..adapter..} 段，宾语 {@code ..domain..} /
      * {@code ..infrastructure..} 段，任何依赖形态（继承/字段/参数/返回/注解）均计。
      *
-     * <p><strong>局限</strong>：contract 的 {@code ...contract.{agg}.adapter.rest..} 契约接口子包
-     * 同样命中 {@code ..adapter..} 主语——这是有意让契约接口也受本规则约束（它们本就不得触碰
-     * server 层）；不判「adapter 是否依赖了错误的 application 内部组件」——那是 R1b/A4 的职责。
+     * <p><strong>局限</strong>：contract 的 {@code contract.{agg}.adapter.rest.controller} 契约接口
+     * （迁移后与框架 {@code RestAdapter} 坐标精确对偶）同样命中 {@code ..adapter..} 主语——这是
+     * 有意让契约接口也受本规则约束（它们本就不得触碰 server 内部层）；不判「adapter 是否依赖了
+     * 错误的 application 内部组件」——那是 R1b/A4 的职责。
      *
      * <p><strong>挂载</strong>：框架扫描 {@code DddArchitectureTest#r2}（subject = common-ddd 的
-     * adapter 标记接口包，恒非空）；业务扫描现状未挂载（adapter 类经 R1 本地覆写 + R8a/R8b
+     * adapter 标记接口包，恒非空）；业务扫描现状未挂载（adapter 类经共享 R1 + R8a/R8b
      * 类型锚点组合约束）。
      */
     public static final ArchRule ADAPTER_ONLY_DEPENDS_ON_APPLICATION =
@@ -355,50 +400,33 @@ public final class DDDArchitectureRules {
                     .as("R2 Adapter 只依赖 Application/Contract，不得直连 Domain 或 Infrastructure");
 
     /**
-     * 纯 domain 主语：{@code ..domain..} 段匹配，但排除任何同时位于
-     * application / infrastructure / adapter 包段之下的类。
-     *
-     * <p>排除的必要性（本框架包命名惯例的直接后果）：「按实现的接口归属」命名子包，
-     * infrastructure 下存在 {@code ..repository.domain..}（写仓储实现所在包）、
-     * application 下理论上存在 {@code ...domain..} 型子包——这些类的包名含 {@code domain}
-     * 段，但它们<strong>按更深前缀归属于其所在层</strong>，受各自层的规则管辖（R1b 等），
-     * 不是域层主语。不排除则：infra 的 RepositoryImpl 依赖 Mapper（同为 infra 类，合法）
-     * 会被误判成「Domain 依赖 Infrastructure」。
-     *
-     * <p>共享方：R3 与 R4。两者都需要「真正的 domain 层类」作主语。
-     * 反面参照：R6 / R12 的主语<strong>刻意不做</strong>这组排除——它们约束的是「包名带
-     * domain 的一切类不得做什么」，把 infra 同名子包也纳入安全网是保守增强而非冤案
-     * （被排除逻辑仅适用于「宾语含层名」的 R3/R4 场景）。
-     */
-    private static final DescribedPredicate<JavaClass> PURE_DOMAIN_CLASSES =
-            resideInAPackage("..domain..")
-                    .and(not(resideInAPackage("..infrastructure..")))
-                    .and(not(resideInAPackage("..application..")))
-                    .and(not(resideInAPackage("..adapter..")));
-
-    /**
      * R3 —— domain 层不得依赖 application / infrastructure / adapter / contract。
      *
      * <p><strong>守护什么</strong>：依赖箭头的最后一条逆向路径。domain 是圆心，向内零依赖；
      * 一旦 domain import 了 CO / DTO / PO / Mapper，聚合模型开始感知传输格式与存储格式，
      * CQRS 边界与契约独立性（C1）同时被从根部蛀空。
      *
-     * <p><strong>怎么判</strong>：主语 {@link #PURE_DOMAIN_CLASSES}（含 repository.domain
-     * 碰撞排除，原因见该谓词 javadoc）；宾语四个层段。注意 ArchUnit 包匹配按「段」
-     * 精确匹配（非子串），{@code ..application..} 只匹配包段名恰为 application 的包，
-     * 不会误伤 {@code sampleapplication} 这类仅含 "application" 子串的根包。
+     * <p><strong>怎么判</strong>：主语裸 {@code ..domain..} 段。<strong>为什么不再需要层排除
+     * （本版本退税）</strong>：2026-09-05 命名迁移前，infra 的 {@code repository.domain} 等子包
+     * 会伪装成 domain 主语，必须 {@code and(not(..infrastructure..))…} 三连排除（冤案示例：
+     * RepositoryImpl 依赖同为 infra 的 Mapper 会被判成「Domain 依赖 Infrastructure」）；
+     * 迁移后「保留段唯一语义」成为不变量（见类头），{@code ..domain..} 命中的<strong>当且仅当</strong>
+     * 真 domain 层类，排除谓词全部删除。ArchUnit 包匹配按「段」精确匹配（非子串），
+     * {@code ..application..} 只匹配包段名恰为 application 的包，不会误伤
+     * {@code sampleapplication} 这类仅含子串的根包。
      *
-     * <p><strong>局限</strong>：宾语未排除 contract 子包碰撞（contract 的
-     * {@code adapter.rest} 子包命中 {@code ..adapter..} 宾语段时，domain 依赖它=依赖契约
-     * 接口，本就违例，无需排除）。跨仓 domain→框架 infrastructure 的依赖依赖「框架包不在
-     * 业务扫描根内」而不可见——该盲区由异常移包等具体修复收口，非本规则职责。
+     * <p><strong>局限</strong>：宾语 {@code ..contract..} 段会命中 common-contract 模块包
+     * （{@code com.yoursweakfoe.common.contract..}）——domain 依赖框架契约类型同样违例，
+     * 属预期收紧而非误伤；跨仓 domain→框架 infrastructure 的依赖仍受「外部类不进 subject」
+     * 的扫描边界限制（审计 §6.1-4 盲区，由教义与 code review 收口）。
      *
-     * <p><strong>挂载</strong>：框架扫描 {@code DddArchitectureTest#r3}；业务扫描用
-     * {@code BASE} 精确前缀本地覆写版（同一教义、更严主语，见 ApplicationArchitectureTest）。
+     * <p><strong>挂载（本版本转正）</strong>：框架扫描 {@code DddArchitectureTest#r3} +
+     * 业务扫描 {@code ApplicationArchitectureTest#r3}（BASE 精确前缀本地覆写版随命名迁移退役）。
      */
     public static final ArchRule DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS =
             noClasses()
-                    .that(PURE_DOMAIN_CLASSES)
+                    .that()
+                    .resideInAPackage("..domain..")
                     .should()
                     .dependOnClassesThat()
                     .resideInAnyPackage("..application..", "..infrastructure..", "..adapter..", "..contract..")
@@ -420,14 +448,15 @@ public final class DDDArchitectureRules {
 
     /**
      * R4 —— Domain 框架中立：禁 Spring 运行时依赖与 JPA 注解，{@code org.springframework.stereotype}
-     * 装配注解为唯一豁免。（本版本重写；旧版 {@code DOMAIN_MODEL_IS_PURE} 为永空转的相邻段匹配，
-     * 见类头变更记录。）
+     * 装配注解为唯一豁免。（本库上一版本重写；旧版 {@code DOMAIN_MODEL_IS_PURE} 为永空转的
+     * 相邻段匹配，见类头变更记录。）
      *
      * <p><strong>守护什么</strong>：domain 层（含规范布局 {@code domain.{agg}.model} 下的
-     * 聚合根/实体/值对象/工厂，也含 {@code domain.{agg}.service} 等领域服务）的每个类，
-     * 都不得依赖 Spring 容器运行时能力（DI 上下文、AOP、事务、Web……）与 JPA 注解
-     * （{@code jakarta/javax.persistence..}）。唯一豁免：stereotype 装配注解
-     * （{@code @Service}/{@code @Component} 等）——纯元数据，不改变类的编译与运行语义。
+     * 聚合根/实体/值对象/工厂，也含 {@code domain.{agg}.repository} 写端口、
+     * {@code domain.{agg}.service} 等领域服务）的每个类，都不得依赖 Spring 容器运行时能力
+     * （DI 上下文、AOP、事务、Web……）与 JPA 注解（{@code jakarta/javax.persistence..}）。
+     * 唯一豁免：stereotype 装配注解（{@code @Service}/{@code @Component} 等）——纯元数据，
+     * 不改变类的编译与运行语义。
      *
      * <p><strong>为什么重要</strong>：domain 是六边形的圆心，教义（.agents/rules/02/04）要求
      * 「零框架<strong>运行时</strong>依赖」——业务规则必须能在脱离 Spring 的纯 JVM 下推理与测试。
@@ -436,11 +465,11 @@ public final class DDDArchitectureRules {
      * JPA 注解则把实体焊死在特定 ORM 上——本项目持久化语义全部由手写 XML SQL 承担
      * （PO 零 ORM 注解），domain 携带 {@code @Entity}/{@code @Table} 属双重违宪。
      *
-     * <p><strong>怎么判</strong>：主语 {@link #PURE_DOMAIN_CLASSES}——{@code ..domain..} 段匹配
-     * 加层排除，<em>段任意位置</em>即可命中，{@code domain.model}（扁平布局）与
-     * {@code domain.{agg}.model}（规范嵌套布局）皆在射程内；这正是与旧版相邻匹配
-     * {@code ..domain.model..}（对嵌套布局永不为真 = 空文）的本质区别。宾语
-     * {@link #SPRING_RUNTIME_OR_JPA}。
+     * <p><strong>怎么判</strong>：主语裸 {@code ..domain..} 段——「保留段唯一语义」不变量
+     * （见类头）保证命中当且仅当真 domain 层，2026-09-05 命名迁移后无需任何排除（论证同 R3）；
+     * 段匹配对 {@code domain.model}（扁平布局）与 {@code domain.{agg}.model}（规范嵌套布局）
+     * 皆命中——这正是与旧版相邻匹配 {@code ..domain.model..}（对嵌套布局永不为真 = 空文）的
+     * 本质区别。宾语 {@link #SPRING_RUNTIME_OR_JPA}。
      *
      * <p><strong>豁免的边界（读到这里的读者最易误解处）</strong>：本规则只禁「Spring 与 JPA」。
      * domain 对 BusinessException（common-exception）、Lombok、common-ddd 骨架类
@@ -453,8 +482,8 @@ public final class DDDArchitectureRules {
      * {@code DomainPurityRuleProofTest}（sample 测试）：
      * ① 依赖 {@code ApplicationContext} 的 domain 包夹具必须使 {@code check()} 失败（证明会咬）；
      * ② 真实 {@code OrderFactory}（@Component）/ {@code InventoryDomainService}（@Service）
-     * 必须通过（证明白名单不是死闸、规范嵌套布局确在射程）。其余通过路径：框架扫描 +
-     * 业务扫描的真实非空 subject。
+     * 与迁移后的 {@code OrderRepository} 写端口必须通过（证明 stereotype 白名单不是死闸、
+     * 迁移后布局仍在射程）。其余通过路径：框架扫描 + 业务扫描的真实非空 subject。
      *
      * <p><strong>挂载</strong>：框架扫描 {@code DddArchitectureTest#r4}（common-ddd 自有
      * domain 包零 Spring import，教义自证）+ 业务扫描 {@code ApplicationArchitectureTest#r4}
@@ -462,7 +491,8 @@ public final class DDDArchitectureRules {
      */
     public static final ArchRule DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE =
             noClasses()
-                    .that(PURE_DOMAIN_CLASSES)
+                    .that()
+                    .resideInAPackage("..domain..")
                     .should()
                     .dependOnClassesThat(SPRING_RUNTIME_OR_JPA)
                     .as("R4 Domain 框架中立：禁 org.springframework 运行时依赖（org.springframework.stereotype 装配注解唯一豁免）"
@@ -479,16 +509,13 @@ public final class DDDArchitectureRules {
      * 聚合根无法在系统任务、测试夹具、事件回放中独立运行，createdBy/updatedBy 之类的
      * 身份注入必须下沉到应用层完成。
      *
-     * <p><strong>怎么判</strong>：主语 {@code ..domain..} 段匹配且<strong>刻意不做层排除</strong>
-     * （见 {@link #PURE_DOMAIN_CLASSES} javadoc 的反面参照）：infrastructure 的
-     * {@code ..repository.domain..} 子包一并进安全网——仓储实现同样不该感知认证上下文，
-     * 纳入是保守增强。
+     * <p><strong>怎么判</strong>：主语裸 {@code ..domain..} 段——迁移后段语义唯一
+     * （「保留段唯一语义」不变量，见类头），本常量与业务侧旧覆写版的主语集合已完全重合。
      *
-     * <p><strong>挂载状态（本仓已退役为纯下发件）</strong>：本常量在本仓两个扫描均未挂载且
-     * 无挂载点——框架扫描中 common-ddd 的 pom 不依赖 common-security（编译层已断绝，
-     * 挂载永空转，违背「不留空转挂载」原则）；业务扫描用 {@code BASE} 精确前缀本地覆写版
-     * （{@code ApplicationArchitectureTest#r6_domain_no_security}）。对依赖 common-security
-     * 的外部消费方（common-cloud 场景）下发本常量。
+     * <p><strong>挂载（本版本转正）</strong>：业务扫描 {@code ApplicationArchitectureTest#r6}——
+     * 首挂，BASE 精确前缀本地覆写版随命名迁移退役。框架扫描不挂载：common-ddd 的 pom 不依赖
+     * common-security（编译层已断绝 domain 触碰 SecurityUtil 的可能，挂载属结构性空转）。
+     * 对依赖 common-security 的外部消费方（common-cloud 场景）本常量照常可挂。
      */
     public static final ArchRule DOMAIN_DOES_NOT_DEPEND_ON_SECURITY =
             noClasses()
@@ -506,14 +533,11 @@ public final class DDDArchitectureRules {
      * 外部绕过聚合根的状态机守卫与不变量校验直接改写内部状态（{@code order.setStatus(CANCELLED)}
      * 跳过 {@code cancel()} 的库存回补即事故）。
      *
-     * <p><strong>怎么判</strong>：{@code noMethods}  declared in {@code ..domain..} 段主语，
-     * 方法名匹配 {@code set[A-Z].*} 即须非 public。含 Lombok {@code @Data} 在 domain 类上
-     * 生成的 setter（字节码层面与手写无异），一并拦截——这正是 domain 禁 {@code @Data}
-     * 教义的机器化。返回 {@code this} 的流式 setter 同样命中，属预期行为。
-     *
-     * <p><strong>主语不做层排除（与 R3/R4 相反的取舍）</strong>：infra 的
-     * {@code ..repository.domain..} 子包里若有人写 public setter，恰是「把仓储当 DTO 用」的
-     * 坏味道，纳入安全网是保守增强（论证同 R6）。
+     * <p><strong>怎么判</strong>：{@code noMethods}，主语 {@code ..domain..} 段声明类
+     * （迁移后段语义唯一，无需排除，见类头不变量），方法名匹配 {@code set[A-Z].*} 即须非 public。
+     * 含 Lombok {@code @Data} 在 domain 类上生成的 setter（字节码层面与手写无异），一并拦截——
+     * 这正是 domain 禁 {@code @Data} 教义的机器化。返回 {@code this} 的流式 setter 同样命中，
+     * 属预期行为。
      *
      * <p><strong>局限</strong>：包私有 setter 不查（教义允许同包 Factory 使用业务构造器）；
      * 字段直改（{@code public field}）不查——后者由 review 与封装惯例兜底。
@@ -545,14 +569,15 @@ public final class DDDArchitectureRules {
      * 任何类型若成 class（含枚举/记录），即出现「域层内实现仓储」，infrastructure 的实现
      * 与接口同居，倒置链条断裂（.agents/rules/02「依赖倒置」）。
      *
-     * <p><strong>怎么判</strong>：主语 {@code ..domain.repository..}——注意这是<strong>相邻</strong>
-     * 段匹配：{@code domain.{agg}.repository.domain} 命中（domain→repository 相邻成立），
-     * 而 infra 的 {@code infrastructure...repository.domain} 中 repository→domain 顺序相反、
-     * domain→repository 不相邻，<strong>天然不命中</strong>——本规则无需层排除即无碰撞。
-     * 空集允许通过（部分扫描包可能不含 domain repository，如某些框架子包）。
+     * <p><strong>怎么判</strong>：主语 {@code ..domain.repository..}——<strong>相邻</strong>段匹配。
+     * 2026-09-05 迁移后框架侧 {@code domain.repository.Repository} 直接相邻、真实命中；
+     * 业务侧规范嵌套布局 {@code domain.{agg}.repository} 中 domain→repository 隔着聚合段、
+     * 永不相邻——<strong>业务扫描本规则为空集通过（诚实登记，见类头空转警示）</strong>，
+     * 业务域端口的 interface 定型实际由 sample 本地 A3（按 {@code Repository} 标记锚定）
+     * 与框架扫描分担守护。空集允许通过（部分扫描包可能不含 domain repository）。
      *
-     * <p><strong>挂载</strong>：框架扫描 + 业务扫描均挂载，两边 subject 恒非空
-     * （common-ddd 的 Repository 接口 / sample 的 OrderRepository、ProductRepository）。
+     * <p><strong>挂载</strong>：框架扫描（真实开火）+ 业务扫描（空集通过；保留挂载以便
+     * 扁平布局 {@code domain.repository.*} 的外部消费方即时生效）。
      */
     public static final ArchRule DOMAIN_REPOSITORIES_MUST_BE_INTERFACES =
             classes()
@@ -573,15 +598,15 @@ public final class DDDArchitectureRules {
      * <p><strong>怎么判</strong>：主语为简单名后缀 {@code RepositoryImpl}（读侧
      * {@code XxxQueryRepositoryImpl} 同后缀，一并命中——读实现也必须在 infra）；宾语
      * {@code ..infrastructure.persistence..repository..}，通配段可匹配
-     * {@code infrastructure.persistence.master.{agg}.repository.{domain|application}}
-     * 这类多数据源 + 按聚合 + 按读写分包的结构。空集允许通过。
+     * {@code infrastructure.persistence.master.{agg}.repository} 这类多数据源 + 按聚合分包的
+     * 结构（2026-09-05 迁移后读写实现并级于此，读写身份只由类名后缀与所实现标记表达）。
+     * 空集允许通过。
      *
-     * <p><strong>挂载（本版本接线修复）</strong>：业务扫描 {@code ApplicationArchitectureTest#r5b}
+     * <p><strong>挂载（上一版本接线修复）</strong>：业务扫描 {@code ApplicationArchitectureTest#r5b}
      * ——sample 恰有 4 个真实 Impl（order/product × 写/读），subject 非空、守护有效。
      * 框架扫描原挂载已<strong>撤销</strong>：common-ddd 没有任何 *RepositoryImpl 类
      * （仓储实现由消费方继承 {@code MybatisPersistence} 支撑类完成），挂载属结构性空转
-     * （审计 §6.2-6 的「未挂业务、反挂框架」正是修复对象——框架侧空转而业务侧 Impl 放错层
-     * 可过关）。
+     * （审计 §6.2-6 的「未挂业务、反挂框架」正是修复对象）。
      *
      * <p><strong>局限</strong>：只认名字后缀，改名（{@code OrderRepoImpl}/{@code OrderStore}）
      * 即逃逸——命名教义（rules/03 命名规范表）是本规则的主语来源，两者互为锁链。
@@ -634,40 +659,39 @@ public final class DDDArchitectureRules {
                             + "（写侧事务边界由应用层保证，框架不兜底）");
 
     /**
-     * R13 —— CQRS 读写隔离强制：{@code QueryHandler} 实现类不得依赖写侧仓储
-     * （{@code ..domain..repository..} 段下的任何类型）。
+     * R13 —— CQRS 读写隔离强制：{@code QueryHandler} 实现类不得依赖任何 {@code Repository}
+     * 类型（写侧仓储，以类型锚点识别）。
      *
      * <p><strong>守护什么</strong>：读侧固定模式要求查询完全绕过 domain：application 层
      * {@code QueryRepository} 读端口 → infra 实现 → PO 直接投影读 DTO，不 reconstitute
      * 聚合根。若读 Handler 图方便注入写侧 Repository 加载聚合，「读写分离」即名存实亡——
      * 读路径背上聚合重建成本，且为读侧偷偷调用写行为（聚合上的 markAsRead 类方法）开了门。
      *
-     * <p><strong>怎么判</strong>：主语 = 实现 {@code QueryHandler} 标记的类（类型锚点，
-     * 不靠包名猜测）；宾语 = {@code ..domain..repository..} 段组合。
+     * <p><strong>怎么判（本版本从段匹配切换为类型锚点）</strong>：主语 = 实现 {@code QueryHandler}
+     * 标记的类；宾语 = {@code assignableTo("com.yoursweakfoe.common.ddd.domain.repository.Repository")}。
+     * 旧宾语为段匹配 {@code ..domain..repository..}——它过去能「顺带」咬到实现类，纯靠旧坐标
+     * {@code infrastructure...repository.domain}（Impl 包名恰好含 domain 段）的巧合；
+     * 2026-09-05 迁移消灭了该子包，段匹配<strong>静默失去对实现类的识别力</strong>（Impl 包名
+     * 不再含 domain 段），故切换为类型锚点：凡可赋值为 {@code Repository} 者——业务写端口接口、
+     * 其 {@code *RepositoryImpl} 实现、未来任何新形态——一律识别，<strong>布局无关</strong>。
+     * 这正是块4「类型锚点而非名字/包名猜测」哲学在禁则方向的落地。读写分途由两个互不继承的
+     * marker 保证（{@code QueryRepository} 不继承 {@code Repository}），读端口及其实现不会被误咬。
      *
-     * <p><strong>段匹配碰撞内置语义</strong>：宾语按段匹配，
-     * 除写端口接口（{@code domain.{agg}.repository.domain.XxxRepository}）外，还会命中
-     * infrastructure 下 {@code ..repository.domain..} 子包的<strong>实现类</strong>
-     * （{@code ...repository.domain.OrderRepositoryImpl}）——这是<strong>刻意过咬</strong>：
-     * QueryHandler 直连实现类与直连接口是同一违例的两种形态，两端都必须拦截。此处与
-     * R3/R4 主语排除的逻辑相反：主语排除是为了不冤枉「包名带 domain 的非域类」，
-     * 宾语过咬是为了不漏掉「任何形态的写仓储」——一个防误报、一个防漏报，勿混淆。
+     * <p><strong>挂载</strong>：业务扫描 {@code ApplicationArchitectureTest#r13}（QueryHandler
+     * 实现非空 subject）。框架扫描不挂载：common-ddd 无 QueryHandler 实现，挂载即空转。
      *
-     * <p><strong>挂载</strong>：业务扫描 {@code ApplicationArchitectureTest#r13}。框架扫描
-     * 不挂载：common-ddd 无 QueryHandler 实现，挂载即空转。
-     *
-     * <p><strong>局限</strong>：QueryHandler 经 Handler 包装器间接持有写仓储时，字段类型
-     * 不直接出现在读 Handler 上即不命中（依赖图深度 = 1）；包装器缺口同 R11 登记。
+     * <p><strong>局限</strong>：QueryHandler 经 Handler 包装器间接持有写仓储时，依赖图深度 = 1
+     * 不命中；包装器缺口同 R11 登记。
      */
     public static final ArchRule QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES =
             noClasses()
                     .that()
                     .implement("com.yoursweakfoe.common.ddd.application.handler.query.QueryHandler")
                     .should()
-                    .dependOnClassesThat()
-                    .resideInAPackage("..domain..repository..")
+                    .dependOnClassesThat(
+                            assignableTo("com.yoursweakfoe.common.ddd.domain.repository.Repository"))
                     .allowEmptyShould(true)
-                    .as("R13 QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口）");
+                    .as("R13 QueryHandler 禁止依赖任何 Repository 类型（CQRS 读侧只走 QueryRepository 读端口）");
 
     // ═══════════════════════════════════════════════════════════════════════
     // 块4 · 标记与命名契约 —— 类型锚点与命名后缀互为对偶（R8 / R10 / R14）
@@ -675,7 +699,7 @@ public final class DDDArchitectureRules {
     // 共同设计：框架以「空标记接口」定型角色（RestAdapter / ApplicationDTO /
     // ScheduledAdapter）。每对规则双向锁死：正向——实现标记 ⇒ 必须在某层包段内；
     // 反向——包段/命名后缀 ⇒ 必须实现标记。识别一律用类型锚点而非名字猜测，
-    // 名字规则只负责「漂移即失败」，不负责「猜测角色」。
+    // 名字规则只负责「漂移即失败」，不负责「猜测角色」。R13 是同一哲学在禁则方向的延伸。
     // ═══════════════════════════════════════════════════════════════════════
 
     /**
@@ -685,6 +709,12 @@ public final class DDDArchitectureRules {
      * 定型「REST 入口适配器」角色：纯透传 ApplicationService，不含业务逻辑。本规则防止被
      * 标记的组件泄漏到其他层（在 application 里实现一个 RestAdapter = 入口层逻辑内移，
      * R2 的透传教义随之失守）。空集允许通过。
+     *
+     * <p><strong>坐标对偶（2026-09-05 迁移定格）</strong>：业务契约接口
+     * {@code sampleservice.contract.{agg}.adapter.rest.controller.{Agg}Controller} ↔
+     * server 实现 {@code sampleservice.adapter.rest.controller.{Agg}ControllerImpl} ↔
+     * 框架标记 {@code common.ddd.adapter.rest.controller.RestAdapter}——三段全同深，
+     * 「镜像框架 marker 坐标」是「保留段唯一语义」不变量的一部分。
      *
      * <p><strong>挂载</strong>：框架扫描（当前 subject 空集——common-ddd 只有标记接口本身，
      * 接口不实现自己；挂载守护「标记接口所在包结构不被破坏」，属空转警示节所述教义例外）
@@ -702,10 +732,11 @@ public final class DDDArchitectureRules {
     /**
      * R8b（反向）—— 类名以 ControllerImpl 结尾的类必须实现 {@code RestAdapter} 标记。
      *
-     * <p>堵命名漂移：契约接口是 {@code XxxController}（contract 模块），实现端按教义叫
-     * {@code XxxControllerImpl}。有人写了 Impl 却不实现标记 = 自造入口角色绕过 REST 面定型
-     * （可能没有透传、可能绕过了 AppService）。识别 REST 入口用「类型锚点」而非「名字猜测」，
-     * 名字规则只保证「名实相符」，不符即失败。
+     * <p>堵命名漂移：契约接口是 {@code XxxController}（contract 模块
+     * {@code adapter.rest.controller} 段），实现端按教义叫 {@code XxxControllerImpl}。
+     * 有人写了 Impl 却不实现标记 = 自造入口角色绕过 REST 面定型（可能没有透传、可能绕过了
+     * AppService）。识别 REST 入口用「类型锚点」而非「名字猜测」，名字规则只保证「名实相符」，
+     * 不符即失败。
      *
      * <p><strong>挂载</strong>：框架扫描（common-ddd 无 *ControllerImpl，空集通过——守护的是
      * 命名契约本身）+ 业务扫描（sample 的 Order/ProductControllerImpl 恒命中 subject，有效）。
@@ -750,9 +781,9 @@ public final class DDDArchitectureRules {
      * 排除嵌套类：嵌套 DTO（如 {@code OrderDTO.OrderItemDTO}）随外层定型、不重复标记
      * （javadoc 约定）；排除接口：dto 包下可能声明多态视图接口本身。
      *
-     * <p><strong>段匹配语义注意</strong>：{@code ..application..dto..} 两段任意位置匹配，
-     * infra 下若有人建 {@code ...application...dto..} 同名子包同样入网——与 R1b 的
-     * {@code ..repository.application..} 碰撞同理，但此处后果良性（该位置本就该放 DTO）。
+     * <p><strong>段匹配语义注意</strong>：{@code ..application..dto..} 两段任意位置匹配。
+     * 历史上 infra 的 {@code repository.application} 子包也曾命中 application 段（当时后果良性）；
+     * 2026-09-05 命名迁移后此类保留段借用已被「保留段唯一语义」不变量根除（见类头）。
      *
      * <p><strong>挂载</strong>：框架扫描（subject 空集，守护包结构，教义例外同 R8a）+
      * 业务扫描（sample dto 包非空 subject，有效守护）。
@@ -831,7 +862,10 @@ public final class DDDArchitectureRules {
      * server 的发版节奏将绑架所有下游。
      *
      * <p><strong>怎么判</strong>：主语 {@code ..contract..} 段；宾语 = 四层段 +
-     * stereotype/context/beans 三个 Spring 运行时段。
+     * stereotype/context/beans 三个 Spring 运行时段。注意宾语 {@code ..adapter..} 段
+     * <strong>不</strong>排除契约自身的 {@code contract.{agg}.adapter.rest.controller} 子包——
+     * C1 禁的是 contract <em>向外依赖</em> adapter 层类型；契约接口包名带 adapter 段
+     * （与框架 marker 坐标对偶，见 R8a）是命名教义要求，不构成违例。
      *
      * <p><strong>重契约例外（ADR-0003，勿再收紧）</strong>：contract <em>允许且应当</em>
      * 携带 HTTP 映射注解（spring-web 的 {@code @RequestMapping} 族）、Swagger 文档注解与

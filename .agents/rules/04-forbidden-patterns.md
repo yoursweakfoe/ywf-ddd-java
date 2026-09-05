@@ -4,7 +4,7 @@
 
 ## Domain 层禁止
 
-- 禁止引入 Spring / MyBatis 框架**运行时**依赖（DI 容器、AOP、持久化 API 等）；唯一例外：`org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`）——注解是纯元数据，不影响分层纯净性（ArchUnit A2 白名单守护，见 ApplicationArchitectureTest）
+- 禁止引入 Spring / MyBatis 框架**运行时**依赖（DI 容器、AOP、持久化 API 等）；唯一例外：`org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`）——注解是纯元数据，不影响分层纯净性（ArchUnit R4 白名单守护，common-test 共享规则 `DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE`）
 - 禁止暴露 setter 或 public 字段（状态变迁只通过行为方法）
 - 禁止在 Domain 层实现 Repository（实现必须在 Infrastructure）
 - 禁止跨聚合直接修改对方内部状态（通过 Repository 读取）
@@ -61,7 +61,7 @@
 
 ## 持久化与 SQL（含 PO 强制约束）
 
-- 禁止全仓引用 MyBatis-Plus（`com.baomidou.mybatisplus`）任何能力——全仓禁入，ArchUnit 守护（`DDDArchitectureRules.MYBATIS_PLUS_BANNED`，见 docs/common/common-ddd.md ADR-0007）；多数据源仅限 dynamic-datasource 独立模块（common-ddd test-scope 兼容验证；消费方 opt-in 引入，引入后其 `com.baomidou.dynamic` 包依赖需按需覆写守护规则）
+- MyBatis-Plus 不进框架依赖树（持久化 = DddMapper 七语句 + 手写 XML，见下几条）；多数据源用 dynamic-datasource（BOM 推荐坐标，消费方 opt-in 引入，`@DS` 注解合法），规则库对此无专法
 - 禁止 PO 携带任何 ORM 注解——PO 为纯 `@Data` POJO，全部持久化语义（表名 / 主键 / 版本条件 / 逻辑删除）由手写 XML 的 SQL 文本承担
 - 禁止 Wrapper 式动态条件——查询条件一律落成具名 Mapper 方法 + 具名 XML 语句（`<sql>` 片段复用防语句漂移）
 - 建表 DDL **默认含两列**：`version INT NOT NULL DEFAULT 0`（乐观锁）与 `is_delete BOOLEAN NOT NULL DEFAULT FALSE`（逻辑删除），PO 声明对应 `version`（Integer）与 `isDelete`（Boolean）字段；聚合显式豁免时，XML 省略对应条件（见下两条）

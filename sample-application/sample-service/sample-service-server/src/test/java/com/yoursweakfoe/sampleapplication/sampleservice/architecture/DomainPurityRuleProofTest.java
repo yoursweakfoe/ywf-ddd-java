@@ -6,6 +6,7 @@ import com.yoursweakfoe.archproof.domain.FrameworkLeakProbe;
 import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import org.junit.jupiter.api.Test;
 
@@ -23,9 +24,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * <ol>
  *   <li><strong>违例必失败</strong>：{@link FrameworkLeakProbe}（domain 包内依赖 Spring 运行时）
  *       → {@code check()} 抛 AssertionError。证明规则「会咬人」，不是恒真句式。</li>
- *   <li><strong>豁免必通过</strong>：{@link OrderFactory}（@Component）与
- *       {@link InventoryDomainService}（@Service）→ 通过。证明 stereotype 白名单生效，
- *       且这两类规范布局的 domain 类确实在射程内被评估（若谓词仍是旧版相邻匹配，此断言
+ *   <li><strong>豁免必通过</strong>：{@link OrderFactory}（@Component）、
+ *       {@link InventoryDomainService}（@Service）与迁移后的 {@link OrderRepository}
+ *       （{@code domain.order.repository} 写端口）→ 通过。证明 stereotype 白名单生效、
+ *       2026-09-05 包迁移后的布局确在射程内被评估（若谓词仍是旧版相邻匹配，此断言
  *       会因「根本没人被看」而虚假成立——所以配合 ① 才有证明力）。</li>
  *   <li><strong>纯净聚合必通过</strong>：{@link Order} → 通过，回归哨兵。</li>
  * </ol>
@@ -48,10 +50,12 @@ class DomainPurityRuleProofTest {
 
     @Test
     void rule_passes_for_stereotype_annotated_domain_classes_on_canonical_nested_layout() {
-        // OrderFactory 在 domain.order.model、InventoryDomainService 在 domain.shared.service：
-        // 正是旧 R4 相邻谓词永远看不见的规范布局，新 R4 必须看见它们、又必须放行 stereotype 豁免。
+        // OrderFactory 在 domain.order.model、InventoryDomainService 在 domain.shared.service、
+        // OrderRepository 在迁移后的 domain.order.repository（去 repository.domain 重侧段）——
+        // 都是旧 R4 相邻谓词永远看不见的规范布局，新 R4 必须看见它们、
+        // 又必须放行 stereotype 豁免（OrderRepository 顺带证明迁移后布局仍在射程且端口纯净）。
         JavaClasses annotated = new ClassFileImporter()
-                .importClasses(OrderFactory.class, InventoryDomainService.class);
+                .importClasses(OrderFactory.class, InventoryDomainService.class, OrderRepository.class);
 
         assertThatCode(() ->
                 DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(annotated))

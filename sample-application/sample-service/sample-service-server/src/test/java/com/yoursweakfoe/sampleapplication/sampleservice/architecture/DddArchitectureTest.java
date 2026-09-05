@@ -18,7 +18,9 @@ import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
  * 即标记接口之家），属 {@code DDDArchitectureRules} 类头「空集通过警示」登记的教义例外。
  *
  * <p>R1 本地覆写：新增 Configuration 层（{@code MybatisDddAutoConfiguration} 等根包类）以允许框架
- * 自动配置类跨层引用基础设施组件；共享 LAYERED_ARCHITECTURE 因此在本仓两扫描均未挂载（退役说明见其 javadoc）。
+ * 自动配置类跨层引用基础设施组件——框架包无 adapter/contract 业务组件，且根包配置类需要合法
+ * 归属层，故框架扫描必须覆写；共享 LAYERED_ARCHITECTURE 本版本起挂载于业务扫描（命名税迁移后
+ * 段语义无歧义），框架侧保留本覆写。
  *
  * <p>挂载原则（本版本接线修复）：不新增、不保留结构性空转挂载——原 r5b 框架挂载已撤销
  * （common-ddd 无任何 *RepositoryImpl 类：仓储实现由各业务服务继承 {@code MybatisPersistence}
@@ -65,7 +67,7 @@ class DddArchitectureTest {
     @ArchTest
     static final ArchRule r4 = DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
 
-    /** R5a —— 框架写端口（domain.repository.domain.Repository 等）必须是 interface。 */
+    /** R5a —— 框架写端口（domain.repository.Repository）必须是 interface（相邻段直接命中，真实开火）。 */
     @ArchTest
     static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
 

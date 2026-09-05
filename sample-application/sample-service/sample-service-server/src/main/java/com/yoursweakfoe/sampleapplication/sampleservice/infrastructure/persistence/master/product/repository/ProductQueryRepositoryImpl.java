@@ -1,7 +1,7 @@
-package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository.application;
+package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductViewDTO;
-import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.application.ProductQueryRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.application.product.repository.ProductQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.po.ProductPO;
 import java.util.Optional;

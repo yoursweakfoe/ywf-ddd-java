@@ -11,7 +11,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.Or
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.support.TestOrders;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.Optional;

@@ -13,7 +13,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PayOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.ShipOrderCommand;
-import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.adapter.rest.OrderController;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.adapter.rest.controller.OrderController;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;

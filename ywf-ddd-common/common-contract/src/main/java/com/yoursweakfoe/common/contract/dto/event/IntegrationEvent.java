@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.contract.dto.event.integration;
+package com.yoursweakfoe.common.contract.dto.event;
 
 /**
  * 集成事件标记接口 —— 标识一个对象为跨服务边界事件契约（CQRS 中的 IntegrationEvent）。
@@ -14,7 +14,7 @@ package com.yoursweakfoe.common.contract.dto.event.integration;
  *   <li>IntegrationEvent（本接口） —— 跨服务边界，经消息中间件传输，出入站均为它
  * </ul>
  *
- * <p>实现类应命名为 {@code XxxIntegrationEvent}，位于 {@code contract/{agg}/dto/event/integration/}，
+ * <p>实现类应命名为 {@code XxxIntegrationEvent}，位于 {@code contract/{agg}/dto/event/}，
  * 如 {@code PaymentCompletedIntegrationEvent}；载荷字段视为长期对外契约，增删须考虑兼容性。
  *
  * @see com.yoursweakfoe.common.contract.dto.command.Command
