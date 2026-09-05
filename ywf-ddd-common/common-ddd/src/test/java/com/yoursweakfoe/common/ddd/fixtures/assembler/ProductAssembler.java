@@ -8,12 +8,6 @@ import com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler;
 public class ProductAssembler implements BasicAssembler<Product, ProductDTO> {
 
     @Override
-    public Product toDomain(ProductDTO dto) {
-        // DTO 不携带 version（内部乐观锁字段不进应用视图），按新实体初始值 0 重建
-        return Product.reconstitute(dto.id(), dto.name(), dto.stock(), 0);
-    }
-
-    @Override
     public ProductDTO toDTO(Product domain) {
         return new ProductDTO(domain.getId(), domain.getName(), domain.getStock());
     }

@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.uuid.Generators;
+import com.yoursweakfoe.common.ddd.domain.model.AggregateIds;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
@@ -58,9 +58,9 @@ class CreateProductHandlerTest {
 
     @Test
     void handle_createdProductId_isUuidV7() {
-        // 用 JUG 生成真正的 v7 UUID 作为测试数据（与生产生成器同版本）
+        // 框架铸造入口（装配公开 API，生产身份同源）生成真正的 v7 UUID 作为测试数据
         var dto = new ProductDTO();
-        dto.setId(Generators.timeBasedEpochGenerator().generate());
+        dto.setId(AggregateIds.mint());
         when(productAssembler.toDTO(any())).thenReturn(dto);
 
         var result = handler.handle(command());

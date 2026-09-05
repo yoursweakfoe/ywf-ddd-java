@@ -73,7 +73,8 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 
 ### 基础设施最小化
 
-- [ ] 未引入当前不使用的组件、无死代码、common 依赖最小集（rules 04「Infrastructure 层最小化原则」「Common 模块约束」）
+- [ ] 未引入当前不使用的组件、无死代码（rules 04「Infrastructure 层最小化原则」）
+- [ ] common 模块依赖符合身份登记判据（rules 04「Common 模块约束」构件身份二分法：定型装配审「宣言在位 + 命运依赖被本包使用或封装」，工具库审「最小化」）
 
 ### 文档
 

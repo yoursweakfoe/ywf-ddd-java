@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
  * <p>与 {@link com.yoursweakfoe.common.ddd.application.assembler.BasicAssembler} 对称：
  *
  * <ul>
- *   <li>BasicAssembler —— 应用层：DTO ↔ Domain
- *   <li>BasicConverter —— 基础设施层：Domain ↔ PO
+ *   <li>BasicAssembler —— 应用层：Domain → DTO（单向出口视图）
+ *   <li>BasicConverter —— 基础设施层：Domain ↔ PO（双向，存储重建门）
  * </ul>
  *
  * <p>本接口是<strong>最小契约</strong>：只声明 {@code MybatisPersistence} 实际消费的

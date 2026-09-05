@@ -33,7 +33,7 @@ Java 21 / Spring Boot 4.1 / Spring MVC REST / MyBatis（手写 XML SQL）/ Postg
 
 - common 模块 **opt-in**：业务服务按需引入，不强制全量依赖
 - common 模块 **零业务逻辑**：仅提供技术骨架和构建块
-- common 模块 **依赖最小化**：每个模块仅声明自身编译必需的最窄依赖
+- common 模块**依赖哲学按身份分叉**：工具库审最小化，定型装配审命运清单（构件身份二分法 + 模块登记表，唯一事实源见 rules 04「Common 模块约束」）
 - sample-application 是**教学示例**：展示框架最佳实践，非生产代码
 - 框架时间类型统一使用 **OffsetDateTime**（带时区，跨地域无歧义）
 

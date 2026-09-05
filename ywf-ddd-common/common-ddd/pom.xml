@@ -26,8 +26,10 @@
 
         <!-- ========== 领域层 ========== -->
 
-        <!-- JUG（java-uuid-generator）：RFC 9562 UUIDv7 生成（聚合身份铸造）。
-             纯工具库零传递依赖；版本经父 pom dependencyManagement 统一管理 -->
+        <!-- JUG（java-uuid-generator）：聚合身份铸造的<b>命运依赖</b>（定型装配戒律②：已被本包代码
+             封装——domain/model/AggregateIds 为全系统 UUIDv7 铸造唯一入口，消费方经该公开 API
+             使用、不裸 import com.fasterxml.uuid；戒律登记见 .agents/rules/04「Common 模块约束」）。
+             版本经父 pom dependencyManagement 统一管理 -->
         <dependency>
             <groupId>com.fasterxml.uuid</groupId>
             <artifactId>java-uuid-generator</artifactId>

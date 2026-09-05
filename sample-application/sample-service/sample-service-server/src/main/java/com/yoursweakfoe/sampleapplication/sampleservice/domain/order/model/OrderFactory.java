@@ -1,8 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
-import com.fasterxml.uuid.Generators;
-import com.fasterxml.uuid.NoArgGenerator;
 import com.yoursweakfoe.common.ddd.domain.factory.Factory;
+import com.yoursweakfoe.common.ddd.domain.model.AggregateIds;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -15,18 +14,15 @@ import org.springframework.stereotype.Component;
  * 把外部输入翻译为 {@code OrderItem} 是应用层 Handler 的职责。
  *
  * <p>与重建路径的分工：持久化恢复走 {@link Order#reconstitute}（惰性，无校验），
- * 本工厂只负责「从无到有」。ID 铸造策略收口于此：应用侧生成 RFC 9562 <strong>UUIDv7</strong>
- * （时间有序），经由 JUG 库的标准生成器——身份在持久化之前即存在，
- * 内存关联与 API 返回均依赖这一前提。
+ * 本工厂只负责「从无到有」。ID 由框架铸造唯一入口 {@link AggregateIds#mint()} 铸造
+ * （RFC 9562 UUIDv7，时间有序；铸造策略是框架装配宣言的一部分，业务侧不裸 import JUG）——
+ * 身份在持久化之前即存在，内存关联与 API 返回均依赖这一前提。
  *
  * <p>本类与 {@link Order} 同包：聚合的业务构造器为包私有，仅工厂可访问——
  * 「谁能 new 一个订单」由包结构在编译期锁死。
  */
 @Component
 public class OrderFactory implements Factory {
-
-    /** 聚合身份铸造器 —— RFC 9562 UUIDv7（线程安全；静态持有以保持同毫秒单调序列） */
-    private static final NoArgGenerator ID_GENERATOR = Generators.timeBasedEpochGenerator();
 
     /**
      * 创建已下单订单。
@@ -38,7 +34,7 @@ public class OrderFactory implements Factory {
      *         （订单项为空 / 客户 ID 缺失 / 总金额非正）
      */
     public Order create(String customerId, List<OrderItem> items) {
-        Order order = new Order(ID_GENERATOR.generate(), items, customerId);
+        Order order = new Order(AggregateIds.mint(), items, customerId);
         order.place();
         return order;
     }

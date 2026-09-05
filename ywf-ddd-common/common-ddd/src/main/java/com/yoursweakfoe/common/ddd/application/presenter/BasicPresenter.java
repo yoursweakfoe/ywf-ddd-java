@@ -11,8 +11,8 @@ import java.util.List;
  *
  * <h3>与 BasicAssembler / BasicConverter 的区别</h3>
  * <ul>
- *   <li>BasicAssembler —— 应用层：DTO ↔ Domain（双向）
- *   <li>BasicConverter —— 基础设施层：Domain ↔ PO（双向）
+ *   <li>BasicAssembler —— 应用层：Domain → DTO（单向；聚合构造门见其 javadoc 教义）
+ *   <li>BasicConverter —— 基础设施层：Domain ↔ PO（双向，存储重建所需）
  *   <li>BasicPresenter —— 应用层：DTO → CO（<strong>单向</strong>，仅输出清洗）
  * </ul>
  *

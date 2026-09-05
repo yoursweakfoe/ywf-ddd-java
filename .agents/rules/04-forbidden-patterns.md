@@ -82,8 +82,28 @@
 
 ## Common 模块约束
 
+**构件身份二分法**（common 模块依赖审查的单一事实源；审依赖先查登记，两种判据按身份分叉）：
+
+- **工具库**：依赖 = 本包编译所需。审查判据：最小化——超出编译需要的条目即裁剪。
+- **定型装配**（opinionated starter，即「我们做的是脚手架封装，不是库封装」）：依赖 = 使用方注定继承的**命运清单**（「引入本包者注定的依赖」，而非「本包编译用了什么」）。前提教义：所有采用方服务都是单 jar 全套四层，装配替使用方预先决策整条技术栈。
+
+定型装配三条戒律：
+
+1. **自我宣言在位**——命运清单与豁免边界写在该模块入口类/包 javadoc（读注释即得全图）。
+2. **命运依赖必须被本包代码使用或封装**——pom 引入且代码零引用 = 裸传递（绑架使用方，违戒）；策略型能力封装为公开 API（判例：JUG → `domain.model.AggregateIds.mint()`，与 `Identifiable` 配对共居 model）。
+3. **消费方经装配公开 API 使用命运能力**——不裸 import 命运库；换策略时框架一处改动、全员齐步。
+
+| 模块 | 登记身份 | 备注 |
+|------|---------|------|
+| common-ddd | 定型装配 | MyBatis starter / JDBC 栈 = 命运；JUG 经 `AggregateIds` 封装（戒律②③判例）；宣言见 `MybatisDddAutoConfiguration` |
+| common-observability | 纯装配（判例） | 零代码 pom 聚合——命运清单即其全部内容 |
+| common-test | 定型装配 | ArchUnit + Boot Test 栈随引入即得 |
+| common-exception | 定型装配（倾向） | validation starter = 命运：引入全局异常处理即承诺校验栈 |
+| common-contract | 工具库 | 纯标记接口 |
+| common-pg | 工具库 | TypeHandler 按需引入 |
+| common-security / common-cloud | 工具库 | optional 依赖策略属工具库姿态（谁引入谁决策） |
+
 - 禁止 common 模块包含任何业务逻辑（纯技术骨架）
-- 禁止 common 模块声明超出自身编译需要的依赖（依赖最小化）
 - 禁止 common 模块的 test scope 依赖泄漏给消费方（Maven test scope 不传递）
 - 禁止新增 common 模块时不附带 `docs/common/common-{module}.md` 文档
 - 禁止在 common 模块中硬编码业务包名（通过泛型 / SPI / 配置注入）

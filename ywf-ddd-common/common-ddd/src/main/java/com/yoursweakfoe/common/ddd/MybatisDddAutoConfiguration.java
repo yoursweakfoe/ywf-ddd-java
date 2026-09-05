@@ -21,8 +21,13 @@ import org.springframework.context.annotation.Import;
  *       （由 {@code MybatisPersistence} 在写库前显式调用）</li>
  * </ul>
  *
- * <p>仅在 MyBatis（{@link SqlSessionFactory}）存在于 classpath 时激活，
- * 避免纯领域层消费方（仅使用 AggregateRoot / Repository 接口）被强制要求 MyBatis 运行时。
+ * <p><strong>装配宣言</strong>：common-ddd 是定型装配（opinionated starter），不是中立库——
+ * 引入本包即承诺 Boot + MyBatis + JDBC 持久栈为其使用方的<strong>命运依赖</strong>
+ * （所有采用服务都是单 jar 全套四层，不存在纯领域消费方；判据见 .agents/rules/04「Common 模块约束」）。
+ *
+ * <p>{@code @ConditionalOnClass} 的意义是<strong>装配自检卫兵</strong>而非「保护不存在的纯领域消费方」：
+ * 消费方以 dependencyManagement 排除 starter 时装配优雅退化（不产半残 Bean），
+ * 且无 MyBatis 环境下不致 bean 装配错误炸得难以定位。
  *
  * <p><strong>时间源不在此配置</strong>——{@code java.time.Clock} 是平台级横切关注点，
  * 由独立的 {@link ClockAutoConfiguration} 提供（硬编码 UTC 缺省，业务自定义 Clock Bean 时退位）；
