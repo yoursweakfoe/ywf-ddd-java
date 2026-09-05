@@ -66,6 +66,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 - [ ] `mvn compile -pl sample-application/sample-service/sample-service-server` 消费方编译通过
 - [ ] `docs/common/common-{module}.md` 已同步更新
 - [ ] 依赖符合模块身份登记（rules 04「Common 模块约束」）：定型装配过「自我宣言在位 + 命运依赖被本包代码使用或封装、消费方经公开 API 触达」；工具库过「无新增超出编译需要的依赖」
+- [ ] 子 pom 声明处零 `<exclusions>`——排除只写在策略文件 depMgmt（rules 04「exclusions 卫生集中制」；局部清单整体覆盖 managed）
 - [ ] 无业务逻辑泄漏（common 模块纯技术骨架）
 
 ## 文档同步

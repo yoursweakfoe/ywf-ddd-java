@@ -93,6 +93,8 @@
 2. **命运依赖必须被本包代码使用或封装**——pom 引入且代码零引用 = 裸传递（绑架使用方，违戒）；策略型能力封装为公开 API（判例：JUG → `domain.model.AggregateIds.mint()`，与 `Identifiable` 配对共居 model）。
 3. **消费方经装配公开 API 使用命运能力**——不裸 import 命运库；换策略时框架一处改动、全员齐步。
 
+**exclusions 卫生集中制**（对两种身份一体适用）：依赖排除只写在策略文件——`ywf-ddd-common/pom.xml` 与 `sample-application/pom.xml` 的 `<dependencyManagement>`；子 pom 声明处保持零 exclusions。判据来自 Maven 语义：无局部清单的声明自动继承 managed exclusions，而**任何局部 `<exclusions>` 块整体替换（非合并）managed 清单**——在声明处写一条排除即静默拆除该构件的全部集中卫生。判例：`ywf-ddd-common/pom.xml` 的 dynamic-datasource（Oracle UCP/ojdbc 排除）与 seata starter（fastjson/druid/dubbo-filter-seata 排除）条目。`<optional>/<scope>` 留在声明处（它们是消费姿态，非卫生政策）。
+
 | 模块 | 登记身份 | 备注 |
 |------|---------|------|
 | common-ddd | 定型装配 | MyBatis starter / JDBC 栈 = 命运；JUG 经 `AggregateIds` 封装（戒律②③判例）；宣言见 `MybatisDddAutoConfiguration` |

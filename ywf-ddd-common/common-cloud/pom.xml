@@ -27,28 +27,13 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- 分布式事务（AT/TCC）—— opt-in：消费方按需显式声明 -->
+        <!-- 分布式事务（AT/TCC）—— opt-in：消费方按需显式声明。
+             依赖卫生（fastjson/druid/dubbo-filter-seata 排除）已上收至父 pom
+             dependencyManagement 策略条目，本声明处零 exclusions -->
         <dependency>
             <groupId>org.apache.seata</groupId>
             <artifactId>seata-spring-boot-starter</artifactId>
             <optional>true</optional>
-            <exclusions>
-                <!-- 项目不需要 fastjson（SCA BOM 激活了 seata-all 的该依赖） -->
-                <exclusion>
-                    <groupId>com.alibaba</groupId>
-                    <artifactId>fastjson</artifactId>
-                </exclusion>
-                <!-- 项目用 HikariCP，排除 druid -->
-                <exclusion>
-                    <groupId>com.alibaba</groupId>
-                    <artifactId>druid</artifactId>
-                </exclusion>
-                <!-- 不走 Dubbo RPC -->
-                <exclusion>
-                    <groupId>org.apache.dubbo.extensions</groupId>
-                    <artifactId>dubbo-filter-seata</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- 声明式 HTTP 客户端 —— opt-in：本模块 2 个类仅依赖 feign 接口，消费方按需显式声明 -->

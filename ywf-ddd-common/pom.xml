@@ -51,6 +51,8 @@
         <!-- mybatis-spring-boot-starter 4.1.0：面向 Spring Boot 4.1.0 / mybatis 3.5.19 /
              mybatis-spring 4.1.0（Java 17 基线，Maven Central 实证） -->
         <mybatis-spring-boot-starter.version>4.1.0</mybatis-spring-boot-starter.version>
+        <!-- mybatis-spring 与 starter 锁步（见 dependencyManagement 显式 pin 的缘由注释） -->
+        <mybatis-spring.version>4.1.0</mybatis-spring.version>
         <dynamic-datasource-spring-boot4-starter.version>4.5.0</dynamic-datasource-spring-boot4-starter.version>
         <postgresql.version>42.7.13</postgresql.version>
 
@@ -143,11 +145,31 @@
             </dependency>
 
             <!-- ==================== 分布式事务（common-cloud 消费） ==================== -->
-            <!-- Apache Seata：独立 starter + 版本独立管理（覆盖 SCA BOM 的 2.5.0） -->
+            <!-- Apache Seata：独立 starter + 版本独立管理（覆盖 SCA BOM 的 2.5.0）。
+                 依赖卫生集中于本 pom dependencyManagement（策略文件）；子 pom 声明处禁止
+                 exclusions——局部清单会整体覆盖 managed 清单（Maven replace 语义），
+                 卫生政策即被静默拆除（判例：dynamic-datasource 条目）。
+                 以下排除为 opt-in 路径的卫生项，仅作用于引用本 managed 条目的声明：
+                 项目不需要 fastjson（SCA BOM 激活了 seata-all 的该依赖）、
+                 项目用 HikariCP 排除 druid、不走 Dubbo RPC 排除 dubbo-filter-seata。 -->
             <dependency>
                 <groupId>org.apache.seata</groupId>
                 <artifactId>seata-spring-boot-starter</artifactId>
                 <version>${seata.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.alibaba</groupId>
+                        <artifactId>fastjson</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.alibaba</groupId>
+                        <artifactId>druid</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.dubbo.extensions</groupId>
+                        <artifactId>dubbo-filter-seata</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <!-- ==================== REST API 文档标注（common-contract 消费） ==================== -->
             <dependency>
@@ -162,11 +184,40 @@
                 <artifactId>mybatis-spring-boot-starter</artifactId>
                 <version>${mybatis-spring-boot-starter.version}</version>
             </dependency>
-            <!-- 多数据源路由（@DS 注解切换，底层 HikariCP；独立模块，非 MyBatis 增强一部分） -->
+            <!-- 多数据源路由（@DS 注解切换，底层 HikariCP；独立模块，非 MyBatis 增强一部分）。
+                 供应链护栏（release-audit A1，2026-09，dependency:tree 实证后加装）：
+                 ① 排除 Oracle UCP 传递链——dynamic-datasource-spring-boot-common 硬带
+                   oracle-spring-boot-starter-ucp（Boot 3 血统、自带自动配置元数据）与
+                   ojdbc11/ucp ≈8MB 驱动，本框架及预设消费方无一使用；dependencyManagement
+                   条目上的 exclusions 会传染给以 managed 方式引用的消费方（一处装配、全员受益）。
+                 ② mybatis-spring 版本显式 pin（见下一条），终结深度仲裁轮盘。
+                 ③ 版本表态——4.5.0 为当前 Central 唯一 boot4 release；上游 SpEL 注入加固
+                   （PR #767，2026-04 合入主干）未随其发布，4.5.x 出现即升级；在此之前
+                   spring.datasource.dynamic.* 任何配置键不得接攻击者可 influence 的输入
+                   （含 ENC 密文投喂与 SpEL 解析的 @DS 键）。 -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
                 <version>${dynamic-datasource-spring-boot4-starter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.database.spring</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.database.jdbc</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- mybatis-spring pin：dynamic-datasource-spring 硬传递 2.1.2（Spring 5 血统，供其
+                 Atomikos 事务工厂用），此前仅靠 mybatis starter 在依赖深度上侥幸压过（实测 4.1.0 胜出，
+                 但声明顺序/深度一变即可能降级引爆运行期 NoSuchMethodError）；dependencyManagement
+                 显式仲裁终结此赌局。版本与 mybatis-spring-boot-starter 锁步，两者必须同升。 -->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>${mybatis-spring.version}</version>
             </dependency>
             <!-- PostgreSQL JDBC 驱动（scope 统一为 compile：common-pg 具体 TypeHandler 编译期直接引用
                  PGobject 类；若仅声明 runtime 会迫使子模块重复覆写 scope） -->
