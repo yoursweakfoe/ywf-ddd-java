@@ -24,11 +24,11 @@
 
 | 组件 | 位置 | 职责 |
 |------|------|------|
-| Controller 契约接口 | `{aggregate}/adapter/rest/` | 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源），`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping` 声明；服务端 ControllerImpl 实现 |
+| Controller 契约接口 | `{aggregate}/adapter/rest/controller/` | 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源），`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping` 声明；服务端 ControllerImpl 实现 |
 | Command | `{aggregate}/dto/command/` | 写操作命令，实现 `Command` 标记接口 |
 | Query / PageableQuery | `{aggregate}/dto/query/` | 读操作查询，实现 `Query` / `PageableQuery` 标记接口（分页带 pageNum/pageSize + @Min/@Max） |
 | CO | `{aggregate}/dto/co/` | Contract Object，对内部 DTO 清洗后的外部安全视图，`@Schema` 声明字段语义 |
-| IntegrationEvent | `{aggregate}/dto/event/integration/` | 跨服务事件契约（出站发布 / 入站消费），实现 `IntegrationEvent` 标记接口（common-contract） |
+| IntegrationEvent | `{aggregate}/dto/event/` | 跨服务事件契约（出站发布 / 入站消费），实现 `IntegrationEvent` 标记接口（common-contract） |
 | 枚举 | `{aggregate}/enums/` | 契约共享枚举 |
 
 ## 文档注解归属
@@ -90,7 +90,7 @@ contract jar 本质是**东西向**产物（内部 Java 服务间类型契约）
 ```
 contract（本模块）                             server
 ─────────────                             ──────
-adapter/rest/{Aggregate}Controller.java            ←──  adapter/rest/controller/（ControllerImpl 实现接口，纯透传 AppService）
+adapter/rest/controller/{Aggregate}Controller.java ←──  adapter/rest/controller/{Aggregate}ControllerImpl（实现接口，纯透传 AppService）
 {aggregate}/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/command|query/（接收 CQE 执行用例）
 {aggregate}/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
 ```

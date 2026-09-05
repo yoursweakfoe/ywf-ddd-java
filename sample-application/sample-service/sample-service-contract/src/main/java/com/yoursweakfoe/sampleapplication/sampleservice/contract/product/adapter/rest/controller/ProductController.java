@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * 商品 REST 端点契约 —— 完整 REST 契约（方法签名 + 能力语义 + HTTP 映射的单一事实源）。
  *
  * <p>本接口承载 HTTP 映射与文档注解，契约 = 完整 REST 定义。服务端
- * {@code adapter.rest.ProductControllerImpl} 仅以 {@code @RestController} 标记并实现本接口；
+ * {@code adapter.rest.controller.ProductControllerImpl} 仅以 {@code @RestController} 标记并实现本接口；
  * 东西向内部查询同样经 HTTP 直连本契约的 REST 端点（消费方 RestClient 调用）。
  */
 @Tag(name = "商品服务", description = "商品创建与查询")

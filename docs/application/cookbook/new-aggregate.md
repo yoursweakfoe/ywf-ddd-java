@@ -23,7 +23,7 @@
 sample-service/
 ├── sample-service-contract/src/main/java/.../contract/
 │   └── payment/
-│       ├── adapter/rest/PaymentController.java     ← ① Controller 契约接口
+│       ├── adapter/rest/controller/PaymentController.java ← ① Controller 契约接口
 │       ├── dto/co/PaymentCO.java                    ← ② 契约输出
 │       ├── dto/command/CreatePaymentCommand.java    ← ③ Command
 │       └── dto/query/GetPaymentQuery.java           ← ④ Query
@@ -58,7 +58,7 @@ sample-service-server/src/main/resources/
 ## ① Contract — Controller 契约接口
 
 ```java
-package ...contract.payment.adapter.rest;
+package ...contract.payment.adapter.rest.controller;
 
 @Tag(name = "支付服务", description = "支付创建与查询")
 @RequestMapping("/payments")

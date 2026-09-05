@@ -18,7 +18,7 @@ package com.yoursweakfoe.common.ddd.adapter.rest.controller;
  * <h3>与 contract Controller 契约接口的分工</h3>
  * <table>
  *   <tr><th>接口</th><th>归属</th><th>承载</th></tr>
- *   <tr><td>{@code XxxController}（contract）</td><td>contract/{agg}/adapter/rest</td><td>HTTP 面：方法签名 + 映射注解 + 文档注解（重契约，ADR-0003）</td></tr>
+ *   <tr><td>{@code XxxController}（contract）</td><td>contract/{agg}/adapter/rest/controller</td><td>HTTP 面：方法签名 + 映射注解 + 文档注解（重契约，ADR-0003）</td></tr>
  *   <tr><td>{@code RestAdapter}（本接口）</td><td>common-ddd/adapter/rest/controller</td><td>角色身份：adapter 层 REST 入口，供架构规则定位（与 contract 接口互补，不重复）</td></tr>
  * </table>
  *

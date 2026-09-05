@@ -26,6 +26,17 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis 仓�
 | `Portal` | 外部资源访问标记接口（Domain 定义 XxxPortal，Infrastructure 实现 XxxGateway） |
 | `DomainEvent` | 领域事件标记接口（`domain/event/`）—— 表达「领域已发生的事实」，仅进程内消费；跨边界用契约层 `IntegrationEvent` |
 
+### 事件角色标记（词汇，非机制）
+
+框架为事件协作定义了「2 种事件 × 2 个方向」的角色词汇，全部是空标记接口——**不内建任何发布、订阅、投递、去重机制**。业务需要时实现对应标记定型身份：进程内路线通常是 Spring `ApplicationEventPublisher` + `@EventListener`，跨服务路线是业务自持的消息中间件。
+
+| 标记 | 位置 | 角色 |
+|------|------|------|
+| `DomainEventPublisher` | `application/event/publisher/` | 领域事件进程内发布（对 Spring 事件发布的薄包装） |
+| `IntegrationEventPublisher` | `application/event/publisher/` | 领域事实翻译为集成事件并出站（可靠性策略归业务：直发 / 本地消息表 / 事务消息） |
+| `DomainEventSubscriber` | `application/event/listener/` | 进程内领域事件接收，域内反应薄编排 |
+| `IntegrationEventSubscriber` | `adapter/event/consumer/` | 外部集成事件入站消费（与 REST / 定时任务入口同构的 driving adapter，消费端幂等归业务） |
+
 ### CQRS Handler 接口
 
 | 标记接口（common-contract） | Handler（本包） | 语义 | 返回值 |

@@ -59,7 +59,7 @@ public class OrderCO implements Serializable {
 ## 2. Adapter — Controller 契约接口 + 实现（纯透传）
 
 ```java
-// contract/order/adapter/rest/OrderController.java（契约接口，承载 HTTP 映射 + 文档注解）
+// contract/order/adapter/rest/controller/OrderController.java（契约接口，承载 HTTP 映射 + 文档注解）
 @Tag(name = "订单服务", description = "订单生命周期管理")
 @RequestMapping("/orders")
 public interface OrderController {
@@ -319,7 +319,7 @@ public class OrderRepositoryImpl
 |----|------|------|
 | contract | `dto/command/PayOrderCommand.java` | 写操作意图 |
 | contract | `dto/co/OrderCO.java` | 契约输出 |
-| contract | `adapter/rest/OrderController.java` | Controller 契约接口 |
+| contract | `adapter/rest/controller/OrderController.java` | Controller 契约接口 |
 | adapter | `rest/controller/OrderControllerImpl.java` | 协议适配（透传） |
 | application | `service/OrderAppService.java` | 聚合入口 |
 | application | `handler/command/PayOrderHandler.java` | 用例编排 |
