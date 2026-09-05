@@ -76,7 +76,8 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R1 —— DDD 四层依赖方向：adapter → application → domain ← infrastructure（依赖倒置）</li>
  *   <li>R2 —— adapter 只依赖 application/contract，不得直连 domain 或 infrastructure</li>
  *   <li>R3 —— domain 不依赖 application / infrastructure / adapter / contract</li>
- *   <li>R4 —— domain.model 不得依赖 MyBatis-Plus / Spring Stereotype / JPA</li>
+ *   <li>R4 —— domain.model 不得依赖 Spring Stereotype / JPA</li>
+ *   <li>R15 —— 全仓禁止依赖 {@code com.baomidou..}（MyBatis-Plus 剥离回归守护，ADR-0007）</li>
  *   <li>R5a —— domain Repository 必须是 interface</li>
  *   <li>R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下</li>
  *   <li>R6 —— domain 不依赖 common-security（领域模型不感知认证上下文）</li>
@@ -223,7 +224,7 @@ public final class DDDArchitectureRules {
                     .resideInAnyPackage("..application..", "..infrastructure..", "..adapter..", "..contract..")
                     .as("R3 Domain 不依赖 application/infrastructure/adapter/contract");
 
-    /** R4 —— Entity/ValueObject 不得依赖 MyBatis-Plus/Spring Stereotype/JPA 等基础设施技术栈。 */
+    /** R4 —— Entity/ValueObject 不得依赖 Spring Stereotype/JPA 等基础设施技术栈（持久化技术栈禁令见 R15）。 */
     public static final ArchRule DOMAIN_MODEL_IS_PURE =
             noClasses()
                     .that()
@@ -231,11 +232,30 @@ public final class DDDArchitectureRules {
                     .should()
                     .dependOnClassesThat()
                     .resideInAnyPackage(
-                            "com.baomidou.mybatisplus..",
                             "org.springframework.stereotype..",
                             "jakarta.persistence..",
                             "javax.persistence..")
-                    .as("R4 Domain 模型保持纯净：Entity/ValueObject 不得依赖 MyBatis-Plus/Spring Stereotype/JPA");
+                    .as("R4 Domain 模型保持纯净：Entity/ValueObject 不得依赖 Spring Stereotype/JPA");
+
+    /**
+     * R15 —— 全仓禁入 {@code com.baomidou..}（任何层、任何方向）。
+     *
+     * <p>MyBatis-Plus 已于 2026-09 从技术栈移除（决策论证见 docs/common/common-ddd.md ADR-0007），
+     * 持久化由纯 MyBatis + 每聚合手写 XML SQL 全量接管。本规则将「SQL 文本即契约」从纪律约束
+     * 升级为机器红线：任何重新引入 {@code com.baomidou} 代码依赖的变更都会在架构测试中失败。
+     *
+     * <p><strong>dynamic-datasource 说明</strong>：baomidou 系中的 dynamic-datasource 是与
+     * MyBatis-Plus 无关的独立多数据源路由模块，仅以 test scope 保留于 common-ddd 作
+     * {@code MybatisPersistence} 多数据源路由兼容验证——它永不得成为任何层的编译/运行时代码依赖。
+     */
+    public static final ArchRule MYBATIS_PLUS_BANNED =
+            noClasses()
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage("com.baomidou..")
+                    .as("R15 全仓禁止依赖 com.baomidou（MyBatis-Plus 已于 2026-09 移除，ADR-0007：手写 XML SQL 全链路可见）")
+                    .because("持久化契约由 DddMapper + 手写 XML 承担，Wrapper 动态生成 SQL 意味着真正执行的 SQL 不在代码库里；"
+                            + "dynamic-datasource 属独立多数据源模块，仅作 common-ddd test scope 兼容验证，不得进入任何层代码依赖");
 
     /**
      * R5a —— domain Repository 必须是 interface。
@@ -347,13 +367,12 @@ public final class DDDArchitectureRules {
                     .resideInAPackage("..contract..")
                     .should()
                     .dependOnClassesThat()
-                    .resideInAnyPackage(
-                            "..adapter..", "..application..", "..domain..", "..infrastructure..",
-                            "org.springframework.stereotype..",
-                            "org.springframework.context..",
-                            "org.springframework.beans..",
-                            "com.baomidou.mybatisplus..")
-                    .as("C1 Contract 纯契约：不得依赖 server 四层及 Spring/MyBatis 运行时基础设施");
+                     .resideInAnyPackage(
+                             "..adapter..", "..application..", "..domain..", "..infrastructure..",
+                             "org.springframework.stereotype..",
+                             "org.springframework.context..",
+                             "org.springframework.beans..")
+                     .as("C1 Contract 纯契约：不得依赖 server 四层及 Spring/MyBatis 运行时基础设施");
 
     /**
      * R6 —— Domain 层不得依赖 common-security（领域模型不感知认证上下文）。
@@ -374,8 +393,8 @@ public final class DDDArchitectureRules {
      * R11 —— 写侧事务边界强制：{@code CommandHandler} 实现类的 {@code handle} 方法必须标注
      * {@code @Transactional(rollbackFor = Exception.class)}。
      *
-     * <p>写侧固定模式「load → 聚合行为 → save」的原子性由 Handler 入口事务保证；仓储支撑类
-     * （{@code MybatisPlusPersistence}）刻意不声明事务（边界上收至应用层），因此漏标注解时
+      * <p>写侧固定模式「load → 聚合行为 → save」的原子性由 Handler 入口事务保证；仓储支撑类
+      * （{@code MybatisPersistence}）刻意不声明事务（边界上收至应用层），因此漏标注解时
      * 多次持久化将各自提交、中途失败不回滚——本规则将该遗漏从纪律约束变为编译期后置红线。
      * 读侧 {@code QueryHandler} 刻意豁免（只读可省事务，见编码规范 03）。
      */

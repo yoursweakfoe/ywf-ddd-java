@@ -34,7 +34,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         po.setItems(itemsToJson(domain.getItems()));
         po.setTotalAmount(domain.getTotalAmount());
         po.setCustomerId(domain.getCustomerId());
-        // createAt / updateAt 由 BasicAutoFillHandler 填充，不映射
+        // createAt / updateAt 由 AuditFieldFiller 填充，不映射
         return po;
     }
 

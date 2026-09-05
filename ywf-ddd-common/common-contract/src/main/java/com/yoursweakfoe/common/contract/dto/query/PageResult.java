@@ -10,7 +10,7 @@ import java.util.List;
  * 即可拿到完整分页语义（records / total / pageNum / pageSize）。
  *
  * <p>本类型是纯 Java 泛型容器（record），零框架依赖，隔离基础设施分页实现
- * （如 MyBatis-Plus {@code Page}）——服务端读实现负责把底层分页结果装填为本信封，
+ * （手写 XML 的 LIMIT/OFFSET 取数 + COUNT 计数双语句）——服务端读实现负责把底层分页结果装填为本信封，
  * 契约边界不再拆信封，消费方直接读到分页元数据。
  *
  * <pre>
@@ -18,7 +18,7 @@ import java.util.List;
  * application    → PageResult（contract）     ✓ Handler / AppService 使用
  * infrastructure → PageResult（contract）     ✓ 读实现构造返回值
  * domain         → PageResult                 ✗ 读侧绕过 domain，domain 不使用分页
- * 任何层         → Page（MyBatis-Plus）       ✗ 框架泄漏
+ * 任何层         → 底层分页形态（裸 LIMIT/OFFSET、行集元组） ✗ 实现泄漏
  * </pre>
  *
  * <p>本类是不可变容器（record），且该承诺由类型强制：构造时对 {@code records} 做
@@ -28,8 +28,8 @@ import java.util.List;
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * // 读实现装填（PO → DTO + 分页元数据）
- * return new PageResult<>(records, page.getTotal(), pageNum, pageSize);
+ * // 读实现装填（PO → DTO + 分页元数据：取数语句的行集 + 计数语句的总数）
+ * return new PageResult<>(records, total, pageNum, pageSize);
  *
  * // AppService 呈现为 CO（分页元数据不变）
  * PageResult<OrderCO> result = handler.handle(query).map(presenter::present);

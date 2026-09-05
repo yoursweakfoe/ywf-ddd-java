@@ -65,7 +65,7 @@ class SpecificationTest {
 
     @Test
     void composition_appliesToCollection() {
-        // 纯校验语义：规格作为集合成员的判定谓词（不涉及读侧 LambdaQueryWrapper）
+        // 纯校验语义：规格作为集合成员的判定谓词（与读侧 SQL 查询无关）
         Specification<Integer> spec = isPositive.and(isEven).not();
         List<Integer> result = List.of(1, 2, 3, 4, -2, 5).stream()
                 .filter(spec::isSatisfiedBy)

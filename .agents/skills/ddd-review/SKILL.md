@@ -14,7 +14,7 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 
 ### 分层依赖
 
-- [ ] Domain 层零框架注解（无 @Component / @Service / @Autowired / @TableName）
+- [ ] Domain 层零框架注解（无 @Component / @Service / @Autowired / 任何 ORM 注解）
 - [ ] Domain 层不 import 任何 infrastructure / application / adapter 类
 - [ ] Application 层不 import Mapper / PO 类
 - [ ] Adapter 层不 import Domain / Repository / Mapper
@@ -33,7 +33,9 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 - [ ] Repository 实现在 `infrastructure/persistence/{ds}/{agg}/repository/domain/`
 - [ ] 读端口（QueryRepository）接口在 `application/{agg}/repository/application/`
 - [ ] 读实现在 `infrastructure/persistence/{ds}/{agg}/repository/application/`
-- [ ] PO 有 `@Version` + `@TableLogic` + `@TableName` 含 schema 前缀
+- [ ] PO 零 ORM 注解（纯 `@Data`）；XML 表名含 schema 前缀
+- [ ] 手写 XML 语句检查：有版本列的聚合 `updateById` 携带 `SET version = version + 1 ... WHERE ... AND version = #{version}`；逻辑删除聚合每条 select/update/delete 含 `AND is_delete = false`；`insert` 不枚举 `is_delete`；`existsById` 恒返回一行 boolean
+- [ ] `resources/mapper/{agg}/` XML namespace = Mapper 接口全限定名，覆盖 DddMapper 七条语句
 - [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器）
 - [ ] 无跨聚合共享 PO / Mapper
 

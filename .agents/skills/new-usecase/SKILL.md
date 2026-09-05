@@ -23,7 +23,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 标注 `@Transactional(rollbackFor = Exception.class)`
 4. **application**：在 `{Agg}AppService` 新增方法
    - `return {agg}Presenter.present({action}{Agg}Handler.handle(command));`
-5. **adapter**：在 `{Agg}ServiceImpl` 新增方法
+5. **adapter**：在 `{Agg}ControllerImpl` 新增方法
    - 纯透传：`return {agg}AppService.{action}(command);`
 6. **domain**（如需新行为）：在聚合根新增行为方法
    - 内含显式 if-throw 校验 + 状态变迁（跨聚合联动由 Handler 同事务直调）
@@ -36,7 +36,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 实现 `QueryHandler<Get{Xxx}Query, {Agg}DTO>`（或 `PageResult<{Agg}DTO>`）
    - 调用 Repository 读优化方法（绕过聚合根）
 4. **application**：在 `{Agg}AppService` 新增方法
-5. **adapter**：在 `{Agg}ServiceImpl` 新增方法
+5. **adapter**：在 `{Agg}ControllerImpl` 新增方法（实现 contract `{Agg}Controller` 契约接口的对应签名）
 6. **domain**（如需读优化方法）：在 Repository 接口新增方法签名
 7. **infrastructure**：在 RepositoryImpl 实现读优化方法（Mapper 投影 DTO）
 

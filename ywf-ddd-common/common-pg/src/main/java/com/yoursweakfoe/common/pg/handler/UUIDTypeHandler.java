@@ -17,11 +17,12 @@ import org.apache.ibatis.type.MappedTypes;
  * 与数据库的 UUID 类型进行自动转换。
  *
  * <p><strong>使用说明：</strong> 本处理器通过 {@code @MappedTypes(UUID.class)} 注解自动注册为 UUID 类型的全局处理器。 因此，在 PO
- * 实体类中使用 {@code private UUID id;} 时，<strong>无需</strong>显式指定 {@code @TableField(typeHandler =
- * UUIDTypeHandler.class)}，MyBatis 会自动匹配。
+ * 实体类中使用 {@code private UUID id;} 时，手写 XML 语句中<strong>无需</strong>显式指定
+ * {@code typeHandler}，MyBatis 会自动匹配。
  *
  * <p>这种自动发现机制适用于 Java 类型与 TypeHandler 的映射是<strong>唯一</strong>的场景。 如果同一 Java 类型有多个 TypeHandler（如
- * String 可以是普通字符串或 JSONB）， 则需要在字段上使用 {@code @TableField(typeHandler = ...)} 显式指定。
+ * String 可以是普通字符串或 JSONB）， 则需要在 XML 语句中显式指定：参数位 {@code #{prop, typeHandler=全限定类名}}、
+ * 结果位 {@code <result ... typeHandler="全限定类名"/>}。
  *
  * @see org.apache.ibatis.type.BaseTypeHandler
  * @see org.apache.ibatis.type.MappedTypes

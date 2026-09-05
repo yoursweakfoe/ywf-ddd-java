@@ -18,12 +18,13 @@ import org.postgresql.util.PGobject;
  *
  * <p>本处理器将 Java String 与数据库 JSONB 类型进行自动转换， 适用于不需要在 Java 层做 JSON 结构化处理的场景。
  *
- * <p><strong>使用说明：</strong> 由于 {@code String} 类型有多个 TypeHandler（默认的 StringTypeHandler 和本处理器）， 在 PO
- * 实体类中使用 JSONB 字段时，<strong>必须</strong>显式指定本处理器：
+ * <p><strong>使用说明：</strong> 由于 {@code String} 类型有多个 TypeHandler（默认的 StringTypeHandler 和本处理器）， 手写
+ * XML 语句中读写 JSONB 字段时，<strong>必须</strong>显式指定本处理器：
  *
  * <pre>
- * {@code @TableField(value = "metadata", typeHandler = JsonbTypeHandler.class)}
- * private String metadata;
+ * &lt;!-- 参数位 --&gt; #{metadata, typeHandler=com.yoursweakfoe.common.pg.handler.JsonbTypeHandler}
+ * &lt;!-- 结果位 --&gt; &lt;result column="metadata" property="metadata"
+ *                 typeHandler="com.yoursweakfoe.common.pg.handler.JsonbTypeHandler"/&gt;
  * </pre>
  *
  * 否则 MyBatis 会默认使用 StringTypeHandler，导致 PostgreSQL 类型不匹配错误。

@@ -8,7 +8,7 @@
 
 这是一个面向生产环境的微服务基础框架，目标是将 DDD 战术模式落地为可复用的公共模块 + 可参照的示例应用。
 
-技术栈：Spring Boot 4 + Spring MVC REST（对外经 Higress 网关；东西向服务间 HTTP/RestClient 直连，一期静态地址）+ MyBatis-Plus + PostgreSQL + Nacos 客户端（二期注册发现预留）+ Seata 分布式事务 + Higress 云原生网关，部署目标为阿里云。
+技术栈：Spring Boot 4 + Spring MVC REST（对外经 Higress 网关；东西向服务间 HTTP/RestClient 直连，一期静态地址）+ MyBatis（手写 XML SQL）+ PostgreSQL + Nacos 客户端（二期注册发现预留）+ Seata 分布式事务 + Higress 云原生网关，部署目标为阿里云。
 
 > **当前状态**：探索性脚手架项目，外围环境暂未备齐，未经历真实生产考验。比较适合用作结构参考和学习，暂时不推荐直接用于生产环境。
 

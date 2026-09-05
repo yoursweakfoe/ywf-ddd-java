@@ -48,8 +48,9 @@
         <swagger-annotations.version>2.2.53</swagger-annotations.version>
 
         <!-- ========== 持久化层（common-ddd / common-pg） ========== -->
-        <mybatis-plus-spring-boot4-starter.version>3.5.17</mybatis-plus-spring-boot4-starter.version>
-        <mybatis-plus-jsqlparser.version>3.5.17</mybatis-plus-jsqlparser.version>
+        <!-- mybatis-spring-boot-starter 4.1.0：面向 Spring Boot 4.1.0 / mybatis 3.5.19 /
+             mybatis-spring 4.1.0（Java 17 基线，Maven Central 实证） -->
+        <mybatis-spring-boot-starter.version>4.1.0</mybatis-spring-boot-starter.version>
         <dynamic-datasource-spring-boot4-starter.version>4.5.0</dynamic-datasource-spring-boot4-starter.version>
         <postgresql.version>42.7.13</postgresql.version>
 
@@ -155,19 +156,13 @@
                 <version>${swagger-annotations.version}</version>
             </dependency>
 
-            <!-- ==================== 持久化层（common-ddd 消费） ==================== -->
+            <!-- ==================== 持久化层（common-ddd / common-pg 消费） ==================== -->
             <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
-                <version>${mybatis-plus-spring-boot4-starter.version}</version>
-                <scope>compile</scope>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis-spring-boot-starter.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-jsqlparser</artifactId>
-                <version>${mybatis-plus-jsqlparser.version}</version>
-            </dependency>
-            <!-- 多数据源路由（@DS 注解切换，底层 HikariCP） -->
+            <!-- 多数据源路由（@DS 注解切换，底层 HikariCP；独立模块，非 MyBatis 增强一部分） -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>

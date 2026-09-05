@@ -19,9 +19,9 @@
 
 ```
 order.pay() → repository.update(order)
-  → MybatisPlusPersistence.updateDomain()
-    → updateById(po)  // MyBatis-Plus OptimisticLockerInnerInterceptor
-      → UPDATE ... SET version=version+1 WHERE id=? AND version=?
+  → MybatisPersistence.updateDomain()
+    → mapper.updateById(po)  // 手写 XML 语句，版本条件即 SQL 文本自身
+      → UPDATE ... SET version=version+1 WHERE id=? AND version=? AND is_delete=false
       → 影响行数 = 0（version 不匹配 或 实体已消失）
     → 失败路径存在性探测分类：
         实体仍存在 → throw OptimisticLockConflictException   // 可安全重试
@@ -41,11 +41,11 @@ order.pay() → repository.update(order)
 
 ## 1. 默认行为（无需额外代码）
 
-框架已内置完整的乐观锁冲突处理链：
+框架已内置完整的乐观锁冲突处理链（版本条件由 UPDATE 语句的手写 XML 文本携带，无运行时拦截器）：
 
 ```java
-// MybatisPlusPersistence.updateDomain() 内部（audit F-01 后的语义分类）
-int rows = baseMapper.updateById(po);
+// MybatisPersistence.updateDomain() 内部（audit F-01 后的语义分类）
+int rows = mapper.updateById(po);   // XML: SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false
 if (rows == 0) {
     // 失败路径存在性探测：影响行数为 0 无法区分「版本冲突」与「实体消失」，补一次探测
     if (existsDomainById(domain.getId())) {
@@ -80,7 +80,7 @@ if (rows == 0) {
 
 ```java
 // application/order/handler/RetryablePayOrderHandler.java
-import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.OptimisticLockConflictException;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.OptimisticLockConflictException;
 
 @Component
 public class RetryablePayOrderHandler {
@@ -143,7 +143,7 @@ public class RetryablePayOrderHandler {
 |----|------|------|
 | application | `handler/RetryablePlaceOrderHandler.java` | 重试包装（**已落地**，PlaceOrder 链路；PayOrder 场景按下文模板仿写） |
 | application | `handler/PlaceOrderHandler.java` / `PayOrderHandler.java` | 标准写路径（被包装复用） |
-| infrastructure | `MybatisPlusPersistence.updateDomain()` | 冲突检测 + 抛异常（框架内置） |
+| infrastructure | `MybatisPersistence.updateDomain()` | 冲突检测 + 抛异常（框架内置，版本条件由 XML SQL 文本承担） |
 | common-exception | `GlobalRestExceptionHandler` | 409 响应翻译（框架内置） |
 
 > 契约说明：冲突识别为**编译期类型契约**——框架抛

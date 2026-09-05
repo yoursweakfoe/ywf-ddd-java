@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yoursweakfoe.common.ddd.fixtures.mapper.ProductXmlMapper">
 
-    <!-- 场景 A：常规手写 UPDATE，不引用任何 MP 保留参数 -->
+    <!-- 常规手写 UPDATE：单实体参数直接透传 POJO，全列覆盖，无版本条件 -->
     <update id="updatePlain">
         UPDATE products.products
         SET name   = #{name},
@@ -10,20 +10,5 @@
             version = #{version}
         WHERE id = #{id}
           AND deleted = false
-    </update>
-
-    <!-- 场景 B：手写 UPDATE，但复刻官方 updateById 模板中 getVersionOli() 生成的
-         版本条件片段（同样的 <if> 守卫 + 同名保留参数）。SET 中 version 取
-         et.version——插件会在执行前把该字段自增为新值。 -->
-    <update id="updateWithEtContract">
-        UPDATE products.products
-        SET name   = #{et.name},
-            stock  = #{et.stock},
-            version = #{et.version}
-        WHERE id = #{et.id}
-          AND deleted = false
-        <if test="et != null and et['version'] != null">
-            AND version = #{MP_OPTLOCK_VERSION_ORIGINAL}
-        </if>
     </update>
 </mapper>

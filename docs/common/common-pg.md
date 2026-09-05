@@ -1,12 +1,12 @@
 # common-pg
 
-PostgreSQL 类型映射 —— MyBatis-Plus TypeHandler 自动注册，支持 UUID / JSONB / 数组等 PG 特有类型。
+PostgreSQL 类型映射 —— MyBatis TypeHandler 自动注册，支持 UUID / JSONB / 数组等 PG 特有类型。
 
 > 本文分两段：§1–4 面向使用者（怎么用），§5–7 面向设计者（为什么这么设计）。
 
 ## 1. 定位与边界
 
-解决 MyBatis-Plus 与 PostgreSQL 特有类型（UUID / JSONB / 数组）的映射问题。面向所有使用 PostgreSQL 的业务服务，引入即自动注册，大部分类型无需额外配置。
+解决 MyBatis 与 PostgreSQL 特有类型（UUID / JSONB / 数组）的映射问题。面向所有使用 PostgreSQL 的业务服务，引入即自动注册，大部分类型无需额外配置。
 
 > 仅 PostgreSQL，不做多数据库方言适配。ENUM / Composite / hstore / range / inet 等类型不覆盖。
 
@@ -28,7 +28,7 @@ PostgreSQL 类型映射 —— MyBatis-Plus TypeHandler 自动注册，支持 UU
 | `Boolean[]` | `boolean[]` | `BooleanArrayTypeHandler` | 否 |
 | `UUID[]` | `uuid[]` | `UUIDArrayTypeHandler` | 否 |
 
-JSONB 字段必须显式指定 `@TableField(typeHandler = ...)`，因为 `String.class` 已被 MyBatis 默认 `StringTypeHandler` 占用。
+JSONB 字段必须在 XML 语句中显式指定 `typeHandler`（参数位 `#{prop, typeHandler=全限定类名}`、结果位 `<result ... typeHandler="全限定类名"/>`），因为 `String.class` 已被 MyBatis 默认 `StringTypeHandler` 占用。
 
 ### 自动发现机制
 
@@ -62,29 +62,37 @@ JSONB 字段必须显式指定 `@TableField(typeHandler = ...)`，因为 `String
 
 ```java
 @Data
-@TableName("orders.orders")
 public class OrderPO {
-    @TableId(type = IdType.ASSIGN_UUID)
-    private UUID id;  // 自动使用 UUIDTypeHandler
+    private UUID id;  // 自动使用 UUIDTypeHandler（@MappedTypes 全局注册，XML 无需显式指定）
     private String status;
 }
 ```
 
-### 场景 2：JSONB 字段（必须显式指定）
+### 场景 2：JSONB 字段（XML 语句中必须显式指定）
 
 ```java
 @Data
-@TableName("products.products")
 public class ProductPO {
-    @TableId(type = IdType.ASSIGN_UUID)
     private UUID id;
-
-    @TableField(typeHandler = JsonbTypeHandler.class)
-    private String extraInfo;      // String → jsonb
-
-    @TableField(typeHandler = JsonNodeTypeHandler.class)
-    private JsonNode metadata;     // JsonNode → jsonb
+    private String extraInfo;   // String → jsonb，需显式 typeHandler
+    private JsonNode metadata;  // JsonNode → jsonb，推荐显式指定以确保清晰
 }
+```
+
+```xml
+<!-- 手写 XML：参数位与结果位显式声明 typeHandler -->
+<resultMap id="productResultMap" type="...po.ProductPO">
+    <id     column="id"         property="id"/>
+    <result column="extra_info" property="extraInfo"
+            typeHandler="com.yoursweakfoe.common.pg.handler.JsonbTypeHandler"/>
+    <result column="metadata"   property="metadata"
+            typeHandler="com.yoursweakfoe.common.pg.handler.JsonNodeTypeHandler"/>
+</resultMap>
+
+<!-- INSERT / UPDATE 参数位 -->
+INSERT INTO products.products (id, extra_info, metadata)
+VALUES (#{id}, #{extraInfo, typeHandler=com.yoursweakfoe.common.pg.handler.JsonbTypeHandler},
+        #{metadata, typeHandler=com.yoursweakfoe.common.pg.handler.JsonNodeTypeHandler})
 ```
 
 ### 场景 3：数组字段（自动映射）
@@ -98,7 +106,7 @@ private UUID[] relatedIds;      // uuid[]，自动 UUIDArrayTypeHandler
 ## 4. 依赖关系
 
 ```
-common-pg → mybatis-plus-spring-boot4-starter（TypeHandler 基类 + 自动装配）
+common-pg → mybatis-spring-boot-starter（TypeHandler 基类 + ConfigurationCustomizer 装配）
           → postgresql（编译期，PGobject）
           → jackson-databind（Jackson 3，JsonNodeTypeHandler）
 ```
@@ -133,7 +141,7 @@ common-pg → mybatis-plus-spring-boot4-starter（TypeHandler 基类 + 自动装
 
 **决策**：不能。`String.class` 已被默认 `StringTypeHandler` 占用，无法自动路由到 JsonbTypeHandler；显式声明避免歧义。
 
-**确认**：JsonbTypeHandler / JsonNodeTypeHandler 需 `@TableField(typeHandler=...)` 显式指定。
+**确认**：JsonbTypeHandler / JsonNodeTypeHandler 需在 XML 语句中显式指定 `typeHandler`（参数位 / 结果位）。
 
 ## 7. 职责边界与技术债
 

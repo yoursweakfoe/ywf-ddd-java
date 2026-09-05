@@ -23,7 +23,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
    - 固定模式：批量 load → 逐个领域行为 → updateDomainBatch → 批量 toDTO
 4. **application**：在 `{Agg}AppService` 新增方法
    - `return {agg}Presenter.presentList(handler.handle(command));`
-5. **adapter**：在 `{Agg}ServiceImpl` 新增方法（纯透传）
+5. **adapter**：在 `{Agg}ControllerImpl` 新增方法（纯透传）
 
 ## 失败策略选择
 

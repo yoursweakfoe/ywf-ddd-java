@@ -77,10 +77,10 @@ server/
     ├── persistence/                   # 持久化（实现 Domain Repository）
     │   ├── master/                    # 主数据源（框架默认回退值）
 │   │   └── {aggregate}/           # 按聚合命名空间隔离
-│   │       ├── mybatisplus/           # MyBatis-Plus 技术位（撤换 ORM 时整体删除）
-│   │       │   ├── po/                # 持久化对象
-│   │       │   └── mapper/            # MyBatis-Plus Mapper
-│   │       │       └── xml/           # MyBatis XML（复杂 SQL）
+│   │       ├── mybatis/               # MyBatis 技术位（撤换 ORM 时整体删除）
+│   │       │   ├── po/                # 持久化对象（纯 POJO，零 ORM 注解）
+│   │       │   └── mapper/            # Mapper 接口（extends DddMapper）
+│   │       │                          #   SQL 全部手写：resources/mapper/{aggregate}/XxxMapper.xml
 │   │       ├── converter/             # Domain ↔ PO 转换（框架 BasicConverter 桥）
 │   │       └── repository/            # Repository 实现
 │   │           ├── application/       # XxxQueryRepositoryImpl（读侧，对偶 application 读端口）

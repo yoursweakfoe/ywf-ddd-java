@@ -22,7 +22,7 @@
 | `INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES` | R1b | 收窄 R1 读侧例外：Infrastructure 对 Application 的访问仅限 QueryRepository 实现 / ApplicationDTO 类型锚点 |
 | `ADAPTER_ONLY_DEPENDS_ON_APPLICATION` | R2 | Adapter 只依赖 Application/Contract，不得直连 Domain 或 Infrastructure |
 | `DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS` | R3 | Domain 不依赖 application/infrastructure/adapter/contract |
-| `DOMAIN_MODEL_IS_PURE` | R4 | 领域模型纯净（domain.model 不依赖 MyBatis-Plus/Spring Stereotype/JPA） |
+| `DOMAIN_MODEL_IS_PURE` | R4 | 领域模型纯净（domain.model 不依赖 Spring Stereotype/JPA；持久化技术栈禁令见 R15） |
 | `DOMAIN_REPOSITORIES_MUST_BE_INTERFACES` | R5a | Domain Repository 必须是接口 |
 | `REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE` | R5b | 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository |
 | `DOMAIN_DOES_NOT_DEPEND_ON_SECURITY` | R6 | Domain 不依赖 common-security（领域模型不感知认证上下文） |
@@ -33,6 +33,7 @@
 | `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制） |
 | `DOMAIN_HAS_NO_PUBLIC_SETTERS` | R12 | Domain 层禁止 public setter（守护充血模型不变量） |
 | `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口） |
+| `MYBATIS_PLUS_BANNED` | R15 | 全仓禁止依赖 `com.baomidou..`（MyBatis-Plus 剥离回归守护，论证见 common-ddd.md ADR-0007；规则名中的 MYBATIS_PLUS 即禁令所指） |
 | `CONTRACT_DOES_NOT_DEPEND_ON_SERVER` | C1 | Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施 |
 
 > **段匹配碰撞提示**：`..domain..` / `..application..` 按包段精确匹配（非子串），但会同时命中

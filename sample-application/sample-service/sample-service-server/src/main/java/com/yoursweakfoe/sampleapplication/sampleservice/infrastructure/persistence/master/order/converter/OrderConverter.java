@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persiste
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po.OrderPO;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import java.util.List;
 import java.util.UUID;
@@ -54,7 +54,7 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         po.setVersion(domain.getVersion());
         po.setCreateAt(domain.getCreateAt());
         po.setUpdateAt(domain.getUpdateAt());
-        // isDelete 由 @TableLogic 逻辑删除维护，不映射
+        // isDelete 由 SQL 文本承担（INSERT 靠 DB 默认 FALSE、逻辑删除语句置位），不映射
         return po;
     }
 

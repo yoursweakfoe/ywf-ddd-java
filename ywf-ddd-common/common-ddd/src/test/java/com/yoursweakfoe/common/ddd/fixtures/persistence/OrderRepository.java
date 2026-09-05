@@ -6,21 +6,29 @@ import com.yoursweakfoe.common.ddd.fixtures.model.Order;
 import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.CurrentUserProvider;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPersistence;
 import java.io.Serializable;
+import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class OrderRepository extends MybatisPlusPersistence<OrderMapper, OrderPO, Order, UUID>
+public class OrderRepository extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
         implements Repository<Order, UUID> {
 
     private final OrderConverter converter;
 
-    public OrderRepository(OrderMapper mapper, OrderConverter converter) {
-        super(mapper);
+    public OrderRepository(OrderMapper mapper,
+                           OrderConverter converter,
+                           Clock clock,
+                           AuditProperties auditProperties,
+                           ObjectProvider<CurrentUserProvider> currentUserProvider) {
+        super(mapper, clock, auditProperties, currentUserProvider);
         this.converter = converter;
     }
 

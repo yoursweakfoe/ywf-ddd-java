@@ -21,8 +21,8 @@ import java.util.Objects;
  * <ul>
  *   <li><b>简单校验</b>：聚合根内显式 {@code if-throw} + {@code BusinessException}（错误码）仍是首选；
  *       Specification 仅在规则需要 {@code and/or/not} 组合时才引入，避免为一条断言造对象。</li>
- *   <li><b>查询过滤</b>：<strong>不经过本接口</strong>——读侧（CQRS）用 MyBatis-Plus
- *       {@code LambdaQueryWrapper} 直接投影 DTO（读侧本就绕过 domain），不把领域谓词引入读路径。</li>
+ *   <li><b>查询过滤</b>：<strong>不经过本接口</strong>——读侧（CQRS）用业务 Mapper 的
+ *       <strong>具名方法 + 手写 XML 语句</strong>（{@code <if>} 动态条件）直接投影 DTO（读侧本就绕过 domain），不把领域谓词引入读路径。</li>
  * </ul>
  *
  * <h3>null 安全约定</h3>

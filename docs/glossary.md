@@ -25,10 +25,11 @@
 | RestAdapter | — | common-ddd 空标记接口，定型「REST 入口适配器」角色（Ports & Adapters 的 driving adapter），供 ArchUnit R8a/R8b 识别与约束 |
 | ApplicationDTO | — | common-ddd 空标记接口（`application/dto/`），定型「应用层内部视图」角色（写侧 DTO + 读侧 DTO），供 ArchUnit R10a/R10b 识别；与 contract 层 `CO` 标记对偶 |
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
-| PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
+| PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离底层分页形态（手写 XML 的 LIMIT/OFFSET + COUNT 双语句），提供 map() 支持逐层转换 |
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |
-| MybatisPlusPersistence | — | common-ddd 提供的仓储支撑基类，封装 MyBatis-Plus 持久化 + 乐观锁 + validate 自动调用 |
-| BasicAutoFillHandler | — | MyBatis-Plus 自动填充处理器，INSERT 填 createAt + updateAt，UPDATE 填 updateAt |
+| MybatisPersistence | — | common-ddd 提供的仓储支撑基类（`infrastructure/mybatis/persistence/`），组合持有 `DddMapper`，封装手写 XML 持久化 + 乐观锁冲突分类 + validate 自动调用 + 审计显式填充；不声明 `@Transactional`（事务边界上收至 Handler） |
+| DddMapper | — | common-ddd 框架级通用 Mapper 接口（`infrastructure/mybatis/mapper/`），定义每聚合手写 XML 必须实现的 7 条语句契约（insert / updateById / selectById / selectByIds / deleteById / deleteByIds / existsById）；逻辑删除过滤与版本条件由 SQL 文本自身承担 |
+| AuditFieldFiller | — | common-ddd 审计字段填充器（`infrastructure/mybatis/handler/`），基于 MyBatis 核心 `MetaObject` 按字段名反射；由 `MybatisPersistence` 在写库前**显式调用**：INSERT 填 createAt + updateAt（+ 可选 createdBy/updatedBy），UPDATE 刷新 updateAt |
 | DomainService | — | Domain 层标记接口（common-ddd），跨聚合协调的无状态服务。实现类标注 @Service 由组件扫描注册 |
 | Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
 | opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |

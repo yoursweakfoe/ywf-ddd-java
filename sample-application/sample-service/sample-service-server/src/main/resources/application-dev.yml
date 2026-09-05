@@ -9,17 +9,11 @@
 # ============================================================================
 
 spring:
+  # 单数据源本地默认值（driver-class-name 继承主配置；可被同名环境变量覆盖）
   datasource:
-    dynamic:
-      datasource:
-        master:
-          url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/app_master}
-          username: ${DB_MASTER_USER:postgres}
-          password: ${DB_MASTER_PASSWORD:postgres}
-        second:
-          url: ${DB_SECOND_URL:jdbc:postgresql://localhost:5432/app_second}
-          username: ${DB_SECOND_USER:postgres}
-          password: ${DB_SECOND_PASSWORD:postgres}
+    url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/app_master}
+    username: ${DB_MASTER_USER:postgres}
+    password: ${DB_MASTER_PASSWORD:postgres}
 
 # Nacos 配置中心（二期恢复；部署多服务时启用，本地开发无需开启）
 # spring:

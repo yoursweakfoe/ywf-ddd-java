@@ -1,13 +1,11 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository.application;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.application.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.mapper.OrderMapper;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po.OrderPO;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.mapper.OrderMapper;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,14 +46,15 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
         // 双通道防御钳制（1..MAX_PAGE_SIZE）：即使调用点未经 Bean Validation 也安全
         int safePageNum = query.safePageNum();
         int safePageSize = query.safePageSize();
-        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<OrderPO>()
-                .eq(query.status() != null, OrderPO::getStatus, query.status())
-                .eq(query.customerId() != null, OrderPO::getCustomerId, query.customerId())
-                .orderByDesc(OrderPO::getCreateAt);
-        Page<OrderPO> page = orderMapper.selectPage(new Page<>(safePageNum, safePageSize), wrapper);
+        // 手写分页：offset 由钳制后的页码换算（long 乘法防大页码 int 溢出）；
+        // 取数与计数两条语句共享同一 WHERE 条件片段（XML 内 <if> 动态拼接），无运行时分页插件
+        long offset = (safePageNum - 1) * (long) safePageSize;
+        List<OrderPO> rows = orderMapper.selectPageByCondition(
+                query.status(), query.customerId(), offset, safePageSize);
+        long total = orderMapper.countByCondition(query.status(), query.customerId());
         return new PageResult<>(
-                page.getRecords().stream().map(this::toViewDTO).toList(),
-                page.getTotal(),
+                rows.stream().map(this::toViewDTO).toList(),
+                total,
                 safePageNum,
                 safePageSize);
     }

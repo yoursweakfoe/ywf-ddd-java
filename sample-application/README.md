@@ -31,14 +31,14 @@
 | 保留元素 | 演示的框架能力 |
 |----------|---------------|
 | Order 聚合（状态机 + 行为方法） | AggregateRoot、显式 if-throw、validate() |
-| Product 聚合（库存增减） | 乐观锁（@Version）、聚合行为封装 |
+| Product 聚合（库存增减） | 乐观锁（`updateById` 的 SQL 版本条件）、聚合行为封装 |
 | PlaceOrderCommand（跨聚合） | CommandHandler、Domain Service 协调 |
 | cancel → 库存回补 | 同事务直调 InventoryDomainService（补偿原子化） |
 | GetOrderQuery | QueryHandler、读路径 |
 | OrderAssembler / OrderConverter | BasicAssembler（应用层）、BasicConverter（基础设施层） |
 | OrderController / ProductController（Adapter web） | Spring MVC REST 面、纯透传 |
 | ArchUnit 测试 | common-test 架构守护 |
-| 并发下单压测 | OptimisticLockerInnerInterceptor 防超卖 |
+| 并发下单压测 | 手写 XML 乐观锁（`SET version = version + 1 WHERE ... AND version = #{version}`）防超卖 |
 | OrderFactory（订单工厂） | Factory 标记接口、创建即合法（校验一步到位）、新建/重建双路径收口 |
 | （刻意不演示）Portal/Gateway、Policy | 框架能力已备齐，完整示例见 `docs/application/cookbook/gateway.md`、`docs/application/cookbook/policy-pattern.md`；示例应用有意保持最小闭环，避免样例膨胀 |
 

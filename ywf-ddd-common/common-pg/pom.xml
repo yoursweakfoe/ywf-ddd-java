@@ -14,10 +14,10 @@
     <description>PostgreSQL TypeHandler 扩展 - UUID/JSONB/数组类型处理器（opt-in，使用 PG 时引入）</description>
 
     <dependencies>
-        <!-- MyBatis-Plus 基础设施（TypeHandler 继承 BaseTypeHandler；ConfigurationCustomizer / MybatisConfiguration 来自 MyBatis-Plus 自动装配） -->
+        <!-- MyBatis 基础设施（TypeHandler 继承 BaseTypeHandler；ConfigurationCustomizer 来自 mybatis-spring-boot 自动装配） -->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
 
         <!-- PostgreSQL 驱动（编译期需访问 PGobject） -->

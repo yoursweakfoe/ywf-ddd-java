@@ -1,29 +1,19 @@
 package com.yoursweakfoe.common.ddd.fixtures.po;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import lombok.Data;
 
+/** 订单持久化对象测试夹具 —— 纯 POJO，表名 / 主键 / 逻辑删除语义全部由手写 XML 承载。 */
 @Data
-@TableName("orders.orders")
 public class OrderPO {
 
-    @TableId(type = IdType.ASSIGN_UUID)
     private String id;
     private String status;
     private String items;
     private BigDecimal totalAmount;
     private String customerId;
-    @TableField(fill = FieldFill.INSERT)
     private OffsetDateTime createAt;
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private OffsetDateTime updateAt;
-    @TableLogic(value = "false", delval = "true")
     private Boolean deleted;
 }

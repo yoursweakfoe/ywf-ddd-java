@@ -1,2 +1,2 @@
 com.yoursweakfoe.common.ddd.ClockAutoConfiguration
-com.yoursweakfoe.common.ddd.MybatisPlusDddAutoConfiguration
+com.yoursweakfoe.common.ddd.MybatisDddAutoConfiguration

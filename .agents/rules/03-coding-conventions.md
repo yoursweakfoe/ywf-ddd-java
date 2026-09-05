@@ -84,9 +84,11 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Repository 泛型
 
 - 接口：`Repository<Domain, ID>`（domain 层）
-- 实现：继承 `MybatisPlusPersistence<Mapper, PO, Domain, ID>`（infrastructure 层），
-  构造器注入 `Mapper` + Converter；
+- 实现：继承 `MybatisPersistence<Mapper, PO, Domain, ID>`（infrastructure 层），
+  构造器注入 `Mapper` + Converter + `Clock` + `AuditProperties` + `ObjectProvider<CurrentUserProvider>`；
   领域 ID 与 PO 主键类型不一致时覆写 `toPersistenceId(ID)`
+- Mapper：`XxxMapper extends DddMapper<XxxPO>`（标注 `@Mapper`），七条通用语句 + 业务查询全部手写 XML
+- PO：纯 `@Data` POJO，零 ORM 注解（表名 / 版本条件 / 逻辑删除过滤由 XML SQL 文本承担）
 - Converter：实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
 
 ## Domain Service（跨聚合协调）
@@ -118,13 +120,13 @@ public void cancelOrder(CancelOrderCommand command) {
 - 当前时间一律经注入的 `Clock` Bean 获取（框架缺省 `Clock.systemUTC()`，业务可覆盖），禁止无参 `OffsetDateTime.now()`
 - 「同一瞬时」比较用 `isEqual()` / `timeLineOrder()`；`equals()` 仅作同 UTC 源值的往返断言（`equals` 要求偏移亦相等）
 - PO 中 `createAt` / `updateAt` 声明为 `OffsetDateTime`
-- `BasicAutoFillHandler` 自动填充（INSERT 填 createAt + updateAt，UPDATE 填 updateAt）
+- `AuditFieldFiller` 显式填充（由 `MybatisPersistence` 在写库前调用：INSERT 填 createAt + updateAt，UPDATE 刷新 updateAt）
 - Domain 层时间字段与 PO 保持一致（Converter 直接透传）
 
 ## 分页查询
 
 - 分页 Query 实现 `PageableQuery` 接口（继承自 `Query`）
-- 页码从 **1** 开始（与 MyBatis-Plus Page 一致）
+- 页码从 **1** 开始；读实现换算 `offset = (safePageNum - 1) * safePageSize`，XML 用 `LIMIT / OFFSET` 原生分页
 - 默认每页 20，上限 1000（`MAX_PAGE_SIZE`）
 - 契约层通过 `@Min(1)` / `@Max(MAX_PAGE_SIZE)` 声明约束，Handler 层 `@Validated` 触发校验
 - 读侧查询实现（`XxxQueryRepositoryImpl`）内置防御性 clamp（pageNum≥1，1≤pageSize≤1000），未校验参数不会产生非法分页
@@ -155,7 +157,7 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Lombok 使用约定
 
 - Domain 层（聚合根/实体/值对象）：**禁止** `@Data`，仅用字段级 `@Getter`（禁止 setter，保护不变量）
-- Infrastructure 层 PO：**必须** `@Data`（MyBatis-Plus 反射需要 setter）
+- Infrastructure 层 PO：**必须** `@Data`（MyBatis 结果映射需要 setter）、零 ORM 注解（表名 / 版本条件 / 逻辑删除过滤等语义全部由手写 XML 承担）
 - Application 层 DTO：**必须** `@Data @NoArgsConstructor @AllArgsConstructor`
 - Contract 层 CQE/CO：**必须** `@Data @NoArgsConstructor @AllArgsConstructor`，字段级 Javadoc 注释
 

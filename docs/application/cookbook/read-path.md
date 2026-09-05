@@ -230,14 +230,15 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
         // 双通道防御钳制（1..MAX_PAGE_SIZE）：即使调用点未经 Bean Validation 也安全
         int safePageNum = query.safePageNum();
         int safePageSize = query.safePageSize();
-        LambdaQueryWrapper<OrderPO> wrapper = new LambdaQueryWrapper<OrderPO>()
-                .eq(query.status() != null, OrderPO::getStatus, query.status())
-                .eq(query.customerId() != null, OrderPO::getCustomerId, query.customerId())
-                .orderByDesc(OrderPO::getCreateAt);
-        Page<OrderPO> page = orderMapper.selectPage(new Page<>(safePageNum, safePageSize), wrapper);
+        // 手写分页：offset 由钳制后的页码换算（long 乘法防大页码溢出）；
+        // 取数 / 计数两条具名方法共享 XML 内同一 <sql> 条件片段，无运行时分页插件
+        long offset = (safePageNum - 1) * (long) safePageSize;
+        List<OrderPO> rows = orderMapper.selectPageByCondition(
+                query.status(), query.customerId(), offset, safePageSize);
+        long total = orderMapper.countByCondition(query.status(), query.customerId());
         return new PageResult<>(
-                page.getRecords().stream().map(this::toViewDTO).toList(),
-                page.getTotal(), safePageNum, safePageSize);
+                rows.stream().map(this::toViewDTO).toList(),
+                total, safePageNum, safePageSize);
     }
 
     /** PO → 读 DTO 直接投影（不经过 domain，不 reconstitute 聚合根）。 */
@@ -260,7 +261,43 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 要点：
 - 读实现**不经过 Converter.toDomain()**（不 reconstitute 聚合根），**也不经过领域读模型**
 - 直接 PO → **读 DTO** 轻量投影（订单项 JSON 直接反序列化为应用层 DTO，不经过领域值对象）
-- `PageResult<T>` 隔离 MyBatis-Plus `Page<PO>`，`map()` 支持链式转换
+- 分页 = Mapper 具名方法 + 手写 XML 双语句（LIMIT/OFFSET 取数 + 同条件 COUNT），`PageResult<T>` 隔离底层分页形态，`map()` 支持链式转换
+
+分页双语句的声明与 SQL 文本（节选自 sample 实际实现）：
+
+```java
+// infrastructure/persistence/master/order/mybatis/mapper/OrderMapper.java（具名分页方法）
+List<OrderPO> selectPageByCondition(@Param("status") String status,
+                                    @Param("customerId") String customerId,
+                                    @Param("offset") long offset,
+                                    @Param("limit") long limit);
+
+long countByCondition(@Param("status") String status,
+                      @Param("customerId") String customerId);
+```
+
+```xml
+<!-- resources/mapper/order/OrderMapper.xml —— WHERE 片段共享，杜绝两条语句条件漂移 -->
+<sql id="pageCondition">
+    WHERE is_delete = false
+    <if test="status != null">AND status = #{status}</if>
+    <if test="customerId != null">AND customer_id = #{customerId}</if>
+</sql>
+
+<select id="selectPageByCondition" resultType="...mybatis.po.OrderPO">
+    SELECT <include refid="columns"/>
+    FROM orders.orders
+    <include refid="pageCondition"/>
+    ORDER BY create_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+</select>
+
+<select id="countByCondition" resultType="long">
+    SELECT COUNT(*)
+    FROM orders.orders
+    <include refid="pageCondition"/>
+</select>
+```
 
 ## 写路径 vs 读路径对比
 
@@ -287,3 +324,4 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 | application | `repository/OrderQueryRepository.java` | 读端口（返回读 DTO） |
 | application | `presenter/OrderViewPresenter.java` | 读 DTO → CO |
 | infrastructure | `repository/application/OrderQueryRepositoryImpl.java` | 读实现（PO → 读 DTO 投影） |
+| resources | `mapper/order/OrderMapper.xml` | 分页双语句 + 动态条件（LIMIT/OFFSET + COUNT） |

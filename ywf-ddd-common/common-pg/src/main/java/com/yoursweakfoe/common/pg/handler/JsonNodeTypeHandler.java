@@ -23,11 +23,11 @@ import tools.jackson.databind.json.JsonMapper;
  * <p>使用本处理器需要确保 classpath 中包含 Jackson Databind 依赖。
  *
  * <p><strong>使用说明：</strong> 由于 {@code JsonNode} 是特定类型，本处理器通过 {@code @MappedTypes(JsonNode.class)}
- * 自动注册。在 PO 实体类中使用时，<strong>推荐</strong>显式指定以确保清晰：
+ * 自动注册。手写 XML 语句中使用时，<strong>推荐</strong>显式指定以确保清晰：
  *
  * <pre>
- * {@code @TableField(value = "config", typeHandler = JsonNodeTypeHandler.class)}
- * private JsonNode config;
+ * &lt;result column="config" property="config"
+ *         typeHandler="com.yoursweakfoe.common.pg.handler.JsonNodeTypeHandler"/&gt;
  * </pre>
  *
  * @see tools.jackson.databind.JsonNode

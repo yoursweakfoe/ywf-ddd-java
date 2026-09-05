@@ -1,7 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
-import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
+import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.po.ProductPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -33,7 +33,7 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
         po.setVersion(domain.getVersion());
         po.setCreateAt(domain.getCreateAt());
         po.setUpdateAt(domain.getUpdateAt());
-        // isDelete 由 @TableLogic 逻辑删除维护，不映射
+        // isDelete 由 SQL 文本承担（INSERT 靠 DB 默认 FALSE、逻辑删除语句置位），不映射
         return po;
     }
 }

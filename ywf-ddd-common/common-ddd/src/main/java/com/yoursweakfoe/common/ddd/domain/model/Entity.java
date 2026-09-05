@@ -15,12 +15,12 @@ package com.yoursweakfoe.common.ddd.domain.model;
  * {@code getId()} 实现。 这样子类可以自由在 {@code id} 字段上添加所需注解（如 {@code @ExcelIgnore}）。
  *
  * <p><strong>关于乐观锁</strong>：本基类<b>不持有</b> {@code version} 字段。
- * 需要乐观锁的实体在 PO 上声明 {@code @Version} 字段即可，
- * {@code OptimisticLockerInnerInterceptor} 仅对含 {@code @Version} 的 PO 生效。
+ * 需要乐观锁的实体在 PO 上声明 {@code version} 字段即可，
+ * 版本条件由 UPDATE 语句的手写 XML 文本携带（{@code WHERE ... AND version = #{version}}），无运行时拦截器。
  *
  * <p><strong>version 字段例外规则</strong>：当仓储采用「reconstitute → 行为方法 → toPO → updateById」
  * 路径时，领域对象必须携带 {@code version}（由 reconstitute 回填），
- * 以便 Converter 将其映射到 PO 供乐观锁拦截器使用。
+ * 以便 Converter 将其映射到 PO 供 UPDATE 语句的版本条件使用。
  * 这是「领域零持久化关注」原则的<b>已文档化例外</b>：
  * version 在领域层为只读透传（不参与业务决策），仅作为持久化层乐观锁的载体。
  * 若仓储采用「reload PO → 自行定义的合并方法（如 {@code updatePO}）→ updateById」路径，

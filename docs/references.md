@@ -34,13 +34,13 @@
 | Repository (Evans / Fowler) | Domain 层定义接口，Infrastructure 层实现；写侧 reconstitute 聚合，读侧投影 DTO |
 | Factory (Evans) | 复杂创建逻辑抽离为独立工厂，仅当构造器不足以表达创建语义时使用 |
 | Domain Service (Evans) | 跨聚合协调 / 逻辑不自然归属任何实体时使用；无状态 |
-| Specification (Evans) | 纯接口（可选工具）：领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用；查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`（读侧绕过 domain），简单校验仍用聚合根内 if-throw，不强制走规约 |
+| Specification (Evans) | 纯接口（可选工具）：领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用；查询过滤用具名 Mapper 方法 + 手写 XML 动态条件（读侧绕过 domain），简单校验仍用聚合根内 if-throw，不强制走规约 |
 | Bounded Context (Evans) | 每个微服务 = 一个限界上下文；contract 模块定义上下文对外边界 |
 | Shared Kernel (Evans) | common-contract / common-ddd 为多个限界上下文共享的构建块 |
 | Customer-Supplier (Evans) | contract jar 是消费方唯一依赖；CO 变更需协调消费方（Breaking Change） |
 | Published Language (Evans) | contract 模块即跨上下文共享语言：CQE / CO 是发布方与消费方的共同词汇表，避免逐点翻译 |
 | Context Map 策略集 | 已知策略显式定档：Shared Kernel（common-contract/ common-ddd）、Customer-Supplier（contract jar）。Conformist（顺从外部模型）/ Open Host Service / Anti-Corruption 的上下文级 Partner 关系**按需在业务上下文引入**（当前无此场景，不预设）；Separate Ways（无协作上下文）默认为未协作服务的常态 |
-| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》「一事务一聚合实例」经验法则：用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast——任一聚合校验失败整体回滚，以 PO `@Version` 乐观锁防超卖替代事件补偿；事后副作用（取消订单回补库存）同样同事务直调补偿（`CancelOrderHandler` → DomainService，补偿与状态原子提交，无中间态）。跨服务一致性由 Seata + HTTP 显式调用承担。不采纳「先建单再异步扣库存」：会引入『单建成而库存未扣』的中间态难题，用户体验与实现复杂度双输 |
+| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》「一事务一聚合实例」经验法则：用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast——任一聚合校验失败整体回滚，以 PO version 列 + UPDATE 语句版本条件（手写 XML）防超卖替代事件补偿；事后副作用（取消订单回补库存）同样同事务直调补偿（`CancelOrderHandler` → DomainService，补偿与状态原子提交，无中间态）。跨服务一致性由 Seata + HTTP 显式调用承担。不采纳「先建单再异步扣库存」：会引入『单建成而库存未扣』的中间态难题，用户体验与实现复杂度双输 |
 
 **未采纳：**
 
@@ -50,7 +50,7 @@
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
 | 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（ADR-0001）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，cookbook 提供复制粘贴示例 |
-| 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略，MyBatis-Plus 场景下脏检查收益极低且增加复杂度 |
+| 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略（XML 逐列枚举），本框架场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
 
 ### CQRS 与事件架构
@@ -164,6 +164,7 @@
 | jMolecules | xMolecules 项目 | DDD 注解库（@AggregateRoot、@Repository），本项目用 common-ddd 构建块替代 |
 | Spring Modulith | Spring 官方 | 模块化单体框架，本项目已是微服务架构，无需模块级事件/验证 |
 | MapStruct（代码生成映射） | 多数 CRUD 脚手架 | 已彻底移除：AI 辅助开发下手写模板代码成本归零，而生成器的认知负担（注解处理链、生成代码不可见、Lombok 桥接、@MapperScan 误扫）仍在；Converter/Assembler/Presenter 统一纯手写显式映射，富领域模型走 reconstitute，完整性由往返测试守护 |
+| MyBatis-Plus（ORM 增强框架） | 国内 MyBatis 生态主流增强库 | 未采纳（2026-09 移除，ADR-0007）：Wrapper 动态生成 SQL + 拦截器织入使「真正执行的 SQL 不在代码库里」，与全链路可见性目标冲突；乐观锁 / 逻辑删除 / 审计填充 / 分页全部由每聚合手写 XML 的 SQL 文本承担。注：baomidou 系中独立于 ORM 增强的 dynamic-datasource 经一手调研证实与 MyBatis-Plus 零耦合，仍作消费方多数据源 opt-in 方案（见 docs/application/module-design/infrastructure.md） |
 | Lombok @Data 用于领域模型 | 多数业务项目 | 充血模型禁止暴露 setter；@Data 生成 equals/hashCode 与 Entity ID 判等冲突 |
 
 ### 书籍与文章

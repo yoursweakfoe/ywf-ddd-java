@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商品聚合手写 SQL —— DddMapper 7 条通用语句契约，逐条可见、可 grep、可 review。
+     乐观锁防超卖：SET version = version + 1 ... WHERE id AND version AND is_delete = false
+     由 SQL 文本自身承担（无运行时拦截器），影响行数 0 → 基类存在性探测分类为版本冲突；
+     逻辑删除列 is_delete 由 WHERE/SET 文本显式承担；
+     本表有 created_by / updated_by 操作人列 → 删除语句消费 now + updatedBy 双审计参数，
+     操作人列以 <if> 守卫：无 CurrentUserProvider 实现（updatedBy=null）时不覆写已有值。 -->
+<mapper namespace="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.mapper.ProductMapper">
+
+    <sql id="columns">
+        id, name, price, stock, version, create_at, update_at, created_by, updated_by, is_delete
+    </sql>
+
+    <!-- 枚举全部业务列（含 version —— 新建商品初始版本恒为 0，与 DB 默认一致）；
+         is_delete 不枚举 → 靠 DB 默认 FALSE -->
+    <insert id="insert">
+        INSERT INTO products.products (id, name, price, stock, version,
+                                       create_at, update_at, created_by, updated_by)
+        VALUES (#{id}, #{name}, #{price}, #{stock}, 0,
+                #{createAt}, #{updateAt}, #{createdBy}, #{updatedBy})
+    </insert>
+
+    <!-- 全列 UPDATE（PO 由 Converter 完整装配）+ 乐观锁版本条件 + 逻辑删除过滤 -->
+    <update id="updateById">
+        UPDATE products.products
+        SET name      = #{name},
+            price     = #{price},
+            stock     = #{stock},
+            version   = version + 1,
+            update_at = #{updateAt}
+        <if test="updatedBy != null">
+            , updated_by = #{updatedBy}
+        </if>
+        WHERE id = #{id}
+          AND version = #{version}
+          AND is_delete = false
+    </update>
+
+    <select id="selectById" resultType="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.po.ProductPO">
+        SELECT <include refid="columns"/>
+        FROM products.products
+        WHERE id = #{id}
+          AND is_delete = false
+    </select>
+
+    <select id="selectByIds" resultType="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatis.po.ProductPO">
+        SELECT <include refid="columns"/>
+        FROM products.products
+        WHERE is_delete = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- 逻辑删除 = UPDATE 置位 + 审计刷新（now / updatedBy 由基类经 Clock / CurrentUserProvider 传入） -->
+    <update id="deleteById">
+        UPDATE products.products
+        SET is_delete = true,
+            update_at = #{now}
+        <if test="updatedBy != null">
+            , updated_by = #{updatedBy}
+        </if>
+        WHERE id = #{id}
+          AND is_delete = false
+    </update>
+
+    <update id="deleteByIds">
+        UPDATE products.products
+        SET is_delete = true,
+            update_at = #{now}
+        <if test="updatedBy != null">
+            , updated_by = #{updatedBy}
+        </if>
+        WHERE is_delete = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM products.products WHERE id = #{id} AND is_delete = false
+        )
+    </select>
+</mapper>

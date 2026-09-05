@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
  * 框架级时间源自动配置 —— 提供全应用统一的 {@link java.time.Clock} Bean。
  *
  * <p><strong>为什么独立于其它自动配置</strong>：时间源是平台级横切关注点，
- * 与 MyBatis-Plus（{@code MybatisPlusDddAutoConfiguration}）等具体能力无归属关系——任何组件
+ * 与 MyBatis（{@code MybatisDddAutoConfiguration}）等具体能力无归属关系——任何组件
  * （审计填充器、调度器等）都可注入同一时间源。
  *
  * <h3>缺省策略：硬编码 UTC</h3>
@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Bean;
  * 集成测试注册 {@code Clock.fixed(...)} 使时间断言确定化。这已是 Spring 原生语义
  * （Bean 即配置），无需额外属性命名空间。
  *
- * <p>消费方注入示例：{@code BasicAutoFillHandler}（经构造器注入）。
+ * <p>消费方注入示例：{@code AuditFieldFiller}（经构造器注入）。
  */
 @AutoConfiguration
 @ConditionalOnMissingBean(Clock.class)

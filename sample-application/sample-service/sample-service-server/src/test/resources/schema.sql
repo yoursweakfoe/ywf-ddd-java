@@ -2,7 +2,7 @@
 -- ID 策略说明：
 --   orders   — UUID（应用侧工厂铸造：RFC 9562 UUIDv7，时间有序）
 --   products — UUID（应用侧工厂铸造：同上；两类聚合身份策略已统一）
--- create_at / update_at 无默认值：由 BasicAutoFillHandler 在应用层填充（非 DB 触发器）。
+-- create_at / update_at 无默认值：由 AuditFieldFiller 在应用层填充（非 DB 触发器）。
 -- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS orders;

@@ -91,5 +91,5 @@ common-observability（独立，无内部模块依赖）
 |---|---|
 | 边界：自定义业务指标埋点 API | Micrometer `MeterRegistry` 已由 Actuator 自动注入，业务代码直接 `@Autowired` 使用 |
 | 边界：告警规则（AlertManager） | 属于 Prometheus/Grafana 侧配置，非应用 SDK 职责 |
-| 边界：慢 SQL 监控（P6Spy/Druid） | MyBatis-Plus 自带 SQL 日志（dev）；生产由 PG `pg_stat_statements` 覆盖 |
+| 边界：慢 SQL 监控（P6Spy/Druid） | MyBatis `log-impl: Slf4jImpl` 输出全部执行 SQL 到日志（dev）；生产由 PG `pg_stat_statements` 覆盖 |
 | 边界：APM Dashboard | 由 OTel + Grafana/Jaeger 基础设施承载 |

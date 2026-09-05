@@ -8,7 +8,7 @@ DDD 公共基础模块，为业务项目提供领域建模、持久化基础设�
 ```
 ywf-ddd-common/
 ├── common-contract/       # CQRS 契约标记接口（Command / Query / CO / IntegrationEvent）
-├── common-ddd/            # DDD 框架（领域模型 + CQRS 契约 + MyBatis-Plus 仓储）
+├── common-ddd/            # DDD 框架（领域模型 + CQRS 契约 + MyBatis 仓储支撑，手写 XML SQL）
 ├── common-exception/      # 统一异常体系（BusinessException + REST 全局异常处理）
 ├── common-pg/             # PostgreSQL TypeHandler 扩展（UUID / JSONB / 数组）
 ├── common-security/       # 零信任身份（JWT 资源服务器，服务自验 JWT）
@@ -26,7 +26,7 @@ common-contract     纯标记接口 + 注解（swagger / spring-web / jakarta-va
 common-exception    统一异常体系（BusinessException + REST 全局异常处理）
 common-security     零信任身份（JWT 资源服务器）
 common-observability 可观测性（Actuator + Prometheus）
-common-pg           PG TypeHandler 扩展（仅依赖 MyBatis-Plus / PG 驱动 / Jackson 3）
+common-pg           PG TypeHandler 扩展（仅依赖 MyBatis / PG 驱动 / Jackson 3）
 
 ── 编译依赖链 ──
 

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 订单聚合通用语句契约（DddMapper 7 条）——手写 SQL，逐条可见。
+     逻辑删除列 deleted 由 WHERE/SET 文本显式承担；OrderPO 无 version 字段
+     → 本 XML 省略乐观锁版本条件（版本保护仅对带版本列的聚合生效）。 -->
+<mapper namespace="com.yoursweakfoe.common.ddd.fixtures.mapper.OrderMapper">
+
+    <sql id="columns">
+        id, status, items, total_amount, customer_id, create_at, update_at, deleted
+    </sql>
+
+    <!-- 不枚举 deleted 列 → DB 默认 FALSE；tracking_number / cancel_reason / version 不入列 → DB 默认 -->
+    <insert id="insert">
+        INSERT INTO orders.orders (id, status, items, total_amount, customer_id, create_at, update_at)
+        VALUES (#{id}, #{status}, #{items}, #{totalAmount}, #{customerId}, #{createAt}, #{updateAt})
+    </insert>
+
+    <!-- 全列 UPDATE（PO 由 Converter 完整装配）+ 逻辑删除过滤；审计列 update_at 由 AuditFieldFiller 刷新 -->
+    <update id="updateById">
+        UPDATE orders.orders
+        SET status      = #{status},
+            items       = #{items},
+            total_amount = #{totalAmount},
+            customer_id = #{customerId},
+            update_at   = #{updateAt}
+        WHERE id = #{id}
+          AND deleted = false
+    </update>
+
+    <select id="selectById" resultType="com.yoursweakfoe.common.ddd.fixtures.po.OrderPO">
+        SELECT <include refid="columns"/>
+        FROM orders.orders
+        WHERE id = #{id}
+          AND deleted = false
+    </select>
+
+    <select id="selectByIds" resultType="com.yoursweakfoe.common.ddd.fixtures.po.OrderPO">
+        SELECT <include refid="columns"/>
+        FROM orders.orders
+        WHERE deleted = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- 逻辑删除 = UPDATE 置位 + 审计刷新（now/updatedBy 由基类传入；本表无操作人列，仅消费 now） -->
+    <update id="deleteById">
+        UPDATE orders.orders
+        SET deleted   = true,
+            update_at = #{now}
+        WHERE id = #{id}
+          AND deleted = false
+    </update>
+
+    <update id="deleteByIds">
+        UPDATE orders.orders
+        SET deleted   = true,
+            update_at = #{now}
+        WHERE deleted = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM orders.orders WHERE id = #{id} AND deleted = false
+        )
+    </select>
+</mapper>

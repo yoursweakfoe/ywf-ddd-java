@@ -4,27 +4,16 @@ spring:
   threads:
     virtual:
       enabled: true
+  # 单数据源 H2（MODE=PostgreSQL 兼容 PG 方言：schema 限定名 / LIMIT OFFSET / SELECT EXISTS）
   datasource:
-    dynamic:
-      primary: master
-      datasource:
-        master:
-          driver-class-name: org.h2.Driver
-          url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'classpath:schema.sql'
-          username: sa
-          password:
-        second:
-          driver-class-name: org.h2.Driver
-          url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-          username: sa
-          password:
-      hikari:
-        maximum-pool-size: 200
-        minimum-idle: 5
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'classpath:schema.sql'
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 200
+      minimum-idle: 5
 
-mybatis-plus:
-  global-config:
-    db-config:
-      id-type: auto
+mybatis:
   configuration:
     map-underscore-to-camel-case: true

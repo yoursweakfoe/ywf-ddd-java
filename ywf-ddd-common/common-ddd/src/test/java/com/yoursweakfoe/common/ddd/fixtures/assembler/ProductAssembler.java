@@ -9,7 +9,8 @@ public class ProductAssembler implements BasicAssembler<Product, ProductDTO> {
 
     @Override
     public Product toDomain(ProductDTO dto) {
-        return Product.reconstitute(dto.id(), dto.name(), dto.stock());
+        // DTO 不携带 version（内部乐观锁字段不进应用视图），按新实体初始值 0 重建
+        return Product.reconstitute(dto.id(), dto.name(), dto.stock(), 0);
     }
 
     @Override

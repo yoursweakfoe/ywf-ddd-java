@@ -2,7 +2,7 @@
 # 主配置（profile 无关，所有环境共享）
 #
 # 与分环境配置的权责边界：
-#   - 本文件：服务端口 / 应用名 / MyBatis-Plus / Actuator 端点暴露
+#   - 本文件：服务端口 / 应用名 / MyBatis / Actuator 端点暴露
 #   - application-{profile}.yml：安全策略 / 管理端口绑定
 #   - 环境变量 / K8s ConfigMap：敏感凭证（DB 密码等）
 # ============================================================================
@@ -30,42 +30,28 @@ spring:
     timeout-per-shutdown-phase: 30s
 
   # ----------------------------------------------------------------------------
-  # 多数据源（dynamic-datasource + HikariCP）
-  # 切换方式：业务代码标注 @DS("second") 即可切换到第二数据源
+  # 单数据源（Spring Boot 托管 HikariCP）
   #
   # ⚠️ 本文件占位符一律不带默认值：任何环境（含 prod）漏配环境变量时
   #    占位符无法解析、上下文启动即失败（fail-fast），杜绝静默回落弱口令。
   #    本地开发默认值见 application-dev.yml。
   # ----------------------------------------------------------------------------
   datasource:
-    dynamic:
-      primary: master                    # 默认数据源（未标注 @DS 时走此源）
-      strict: false                      # false=未匹配时回落 primary；true=抛异常
-      datasource:
-        master:
-          driver-class-name: org.postgresql.Driver
-          url: ${DB_MASTER_URL}
-          username: ${DB_MASTER_USER}
-          password: ${DB_MASTER_PASSWORD}
-        second:
-          driver-class-name: org.postgresql.Driver
-          url: ${DB_SECOND_URL}
-          username: ${DB_SECOND_USER}
-          password: ${DB_SECOND_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_MASTER_URL}
+    username: ${DB_MASTER_USER}
+    password: ${DB_MASTER_PASSWORD}
 
 # ----------------------------------------------------------------------------
-# MyBatis-Plus（显式声明全部配置，框架 Customizer 仅作兜底）
+# MyBatis（纯 MyBatis + 手写 XML SQL——每条语句可见、可 grep、可 review）
+# 逻辑删除过滤与乐观锁版本条件由 XML 文本承担，无全局注解/插件约定
 # ----------------------------------------------------------------------------
-mybatis-plus:
+mybatis:
   # PO 实体别名扫描包
   type-aliases-package: com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master
+  # 手写 Mapper XML 位置（框架 DddMapper 7 条通用语句 + 业务具名查询）
+  mapper-locations: classpath*:/mapper/**/*.xml
   # 自定义 TypeHandler（UUID/JSONB/数组等）由 common-pg 的 PgTypeHandlerAutoConfiguration 自动注册，无需手动配置
-  global-config:
-    db-config:
-      # 逻辑删除约定
-      logic-delete-field: isDelete
-      logic-delete-value: true
-      logic-not-delete-value: false
   configuration:
     # 下划线列名自动映射驼峰属性（user_name -> userName）
     map-underscore-to-camel-case: true

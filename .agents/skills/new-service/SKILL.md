@@ -65,7 +65,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 ### Phase 3: server 模块
 
 6. 依赖（按需选择）：
-   - `common-ddd`（必选，DDD 构建块 + MyBatis-Plus）
+   - `common-ddd`（必选，DDD 构建块 + MyBatis 仓储支撑，starter 已传递）
    - `common-cloud`（必选，springdoc + Nacos 预留 + Seata）
    - `spring-boot-starter-webmvc`（必选，REST 面 + 内嵌 Tomcat）
    - `common-observability`（推荐，Actuator + 日志）
@@ -78,15 +78,24 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
    application/{agg}/handler/ + assembler/ + presenter/ + dto/ + repository/application/
    domain/{agg}/model/ + repository/domain/ + portal/
    domain/shared/service/
-   infrastructure/persistence/master/{agg}/mybatisplus/po/ + mybatisplus/mapper/ + converter/ + repository/
-   infrastructure/gateway/
-   infrastructure/config/
-   ```
-8. 创建 `Application.java`（@SpringBootApplication）
+    infrastructure/persistence/master/{agg}/mybatis/po/ + mybatis/mapper/ + converter/ + repository/
+    （SQL 手写 XML 归 resources/mapper/{agg}/）
+    infrastructure/gateway/
+    infrastructure/config/
+    ```
+ 8. 创建 `Application.java`（@SpringBootApplication）
 
 ### Phase 4: 配置文件
 
-9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis-Plus / Actuator）
+9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis / Actuator）——数据源用普通单 `spring.datasource`（多数据源需求经 dynamic-datasource opt-in，见 docs/application/module-design/infrastructure.md）；MyBatis 用 `mybatis.*` 命名空间：
+   ```yaml
+   mybatis:
+     type-aliases-package: com.xxx.{service}.infrastructure.persistence.master
+     mapper-locations: classpath*:/mapper/**/*.xml
+     configuration:
+       map-underscore-to-camel-case: true
+       log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+   ```
 10. `application-dev.yml`（开发环境：与 prod 的差异项，如 Nacos 配置中心预留）
 11. `application-prod.yml`（生产环境：springdoc 禁用 + 管理端口收紧）
 
@@ -100,7 +109,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 - [ ] `mvn clean compile` 编译通过
 - [ ] BOM import 版本与 ywf-ddd-common 一致
 - [ ] 包结构符合 `.agents/rules/02-architecture.md`
-- [ ] application.yml 中数据源使用 dynamic-datasource 格式
+- [ ] application.yml 数据源为普通单 `spring.datasource`（多数据源需显式引入 dynamic-datasource 并说明理由）
 - [ ] Dockerfile 默认 profile=prod，OTel 环境变量齐全
 - [ ] 无多余依赖（每个引入的 common 模块都有明确用途）
 

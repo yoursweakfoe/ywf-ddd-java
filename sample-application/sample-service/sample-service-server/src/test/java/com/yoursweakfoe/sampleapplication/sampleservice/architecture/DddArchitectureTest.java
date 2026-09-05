@@ -13,7 +13,7 @@ import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
  * <p>{@code com.yoursweakfoe.common.ddd} 包含标准 DDD 分层（domain / application / infrastructure），
  * 所有规则均可有效校验。
  *
- * <p>R1 覆写：新增 Configuration 层（{@code MybatisPlusDddAutoConfiguration} 等根包类）以允许框架
+ * <p>R1 覆写：新增 Configuration 层（{@code MybatisDddAutoConfiguration} 等根包类）以允许框架
  * 自动配置类跨层引用基础设施组件。
  */
 @AnalyzeClasses(
@@ -23,7 +23,7 @@ class DddArchitectureTest {
 
     /**
      * R1 本地覆写：在标准四层基础上增加 Configuration 层，
-     * 容纳 {@code MybatisPlusDddAutoConfiguration} 等根包自动配置类，避免其跨层引用被误报。
+     * 容纳 {@code MybatisDddAutoConfiguration} 等根包自动配置类，避免其跨层引用被误报。
      *
      * <p>Application 允许被 Infrastructure 访问：与通用 R1 的依赖倒置语义对齐——
      * 应用层读端口（{@code QueryRepository}）由基础设施层实现（读侧先例）。
@@ -55,6 +55,10 @@ class DddArchitectureTest {
 
     @ArchTest
     static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+
+    // 框架自身必须零 com.baomidou 依赖（MyBatis-Plus 已剥离，ADR-0007；dynamic-datasource 仅 test scope，不在此扫描范围）
+    @ArchTest
+    static final ArchRule r15 = DDDArchitectureRules.MYBATIS_PLUS_BANNED;
 
     // 框架包自身无 adapter 层组件（标记接口位于 common-ddd/adapter/..，规则按空集通过），
     // 挂载以守护「标记接口所在的包结构不被破坏」。

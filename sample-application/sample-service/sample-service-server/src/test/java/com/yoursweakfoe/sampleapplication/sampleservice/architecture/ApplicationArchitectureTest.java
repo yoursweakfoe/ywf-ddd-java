@@ -116,13 +116,15 @@ class ApplicationArchitectureTest {
             .resideInAPackage(BASE + "domain..")
             .should()
             .dependOnClassesThat(
-                    resideInAPackage("com.baomidou.mybatisplus..")
-                            .or(resideInAPackage("org.springframework..")
-                                    .and(not(resideInAPackage("org.springframework.stereotype..")))))
-            .as("A2 Domain 不依赖框架运行时能力（允许 stereotype 注解，禁 Spring 容器 / MyBatis-Plus）");
+                    resideInAPackage("org.springframework..")
+                            .and(not(resideInAPackage("org.springframework.stereotype.."))))
+            .as("A2 Domain 不依赖框架运行时能力（允许 stereotype 注解，禁 Spring 容器）");
 
     // ── 复用 DDDArchitectureRules 通用规则（不涉及 repository.domain/application 碰撞） ──
 
+    /** R15 —— 全仓禁入 com.baomidou（MyBatis-Plus 剥离回归守护，ADR-0007；覆盖所有层，含 application / adapter）。 */
+    @ArchTest
+    static final ArchRule r15_baomidou_banned = DDDArchitectureRules.MYBATIS_PLUS_BANNED;
     /** R4 —— Domain 模型保持纯净。 */
     @ArchTest
     static final ArchRule r4_domain_model_pure = DDDArchitectureRules.DOMAIN_MODEL_IS_PURE;

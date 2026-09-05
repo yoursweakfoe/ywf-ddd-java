@@ -1,6 +1,8 @@
 spring:
   main:
     allow-bean-definition-overriding: true
+  # 双 H2 源经 dynamic-datasource 路由：MybatisPersistence 多数据源路由兼容验证
+  # （dynamic-datasource 为独立模块，非 MyBatis 增强的一部分，终审保留 test scope）
   datasource:
     dynamic:
       primary: master
@@ -16,10 +18,7 @@ spring:
           username: sa
           password:
 
-mybatis-plus:
-  global-config:
-    db-config:
-      id-type: auto
+mybatis:
   configuration:
     map-underscore-to-camel-case: true
-
+  mapper-locations: classpath*:/mapper/**/*.xml

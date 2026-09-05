@@ -1,12 +1,12 @@
 # common-ddd
 
-DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus 仓储支撑。
+DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis 仓储支撑（手写 XML SQL）。
 
 > 本文分两段：§1–4 面向使用者（怎么用），§5–7 面向设计者（为什么这么设计）。
 
 ## 1. 定位与边界
 
-为业务服务提供 DDD 战术层的通用构建块：聚合根/实体/值对象基类、CQRS Handler 接口、仓储支撑。面向所有采用 DDD 分层架构的业务服务，是框架的核心模块。引入后获得领域建模基类 + MyBatis-Plus 插件自动配置。
+为业务服务提供 DDD 战术层的通用构建块：聚合根/实体/值对象基类、CQRS Handler 接口、仓储支撑。面向所有采用 DDD 分层架构的业务服务，是框架的核心模块。引入后获得领域建模基类 + MyBatis 持久化支撑（`MybatisPersistence` 基类 + 审计填充自动配置，零运行时插件栈）。
 
 > 只提供「基类 + 契约接口 + 自动装配」，不包含任何业务模型。ID 生成、序列化策略、跨服务通信均由业务侧自行决定。
 
@@ -34,7 +34,7 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis-Plus
 | `Query` | `QueryHandler<Q, R>` | 请给我这个 | **R** |
 | `PageableQuery` | `QueryHandler<Q, PageResult<R>>` | 给我一页 | **PageResult&lt;R&gt;** |
 
-`PageResult<T>` 是框架级分页容器（record），定义在 **contract 层**（与 `PageableQuery` 同居 `dto/query`），隔离 MyBatis-Plus `Page<PO>`，提供 `map()` 支持逐层转换。服务端 application（读端口 / Handler / AppService）与 infrastructure（读实现装填）均使用它，消费方从 common-contract 直接拿到分页元数据（records / total / pageNum / pageSize）。
+`PageResult<T>` 是框架级分页容器（record），定义在 **contract 层**（与 `PageableQuery` 同居 `dto/query`），隔离基础设施分页实现（手写 XML 的 LIMIT/OFFSET 取数 + COUNT 计数双语句），提供 `map()` 支持逐层转换。服务端 application（读端口 / Handler / AppService）与 infrastructure（读实现装填）均使用它，消费方从 common-contract 直接拿到分页元数据（records / total / pageNum / pageSize）。
 
 `ApplicationService` 是 application 层聚合协调入口的**标记接口**（`common-ddd/application/service/`），业务侧 `XxxAppService` 实现之，与 domain 层 `DomainService` 标记对偶（应用编排 vs 领域协调）。业务类名沿用缩写 `XxxAppService`（`App` = Application 的缩写，仅类名简洁），标记接口保持全名语义。
 
@@ -54,26 +54,46 @@ Adapter 层入口同样以**空标记**定型角色：
 
 被转换的 `DTO` 由 `ApplicationDTO` **空标记接口**（`common-ddd/application/dto/`）定型：业务顶层 DTO 类（写侧 `XxxDTO` / 读侧 `XxxViewDTO`）实现之，与 contract 层对外 `CO` 标记对偶（DTO = 内部视图可含 version/审计，CO = 经 Presenter 清洗后对外暴露）。嵌套 DTO（如 `OrderDTO.OrderItemDTO`）随外层定型，不重复标记。
 
-### 仓储支撑（MybatisPlusPersistence）
+### 仓储支撑（MybatisPersistence）
 
-组合持有 `BaseMapper`（不继承 ServiceImpl，避免 `save(PO)`/`updateById(PO)` 等底层 PO 直操方法泄漏为公开 API），封装：
+组合持有业务 Mapper（`DddMapper<PO>` 的扩展接口），直接操作 PO 的底层方法不泄漏为公开 API，封装写侧「load → 行为 → save」链路：
 
-- `saveDomain` / `updateDomain` — 持久化前自动 `validate()`（聚合根不变量校验）
+- `saveDomain` / `updateDomain` — 持久化前自动 `validate()`（聚合根不变量校验）+ 经 `AuditFieldFiller` 显式填充审计字段
 - `removeDomain` / `removeDomains` — 传实体删除（内部提取 ID）；`removeDomains` 为 **BEST_EFFORT** 批量语义：不存在的 ID 静默跳过，仅当全部不存在时才抛 `IllegalStateException`
 - `removeDomainById` / `removeDomainByIds` — 按 ID 删除；`removeDomainById` 为 STRICT（ID 不存在即抛 `IllegalStateException`），`removeDomainByIds` 为 BEST_EFFORT（与 `removeDomains` 一致）
-- `findDomainById` / `findDomainsByIds` / `findDomainOneByCondition` — 写侧加载聚合（load → 行为 → save 链路）
-- 乐观锁冲突 → `IllegalStateException`（HTTP 409）
+- `findDomainById` / `findDomainsByIds` / `existsDomainById` — 写侧加载聚合（load → 行为 → save 链路）
+- 乐观锁版本冲突 → `OptimisticLockConflictException`（继承 `IllegalStateException`，HTTP 409）——UPDATE 影响行数 0 时基类经存在性探测区分「版本冲突（可重试）」与「实体消失（重试无意义）」
+- 业务唯一键单条查询由子类以**具名 Mapper 方法**实现（普通 selectOne 语义），基类不设通用条件查询
 - **事务边界上收**：本类不声明 `@Transactional`，事务由应用层 Handler 控制（批量原子性由调用方包裹事务保证）
 
-### MyBatis-Plus 自动配置
+#### DddMapper<PO> —— 通用语句契约（每聚合手写 XML 七条）
 
-| 拦截器 | 说明 |
-|--------|------|
-| PaginationInnerInterceptor | 物理分页（AUTO 方言） |
-| OptimisticLockerInnerInterceptor | 乐观锁（仅 @Version 实体生效） |
-| BlockAttackInnerInterceptor | 防全表 UPDATE/DELETE（始终开启） |
+每个聚合的业务 Mapper `extends DddMapper<XxxPO>`，配一份**手写 XML**（namespace = 业务 Mapper 全限定名，泛型继承方法按子接口 namespace 解析、无跨 namespace 共享）。全部 ORM 语义由 SQL 文本自身承担——可见、可 grep、可 review：
 
-`@ConditionalOnMissingBean` 允许业务项目完全自定义覆盖。
+| 语句 | XML 手写语义 |
+|---|---|
+| `insert` | 枚举全部业务列（业务铸造 ID 显式传参、`version` 写字面量 0、**不枚举**逻辑删除列——靠 DB 默认值） |
+| `updateById` | **全量 UPDATE** + `SET version = version + 1` + `WHERE id = #{id} AND version = #{version} AND is_delete = false`——版本条件由 SQL 文本携带，无运行时拦截器；无版本列的聚合省略该条件即可 |
+| `selectById` / `selectByIds` | 查询列 + `AND is_delete = false` 显式过滤（批量为 `foreach` IN） |
+| `deleteById` / `deleteByIds` | 逻辑删除聚合 = `UPDATE SET is_delete = true, update_at = #{now}`（操作人列以 `<if test="updatedBy != null">` 守卫）；物理删除聚合 = `DELETE`。审计参数由基类传入，是否消费由聚合 XML 决定 |
+| `existsById` | `SELECT EXISTS(SELECT 1 ... AND is_delete = false)`——恒返回一行 boolean，不加载完整行（冲突分类依赖它） |
+
+逻辑删除列名、版本列有无、物理还是逻辑删除——都是**聚合级选择**，逐篇 XML 自行表达，不存在全局隐式约定。
+
+#### AuditFieldFiller —— 审计字段显式填充
+
+基于 MyBatis 核心反射 `MetaObject`（按字段名读写，PO 无需任何 ORM 注解），由 `MybatisPersistence` 在 `mapper.insert` / `mapper.updateById` 前**显式调用**——触发链透明，无拦截器魔法：
+
+- `fillInsert`：createAt / updateAt（已有值不覆盖）+ createdBy / updatedBy（四道宽松守卫：字段名已配置、容器存在 `CurrentUserProvider` Bean、provider 返回非 null、PO 声明该字段）
+- `fillUpdate`：无条件刷新 updateAt +（守卫满足时）updatedBy
+- 时间源 = 注入 `Clock`（`ClockAutoConfiguration` 缺省 UTC，业务 Bean 退位，见 ADR-0006）；字段名经 `AuditProperties`（`ywf.ddd.audit.*`）可配
+- 逻辑删除的审计刷新不走本组件——由基类把 `now` / `updatedBy` 作为 delete 语句的 SQL 参数传入
+
+### MyBatis 持久化自动配置
+
+`MybatisDddAutoConfiguration`：`@ConditionalOnClass(SqlSessionFactory.class)` 门控（纯领域消费方不被强制 MyBatis 运行时）、after mybatis-spring-boot-starter 的 `MybatisAutoConfiguration` 排序、`@Import(AuditFieldFiller)` + `@EnableConfigurationProperties(AuditProperties)`；`Clock` 由独立的 `ClockAutoConfiguration` 提供。
+
+**零运行时插件**——框架不注册任何 MyBatis `Interceptor`：分页（XML LIMIT/OFFSET 双语句）、乐观锁（UPDATE 文本的版本条件）均由手写 SQL 承担；防全表 UPDATE/DELETE 不设运行时拦截器，手写 XML 使每条语句可见、可 review，「无 WHERE 全表操作」是评审可见项而非运行时黑盒（论证见 ADR-0007）。业务侧经标准 `mybatis.*` 配置命名空间自定义（`configuration.*` / `type-aliases-package` / `mapper-locations`）。
 
 ## 3. 使用方式
 
@@ -134,30 +154,62 @@ public class Order extends AggregateRoot<UUID> {
 }
 ```
 
-### 场景 2：RepositoryImpl（仓储实现）
+### 场景 2：PO + Mapper + XML + RepositoryImpl（仓储实现）
+
+PO 是**零 ORM 注解**的纯 `@Data` POJO——表名、主键、版本条件、逻辑删除过滤全部写在 XML 的 SQL 文本里：
+
+```java
+@Data
+public class OrderPO {
+    private String id;                 // 业务铸造（UUIDv7 文本），INSERT 显式传参
+    private String status;
+    private BigDecimal totalAmount;
+    private Integer version;           // 版本条件由 UPDATE 语句文本携带
+    private OffsetDateTime createAt;   // AuditFieldFiller 填充
+    private OffsetDateTime updateAt;
+}
+```
+
+Mapper 扩展框架契约接口，通用七条语句 + 业务查询同一篇 XML 承载：
+
+```java
+@Mapper
+public interface OrderMapper extends DddMapper<OrderPO> {
+    // 分页双语句 + 业务专有查询，实现在 resources/mapper/order/OrderMapper.xml
+    List<OrderPO> selectPageByCondition(@Param("status") String status, @Param("offset") long offset, @Param("limit") long limit);
+    long countByCondition(@Param("status") String status);
+}
+```
+
+RepositoryImpl 继承 `MybatisPersistence`，构造器注入四件依赖（Mapper / Clock / AuditProperties / CurrentUserProvider）：
 
 ```java
 @Component
 public class OrderRepositoryImpl
-        extends MybatisPlusPersistence<OrderMapper, OrderPO, Order, UUID>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
         implements OrderRepository {
 
     private final OrderConverter converter;
 
-    public OrderRepositoryImpl(OrderMapper mapper, OrderConverter converter) {
-        super(mapper);
+    public OrderRepositoryImpl(OrderMapper mapper,
+                               OrderConverter converter,
+                               Clock clock,
+                               AuditProperties auditProperties,
+                               ObjectProvider<CurrentUserProvider> currentUserProvider) {
+        super(mapper, clock, auditProperties, currentUserProvider);
         this.converter = converter;
     }
 
     @Override protected BasicConverter<Order, OrderPO> getConverter() { return converter; }
 
+    /** 领域 ID（UUID）→ PO 主键（String）；类型一致时无需覆写 */
+    @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
+
     @Override public Optional<Order> findById(UUID id) { return findDomainById(id); }
 
-    @Override @Transactional(rollbackFor = Exception.class)
-    public void save(Order domain) { saveDomain(domain); }
+    @Override public void save(Order domain) { saveDomain(domain); }
 
-    @Override @Transactional(rollbackFor = Exception.class)
-    public void update(Order domain) { updateDomain(domain); }
+    @Override public void update(Order domain) { updateDomain(domain); }
 
     @Override public void deleteById(UUID id) { removeDomainById(id); }
 }
@@ -207,19 +259,21 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 ```
 common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记接口）
            → common-exception（BusinessException）
-           → mybatis-plus-spring-boot4-starter
-           → mybatis-plus-jsqlparser
-           → dynamic-datasource-spring-boot4-starter（test scope，多数据源兼容性验证）
+           → mybatis-spring-boot-starter 4.1.0（Boot 4.1.0 / mybatis 3.5.19 / mybatis-spring 4.1.0）
+           → dynamic-datasource-spring-boot4-starter（test scope，多数据源路由兼容性验证；独立模块，非 ORM 增强的一部分）
            → h2（test scope，持久化测试的内嵌库）
 ```
 
+依赖树纯净：仅 `org.mybatis` 系，无任何 ORM 增强框架或其 SQL 解析器传递依赖。
+
 ## 5. 设计原则
 
-- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`ApplicationDTO`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`ScheduledAdapter`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPlusPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`ApplicationDTO`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`ScheduledAdapter`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
-- **`@ConditionalOnMissingBean`**：MyBatis-Plus 插件允许业务项目完全自定义覆盖
+- **SQL 文本即契约**：每条执行的语句都在仓库里（手写 XML），无动态生成、无运行时织入（ADR-0007）
+- **`@ConditionalOnMissingBean`**：`Clock` 等平台级 Bean 允许业务项目定义自己的 Bean 覆盖，框架配置整体退位
 
 ## 6. 设计决策
 
@@ -243,9 +297,9 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 
 **背景**：持久化采用脏检查还是全量更新。
 
-**决策**：选全量 UPDATE。MyBatis-Plus 场景下脏检查收益极低且增加复杂度；全量更新保证审计字段刷新。
+**决策**：选全量 UPDATE。本框架场景下脏检查收益极低且增加复杂度（需要变更追踪设施）；全量更新保证审计字段刷新——XML 的 `updateById` 语句逐列枚举，PO 由 Converter 完整装配，null 字段真实写为 NULL。
 
-**确认**：`updateDomain` 走 MyBatis-Plus 全量 update。
+**确认**：`updateDomain` 走 `mapper.updateById` 全量 UPDATE（见各聚合 `resources/mapper/**/XxxMapper.xml`）。
 
 ### ADR-0004 对象转换纯手写，不用 MapStruct
 
@@ -271,7 +325,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 
 - 状态：accepted（2026-09 补录，经一手源码调研论证）
 
-**背景**：时间类型贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误是系统性风险（数据漂移、排序错乱、去重漏判）。技术栈为 PostgreSQL `timestamptz` + pgjdbc + MyBatis(-Plus) + Jackson。需以一手证据锁定唯一时间类型与唯一时间源。
+**背景**：时间类型贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误是系统性风险（数据漂移、排序错乱、去重漏判）。技术栈为 PostgreSQL `timestamptz` + pgjdbc + MyBatis + Jackson。需以一手证据锁定唯一时间类型与唯一时间源。
 
 **决策**：全框架统一 `java.time.OffsetDateTime`；框架级 `Clock` Bean 统一注入（`ClockAutoConfiguration` 缺省 `Clock.systemUTC()`，类级 `@ConditionalOnMissingBean` 退位，业务测试以 `Clock.fixed(instant, ZoneOffset.UTC)` 覆盖）。
 
@@ -287,7 +341,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 **关键事实**：
 
 1. **偏移往返语义**：写入时偏移被丢弃（PG 归一化为绝对瞬时、以 UTC 存储，原始偏移不保留——PG 官方文档 §8.5.3）；读回时驱动**恒定返回 +00:00**（二进制路径硬编码 `OffsetDateTime.ofInstant(instant, ZoneOffset.UTC)`，文本路径同样归一）——与会话时区、JVM 时区、传输模式全部无关。`timestamptz` + `OffsetDateTime` 的实质是「带类型纪律的绝对瞬时」
-2. **MyBatis-Plus 委托链**：`MybatisConfiguration extends Configuration`，MP 零自带时间 handler，`OffsetDateTime` 字段实际走 MyBatis 原生 handler 路径
+2. **MyBatis 路径**：`OffsetDateTime` 走 MyBatis 原生 `TypeHandler`（3.5.0+ 内置），无自定义时间 handler，绑定即 JDBC `setObject` / 读取即 `getObject`
 3. **业界收敛**：Hibernate 6 / jOOQ 默认 / Spring Data JDBC 均把 timestamptz 映射为 OffsetDateTime；jOOQ 虽增设 `SQLDataType.INSTANT`，作者原话 "For all practical purposes, Instant and OffsetDateTime are the same data type"
 4. **现代性核查**：Java 8→25 无新时间类型（Java 23 仅增 `Instant.until`）；ThreeTen-Extra 定位是 complement（补充）非替代；Joda-Time 官方宣告 finished 并建议迁移 java.time；JDK 25 javadoc 对 OffsetDateTime 的定位即 "communicating to a database"
 5. **Clock 同构论证**：`OffsetDateTime.now(systemUTC())` 产出偏移 `Z`，与 pgjdbc 读回的 `+00:00` **equals 相等**——写读往返断言稳定；`systemDefaultZone()` 则使每个非 UTC 主机制造「同瞬时不等值」地雷。JDK `Clock` javadoc 原文背书：`systemDefaultZone()` "hard codes a dependency to the default time-zone... recommended to avoid"；DI 注入 Clock 即官方推荐实践
@@ -300,7 +354,43 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 4. **纵深防御**：容器统一 `TZ=UTC`，消除 `java.sql.Timestamp` 桥路径与日志格式的宿主时区残余泄漏
 5. **value-based class**：禁止对 `OffsetDateTime` 实例加锁（与虚拟线程规则同向）
 
-**确认**：`ClockAutoConfiguration`（`systemUTC` 缺省）、`BasicAutoFillHandler`（`OffsetDateTime.now(clock)` 填充审计字段）、PO 审计列 `createAt`/`updateAt` 均为 `OffsetDateTime`。
+**确认**：`ClockAutoConfiguration`（`systemUTC` 缺省）、`AuditFieldFiller`（`OffsetDateTime.now(clock)` 填充审计字段）、PO 审计列 `createAt`/`updateAt` 均为 `OffsetDateTime`。
+
+### ADR-0007 持久化手写 XML SQL 全面接管，移除 MyBatis-Plus
+
+- 状态：accepted（2026-09）
+
+**背景**：本仓一等设计目标是「AI 与人共同可理解的全链路上下文」——ADR-0004 拒绝 MapStruct 的同源论证（AI 辅助下手写模板成本归零，生成器的认知负担仍在）在此同样适用。MyBatis-Plus 的 Wrapper 动态生成与拦截器织入意味着**真正执行的 SQL 不在代码库里**：数据链路从 domain 追到 Repository，再追到 Wrapper / 插件的 SQL 拼装即断。当时 MyBatis-Plus 已被严格圈禁在 infrastructure（domain / application / adapter / contract 四层零命中，ArchUnit 守护在位），但圈禁属「他律」——可剥离性应由架构实际验证而非仅靠纪律。
+
+**决策**：切换为纯 MyBatis（mybatis-spring-boot-starter 4.1.0，配套 Boot 4.1.0 / mybatis 3.5.19 / mybatis-spring 4.1.0），每聚合手写 XML SQL 全量接管；MyBatis-Plus 及其 SQL 解析器全部从依赖树移除。执行中落定的五个分支结果：
+
+1. **逻辑删除——保留语义，降级为聚合级选择**：`UPDATE SET is_delete = true` 置位与 `AND is_delete = false` 过滤写进每篇 XML 文本；不需要逻辑删除的聚合直接写物理 `DELETE`，基类语义不变
+2. **防全表 UPDATE/DELETE 拦截器——裁撤**：手写 XML 使每条 UPDATE / DELETE 语句可见、可 grep、可 review，「无 WHERE 全表操作」从运行时黑盒风险降级为代码评审可见项；不自研替代拦截器
+3. **审计填充——基类显式调用**：`AuditFieldFiller`（基于 MyBatis 核心 `MetaObject` 按字段名反射）由 `MybatisPersistence` 在写库前显式调用，替代隐式触发链；`AuditProperties` / `Clock` / `CurrentUserProvider` 四道宽松守卫语义逐条保留
+4. **dynamic-datasource——保留（test scope）**：2026-09 一手调研（POM / 源码）证实它是与 MyBatis-Plus 无关的独立多数据源路由模块（对 MyBatis-Plus 仅有 dependencyManagement 条目 + 一处 `Class.forName` 反射带优雅降级；`DynamicRoutingDataSource` 直接构建于 Spring `AbstractRoutingDataSource`）。框架测试继续在其 `DynamicRoutingDataSource` 包裹下运行，作为 `MybatisPersistence` 多数据源兼容性的真实库实证；消费方按需 opt-in（用法与注意事项见 `docs/application/module-design/infrastructure.md`）。跟进项：SpEL 数据源表达式注入加固（PR #767）已合入 master 但不在 4.5.0 发布内，使用 SpEL 表达式的消费方待 4.5.1+ 发布后升级
+5. **基类通用条件查询 `findDomainOneByCondition`——删除**：业务唯一键单查 / 计数由子类以**具名 Mapper 方法 + 具名 XML 语句**实现，SQL 按业务命名，基类不设条件查询通道
+
+**论据（每项能力的接管落点，逐条对齐行为语义）**：
+
+| 原能力 | 手写接管落点 |
+|---|---|
+| 通用 `insert`（非空列动态拼） | XML 枚举全部业务列；审计列由 `AuditFieldFiller` 保证非空；逻辑删除列不入 INSERT，靠 DB 默认值 |
+| 按主键全列更新 + 乐观锁（注解 + 拦截器织入版本条件） | XML `SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false`；影响行数 0 → 基类存在性探测分类（`OptimisticLockConflictException` / `IllegalStateException`），分类链不变 |
+| 逻辑删除翻译（DELETE → UPDATE 置位 + 审计刷新） | XML `UPDATE SET is_delete = true, update_at = #{now}`（`updated_by` 以 `<if>` 守卫），审计参数由基类经 Clock / `CurrentUserProvider` 传入 |
+| 隐式 `is_delete = false` 过滤 | 每条 select / update / delete 语句显式携带——比隐式更可见，漏写属评审可查缺陷 |
+| 类型安全条件构造器 | 具名 Mapper 方法 + XML `<if>` 动态条件 |
+| 分页（运行时物理分页插件） | `selectPageByCondition` + `countByCondition` 双语句共享 `<sql>` 条件片段，`ORDER BY create_at DESC` + 数据库原生 `LIMIT / OFFSET`；`PageResult` / `PageableQuery` 契约零改动，单页上限仍由 `PageableQuery.MAX_PAGE_SIZE` 钳制 |
+| 审计字段自动填充回调 | `AuditFieldFiller.fillInsert` / `fillUpdate` 显式调用（同配置 / 同时间源 / 同 SPI） |
+| 表名 / 主键 / 版本 / 逻辑删除注解模型 | PO 回归纯 `@Data` POJO，全部语义入 SQL 文本 |
+| 防全表攻击拦截器 + SQL 解析器 | 裁撤（决策 2），SQL 可见性 + 评审接管 |
+
+**后果**：
+
+- 正面：每条真正执行的 SQL 都在仓库里（可 grep、可 review、可被 AI 直接引用）；运行时插件栈归零，行为与 SQL 文本一一对应；依赖树纯净（仅 `org.mybatis` 系）；PO 零 ORM 注解，domain / infrastructure 边界更干净
+- 成本：每聚合新增约 80–100 行手写 XML（通用 7 条 + 业务查询）；逻辑删除过滤、版本条件由「每语句一条 `AND`」保证，漏写风险由 XML 评审 checklist + 行为等价测试承接（防超卖并发测试为关键证人）
+- 守护：ArchUnit R15（`DDDArchitectureRules.MYBATIS_PLUS_BANNED`）全仓禁入 `com.baomidou..` 代码依赖，防回归；dynamic-datasource 仅存于 common-ddd test scope（兼容验证），永不成为任何层代码依赖
+
+**确认**：`MybatisPersistence` / `DddMapper` / `AuditFieldFiller`（§2 仓储支撑）；sample PO 零注解 + `resources/mapper/` 手写 XML；`mybatis.*` 配置命名空间；`mvn dependency:tree` 无 MyBatis-Plus 相关构件。
 
 ## 7. 职责边界与技术债
 
@@ -308,4 +398,4 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 |---|---|
 | 边界：聚合根 ID 自动生成策略 | ID 生成与业务强相关，由子类构造器自行决定 |
 | 边界：脏检查 / 变更追踪 | 全量 UPDATE 策略已覆盖 |
-| 边界：Specification 模式 | 采纳为纯接口（可选工具）：领域规则 and/or/not 组合表达，供复杂校验场景；查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`，简单校验仍用聚合根 if-throw |
+| 边界：Specification 模式 | 采纳为纯接口（可选工具）：领域规则 and/or/not 组合表达，供复杂校验场景；查询过滤用业务 Mapper 具名方法 + 手写 XML 动态条件（`<if>`），简单校验仍用聚合根 if-throw |

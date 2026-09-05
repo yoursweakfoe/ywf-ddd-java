@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商品聚合通用语句契约（DddMapper 7 条）——手写 SQL，逐条可见。
+     乐观锁由 WHERE version = #{version} + SET version = version + 1 文本承担（无拦截器）；
+     逻辑删除列 deleted 由 WHERE/SET 文本显式承担。 -->
+<mapper namespace="com.yoursweakfoe.common.ddd.fixtures.mapper.ProductMapper">
+
+    <sql id="columns">
+        id, name, stock, version, create_at, update_at, deleted
+    </sql>
+
+    <!-- id 为数据库自增主键 → 不枚举，useGeneratedKeys 回写 PO.id；deleted 不枚举 → DB 默认 FALSE -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO products.products (name, stock, version, create_at, update_at)
+        VALUES (#{name}, #{stock}, #{version}, #{createAt}, #{updateAt})
+    </insert>
+
+    <!-- 乐观锁契约：SET version = version + 1 ... WHERE id AND version AND deleted = false；
+         影响行数 0 → 基类存在性探测分类（版本冲突 / 实体消失） -->
+    <update id="updateById">
+        UPDATE products.products
+        SET name      = #{name},
+            stock     = #{stock},
+            version   = version + 1,
+            update_at = #{updateAt}
+        WHERE id = #{id}
+          AND version = #{version}
+          AND deleted = false
+    </update>
+
+    <select id="selectById" resultType="com.yoursweakfoe.common.ddd.fixtures.po.ProductPO">
+        SELECT <include refid="columns"/>
+        FROM products.products
+        WHERE id = #{id}
+          AND deleted = false
+    </select>
+
+    <select id="selectByIds" resultType="com.yoursweakfoe.common.ddd.fixtures.po.ProductPO">
+        SELECT <include refid="columns"/>
+        FROM products.products
+        WHERE deleted = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- 业务唯一键具名查询（House pattern：替代既往基类通用条件查询）——
+         多条命中时 MyBatis selectOne 语义抛 TooManyResultsException，由仓储层决定包装策略 -->
+    <select id="selectByUniqueName" resultType="com.yoursweakfoe.common.ddd.fixtures.po.ProductPO">
+        SELECT <include refid="columns"/>
+        FROM products.products
+        WHERE name = #{name}
+          AND deleted = false
+    </select>
+
+    <!-- 逻辑删除 = UPDATE 置位 + 审计刷新（now/updatedBy 由基类传入；本表无操作人列，仅消费 now） -->
+    <update id="deleteById">
+        UPDATE products.products
+        SET deleted   = true,
+            update_at = #{now}
+        WHERE id = #{id}
+          AND deleted = false
+    </update>
+
+    <update id="deleteByIds">
+        UPDATE products.products
+        SET deleted   = true,
+            update_at = #{now}
+        WHERE deleted = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM products.products WHERE id = #{id} AND deleted = false
+        )
+    </select>
+</mapper>

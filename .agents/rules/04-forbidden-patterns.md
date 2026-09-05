@@ -35,7 +35,7 @@
 - 禁止被 Domain 层引用（方向反了）
 - 禁止将外部 SDK 类型泄漏到 Domain 层（必须 ACL 翻译）
 - 禁止跨聚合共享 PO / Mapper
-- 禁止在 Repository 中直接拼接 SQL 字符串（复杂 SQL 写 XML）
+- 禁止在 Repository 中直接拼接 SQL 字符串（全部 SQL 写手写 XML）
 
 ## Contract 模块禁止
 
@@ -57,7 +57,16 @@
 
 > 注：Specification 模式已解除禁止（2026-08 决策修订）——common-ddd 提供的最小纯接口
 > 实现为既定采纳项（见 docs/references.md「采纳」表），可用于领域规则的 and/or/not 组合校验；
-> 查询过滤仍用 MyBatis-Plus `LambdaQueryWrapper`，简单校验仍优先聚合根内 if-throw。
+> 查询过滤用业务 Mapper 具名方法 + 手写 XML 动态条件（`<if>`），简单校验仍优先聚合根内 if-throw。
+
+## 持久化与 SQL（含 PO 强制约束）
+
+- 禁止全仓引用 MyBatis-Plus（`com.baomidou.mybatisplus`）任何能力——全仓禁入，ArchUnit 守护（`DDDArchitectureRules.MYBATIS_PLUS_BANNED`，见 docs/common/common-ddd.md ADR-0007）；多数据源仅限 dynamic-datasource 独立模块（common-ddd test-scope 兼容验证；消费方 opt-in 引入，引入后其 `com.baomidou.dynamic` 包依赖需按需覆写守护规则）
+- 禁止 PO 携带任何 ORM 注解——PO 为纯 `@Data` POJO，全部持久化语义（表名 / 主键 / 版本条件 / 逻辑删除）由手写 XML 的 SQL 文本承担
+- 禁止 Wrapper 式动态条件——查询条件一律落成具名 Mapper 方法 + 具名 XML 语句（`<sql>` 片段复用防语句漂移）
+- PO **必须**声明 `version` 字段（Integer，乐观锁，无此字段视为架构违规）与 `isDelete` 字段（Boolean，逻辑删除）；建表 DDL 必须包含 `version INT NOT NULL DEFAULT 0` 和 `is_delete BOOLEAN NOT NULL DEFAULT FALSE`
+- 手写 XML 的 `updateById` 语句（有版本列的聚合）**必须**携带乐观锁条件：`SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false`——**无任何运行时拦截器织入**，版本条件缺失即并发缺陷（防超卖依赖它，行为由 sample `OptimisticLockConcurrencyTest` 实证）；影响行数 0 由 `MybatisPersistence` 经存在性探测分类为 `OptimisticLockConflictException`（可重试）或 `IllegalStateException`（实体已消失）；无版本列的聚合在 XML 省略版本条件即可
+- 逻辑删除聚合的每条 select / update / delete 语句**必须**显式携带 `AND is_delete = false` 过滤——漏写一处即数据泄漏；不需要逻辑删除的聚合在 XML 写物理 `DELETE`
 
 ## Infrastructure 层最小化原则
 
@@ -65,13 +74,6 @@
 - 禁止保留死代码（注释掉的代码块、TODO-restore、空实现）
 - 禁止手动记录日志替代框架机制（如用 System.out 替代 SLF4J）
 - 禁止在 infrastructure 层定义业务规则（仅做技术实现 + ACL 翻译）
-
-## PO 强制注解
-
-- PO **必须**声明 `@Version` 字段（乐观锁，无此注解视为架构违规）
-- PO **必须**声明 `@TableLogic` 字段（逻辑删除，字段名 `isDelete`）
-- 建表 DDL 必须包含 `version INT NOT NULL DEFAULT 0` 和 `is_delete BOOLEAN NOT NULL DEFAULT FALSE`
-- 乐观锁**仅由** `OptimisticLockerInnerInterceptor` 对 MyBatis-Plus 内置方法自动织入（如 `updateById`）；**手写 XML/注解 SQL 的 UPDATE 不经过插件、无任何版本保护**。确需手写更新时必须复刻插件参数契约：实体参数标 `@Param("et")`，并在 `<if test="et != null and et['version'] != null">` 守卫内追加 `AND version = #{MP_OPTLOCK_VERSION_ORIGINAL}` 版本条件——行为基线由 common-ddd 的 `OptimisticLockHandWrittenXmlTest` 运行时实证钉死
 
 ## 虚拟线程兼容
 

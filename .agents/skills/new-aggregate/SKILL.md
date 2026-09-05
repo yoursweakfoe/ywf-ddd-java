@@ -1,13 +1,13 @@
 ---
 name: new-aggregate
-description: 从零创建 DDD 聚合（18 个文件，5 阶段）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
+description: 从零创建 DDD 聚合（19 个文件，5 阶段）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
 ---
 
 # 新建聚合
 
 ## 前置阅读
 
-1. `docs/application/cookbook/new-aggregate.md`（完整 18 文件模板）
+1. `docs/application/cookbook/new-aggregate.md`（完整 19 文件模板）
 2. `.agents/rules/02-architecture.md`（分层 + 包结构）
 3. `.agents/rules/03-coding-conventions.md`（命名 + 泛型）
 
@@ -30,23 +30,24 @@ description: 从零创建 DDD 聚合（18 个文件，5 阶段）。当需要新
 
 ### Phase 3: infrastructure 层
 
-8. `infrastructure/persistence/master/{agg}/mybatisplus/po/{Agg}PO.java` — 持久化对象（MyBatis-Plus 注解载体）
-9. `infrastructure/persistence/master/{agg}/mybatisplus/mapper/{Agg}Mapper.java` — MyBatis-Plus Mapper（extends BaseMapper）
-10. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器（框架 BasicConverter 桥）
-11. `infrastructure/persistence/master/{agg}/repository/domain/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPlusPersistence）
+8. `infrastructure/persistence/master/{agg}/mybatis/po/{Agg}PO.java` — 持久化对象（纯 `@Data` POJO，零 ORM 注解）
+9. `infrastructure/persistence/master/{agg}/mybatis/mapper/{Agg}Mapper.java` — Mapper 接口（`extends DddMapper<{Agg}PO>`，标注 `@Mapper`）
+10. `src/main/resources/mapper/{agg}/{Agg}Mapper.xml` — 手写 SQL（DddMapper 七条语句契约，模板见 cookbook ⑲）
+11. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器（框架 BasicConverter 桥）
+12. `infrastructure/persistence/master/{agg}/repository/domain/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPersistence，构造器注入 Mapper + Converter + Clock + AuditProperties + CurrentUserProvider）
 
 ### Phase 4: application 层
 
-12. `application/{agg}/dto/{Agg}DTO.java` — 内部视图
-13. `application/{agg}/assembler/{Agg}Assembler.java` — Domain → DTO
-14. `application/{agg}/presenter/{Agg}Presenter.java` — DTO → CO
-15. `application/{agg}/handler/Create{Agg}Handler.java` — 写 Handler
-16. `application/{agg}/handler/Get{Agg}Handler.java` — 读 Handler
-17. `application/{agg}/{Agg}AppService.java` — 聚合入口
+13. `application/{agg}/dto/{Agg}DTO.java` — 内部视图
+14. `application/{agg}/assembler/{Agg}Assembler.java` — Domain → DTO
+15. `application/{agg}/presenter/{Agg}Presenter.java` — DTO → CO
+16. `application/{agg}/handler/Create{Agg}Handler.java` — 写 Handler
+17. `application/{agg}/handler/Get{Agg}Handler.java` — 读 Handler
+18. `application/{agg}/{Agg}AppService.java` — 聚合入口
 
 ### Phase 5: adapter 层
 
-18. `adapter/web/{Agg}Controller.java` — REST 入口（@RestController 实现 contract 接口）
+19. `adapter/web/{Agg}Controller.java` — REST 入口（@RestController 实现 contract 接口）
 
 ## 验证
 
@@ -54,9 +55,10 @@ description: 从零创建 DDD 聚合（18 个文件，5 阶段）。当需要新
 - [ ] ArchUnit 测试通过（`mvn test -pl ... -Dtest=ArchitectureTest`）
 - [ ] Handler 返回 DTO，AppService 返回 CO
 - [ ] Domain 层零框架注解
-- [ ] PO 有 `@Version` + `@TableLogic` + `@TableName` 含 schema
+- [ ] XML 表名含 schema 前缀；`updateById` 携带 `SET version = version + 1 ... AND version = #{version}`；各 select/update/delete 语句显式 `AND is_delete = false`；`insert` 不枚举 `is_delete`
+- [ ] PO 零 ORM 注解（表名 / 版本条件 / 逻辑删除全在 SQL 文本）
 - [ ] Converter.toDomain() 使用 `reconstitute()`
-- [ ] RepositoryImpl 的 `save()`/`update()` 标注 `@Transactional(rollbackFor = Exception.class)`
+- [ ] 事务边界在 Handler（RepositoryImpl 不标注 `@Transactional`，边界上收至应用层）
 
 ## 文档同步
 

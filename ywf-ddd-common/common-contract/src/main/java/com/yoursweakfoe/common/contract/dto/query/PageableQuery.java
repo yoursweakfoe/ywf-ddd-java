@@ -25,7 +25,7 @@ package com.yoursweakfoe.common.contract.dto.query;
  *       即使调用点未触发 Bean Validation，也不会产生非法分页或超大分页拖垮数据库</li>
  * </ul>
  *
- * <p>页码从 <strong>1</strong> 开始（与 MyBatis-Plus {@code Page} 一致）。
+ * <p>页码从 <strong>1</strong> 开始。
  *
  * <h3>校验约定</h3>
  *

@@ -27,7 +27,7 @@ REST 请求
       → application/order/handler/PayOrderHandler（编排领域逻辑）
         → domain/order/model/Order.pay()（业务规则 + 状态变迁）
         → domain/order/repository/OrderRepository.update()（持久化抽象）
-          → infrastructure/persistence/.../OrderRepositoryImpl（MyBatis-Plus 落盘）
+          → infrastructure/persistence/.../OrderRepositoryImpl（纯 MyBatis + 手写 XML 落盘）
       → application/order/presenter/OrderPresenter（DTO → CO）
   ← OrderCO（返回调用方）
 ```
@@ -226,26 +226,28 @@ public interface OrderRepository extends Repository<Order, UUID> {
 }
 ```
 
-## 6. Infrastructure — PO / Converter / RepositoryImpl
+## 6. Infrastructure — PO / Mapper + XML / RepositoryImpl
+
+PO 是纯 `@Data` POJO——零 ORM 注解；表名、乐观锁版本条件、逻辑删除过滤全部在 XML 的 SQL 文本里（语句模板见 [new-aggregate.md](new-aggregate.md) ⑲）：
 
 ```java
 @Data
-@TableName("orders.orders")
 public class OrderPO {
-    @TableId(type = IdType.ASSIGN_UUID)
-    private String id;
+    private String id;                 // 业务铸造（UUID 文本），INSERT 显式传参
     private String status;
-    private String items;          // JSON 序列化
+    private String items;              // JSON 序列化
     private BigDecimal totalAmount;
     private String customerId;
     private String trackingNumber;
     private String cancelReason;
-    @Version
-    private Integer version;
-    private OffsetDateTime createAt;
+    private Integer version;           // 条件由 updateById 语句文本携带
+    private OffsetDateTime createAt;   // AuditFieldFiller 填充
     private OffsetDateTime updateAt;
-    @TableLogic
-    private Boolean isDelete;
+}
+
+@Mapper
+public interface OrderMapper extends DddMapper<OrderPO> {
+    // DddMapper 七条通用语句由 resources/mapper/order/OrderMapper.xml 手写实现
 }
 
 @Component
@@ -279,29 +281,33 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
 
 @Component
 public class OrderRepositoryImpl
-        extends MybatisPlusPersistence<OrderMapper, OrderPO, Order, UUID>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
         implements OrderRepository {
 
     private final OrderConverter converter;
 
-    public OrderRepositoryImpl(OrderMapper mapper, OrderConverter converter) {
-        super(mapper);
+    public OrderRepositoryImpl(OrderMapper mapper,
+                               OrderConverter converter,
+                               Clock clock,
+                               AuditProperties auditProperties,
+                               ObjectProvider<CurrentUserProvider> currentUserProvider) {
+        super(mapper, clock, auditProperties, currentUserProvider);
         this.converter = converter;
     }
 
     @Override protected BasicConverter<Order, OrderPO> getConverter() { return converter; }
     @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
     @Override public Optional<Order> findById(UUID id) { return findDomainById(id); }
-    @Override @Transactional(rollbackFor = Exception.class)
-    public void save(Order domain) { saveDomain(domain); }
-    @Override @Transactional(rollbackFor = Exception.class)
-    public void update(Order domain) { updateDomain(domain); }
+    @Override public void save(Order domain) { saveDomain(domain); }
+    @Override public void update(Order domain) { updateDomain(domain); }
     @Override public boolean exists(UUID id) { return existsDomainById(id); }
     @Override public void deleteById(UUID id) { removeDomainById(id); }
 }
 ```
 
-> 仓储只负责持久化与不变量校验（save/update 前自动 `validate()`）；跨聚合协调 = 同事务直调。
+> 仓储只负责持久化与不变量校验（save/update 前自动 `validate()`，并经 `AuditFieldFiller` 显式填充审计字段）；事务边界在应用层 Handler；跨聚合协调 = 同事务直调。
+
+并发支付的行为等价性由 XML 的 `updateById` 保证：`SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false`——影响行数 0 即版本被并发事务推进，基类抛 `OptimisticLockConflictException`（HTTP 409），无任何运行时拦截器参与。
 
 ## 完整文件清单
 
@@ -319,7 +325,8 @@ public class OrderRepositoryImpl
 | domain | `model/Order.java` | 聚合根（业务规则） |
 | domain | `model/OrderItem.java` | 值对象 |
 | domain | `repository/OrderRepository.java` | 持久化抽象 |
-| infrastructure | `mybatisplus/po/OrderPO.java` | 持久化对象（MyBatis-Plus 注解载体） |
+| infrastructure | `mybatis/po/OrderPO.java` | 持久化对象（纯 POJO，零 ORM 注解） |
 | infrastructure | `converter/OrderConverter.java` | Domain ↔ PO（框架 BasicConverter 桥） |
-| infrastructure | `mybatisplus/mapper/OrderMapper.java` | MyBatis-Plus Mapper |
-| infrastructure | `repository/OrderRepositoryImpl.java` | 仓储实现（继承 MybatisPlusPersistence） |
+| infrastructure | `mybatis/mapper/OrderMapper.java` | Mapper（extends DddMapper，七条通用语句契约） |
+| resources | `mapper/order/OrderMapper.xml` | 手写 SQL（表名 / 版本条件 / 逻辑删除过滤逐条可见） |
+| infrastructure | `repository/OrderRepositoryImpl.java` | 仓储实现（继承 MybatisPersistence） |

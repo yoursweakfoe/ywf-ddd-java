@@ -5,7 +5,6 @@
 #
 # ⚠️ 必需环境变量（主配置占位符无默认值，缺失任一即启动失败——fail-fast）：
 #   DB_MASTER_URL / DB_MASTER_USER / DB_MASTER_PASSWORD
-#   DB_SECOND_URL / DB_SECOND_USER / DB_SECOND_PASSWORD
 #
 # 与 dev 的差异：
 #   - OpenAPI 文档：生产禁用

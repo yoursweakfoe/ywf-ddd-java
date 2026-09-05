@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 订单聚合手写 SQL —— DddMapper 7 条通用语句契约 + 读侧分页双语句，逐条可见、可 grep、可 review。
+     逻辑删除列 is_delete 由 WHERE/SET 文本显式承担（区别于框架 fixture 的 deleted 列名）；
+     本表有 created_by / updated_by 操作人列 → 删除语句消费 now + updatedBy 双审计参数，
+     操作人列以 <if> 守卫：无 CurrentUserProvider 实现（updatedBy=null）时不覆写已有值。 -->
+<mapper namespace="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.mapper.OrderMapper">
+
+    <sql id="columns">
+        id, status, items, total_amount, customer_id, tracking_number, cancel_reason,
+        version, create_at, update_at, created_by, updated_by, is_delete
+    </sql>
+
+    <!-- 枚举全部业务列（含 version —— 新建聚合初始版本恒为 0，与 DB 默认一致）；
+         is_delete 不枚举 → 靠 DB 默认 FALSE（语义同既往逻辑删除列不入 INSERT） -->
+    <insert id="insert">
+        INSERT INTO orders.orders (id, status, items, total_amount, customer_id, tracking_number,
+                                   cancel_reason, version, create_at, update_at, created_by, updated_by)
+        VALUES (#{id}, #{status}, #{items}, #{totalAmount}, #{customerId}, #{trackingNumber},
+                #{cancelReason}, 0, #{createAt}, #{updateAt}, #{createdBy}, #{updatedBy})
+    </insert>
+
+    <!-- 全列 UPDATE（PO 由 Converter 完整装配）+ 乐观锁版本条件 + 逻辑删除过滤；
+         update_at 由 AuditFieldFiller 刷新，updated_by 仅在解析到操作人时覆写 -->
+    <update id="updateById">
+        UPDATE orders.orders
+        SET status         = #{status},
+            items          = #{items},
+            total_amount   = #{totalAmount},
+            customer_id    = #{customerId},
+            tracking_number = #{trackingNumber},
+            cancel_reason  = #{cancelReason},
+            version        = version + 1,
+            update_at      = #{updateAt}
+        <if test="updatedBy != null">
+            , updated_by = #{updatedBy}
+        </if>
+        WHERE id = #{id}
+          AND version = #{version}
+          AND is_delete = false
+    </update>
+
+    <select id="selectById" resultType="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO">
+        SELECT <include refid="columns"/>
+        FROM orders.orders
+        WHERE id = #{id}
+          AND is_delete = false
+    </select>
+
+    <select id="selectByIds" resultType="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO">
+        SELECT <include refid="columns"/>
+        FROM orders.orders
+        WHERE is_delete = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- 逻辑删除 = UPDATE 置位 + 审计刷新（now / updatedBy 由基类经 Clock / CurrentUserProvider 传入） -->
+    <update id="deleteById">
+        UPDATE orders.orders
+        SET is_delete = true,
+            update_at = #{now}
+        <if test="updatedBy != null">
+            , updated_by = #{updatedBy}
+        </if>
+        WHERE id = #{id}
+          AND is_delete = false
+    </update>
+
+    <update id="deleteByIds">
+        UPDATE orders.orders
+        SET is_delete = true,
+            update_at = #{now}
+        <if test="updatedBy != null">
+            , updated_by = #{updatedBy}
+        </if>
+        WHERE is_delete = false
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM orders.orders WHERE id = #{id} AND is_delete = false
+        )
+    </select>
+
+    <!-- ==================== 读侧分页（替代既往运行时分页插件） ==================== -->
+
+    <sql id="pageCondition">
+        WHERE is_delete = false
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="customerId != null">
+            AND customer_id = #{customerId}
+        </if>
+    </sql>
+
+    <!-- 动态条件 + create_at 降序 + PG 原生 LIMIT/OFFSET（offset 由读仓储经安全钳制后的页码换算） -->
+    <select id="selectPageByCondition" resultType="com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO">
+        SELECT <include refid="columns"/>
+        FROM orders.orders
+        <include refid="pageCondition"/>
+        ORDER BY create_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 与 selectPageByCondition 同条件的总数统计（WHERE 片段共享 pageCondition，杜绝两语句漂移） -->
+    <select id="countByCondition" resultType="long">
+        SELECT COUNT(*)
+        FROM orders.orders
+        <include refid="pageCondition"/>
+    </select>
+</mapper>

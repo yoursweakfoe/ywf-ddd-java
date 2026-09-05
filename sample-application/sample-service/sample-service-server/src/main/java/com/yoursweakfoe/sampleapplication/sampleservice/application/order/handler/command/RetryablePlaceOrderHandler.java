@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
-import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.OptimisticLockConflictException;
+import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.OptimisticLockConflictException;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * （{@code docs/application/cookbook/optimistic-lock-retry.md} §2 模板的落地实现）。
  *
  * <p><b>适用场景</b>：高并发下单扣库存。并发事务加载同一 Product（version=N）后先后 UPDATE，
- * 后者影响 0 行 → {@code MybatisPlusPersistence.updateDomain()} 抛
+ * 后者影响 0 行 → {@code MybatisPersistence.updateDomain()} 抛
  * {@link OptimisticLockConflictException} → 本包装器按<b>异常类型</b>识别为乐观锁冲突，
  * 指数退避后整单重试。
  *

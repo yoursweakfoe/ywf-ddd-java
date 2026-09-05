@@ -43,8 +43,8 @@ import org.apache.ibatis.type.MappedJdbcTypes;
  * private UUID[] relatedIds;  // 自动使用 UUIDArrayTypeHandler
  * </pre>
  *
- * <p><strong>何时需要显式指定：</strong> 如果同一 Java 数组类型需要映射到不同的 PostgreSQL 类型（极少见）， 可以在字段上使用
- * {@code @TableField(typeHandler = ...)} 显式指定。
+ * <p><strong>何时需要显式指定：</strong> 如果同一 Java 数组类型需要映射到不同的 PostgreSQL 类型（极少见）， 可以在 XML 语句中显式指定：
+ * 参数位 {@code #{prop, typeHandler=全限定类名}}、结果位 {@code <result ... typeHandler="全限定类名"/>}。
  *
  * @param <T> Java 数组类型，如 String[]、Integer[] 等
  * @see PgArrayType
