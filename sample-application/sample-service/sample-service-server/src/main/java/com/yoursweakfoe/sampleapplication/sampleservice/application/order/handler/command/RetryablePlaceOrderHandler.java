@@ -1,6 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handler.command;
 
-import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.OptimisticLockConflictException;
+import com.yoursweakfoe.common.exception.type.OptimisticLockConflictException;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +24,10 @@ import org.springframework.stereotype.Component;
  * 「实体已被删除/不存在」由框架抛普通 {@link IllegalStateException}（非冲突类型），同样不重试。
  * 重试耗尽仍冲突 → 上抛，由全局异常处理返回 409（前端提示刷新重试）。
  *
- * <p><b>契约说明</b>：冲突识别依赖框架类型 {@link OptimisticLockConflictException}
- * （编译期绑定，无消息文本耦合）；历史版本曾以消息含 {@code affected 0 rows} 判定，
+ * <p><b>契约说明</b>：冲突识别依赖 {@code common-exception} 提供的异常类型
+ * {@link OptimisticLockConflictException}（抛出方为 {@code common-ddd} 的持久化基类，
+ * 类型归属异常体系使应用层捕获不依赖框架 infrastructure 包；编译期绑定，无消息文本耦合）；
+ * 历史版本曾以消息含 {@code affected 0 rows} 判定，
  * 该字样在框架侧保留仅为兼容期过渡，新代码一律按类型捕获。
  */
 @Slf4j

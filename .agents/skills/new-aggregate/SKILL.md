@@ -1,6 +1,6 @@
 ---
 name: new-aggregate
-description: 从零创建 DDD 聚合（19 个文件，5 阶段）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
+description: 从零创建 DDD 聚合（19+2 个文件，5 阶段：19 最小闭环 + 读端口配对 2 文件）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
 ---
 
 # 新建聚合
@@ -49,7 +49,7 @@ description: 从零创建 DDD 聚合（19 个文件，5 阶段）。当需要新
 
 19. ⑤ `adapter/rest/controller/{Agg}ControllerImpl.java` — `@RestController` 实现契约接口 + `RestAdapter` 标记（R8a/R8b），纯透传（见 cookbook ⑤）
 
-> **读端口**（⑪ 依赖，不计入 19 文件最小闭环）：`application/{agg}/repository/application/{Agg}QueryRepository.java`（`extends QueryRepository` 标记）+ `infrastructure/persistence/master/{agg}/repository/application/{Agg}QueryRepositoryImpl.java`（PO → 读 DTO 直接投影，不 reconstitute 聚合根）。流程模板 → `docs/application/cookbook/read-path.md`。
+> **读端口配对**（⑪ 依赖，即 cookbook 完整模板 21 文件中的 ⑳㉑，不计入 19 最小闭环）：`application/{agg}/repository/application/{Agg}QueryRepository.java`（`extends QueryRepository` 标记）+ `infrastructure/persistence/master/{agg}/repository/application/{Agg}QueryRepositoryImpl.java`（PO → 读 DTO 直接投影，不 reconstitute 聚合根）。流程模板 → `docs/application/cookbook/read-path.md`。
 
 ## 验证
 

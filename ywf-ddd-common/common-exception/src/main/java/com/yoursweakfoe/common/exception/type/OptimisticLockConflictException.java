@@ -1,4 +1,4 @@
-package com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence;
+package com.yoursweakfoe.common.exception.type;
 
 /**
  * 乐观锁版本冲突 —— {@code updateDomain} 在「实体仍然存在但版本不匹配」时抛出。
@@ -20,7 +20,10 @@ package com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence;
  * <p>消息保留历史核心字样 {@code affected 0 rows}：未迁移到类型判断的旧消费方
  * （如字符串匹配重试器）行为不变；新代码应一律按本类型捕获，不依赖消息文本。
  *
- * @see MybatisPersistence#updateDomain(com.yoursweakfoe.common.ddd.domain.model.Identifiable)
+ * <h3>抛出方</h3>
+ * <p>由 {@code common-ddd} 模块 {@code MybatisPersistence.updateDomain()} 在失败路径
+ * 存在性探测判定「实体仍在但版本不匹配」后抛出；类型归属本模块（异常体系），
+ * 使应用层可按类型捕获而不必引用框架 infrastructure 包。
  */
 public class OptimisticLockConflictException extends IllegalStateException {
 

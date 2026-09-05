@@ -7,6 +7,7 @@ import com.yoursweakfoe.common.ddd.infrastructure.mybatis.config.AuditProperties
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.AuditFieldFiller;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.handler.CurrentUserProvider;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.mapper.DddMapper;
+import com.yoursweakfoe.common.exception.type.OptimisticLockConflictException;
 import java.io.Serializable;
 import java.time.Clock;
 import java.time.OffsetDateTime;

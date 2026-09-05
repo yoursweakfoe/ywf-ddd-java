@@ -17,6 +17,7 @@ import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.OrderRepository;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.common.exception.type.OptimisticLockConflictException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
