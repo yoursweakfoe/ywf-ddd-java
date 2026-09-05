@@ -2,6 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co;
 
 
 import com.yoursweakfoe.common.contract.dto.co.CO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums.OrderStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
@@ -25,9 +26,9 @@ public class OrderCO implements CO, Serializable {
     @Schema(description = "订单 ID")
     private String id;
 
-    /** 订单状态 */
-    @Schema(description = "订单状态")
-    private String status;
+    /** 订单状态（值域镜像 domain 状态机，奇偶由 ContractEnumParityTest 锁死；未知字面量=消费方需升级 contract jar） */
+    @Schema(description = "订单状态（值域=OrderStatus 枚举，OpenAPI 自动枚举合法值）")
+    private OrderStatus status;
 
     /** 订单项列表 */
     @Schema(description = "订单项列表")

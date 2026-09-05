@@ -6,6 +6,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.Application;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.PlaceOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.co.ProductCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
 import java.math.BigDecimal;
@@ -121,7 +122,7 @@ class RestEndpointIntegrationTest {
                 .body(OrderCO.class);
 
         assertThat(dto).isNotNull();
-        assertThat(dto.getStatus()).isEqualTo("PENDING");
+        assertThat(dto.getStatus()).isEqualTo(OrderStatus.PENDING);
         assertThat(dto.getCustomerId()).isEqualTo("customer-001");
         assertThat(dto.getItems()).hasSize(1);
         createdOrderId = dto.getId();
@@ -174,7 +175,7 @@ class RestEndpointIntegrationTest {
 
         assertThat(dto).isNotNull();
         assertThat(dto.getId()).isEqualTo(createdOrderId);
-        assertThat(dto.getStatus()).isEqualTo("PENDING");
+        assertThat(dto.getStatus()).isEqualTo(OrderStatus.PENDING);
     }
 
     @Test
@@ -222,7 +223,7 @@ class RestEndpointIntegrationTest {
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(dto).isNotNull();
-        assertThat(dto.getStatus()).isEqualTo("CANCELLED");
+        assertThat(dto.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
     @Test
@@ -273,14 +274,14 @@ class RestEndpointIntegrationTest {
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(placed).isNotNull();
-        assertThat(placed.getStatus()).isEqualTo("PENDING");
+        assertThat(placed.getStatus()).isEqualTo(OrderStatus.PENDING);
         lifecycleOrderId = placed.getId();
 
         OrderCO paid = client().put().uri("/orders/" + lifecycleOrderId + "/pay")
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(paid).isNotNull();
-        assertThat(paid.getStatus()).isEqualTo("PAID");
+        assertThat(paid.getStatus()).isEqualTo(OrderStatus.PAID);
     }
 
     @Test
@@ -306,25 +307,25 @@ class RestEndpointIntegrationTest {
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(confirmed).isNotNull();
-        assertThat(confirmed.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(confirmed.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
 
         OrderCO shipped = client().put()
                 .uri("/orders/" + lifecycleOrderId + "/ship?trackingNumber=SF-123456")
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(shipped).isNotNull();
-        assertThat(shipped.getStatus()).isEqualTo("SHIPPED");
+        assertThat(shipped.getStatus()).isEqualTo(OrderStatus.SHIPPED);
 
         OrderCO delivered = client().put().uri("/orders/" + lifecycleOrderId + "/deliver")
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(delivered).isNotNull();
-        assertThat(delivered.getStatus()).isEqualTo("DELIVERED");
+        assertThat(delivered.getStatus()).isEqualTo(OrderStatus.DELIVERED);
 
         OrderCO completed = client().put().uri("/orders/" + lifecycleOrderId + "/complete")
                 .retrieve()
                 .body(OrderCO.class);
         assertThat(completed).isNotNull();
-        assertThat(completed.getStatus()).isEqualTo("COMPLETED");
+        assertThat(completed.getStatus()).isEqualTo(OrderStatus.COMPLETED);
     }
 }

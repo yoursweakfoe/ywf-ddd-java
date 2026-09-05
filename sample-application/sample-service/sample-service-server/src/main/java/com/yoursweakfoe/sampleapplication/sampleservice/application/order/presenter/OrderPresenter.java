@@ -2,6 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.prese
 
 import com.yoursweakfoe.common.ddd.application.presenter.BasicPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import java.util.List;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,9 @@ public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
     public OrderCO present(OrderDTO dto) {
         OrderCO co = new OrderCO();
         co.setId(dto.getId());
-        co.setStatus(dto.getStatus());
+        // 内部 DTO 恒为 String（Assembler 映 domain.name()）；String→契约枚举在呈现层收口，
+        // 奇偶守卫锁死值域、脏值当场 fail-fast，映射不外溢
+        co.setStatus(OrderStatus.valueOf(dto.getStatus()));
         co.setItems(presentItems(dto.getItems()));
         co.setTotalAmount(dto.getTotalAmount());
         co.setCustomerId(dto.getCustomerId());

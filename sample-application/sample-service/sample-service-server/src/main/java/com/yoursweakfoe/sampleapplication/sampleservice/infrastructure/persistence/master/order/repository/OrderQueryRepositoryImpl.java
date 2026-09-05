@@ -4,6 +4,7 @@ import com.yoursweakfoe.common.contract.dto.query.PageResult;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.repository.OrderQueryRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.query.GetOrderPageQuery;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.mapper.OrderMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatis.po.OrderPO;
 import java.util.List;
@@ -49,9 +50,12 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
         // 手写分页：offset 由钳制后的页码换算（long 乘法防大页码 int 溢出）；
         // 取数与计数两条语句共享同一 WHERE 条件片段（XML 内 <if> 动态拼接），无运行时分页插件
         long offset = (safePageNum - 1) * (long) safePageSize;
+        // 契约过滤参数已枚举化（非法字面量在 binding 层即 400，到此必为合法值或 null）；
+        // SQL 文本按常量名比对，枚举→字符串在此收口
+        String statusFilter = query.status() == null ? null : query.status().name();
         List<OrderPO> rows = orderMapper.selectPageByCondition(
-                query.status(), query.customerId(), offset, safePageSize);
-        long total = orderMapper.countByCondition(query.status(), query.customerId());
+                statusFilter, query.customerId(), offset, safePageSize);
+        long total = orderMapper.countByCondition(statusFilter, query.customerId());
         return new PageResult<>(
                 rows.stream().map(this::toViewDTO).toList(),
                 total,

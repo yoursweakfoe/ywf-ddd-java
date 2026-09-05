@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.prese
 import com.yoursweakfoe.common.ddd.application.presenter.BasicPresenter;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderSummaryCO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderViewDTO;
 import java.util.List;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,9 @@ public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO>
     public OrderCO present(OrderViewDTO view) {
         OrderCO co = new OrderCO();
         co.setId(view.getId());
-        co.setStatus(view.getStatus());
+        // 读侧投影 DTO 恒 String（PO 直投，不经 domain）；契约枚举化后在此收口，
+        // 存储脏值 valueOf 当场 fail-fast（值域奇偶由 ContractEnumParityTest 锁死）
+        co.setStatus(OrderStatus.valueOf(view.getStatus()));
         co.setItems(presentItems(view.getItems()));
         co.setTotalAmount(view.getTotalAmount());
         co.setCustomerId(view.getCustomerId());
@@ -35,7 +38,7 @@ public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO>
     public OrderSummaryCO presentSummary(OrderViewDTO view) {
         OrderSummaryCO co = new OrderSummaryCO();
         co.setId(view.getId());
-        co.setStatus(view.getStatus());
+        co.setStatus(OrderStatus.valueOf(view.getStatus()));
         co.setTotalAmount(view.getTotalAmount());
         co.setCustomerId(view.getCustomerId());
         return co;

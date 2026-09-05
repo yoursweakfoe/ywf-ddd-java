@@ -1,6 +1,7 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co;
 
 import com.yoursweakfoe.common.contract.dto.co.CO;
+import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.enums.OrderStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
@@ -21,8 +22,8 @@ public class OrderSummaryCO implements CO, Serializable {
     @Schema(description = "订单 ID")
     private String id;
 
-    @Schema(description = "订单状态")
-    private String status;
+    @Schema(description = "订单状态（值域=OrderStatus 枚举）")
+    private OrderStatus status;
 
     @Schema(description = "订单总金额")
     private BigDecimal totalAmount;
