@@ -154,60 +154,60 @@ import com.tngtech.archunit.library.Architectures;
  * public class ArchitectureTest {
  *
  *     @ArchTest
- *     static final ArchRule r1 = DDDArchitectureRules.LAYERED_ARCHITECTURE;
+ *     static final ArchRule r1 = DddArchitectureRules.LAYERED_ARCHITECTURE;
  *
  *     @ArchTest
  *     static final ArchRule r1b =
- *             DDDArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
+ *             DddArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
  *
  *     @ArchTest
- *     static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
+ *     static final ArchRule r2 = DddArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
  *
  *     @ArchTest
- *     static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+ *     static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
  *
  *     @ArchTest
  *     static final ArchRule r4 =
- *             DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
+ *             DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
  *
  *     @ArchTest
- *     static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
+ *     static final ArchRule r5a = DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
  *
  *     @ArchTest
- *     static final ArchRule r5b = DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+ *     static final ArchRule r5b = DddArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
  *
  *     @ArchTest
- *     static final ArchRule r6 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_SECURITY;
+ *     static final ArchRule r6 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_SECURITY;
  *
  *     @ArchTest
- *     static final ArchRule r8a = DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+ *     static final ArchRule r8a = DddArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
  *
  *     @ArchTest
- *     static final ArchRule r8b = DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
+ *     static final ArchRule r8b = DddArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
  *
  *     @ArchTest
- *     static final ArchRule r10a = DDDArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
+ *     static final ArchRule r10a = DddArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
  *
  *     @ArchTest
- *     static final ArchRule r10b = DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+ *     static final ArchRule r10b = DddArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
  *
  *     @ArchTest
- *     static final ArchRule r11 = DDDArchitectureRules.COMMAND_HANDLERS_ARE_TRANSACTIONAL;
+ *     static final ArchRule r11 = DddArchitectureRules.COMMAND_HANDLERS_ARE_TRANSACTIONAL;
  *
  *     @ArchTest
- *     static final ArchRule r12 = DDDArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
+ *     static final ArchRule r12 = DddArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
  *
  *     @ArchTest
- *     static final ArchRule r13 = DDDArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
+ *     static final ArchRule r13 = DddArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
  *
  *     @ArchTest
- *     static final ArchRule r14a = DDDArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+ *     static final ArchRule r14a = DddArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
  *
  *     @ArchTest
- *     static final ArchRule r14b = DDDArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
+ *     static final ArchRule r14b = DddArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
  *
  *     @ArchTest
- *     static final ArchRule c1 = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
+ *     static final ArchRule c1 = DddArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
  * }
  * }</pre>
  *
@@ -234,9 +234,9 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>C1 —— contract 纯契约模块，不得依赖 server 四层及 Spring 运行时基础设施</li>
  * </ul>
  */
-public final class DDDArchitectureRules {
+public final class DddArchitectureRules {
 
-    private DDDArchitectureRules() {}
+    private DddArchitectureRules() {}
 
     // ═══════════════════════════════════════════════════════════════════════
     // 块1 · 层间依赖方向 —— 谁能依赖谁（R1 / R1b / R2 / R3）

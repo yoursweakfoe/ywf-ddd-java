@@ -5,7 +5,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
-import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
+import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
 
 /**
  * 框架侧架构扫描 —— 对 common-ddd 框架包自身（扫描根 {@code com.yoursweakfoe.common.ddd}）
@@ -15,7 +15,7 @@ import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
  * （common-ddd 自有 domain 包）。其余标记类规则（r8a / r8b / r10a / r10b / r14a / r14b）
  * 在此扫描为<strong>空集通过</strong>——挂载意义是守护「标记接口所在包结构不被破坏」
  * （common-ddd 的 adapter.rest.controller / application.dto / adapter.task.scheduler 包
- * 即标记接口之家），属 {@code DDDArchitectureRules} 类头「空集通过警示」登记的教义例外。
+ * 即标记接口之家），属 {@code DddArchitectureRules} 类头「空集通过警示」登记的教义例外。
  *
  * <p>R1 本地覆写：新增 Configuration 层（{@code MybatisDddAutoConfiguration} 等根包类）以允许框架
  * 自动配置类跨层引用基础设施组件——框架包无 adapter/contract 业务组件，且根包配置类需要合法
@@ -54,43 +54,43 @@ class DddArchitectureTest {
 
     /** R2 —— adapter 标记接口（RestAdapter / ScheduledAdapter）不得触碰 domain / infrastructure。 */
     @ArchTest
-    static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
+    static final ArchRule r2 = DddArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
 
     /** R3 —— 框架 domain 骨架（AggregateRoot / Repository 接口等）不依赖任何外层。 */
     @ArchTest
-    static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
 
     /**
      * R4 —— 框架 domain 骨架框架中立（零 Spring import，教义自证）。
      * 业务扫描挂载同一常量守护 sample 的 stereotype 白名单边界，双向分发（审计 §6.2-7 修复项）。
      */
     @ArchTest
-    static final ArchRule r4 = DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
+    static final ArchRule r4 = DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
 
     /** R5a —— 框架写端口（domain.repository.Repository）必须是 interface（相邻段直接命中，真实开火）。 */
     @ArchTest
-    static final ArchRule r5a = DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
+    static final ArchRule r5a = DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
 
     // 框架包自身无 adapter 层组件（标记接口位于 common-ddd/adapter/..，规则按空集通过），
     // 挂载以守护「标记接口所在的包结构不被破坏」。
     @ArchTest
-    static final ArchRule r8a = DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+    static final ArchRule r8a = DddArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
 
     @ArchTest
-    static final ArchRule r8b = DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
+    static final ArchRule r8b = DddArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
 
     // 框架包自身无 dto 实现类（标记接口位于 common-ddd/application/dto/，规则按空集通过）
     @ArchTest
-    static final ArchRule r10a = DDDArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
+    static final ArchRule r10a = DddArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
 
     @ArchTest
-    static final ArchRule r10b = DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+    static final ArchRule r10b = DddArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
 
     // 同上：框架包自身无 scheduler 实现类（标记接口位于 common-ddd/adapter/task/scheduler/..），
     // 挂载以守护「scheduler 包结构 = 标记接口 + 被标记实现」不被破坏。
     @ArchTest
-    static final ArchRule r14a = DDDArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+    static final ArchRule r14a = DddArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
 
     @ArchTest
-    static final ArchRule r14b = DDDArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
+    static final ArchRule r14b = DddArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
 }

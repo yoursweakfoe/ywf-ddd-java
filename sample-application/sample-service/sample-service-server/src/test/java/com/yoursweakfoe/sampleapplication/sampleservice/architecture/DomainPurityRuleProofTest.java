@@ -3,7 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.architecture;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.yoursweakfoe.archproof.domain.FrameworkLeakProbe;
-import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
+import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
@@ -42,7 +42,7 @@ class DomainPurityRuleProofTest {
         JavaClasses violating = new ClassFileImporter().importClasses(FrameworkLeakProbe.class);
 
         assertThatThrownBy(() ->
-                DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(violating))
+                DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(violating))
                 .isInstanceOf(AssertionError.class)
                 .hasMessageContaining("org.springframework.context.ApplicationContext")
                 .hasMessageContaining("FrameworkLeakProbe");
@@ -58,7 +58,7 @@ class DomainPurityRuleProofTest {
                 .importClasses(OrderFactory.class, InventoryDomainService.class, OrderRepository.class);
 
         assertThatCode(() ->
-                DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(annotated))
+                DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(annotated))
                 .doesNotThrowAnyException();
     }
 
@@ -67,7 +67,7 @@ class DomainPurityRuleProofTest {
         JavaClasses clean = new ClassFileImporter().importClasses(Order.class);
 
         assertThatCode(() ->
-                DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(clean))
+                DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check(clean))
                 .doesNotThrowAnyException();
     }
 }

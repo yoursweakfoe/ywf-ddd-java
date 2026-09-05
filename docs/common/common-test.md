@@ -14,7 +14,7 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DDDArchitectureRules` 类（每条规则的 `as(...)` 描述文本自带 R 编号前缀，与下表一致）：
+公开常量位于 `DddArchitectureRules` 类（每条规则的 `as(...)` 描述文本自带 R 编号前缀，与下表一致）：
 
 | 常量名 | 编号 | 守护内容 |
 |--------|------|---------|
@@ -134,7 +134,7 @@ common-test（独立，test scope 使用）
 
 **决策**：选 ArchUnit 自动化。规则编码为测试，CI 自动执行，不依赖人的纪律性。
 
-**确认**：`DDDArchitectureRules` 提供静态常量规则集。
+**确认**：`DddArchitectureRules` 提供静态常量规则集。
 
 ### ADR-0002 规则集为静态常量
 
@@ -144,7 +144,7 @@ common-test（独立，test scope 使用）
 
 **决策**：公开静态常量。业务服务直接引用 `DDDArchitectureRules.XXX`，无需重复定义。
 
-**确认**：`DDDArchitectureRules` 类公开 `ArchRule` 静态字段。
+**确认**：`DddArchitectureRules` 类公开 `ArchRule` 静态字段。
 
 ## 7. 职责边界与技术债
 

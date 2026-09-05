@@ -8,7 +8,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
 import com.yoursweakfoe.common.ddd.domain.repository.Repository;
-import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
+import com.yoursweakfoe.common.test.archunit.DddArchitectureRules;
 
 /**
  * 业务侧架构扫描 —— 对 {@code com.yoursweakfoe.sampleapplication.sampleservice} 执行架构合规性校验。
@@ -22,7 +22,7 @@ import com.yoursweakfoe.common.test.archunit.DDDArchitectureRules;
  * <ul>
  *   <li>R1b —— 上一版本已与共享常量逐段同构，直接挂载；</li>
  *   <li>R1 / R3 / R6 —— 本版本删除本地 BASE 版，挂载
- *       {@code DDDArchitectureRules.LAYERED_ARCHITECTURE} /
+ *       {@code DddArchitectureRules.LAYERED_ARCHITECTURE} /
  *       {@code DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS} /
  *       {@code DOMAIN_DOES_NOT_DEPEND_ON_SECURITY}（共享常量就此获得本仓首次真实挂载）。</li>
  * </ul>
@@ -50,7 +50,7 @@ class ApplicationArchitectureTest {
      * 迁移后包名不再存在会让段匹配两层歧义的保留段借用（见类头与规则库类头不变量）。
      */
     @ArchTest
-    static final ArchRule r1_layered_dependency = DDDArchitectureRules.LAYERED_ARCHITECTURE;
+    static final ArchRule r1_layered_dependency = DddArchitectureRules.LAYERED_ARCHITECTURE;
 
     /**
      * R1b —— 收窄 Infrastructure 对 Application 的访问白名单：仅读端口类型锚点
@@ -62,17 +62,17 @@ class ApplicationArchitectureTest {
      */
     @ArchTest
     static final ArchRule r1b_infra_access_application_only_ports =
-            DDDArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
+            DddArchitectureRules.INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES;
 
     /** R3 —— Domain 不依赖 application/infrastructure/adapter/contract。本版本 BASE 覆写退役。 */
     @ArchTest
     static final ArchRule r3_domain_no_outer =
-            DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+            DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
 
     /** R6 —— Domain 不依赖 common-security（SecurityUtil 仅限 Application/Adapter 层）。本版本 BASE 覆写退役。 */
     @ArchTest
     static final ArchRule r6_domain_no_security =
-            DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_SECURITY;
+            DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_SECURITY;
 
     /**
      * R4 —— Domain 框架中立：禁 Spring 运行时依赖（org.springframework.stereotype 装配注解
@@ -83,12 +83,12 @@ class ApplicationArchitectureTest {
      */
     @ArchTest
     static final ArchRule r4_domain_framework_neutral =
-            DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
+            DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE;
 
     /** R5a —— Domain Repository 必须是 interface。 */
     @ArchTest
     static final ArchRule r5a_repository_interfaces =
-            DDDArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
+            DddArchitectureRules.DOMAIN_REPOSITORIES_MUST_BE_INTERFACES;
 
     /**
      * R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下。
@@ -97,56 +97,56 @@ class ApplicationArchitectureTest {
      */
     @ArchTest
     static final ArchRule r5b_repository_impl_in_infra =
-            DDDArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
+            DddArchitectureRules.REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE;
 
     /** C1 —— Contract 纯契约，不得依赖 server 四层及 Spring 运行时基础设施（重契约例外见常量 javadoc）。 */
     @ArchTest
-    static final ArchRule c1_contract_pure = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
+    static final ArchRule c1_contract_pure = DddArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
 
     /** R8a —— 实现 RestAdapter 标记的类必须位于 adapter 层。 */
     @ArchTest
     static final ArchRule r8a_rest_entries_marked_in_adapter =
-            DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+            DddArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
 
     /** R8b —— 类名以 ControllerImpl 结尾的类必须实现 RestAdapter 标记。 */
     @ArchTest
     static final ArchRule r8b_controller_impl_must_be_marked =
-            DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
+            DddArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
 
     /** R14a —— 实现 ScheduledAdapter 标记的类必须位于 adapter 层。 */
     @ArchTest
     static final ArchRule r14a_scheduled_entries_marked_in_adapter =
-            DDDArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
+            DddArchitectureRules.SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
 
     /** R14b —— ..scheduler.. 包下的类必须实现 ScheduledAdapter 标记。 */
     @ArchTest
     static final ArchRule r14b_scheduler_package_marked =
-            DDDArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
+            DddArchitectureRules.SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED;
 
     /** R10a —— 实现 ApplicationDTO 标记的类必须位于 application 层。 */
     @ArchTest
     static final ArchRule r10a_application_dtos_marked_in_application =
-            DDDArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
+            DddArchitectureRules.APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION;
 
     /** R10b —— ..application..dto.. 包下的顶层类必须实现 ApplicationDTO 标记。 */
     @ArchTest
     static final ArchRule r10b_application_dto_package_marked =
-            DDDArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
+            DddArchitectureRules.APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED;
 
     /** R11 —— CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制）。 */
     @ArchTest
     static final ArchRule r11_command_handlers_transactional =
-            DDDArchitectureRules.COMMAND_HANDLERS_ARE_TRANSACTIONAL;
+            DddArchitectureRules.COMMAND_HANDLERS_ARE_TRANSACTIONAL;
 
     /** R12 —— Domain 层禁止 public setter（守护充血模型不变量）。 */
     @ArchTest
     static final ArchRule r12_domain_no_public_setters =
-            DDDArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
+            DddArchitectureRules.DOMAIN_HAS_NO_PUBLIC_SETTERS;
 
     /** R13 —— QueryHandler 禁止依赖任何 Repository 类型（CQRS 读写隔离，类型锚点识别）。 */
     @ArchTest
     static final ArchRule r13_query_handlers_no_write_repository =
-            DDDArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
+            DddArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
 
     // ── 应用特有规则 ───────────────────────────────────────────────────
 

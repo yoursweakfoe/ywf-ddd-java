@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContext;
  * <p>本类唯一的存在意义：构造出教义禁止的最小违例形态（domain 段内 import
  * {@code org.springframework} 非 stereotype 类），供
  * {@code DomainPurityRuleProofTest} 定向导入后断言
- * {@code DDDArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check()} 必然失败——
+ * {@code DddArchitectureRules.DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE.check()} 必然失败——
  * 证明 R4「会咬人」，而非像它的旧版谓词（{@code ..domain.model..} 相邻匹配）那样恒真空转。
  *
  * <p>包位置讲究：{@code domain} 段必须在场（命中主语）；不得含 infrastructure / application /

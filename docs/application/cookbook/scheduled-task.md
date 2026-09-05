@@ -47,7 +47,7 @@ Spring @Scheduled 触发（cron 到点）
 | 环节 | 状态 | 落地位置 |
 |------|------|---------|
 | `ScheduledAdapter` 标记接口 | ✅ 已实现 | `common-ddd/adapter/task/scheduler/ScheduledAdapter.java` |
-| 架构守护规则（R14a/R14b） | ✅ 已实现 | common-test `DDDArchitectureRules` + 双端架构测试挂载 |
+| 架构守护规则（R14a/R14b） | ✅ 已实现 | common-test `DddArchitectureRules` + 双端架构测试挂载 |
 | 示例实现（OrderAutoDeliverScheduler 等） | ⛔ 未落地 | 本文即落地模板；多实例分布式锁见文末注意事项 |
 
 ## 1. Adapter — Scheduler 入口

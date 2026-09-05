@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
  * （「订单内首次出现序」只保证单事务内稳定，不足以防跨事务死锁）。
  *
  * <p>标注 {@code @Service} 由 Spring 组件扫描自动注册（stereotype 注解为纯元数据，
- * 属共享规则 R4「Domain 框架中立」的既定白名单，见 common-test {@code DDDArchitectureRules}）。
+ * 属共享规则 R4「Domain 框架中立」的既定白名单，见 common-test {@code DddArchitectureRules}）。
  */
 @Service
 public class InventoryDomainService implements DomainService {
