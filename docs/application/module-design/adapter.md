@@ -10,7 +10,7 @@
 - rest 入口**纯透传**：协议参数 → Command/Query 包装 → 调用 AppService → 直接返回 CO
 - 入口调用 **AppService**（聚合入口），不直接调用 Handler
 - Controller 实现 `contract` 模块的接口（REST 契约单一事实源：路径、语义、签名均在接口声明），Controller 仅标记 `@RestController` 并透传
-- Consumer / Scheduler 与 rest 同构——纯入口，透传 AppService；三类入口各自以空标记定型（`RestAdapter` / `IntegrationEventConsumer` / `ScheduledAdapter`），供 ArchUnit 规则识别与约束
+- Scheduler 与 rest 同构——纯入口，透传 AppService；两类入口各自以空标记定型（`RestAdapter` / `ScheduledAdapter`），供 ArchUnit 规则识别与约束
 - 东西向端点的运行时访问保障（网关过滤 / 服务间认证 / 一包两部署）见 [contract.md §契约访问边界](contract.md#契约访问边界运行时保障)
 
 ## 包结构
@@ -24,7 +24,6 @@
 | 组件 | 命名规范 | 职责 |
 |------|---------|------|
 | Controller | `XxxControllerImpl` | 实现 contract 的 Controller 契约接口（路径/语义/签名在接口声明），`@RestController` 标记协议，纯透传 AppService |
-| Consumer | `XxxEventConsumer` | 接收外部 MQ Integration Event → 反序列化 → 透传 AppService |
 | Scheduler | `XxxScheduler` | 定时任务入口 → 透传 AppService（实现 `ScheduledAdapter` 标记，规则 R14a/R14b；模板见 [cookbook/scheduled-task.md](../cookbook/scheduled-task.md)） |
 
 → 完整代码见 [cookbook/write-path.md](../cookbook/write-path.md)#3-adapter纯透传

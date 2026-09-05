@@ -6,10 +6,12 @@
 |------|------|------|
 | CO | Contract Object | 契约输出对象。对内部 DTO 清洗后的外部安全视图，定义在 contract 模块，是消费方唯一可见的数据结构 |
 | DTO | Data Transfer Object | 应用层内部视图。可含审计字段、version、内部评分等，不出服务边界 |
-| CQE | Command / Query / IntegrationEvent | 三类请求对象的统称。Command=写，Query=读，IntegrationEvent=跨服务事件契约（出入站） |
+| CQE | Command / Query | 请求对象的统称。Command=写，Query=读，与 Handler 1:1 对应 |
 | Command | — | 写操作请求对象，实现 `common-contract` 的 `Command` 标记接口 |
 | Query | — | 读操作请求对象，实现 `common-contract` 的 `Query` 标记接口 |
 | PageableQuery | — | 分页查询对象，实现 `PageableQuery` 接口（自带 pageNum/pageSize） |
+| DomainEvent | — | 领域事件标记接口（common-ddd，`domain/event/`）。表达「领域已发生的事实」，仅进程内产生与消费，不跨服务序列化 |
+| IntegrationEvent | — | 集成事件标记接口（common-contract，`dto/event/`）。跨服务事件契约，出入站均为它；业务实现类位于 `contract/{agg}/dto/event/integration/`，传输通道业务自持 |
 | Portal | — | Domain 层定义的外部资源访问接口（如支付、存储）。语义："我需要什么外部能力" |
 | Gateway | — | Infrastructure 层实现 Portal 的类。包含技术调用 + ACL 模型翻译。语义："怎么对接外部" |
 | reconstitute | — | 从持久化数据重建完整领域对象的静态工厂方法。Converter.toDomain() 必须调用此方法（不走业务构造器） |
@@ -21,27 +23,17 @@
 | DTO | — | Application 层内部视图对象（`application/{agg}/dto/`），写侧/读侧均实现 `ApplicationDTO` 标记接口（common-ddd），与 contract 层 `CO` 标记对偶（内部可含 version/审计，对外经 Presenter 清洗） |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口与 `RestAdapter` 标记接口（common-ddd），spring-web 注解声明 REST 路径，纯透传 AppService |
 | RestAdapter | — | common-ddd 空标记接口，定型「REST 入口适配器」角色（Ports & Adapters 的 driving adapter），供 ArchUnit R8a/R8b 识别与约束 |
-| DomainEvent | — | 领域事件。聚合根产生，进程内消费（Spring Event），不对外；强制经框架 Outbox 同事务捕获，由排空器在自有事务内可靠投递（at-least-once，幂等键 = eventId）。"进程内我告诉自己人" |
-| IntegrationEvent | — | 集成事件。定义在 contract 模块，跨服务契约（MQ），出入站均为它；出站强制经集成 Outbox 捕获后由框架排空器投递（幂等键 = messageId = outbox 行 id） |
-| DomainEventListener | — | Application 层组件，实现 `DomainEventListener` 标记接口（common-ddd），监听领域事件（@EventListener）执行域内反应。投递发生在框架排空器事务内，带库写的副作用用普通 `@Transactional` 加入该事务（禁用 REQUIRES_NEW / @Async）。薄编排：接事件 → 加载聚合 → 委托 DomainService/Capture |
-| IntegrationEventCapture | — | common-ddd 空标记接口（`application/event/capture/`），定型「集成事件出站捕获」角色（翻译 + 同事务捕获入集成 Outbox，不投递——出站投递由框架集成排空器经 `IntegrationEventSender` 完成），供 ArchUnit R7b/R7c 识别；与 domain 层进程内 `DomainEventPublisher`（带方法签名）划清边界。ADR-0011 由「出站 Publisher」（`IntegrationEventPublisher`，`application/event/publisher/`）更名，旧名保留为历史别名 |
 | ApplicationDTO | — | common-ddd 空标记接口（`application/dto/`），定型「应用层内部视图」角色（写侧 DTO + 读侧 DTO），供 ArchUnit R10a/R10b 识别；与 contract 层 `CO` 标记对偶 |
-| 出站捕获（Capture） | — | Application 层组件（`application/{agg}/event/capture/`），实现 `IntegrationEventCapture` 标记接口（common-ddd），将领域事件翻译为集成事件并经 `IntegrationEventOutboxStore` 同事务捕获入集成 Outbox；不投递，实际投递归框架排空器经 `IntegrationEventSender` 完成（ADR-0011 更名，旧称出站 Publisher，命名惯例 `XxxIntegrationEventCapture`） |
-| Outbox | — | Transactional Outbox，全链路 Outbox 可靠性规范（common-ddd `infrastructure/event/outbox/`，ADR-0009）：领域事件与集成事件**强制**经 Outbox 投递。**SPI-only：框架只定契约与策略，不提供缺省实现、不携带 SQL**——捕获侧 `DomainEventOutboxStore` / `IntegrationEventOutboxStore`、排空侧 `OutboxRowAccess` 均由使用方实现（参考实现 / 参考 DDL 见 sample）。捕获：与业务写入同事务入箱（无 Outbox Bean 时 fail-fast 回滚业务写入）；投递：框架排空器认领 → 派发 → 标记完成，失败退避重投、超限转死信。投递语义 at-least-once，消费端按 eventId / messageId 幂等。不存在直发降级路径 |
-| 排空器（OutboxRelay） | — | 框架排空引擎（common-ddd `infrastructure/event/outbox/scheduler/`，纯 Java 策略骨架、零 SQL）：每行一个 REQUIRES_NEW 事务——经 `OutboxRowAccess` SPI 认领（实现保证多实例并发安全）→ 派发 → 标记完成（参考表结构中为软删）原子提交，失败簿记走独立事务。领域实例经 `DomainEventPublisher` 进程内派发，集成实例经 `IntegrationEventSender` 投 MQ；`OutboxRelayScheduler`（@Scheduled 轮询）统一驱动，是框架管线而非业务 ScheduledAdapter。排空器只排空、绝不删除事件行（ADR-0010）——已完成行软删留痕，搬运 / 归档归数据抽取层 |
-| OutboxRowAccess | — | 框架排空侧行访问 SPI（common-ddd `infrastructure/event/outbox/scheduler/`）：`kind()` / `claimOne` / `markDone` / `recordFailure`，全部方法加入调用方当前事务，认领必须多实例并发安全；重试 / 死信 / 退避策略全在框架，实现只做纯持久化。框架不提供缺省实现（参考实现见 sample）；使用方注册该 Bean（+ 事务管理器）即自动获得排空装配，同类多个实现各自独立装配（支持分表） |
-| IntegrationEventSender | — | 框架 MQ 投递接缝 SPI（common-ddd `infrastructure/event/outbox/`）：集成排空器认领一行后调用实现投递，成功后才标记完成。common-mq 未建设，样例以 `LoggingIntegrationEventSender` 日志占位 |
 | Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
 | PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离 MyBatis-Plus Page，提供 map() 支持逐层转换 |
 | BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |
-| MybatisPlusPersistence | — | common-ddd 提供的仓储支撑基类，封装 MyBatis-Plus 持久化 + 领域事件发布 + 乐观锁 + validate 自动调用 |
+| MybatisPlusPersistence | — | common-ddd 提供的仓储支撑基类，封装 MyBatis-Plus 持久化 + 乐观锁 + validate 自动调用 |
 | BasicAutoFillHandler | — | MyBatis-Plus 自动填充处理器，INSERT 填 createAt + updateAt，UPDATE 填 updateAt |
 | DomainService | — | Domain 层标记接口（common-ddd），跨聚合协调的无状态服务。实现类标注 @Service 由组件扫描注册 |
 | Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
-| Consumer | — | Adapter 层组件，MQ 消息消费入口（`adapter/event/consumer/`），反序列化后透传 AppService。实现 `IntegrationEventConsumer` 标记接口（common-ddd），与出站捕获 `IntegrationEventCapture` 对偶 |
 | opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |
 | PgArrayType | — | common-pg 枚举，定义 Java 数组类型与 PG 数组类型名的映射（如 INTEGER → `integer[]`） |
-| DDDArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 6 条 DDD 分层守护规则 |
+| DDDArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 DDD 分层守护规则集 |
 | RFC 9457 | Problem Details for HTTP APIs | HTTP 错误响应标准（原 RFC 7807），定义 type/title/status/detail/instance 字段 + `application/problem+json` 媒体类型 |
 | 枚举双份（contract / domain） | — | 同名枚举在 contract 与 domain 各存一份是**刻意的上下文隔离**（如 `contract/order/enums/OrderStatus` 与 `domain/order/model/OrderStatus`）：对外契约的稳定性与对内建模的自由度解耦，两边字段演进互不牵连。禁止为「去重」而合并共享 |
 
@@ -62,18 +54,18 @@
 
 ## 业务词汇（订单域通用语言）
 
-领域事件与状态机背后的业务语义。代码中的方法名即此处词汇的落地（Evans：Ubiquitous Language）。
+状态机背后的业务语义。代码中的方法名即此处词汇的落地（Evans：Ubiquitous Language）。
 
 | 词汇 | 代码落点 | 业务含义 | 前置条件 / 迁移 |
 |------|---------|---------|----------------|
-| 下单 place | `Order.place()` | 创建订单，初始 PENDING，注册 OrderPlacedEvent | 订单项非空、客户 ID 必填、总金额 > 0 |
+| 下单 place | `Order.place()` | 创建订单，初始 PENDING | 订单项非空、客户 ID 必填、总金额 > 0 |
 | 支付 pay | `Order.pay()` | 买家完成付款，PENDING → PAID | 仅待支付订单可支付 |
 | 确认 confirm | `Order.confirm()` | 商家审核通过已付款订单，PAID → CONFIRMED | 商家操作 |
 | 发货 ship | `Order.ship(trackingNumber)` | 商家交付物流并登记单号，CONFIRMED → SHIPPED | 必填物流单号 |
 | 签收 deliver | `Order.deliver()` | 买家确认收货，SHIPPED → DELIVERED | — |
 | 完成 complete | `Order.complete()` | 订单闭环（终态），DELIVERED → COMPLETED | 终态不可再迁移 |
 | 取消 cancel | `Order.cancel(reason)` | 关闭订单并记录原因（终态），触发库存回补补偿 | 仅 PENDING/PAID 可取消；已发货不可取消 |
-| 扣减库存 deductStock | `Product.deductStock(quantity)` | 库存减少并发 StockDeductedEvent | 数量为正且库存充足，否则拒绝下单 |
-| 回补库存 restoreStock | `Product.restoreStock(quantity)` | 取消后归还占用量并发 StockRestoredEvent | 数量为正 |
+| 扣减库存 deductStock | `Product.deductStock(quantity)` | 库存减少 | 数量为正且库存充足，否则拒绝下单 |
+| 回补库存 restoreStock | `Product.restoreStock(quantity)` | 取消后归还占用量（由 `CancelOrderHandler` 同事务直调，补偿原子化） | 数量为正 |
 
 > 状态迁移守卫集中在聚合根 `requireStatus(...)`（穷尽性 switch），新增枚举值时编译器强制处理。

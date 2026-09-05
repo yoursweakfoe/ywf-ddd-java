@@ -15,7 +15,7 @@
 3. 支付与订单是多对一关系（一个订单可能多次支付尝试）
 4. 未来支付可能拆分为独立微服务
 
-因此将支付从 Order 聚合中拆出，建立独立的 Payment 聚合。本文列出从 contract 到 infrastructure 的 **20 个文件**完整模板。
+因此将支付从 Order 聚合中拆出，建立独立的 Payment 聚合。本文列出从 contract 到 infrastructure 的 **18 个文件**完整模板。
 
 ## 文件清单总览
 
@@ -26,30 +26,28 @@ sample-service/
 │       ├── adapter/rest/PaymentController.java     ← ① Controller 契约接口
 │       ├── dto/co/PaymentCO.java                    ← ② 契约输出
 │       ├── dto/command/CreatePaymentCommand.java        ← ③ Command
-│       ├── dto/query/GetPaymentQuery.java             ← ④ Query
-│       └── dto/event/integration/PaymentCreatedIntegrationEvent.java  ← ⑤ 集成事件（可选）
+│       └── dto/query/GetPaymentQuery.java             ← ④ Query
 │
 └── sample-service-server/src/main/java/.../
     ├── adapter/rest/controller/
-    │   └── PaymentControllerImpl.java           ← ⑥ Controller 实现（REST 入口）
+    │   └── PaymentControllerImpl.java           ← ⑤ Controller 实现（REST 入口）
     ├── application/payment/
-    │   ├── PaymentAppService.java               ← ⑦ AppService
-    │   ├── dto/PaymentDTO.java                  ← ⑧ 内部 DTO
-    │   ├── assembler/PaymentAssembler.java      ← ⑨ Assembler
-    │   ├── presenter/PaymentPresenter.java      ← ⑩ Presenter
+    │   ├── PaymentAppService.java               ← ⑥ AppService
+    │   ├── dto/PaymentDTO.java                  ← ⑦ 内部 DTO
+    │   ├── assembler/PaymentAssembler.java      ← ⑧ Assembler
+    │   ├── presenter/PaymentPresenter.java      ← ⑨ Presenter
     │   └── handler/
-    │       ├── CreatePaymentHandler.java        ← ⑪ CommandHandler
-    │       └── GetPaymentHandler.java           ← ⑫ QueryHandler
+    │       ├── CreatePaymentHandler.java        ← ⑩ CommandHandler
+    │       └── GetPaymentHandler.java           ← ⑪ QueryHandler
     ├── domain/payment/
-    │   ├── model/Payment.java                   ← ⑬ 聚合根
-    │   ├── model/PaymentStatus.java             ← ⑭ 枚举
-    │   ├── event/domain/PaymentCreatedEvent.java ← ⑮ DomainEvent（可选）
-    │   └── repository/domain/PaymentRepository.java ← ⑯ Repository 接口（写侧）
+    │   ├── model/Payment.java                   ← ⑫ 聚合根
+    │   ├── model/PaymentStatus.java             ← ⑬ 枚举
+    │   └── repository/domain/PaymentRepository.java ← ⑭ Repository 接口（写侧）
     └── infrastructure/persistence/master/payment/
-        ├── mybatisplus/po/PaymentPO.java         ← ⑰ PO（MyBatis-Plus 注解载体）
-        ├── mybatisplus/mapper/PaymentMapper.java ← ⑲ Mapper（extends BaseMapper）
-        ├── converter/PaymentConverter.java       ← ⑱ Converter（框架 BasicConverter 桥）
-        └── repository/domain/PaymentRepositoryImpl.java ← ⑳ RepositoryImpl（继承 MybatisPlusPersistence）
+        ├── mybatisplus/po/PaymentPO.java         ← ⑮ PO（MyBatis-Plus 注解载体）
+        ├── mybatisplus/mapper/PaymentMapper.java ← ⑰ Mapper（extends BaseMapper）
+        ├── converter/PaymentConverter.java       ← ⑯ Converter（框架 BasicConverter 桥）
+        └── repository/domain/PaymentRepositoryImpl.java ← ⑱ RepositoryImpl（继承 MybatisPlusPersistence）
 ```
 
 ## ① Contract — Controller 契约接口
@@ -71,7 +69,7 @@ public interface PaymentController {
 }
 ```
 
-> HTTP 映射 + 文档注解在契约接口声明；服务端 ControllerImpl 仅标记 `@RestController` 并透传（见 ⑥）；
+> HTTP 映射 + 文档注解在契约接口声明；服务端 ControllerImpl 仅标记 `@RestController` 并透传（见 ⑤）；
 > 东西向调用复用同一契约接口（HTTP 直连），无需额外定义。
 
 ## ②③④ Contract — 数据类（CO / Command / Query）
@@ -105,17 +103,7 @@ public class CreatePaymentCommand implements Command, Serializable {
 }
 ```
 
-## ⑤ Contract — Integration Event（可选）
-
-```java
-public class PaymentCreatedIntegrationEvent implements IntegrationEvent, Serializable {
-    private String paymentId;
-    private String orderId;
-    // 仅含外部服务需要的字段
-}
-```
-
-## ⑥ Adapter — Controller 实现
+## ⑤ Adapter — Controller 实现
 
 ```java
 // adapter/rest/controller/PaymentControllerImpl.java（实现，仅标记协议 + 透传）
@@ -142,7 +130,7 @@ public class PaymentControllerImpl implements PaymentController {
 }
 ```
 
-## ⑦ Application — AppService
+## ⑥ Application — AppService
 
 ```java
 @Service
@@ -164,7 +152,7 @@ public class PaymentAppService {
 }
 ```
 
-## ⑧⑨⑩ Application — DTO / Assembler / Presenter
+## ⑦⑧⑨ Application — DTO / Assembler / Presenter
 
 **DTO**：内部视图，可含审计字段（CO 不暴露）：
 
@@ -220,7 +208,7 @@ public class PaymentPresenter implements BasicPresenter<PaymentDTO, PaymentCO> {
 }
 ```
 
-## ⑪⑫ Application — Handler
+## ⑩⑪ Application — Handler
 
 **CommandHandler**（写侧）：
 
@@ -264,7 +252,7 @@ public class GetPaymentHandler implements QueryHandler<GetPaymentQuery, PaymentD
 }
 ```
 
-## ⑬⑭⑮⑯ Domain — 聚合根 / 枚举 / 事件 / Repository
+## ⑫⑬⑭ Domain — 聚合根 / 枚举 / Repository
 
 ```java
 public class Payment extends AggregateRoot<UUID> {
@@ -299,7 +287,6 @@ public class Payment extends AggregateRoot<UUID> {
 
     public void create() {
         validate();
-        registerEvent(new PaymentCreatedEvent(id, orderId, amount));
     }
 
     @Override
@@ -312,19 +299,12 @@ public class Payment extends AggregateRoot<UUID> {
 
 public enum PaymentStatus { PENDING, SUCCESS, FAILED, REFUNDED }
 
-public class PaymentCreatedEvent extends DomainEvent {
-    private final UUID paymentId;
-    private final String orderId;
-    private final BigDecimal amount;
-    // 构造器 + getter
-}
-
 public interface PaymentRepository extends Repository<Payment, UUID> {
     // 继承：findById / save / update / exists / deleteById
 }
 ```
 
-## ⑰⑱⑲⑳ Infrastructure — PO / Converter / Mapper / RepositoryImpl
+## ⑮⑯⑰⑱ Infrastructure — PO / Converter / Mapper / RepositoryImpl
 
 ```java
 @Data
@@ -378,10 +358,8 @@ public class PaymentRepositoryImpl
 
     private final PaymentConverter converter;
 
-    public PaymentRepositoryImpl(PaymentMapper mapper,
-                                 ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
-                                 PaymentConverter converter) {
-        super(mapper, outboxStoreProvider);
+    public PaymentRepositoryImpl(PaymentMapper mapper, PaymentConverter converter) {
+        super(mapper);
         this.converter = converter;
     }
 
@@ -397,18 +375,15 @@ public class PaymentRepositoryImpl
 }
 ```
 
-> 构造器注入的 `ObjectProvider<DomainEventOutboxStore>` 是领域事件 Outbox 捕获的接线点
-> （全链路 Outbox 可靠性规范：捕获实现归使用方——SPI-only，框架不提供缺省实现，
-> 参考实现见 sample；事件与业务同事务入箱，框架排空器 `OutboxRelay` 投递；
-> 无 Outbox Bean 时捕获 fail-fast 回滚业务写入，不存在直发降级）。
+> 构造器只需 `Mapper`，`save/update` 自动 `validate()`，跨聚合协调 = 同事务直调。
 
 ## 创建顺序建议
 
-1. **contract**（①-⑤）：先定义公开契约，确定接口边界
-2. **domain**（⑬-⑯）：核心模型，零依赖，可独立编译验证
-3. **infrastructure**（⑰-⑳）：持久化实现
-4. **application**（⑦-⑫）：编排层，串联 domain + infrastructure
-5. **adapter**（⑥）：最后接入协议层
+1. **contract**（①-④）：先定义公开契约，确定接口边界
+2. **domain**（⑫-⑭）：核心模型，零依赖，可独立编译验证
+3. **infrastructure**（⑮-⑱）：持久化实现
+4. **application**（⑥-⑪）：编排层，串联 domain + infrastructure
+5. **adapter**（⑤）：最后接入协议层
 
 ## 验证清单
 
@@ -418,4 +393,3 @@ public class PaymentRepositoryImpl
 - [ ] `@TableName` 包含 schema 前缀
 - [ ] PO 有 `@Version`（乐观锁）和 `@TableLogic`（逻辑删除）
 - [ ] Converter.toDomain 使用 `reconstitute()` 重建
-- [ ] RepositoryImpl 构造器注入 `ObjectProvider<DomainEventOutboxStore>`

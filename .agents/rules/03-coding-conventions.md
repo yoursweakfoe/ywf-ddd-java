@@ -2,7 +2,7 @@
 
 ## CQRS 模式
 
-- 三类请求对象：`Command`（写）、`Query`（读）、`IntegrationEvent`（跨服务事件契约）
+- 两类请求对象：`Command`（写）、`Query`（读）
 - 每个 CQE 对应一个 Handler（1:1），实现 `CommandHandler<C, R>` 或 `QueryHandler<Q, R>`
 - Handler 位于 `application/{aggregate}/handler/`
 
@@ -66,34 +66,6 @@ public void cancelOrder(CancelOrderCommand command) {
 - **禁止**定义具名领域异常（如 `InsufficientStockException`）
 - Domain 层**不设** `exception/` 包
 
-## 领域事件（全链路 Outbox 可靠性规范）
-
-- 聚合根内 `registerEvent(new XxxEvent(...))`（暂存）
-- Repository 持久化成功后经 `DomainEventCapture` 先清后入箱，**强制**经
-  `DomainEventOutboxStore` 与业务同事务入箱领域 outbox 表（参考表
-  `ddd_domain_event_outbox`，提交 ⇒ 落库，跨崩溃不丢）；聚合注册了事件但无
-  `DomainEventOutboxStore` Bean 时 fail-fast 抛错回滚业务写入——要么不用事件，
-  要么带上 Outbox，**不存在直发降级路径**
-- **SPI-only（框架不提供缺省实现，零 SQL）**：捕获侧 `DomainEventOutboxStore` /
-  `IntegrationEventOutboxStore`、排空侧 `OutboxRowAccess` 均由业务服务实现并注册为
-  Bean（参考实现 / 参考 DDL 见 sample-application）；outbox 表结构为**参考约定**
-  而非框架强制，业务按自身数据库形态自行落地
-- 入箱后由框架排空器 `OutboxRelay`（纯策略引擎，零 SQL / 零 DataSource）在自有事务内
-  经 `OutboxRowAccess` 认领 → 派发 → 标记完成（at-least-once，失败退避重投，超限转死信）
-- DomainEvent 不可变（所有字段 final）
-- 域内反应监听器（DomainEventListener）位于 `application/{agg}/event/listener/`：
-  投递发生在**排空器事务内**——一律 `@EventListener`；带数据库写入的副作用用普通
-  `@Transactional`（REQUIRED，加入排空事务，「内部反应 + 集成入箱 + 标记完成」原子提交）；
-  **禁用 `REQUIRES_NEW` 与 `@Async`**（撕碎原子性，重试产生双份副作用）；
-  监听器不做非事务副作用（HTTP / 直发 MQ），对外通知一律经集成 Outbox 捕获；
-  薄编排：接事件 → 加载聚合 → 委托 DomainService / Capture；逻辑按 `eventId` 幂等
-- 集成事件（跨服务）：出站捕获 Capture（`application/{agg}/event/capture/`，实现
-  `IntegrationEventCapture` 标记）翻译为 contract 中的 IntegrationEvent，经
-  `IntegrationEventOutboxStore` 同事务捕获入集成 outbox 表（参考表
-  `ddd_integration_event_outbox`，行 id = 未来 MQ messageId，`source_event_id` =
-  源领域事件 eventId）；**Capture 不投递**——出站投递由框架集成排空器经
-  `IntegrationEventSender` 完成
-
 ## 命名规范
 
 | 类型 | 命名 | 示例 |
@@ -103,9 +75,6 @@ public void cancelOrder(CancelOrderCommand command) {
 | 契约输出 | `XxxCO` | `OrderCO` |
 | 内部视图 | `XxxDTO` | `OrderDTO` |
 | 持久化对象 | `XxxPO` | `OrderPO` |
-| 领域事件 | `XxxEvent` | `OrderPlacedEvent` |
-| 集成事件 | `XxxIntegrationEvent` | `OrderPlacedIntegrationEvent` |
-| 域内反应监听器 | `XxxDomainEventListener` | `OrderDomainEventListener` |
 | Domain 外部接口 | `XxxPortal` | `PaymentPortal` |
 | Infra 外部实现 | `XxxGateway` | `AlipayPaymentGateway` |
 | 聚合根 | `Xxx extends AggregateRoot<ID>` | `Order` |
@@ -116,7 +85,7 @@ public void cancelOrder(CancelOrderCommand command) {
 
 - 接口：`Repository<Domain, ID>`（domain 层）
 - 实现：继承 `MybatisPlusPersistence<Mapper, PO, Domain, ID>`（infrastructure 层），
-  构造器注入 `Mapper` + `ObjectProvider<DomainEventOutboxStore>` + Converter；
+  构造器注入 `Mapper` + Converter；
   领域 ID 与 PO 主键类型不一致时覆写 `toPersistenceId(ID)`
 - Converter：实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
 
@@ -145,7 +114,9 @@ public void cancelOrder(CancelOrderCommand command) {
 
 ## 时间类型约定
 
-- 框架统一使用 `OffsetDateTime`（带时区偏移，跨地域无歧义）
+- 框架统一使用 `OffsetDateTime`（带时区偏移，跨地域无歧义；选型论证与类型对照见 common-ddd.md ADR-0006）
+- 当前时间一律经注入的 `Clock` Bean 获取（框架缺省 `Clock.systemUTC()`，业务可覆盖），禁止无参 `OffsetDateTime.now()`
+- 「同一瞬时」比较用 `isEqual()` / `timeLineOrder()`；`equals()` 仅作同 UTC 源值的往返断言（`equals` 要求偏移亦相等）
 - PO 中 `createAt` / `updateAt` 声明为 `OffsetDateTime`
 - `BasicAutoFillHandler` 自动填充（INSERT 填 createAt + updateAt，UPDATE 填 updateAt）
 - Domain 层时间字段与 PO 保持一致（Converter 直接透传）
@@ -184,7 +155,6 @@ public void cancelOrder(CancelOrderCommand command) {
 ## Lombok 使用约定
 
 - Domain 层（聚合根/实体/值对象）：**禁止** `@Data`，仅用字段级 `@Getter`（禁止 setter，保护不变量）
-- Domain Events：**禁止** `@Data`，仅用 `@Getter`（事件不可变）
 - Infrastructure 层 PO：**必须** `@Data`（MyBatis-Plus 反射需要 setter）
 - Application 层 DTO：**必须** `@Data @NoArgsConstructor @AllArgsConstructor`
 - Contract 层 CQE/CO：**必须** `@Data @NoArgsConstructor @AllArgsConstructor`，字段级 Javadoc 注释

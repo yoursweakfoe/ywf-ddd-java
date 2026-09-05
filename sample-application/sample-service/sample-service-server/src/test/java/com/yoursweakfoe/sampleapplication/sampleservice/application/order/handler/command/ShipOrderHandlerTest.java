@@ -30,9 +30,7 @@ class ShipOrderHandlerTest {
     @InjectMocks private ShipOrderHandler handler;
 
     private Order createConfirmedOrder() {
-        Order order = TestOrders.rebuilt(OrderStatus.CONFIRMED);
-        order.clearDomainEvents();
-        return order;
+        return TestOrders.rebuilt(OrderStatus.CONFIRMED);
     }
 
     @Test

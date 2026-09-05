@@ -37,12 +37,9 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 - [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器）
 - [ ] 无跨聚合共享 PO / Mapper
 
-### 事件
+### 跨聚合协调
 
-- [ ] DomainEvent 所有字段 final
-- [ ] registerEvent 在状态变迁之后
-- [ ] DomainEventListener 事务注解选择正确
-- [ ] 集成事件定义在 contract 模块
+- [ ] 跨聚合联动 = DomainService / Handler 同事务直调（补偿与业务原子提交）
 
 ### 命名与包结构
 
@@ -96,7 +93,6 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 |---------|-------------|
 | 新增聚合 | 分层依赖 + 职责边界 + 持久化 + 命名包结构 + 文档（全量） |
 | 新增用例 | 职责边界 + 异常 + 命名包结构 |
-| 新增领域事件 | 事件 + 命名包结构 |
 | 新增 Portal/Gateway | 分层依赖 + 持久化 + 基础设施最小化 |
 | 修改 common 模块 | 基础设施最小化 + 文档 |
 | 修改配置/部署 | 基础设施最小化 |

@@ -7,14 +7,12 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.mapper.ProductMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.mybatisplus.po.ProductPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,10 +28,8 @@ public class ProductRepositoryImpl
     // region 依赖注入
     private final ProductConverter converter;
 
-    public ProductRepositoryImpl(ProductMapper mapper,
-                                 ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
-                                 ProductConverter converter) {
-        super(mapper, outboxStoreProvider);
+    public ProductRepositoryImpl(ProductMapper mapper, ProductConverter converter) {
+        super(mapper);
         this.converter = converter;
     }
     // endregion
@@ -68,7 +64,7 @@ public class ProductRepositoryImpl
     @Override
     public void update(Product domain) {
         // 领域对象携带读取时的 version（reconstitute 回填），直接走基类：
-        // validate() + 乐观锁 UPDATE + 领域事件发布，与 OrderRepositoryImpl 路径一致
+        // validate() + 乐观锁 UPDATE，与 OrderRepositoryImpl 路径一致
         updateDomain(domain);
     }
 

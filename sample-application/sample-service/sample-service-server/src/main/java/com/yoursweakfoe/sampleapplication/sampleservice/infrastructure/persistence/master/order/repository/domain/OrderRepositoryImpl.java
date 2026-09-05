@@ -6,12 +6,10 @@ import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persisten
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.mapper.OrderMapper;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.mybatisplus.po.OrderPO;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,10 +28,8 @@ public class OrderRepositoryImpl
     // region 依赖注入
     private final OrderConverter converter;
 
-    public OrderRepositoryImpl(OrderMapper mapper,
-                               ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
-                               OrderConverter converter) {
-        super(mapper, outboxStoreProvider);
+    public OrderRepositoryImpl(OrderMapper mapper, OrderConverter converter) {
+        super(mapper);
         this.converter = converter;
     }
     // endregion

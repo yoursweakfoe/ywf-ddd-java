@@ -13,7 +13,6 @@
 | **外部资料密集** | 无论中文还是英文社区，电商 DDD 的设计方案、代码参考、架构讨论数量远超其他垂直领域，降低读者理解成本 |
 | **技术上限高** | 并发超卖（乐观锁）、分布式事务（下单-扣库存-支付）、最终一致性（事件驱动）、幂等性（重复支付）等高阶问题天然存在 |
 | **跨聚合协调自然** | 下单 = 订单创建 + 库存扣减，天然需要 Domain Service 协调，无需人为构造场景 |
-| **事件驱动直观** | OrderPlaced → 扣库存、OrderCancelled → 回补库存，因果关系清晰，读者无需业务背景即可理解 |
 | **读者零门槛** | 几乎所有开发者都有网购经验，不需要额外解释业务语义 |
 
 ### 已知局限
@@ -32,15 +31,15 @@
 | 保留元素 | 演示的框架能力 |
 |----------|---------------|
 | Order 聚合（状态机 + 行为方法） | AggregateRoot、显式 if-throw、validate() |
-| Product 聚合（库存增减） | 乐观锁（@Version）、领域事件注册 |
+| Product 聚合（库存增减） | 乐观锁（@Version）、聚合行为封装 |
 | PlaceOrderCommand（跨聚合） | CommandHandler、Domain Service 协调 |
-| OrderCancelledEvent → 库存回补 | DomainEvent、@EventListener、事件驱动副作用 |
+| cancel → 库存回补 | 同事务直调 InventoryDomainService（补偿原子化） |
 | GetOrderQuery | QueryHandler、读路径 |
 | OrderAssembler / OrderConverter | BasicAssembler（应用层）、BasicConverter（基础设施层） |
 | OrderController / ProductController（Adapter web） | Spring MVC REST 面、纯透传 |
 | ArchUnit 测试 | common-test 架构守护 |
 | 并发下单压测 | OptimisticLockerInnerInterceptor 防超卖 |
-| OrderFactory（订单工厂） | Factory 标记接口、创建即合法（校验 + 事件注册一步到位）、新建/重建双路径收口 |
+| OrderFactory（订单工厂） | Factory 标记接口、创建即合法（校验一步到位）、新建/重建双路径收口 |
 | （刻意不演示）Portal/Gateway、Policy | 框架能力已备齐，完整示例见 `docs/application/cookbook/gateway.md`、`docs/application/cookbook/policy-pattern.md`；示例应用有意保持最小闭环，避免样例膨胀 |
 
 > **关于未演示的能力**：Portal/Gateway（外部集成 ACL）、Policy（领域策略）、Specification 属于框架的**按需扩展点**——本示例的场景刻意不覆盖它们，教学路径走 cookbook 对应章节；业务项目按需引入即可，不必为「用上而用上」。

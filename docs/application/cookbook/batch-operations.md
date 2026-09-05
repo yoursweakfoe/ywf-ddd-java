@@ -84,7 +84,7 @@ public class BatchConfirmOrderHandler implements CommandHandler<BatchConfirmOrde
 要点：
 - `@Transactional` 保证整批原子性（任一订单 confirm 失败 → 全部回滚）
 - 领域行为 `order.confirm()` 内含状态校验（非 PAID 状态抛 BusinessException）
-- `updateDomainBatch` 内部循环调用 `updateDomain`（每条都触发 validate + 事件发布）
+- `updateDomainBatch` 内部循环调用 `updateDomain`（每条都触发 validate）
 
 ## 3. 事务边界与失败策略
 

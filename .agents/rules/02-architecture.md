@@ -26,7 +26,7 @@ adapter → application → domain ← infrastructure
 
 ## contract 模块
 
-- 仅包含：Service 接口、Command/Query、CO、IntegrationEvent、枚举
+- 仅包含：Service 接口、Command/Query、CO、枚举
 - 仅依赖 `common-contract`（标记接口）
 - 东西向消费方依赖 contract jar，经 HTTP（RestClient）调用提供方 REST 端点
 
@@ -42,7 +42,7 @@ adapter → application → domain ← infrastructure
 每层内部以聚合名分包，打开一个聚合目录即可看到该聚合在该层的全部代码：
 
 ```
-domain/order/          → model/ + repository/ + portal/ + service/ + event/（domain/ + publisher/）
+domain/order/          → model/ + repository/ + portal/ + service/
 application/order/     → OrderAppService + handler/ + assembler/ + presenter/ + dto/
 infrastructure/.../order/ → po/ + converter/ + mapper/ + repository/
 adapter/order/         → web/（Controller）

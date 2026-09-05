@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>创建即合法：{@code create(...)} 返回的商品必然通过不变量校验。
  * ID 铸造策略收口于此：应用侧 RFC 9562 <strong>UUIDv7</strong>（JUG 标准生成器）——
- * 身份在持久化之前即存在，事件载荷与 API 返回的前置条件；
+ * 身份在持久化之前即存在，是 API 返回的前置条件；
  * 自增反查路径随之消亡（audit B-01 收口）。
  *
  * <p>本类与 {@link Product} 同包：业务构造器为包私有，

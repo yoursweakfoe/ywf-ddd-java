@@ -27,12 +27,11 @@ class OrderTest {
     // region 状态机合法路径
 
     @Test
-    void place_shouldKeepPendingAndRegisterEvent() {
+    void place_shouldKeepPending() {
         Order order = createPendingOrder();
         order.place();
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
-        assertThat(order.getDomainEvents()).hasSize(1);
     }
 
     @Test
@@ -41,7 +40,6 @@ class OrderTest {
         order.pay();
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
-        assertThat(order.getDomainEvents()).hasSize(1);
     }
 
     @Test
@@ -221,9 +219,8 @@ class OrderTest {
     void factory_shouldCreatePlacedOrder() {
         Order order = new OrderFactory().create("customer-1", List.of(ITEM));
 
-        // 创建即合法：状态 PENDING + OrderPlacedEvent 已注册
+        // 创建即合法：状态 PENDING（校验已在 place() 内完成）
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
-        assertThat(order.getDomainEvents()).hasSize(1);
     }
 
     @Test
@@ -256,16 +253,6 @@ class OrderTest {
         assertThat(order.getCustomerId()).isEqualTo("customer-1");
         assertThat(order.getTrackingNumber()).isEqualTo("TRACK-999");
         assertThat(order.getVersion()).isEqualTo(3);
-        assertThat(order.getDomainEvents()).isEmpty();
-    }
-
-    @Test
-    void reconstitute_shouldNotRegisterEvents() {
-        Order order = Order.reconstitute(
-                UUID.randomUUID(), OrderStatus.PAID, List.of(ITEM),
-                BigDecimal.TEN, "customer-1", null, null, null, null, 1);
-
-        assertThat(order.getDomainEvents()).isEmpty();
     }
 
     // endregion

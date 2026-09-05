@@ -4,7 +4,7 @@ package com.yoursweakfoe.common.contract.dto.co;
  * 客户端对象标记接口 —— 标识一个对象为出站返回 DTO（Client Object）。
  *
  * <p>CO 是应用层向调用方返回的契约输出对象，由 Presenter 从 DTO 呈现而来，
- * 与 Command（写意图）/ Query（读请求）/ IntegrationEvent（跨服务事件）共同构成 CQRS 契约类型体系。
+ * 与 Command（写意图）/ Query（读请求）共同构成 CQRS 契约类型体系。
  *
  * <p>实现类应命名为 {@code XxxCO}。
  *
@@ -12,6 +12,5 @@ package com.yoursweakfoe.common.contract.dto.co;
  *
  * @see com.yoursweakfoe.common.contract.dto.command.Command
  * @see com.yoursweakfoe.common.contract.dto.query.Query
- * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
  */
 public interface CO {}

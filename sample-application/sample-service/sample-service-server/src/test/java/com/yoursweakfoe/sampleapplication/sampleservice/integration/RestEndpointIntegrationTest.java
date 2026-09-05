@@ -2,7 +2,6 @@ package com.yoursweakfoe.sampleapplication.sampleservice.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.scheduler.OutboxRelayScheduler;
 import com.yoursweakfoe.sampleapplication.sampleservice.Application;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.co.OrderCO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.CancelOrderCommand;
@@ -50,15 +49,6 @@ class RestEndpointIntegrationTest {
 
     @LocalServerPort
     private int port;
-
-    /**
-     * Outbox 排空调度入口（确定性测试接缝）—— 全链路 Outbox 下，领域事件在业务事务内只被捕获入箱，
-     * 进程内派发（含取消订单的库存回补反应）只在排空时发生。测试显式驱动调度入口同步排空
-     * 全部排空引擎（领域 + 集成；集成投递在本样例为日志占位 sender），不依赖后台轮询
-     * （测试 profile 已将调度周期推到极远）。
-     */
-    @Autowired
-    private OutboxRelayScheduler outboxRelayScheduler;
 
     private static UUID createdProductId;
     private static String createdOrderId;
@@ -258,11 +248,8 @@ class RestEndpointIntegrationTest {
     void afterCancelOrder_stockReplenished() {
         assertThat(createdProductId).isNotNull();
         // 初始 100，下单扣 2，取消回补 2 → 应该回到 100。
-        // 全链路 Outbox 语义：取消事件在业务事务内只被捕获入箱，监听器的库存回补
-        // 只在领域排空器排空时（排空事务内）发生——显式驱动排空调度入口，断言前完成投递。
-        // （此处排空同时投递早先的下单事件，出站监听器随之把集成事件捕获入集成 outbox。）
-        outboxRelayScheduler.drainOutboxes();
-
+        // 取消与库存回补同事务原子（CancelOrderHandler 经 InventoryDomainService 直调），
+        // 接口返回即已回补，无需任何异步等待。
         ProductCO dto = client().get().uri("/products/" + createdProductId)
                 .retrieve()
                 .body(ProductCO.class);

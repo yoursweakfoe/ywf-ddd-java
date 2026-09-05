@@ -9,9 +9,8 @@ import org.springframework.context.annotation.Bean;
  * 框架级时间源自动配置 —— 提供全应用统一的 {@link java.time.Clock} Bean。
  *
  * <p><strong>为什么独立于其它自动配置</strong>：时间源是平台级横切关注点，
- * 与 MyBatis-Plus（{@code MybatisPlusDddAutoConfiguration}）、领域事件
- * （{@code DomainEventAutoConfiguration}）等具体能力无归属关系——任何组件
- * （审计填充器、调度器、未来的 outbox relay……）都可注入同一时间源。
+ * 与 MyBatis-Plus（{@code MybatisPlusDddAutoConfiguration}）等具体能力无归属关系——任何组件
+ * （审计填充器、调度器等）都可注入同一时间源。
  *
  * <h3>缺省策略：硬编码 UTC</h3>
  * <p>与企业「存储/运算一律 UTC、渲染本地化交给前端」的实践对齐，且与部署环境的

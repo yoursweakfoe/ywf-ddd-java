@@ -15,7 +15,7 @@
 
 → [directory-structure/server/domain.md](../directory-structure/server/domain.md)
 
-> 完整代码示例 → [cookbook/event-flow.md](../cookbook/event-flow.md)（事件链路）| [cookbook/new-aggregate.md](../cookbook/new-aggregate.md)（新聚合模板）
+> 完整代码示例 → [cookbook/new-aggregate.md](../cookbook/new-aggregate.md)（新聚合模板）
 
 ## 核心组件
 
@@ -24,7 +24,6 @@
 | 组件 | 职责 | 准入规则 |
 |------|------|--------|
 | 聚合根 / 实体 / 值对象 / 枚举 | 领域模型 | 零框架依赖，纯 Java + common-ddd 构建块 |
-| 领域事件 | extends DomainEvent | 事件是模型的组成部分，仅进程内消费 |
 | Repository 接口 | 持久化抽象 | 必须为接口，实现在 Infrastructure 层 |
 | Portal 接口 | 外部资源访问（OSS/RPC/MQ/ES） | 必须为接口，实现在 infrastructure/gateway（含 ACL 翻译） |
 | 领域服务 | 聚合内业务逻辑 | 仅当逻辑不自然归属于任何实体时使用 |
@@ -53,8 +52,6 @@
 | AggregateRoot | common-ddd/domain/model/ | `{aggregate}/model/` |
 | Entity | common-ddd/domain/model/ | `{aggregate}/model/` |
 | ValueObject | common-ddd/domain/model/ | `{aggregate}/model/` |
-| DomainEvent | common-ddd/domain/event/domain/ | `{aggregate}/event/domain/` |
-| DomainEventPublisher | common-ddd/domain/event/publisher/ | `{aggregate}/event/publisher/`（业务自定义，可选；默认框架 InProcessDomainEventPublisher） |
 | Repository | common-ddd/domain/repository/ | `{aggregate}/repository/` |
 | Factory | common-ddd/domain/factory/ | `{aggregate}/factory/` |
 | DomainService | common-ddd/domain/service/ | `{aggregate}/service/` 或 `shared/service/` |
@@ -76,7 +73,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 
 ### 聚合根设计范式
 
-- 继承 `AggregateRoot<ID>`，获得 `registerEvent()` + `validate()` 能力
+- 继承 `AggregateRoot<ID>`，获得 `validate()` 不变量校验能力（save/update 持久化前由仓储自动调用）
 - 状态变迁通过行为方法暴露，不暴露 setter
 - 不变量校验使用显式 `if + throw new BusinessException(key)`，失败抛 BusinessException
 - 提供 `reconstitute()` 静态工厂供 Converter 重建
@@ -91,68 +88,6 @@ adapter ──→ application ──→ domain ←── infrastructure
 | 可变性 | 可变 | 不可变 |
 | 判等方式 | ID 判等 | 属性值判等 |
 | 推荐实现 | class | record |
-
-### 事件边界
-
-#### DomainEvent vs IntegrationEvent
-
-| 维度 | DomainEvent（领域事件） | IntegrationEvent（集成事件，common-contract） |
-|------|----------------------|---------------------------|
-| 方向 | 由内向外（聚合根 → 进程内） | 双向（出站 + 入站） |
-| 产生者 | 本服务聚合根 | 本服务 Capture（出站）/ 其他微服务（入站） |
-| 所在层 | domain 层 | contract 模块（跨服务契约） |
-| 投递机制 | Outbox 同事务捕获 → 框架排空器在排空事务内派发（Spring Event，进程内） | Capture 翻译 + Outbox 同事务捕获 → 框架排空器经 `IntegrationEventSender` 投 MQ（出站）/ 外部消息到达 → Adapter Consumer（入站） |
-| 典型例子 | `OrderPlacedEvent`（我下单了） | `OrderPlacedIntegrationEvent`（我通知外界） |
-
-简记：**DomainEvent 是"进程内我告诉自己人"，IntegrationEvent 是"跨服务我告诉别人 / 别人告诉我"**。
-
-#### 事件监听原理（Spring 机制）
-
-聚合根 `registerEvent()` 暂存事件 → 仓储持久化成功后 `DomainEventCapture` 先清后入箱（同事务捕获）→ 经 `DomainEventOutboxStore`（SPI，使用方实现，参考实现见 sample）与业务写入**同事务**入箱领域 outbox 表（参考表 `ddd_domain_event_outbox`；无 Outbox Bean 时 fail-fast 回滚业务写入，不存在直发路径）→ 业务事务提交后，框架排空器 `OutboxRelay`（领域实例，纯策略骨架）在**自有事务内**经 `OutboxRowAccess` SPI 认领该行 → 经 `DomainEventCodec` 重建事件身份 → `DomainEventPublisher` 桥接 Spring `ApplicationEventPublisher` 按类型路由到 `@EventListener` 方法（监听器加入排空事务）→ 标记完成、原子提交。
-
-`DomainEvent` 不需要实现任何 Spring 接口（Spring 4.2+ 的 `publishEvent` 接受任意 Object），领域层保持零框架依赖。
-
-→ 完整链路代码见 [cookbook/event-flow.md](../cookbook/event-flow.md)；Outbox 可靠性语义见 [common-ddd.md Outbox 节](../../common/common-ddd.md)
-
-#### 事件发布通道（谁来发、什么时候发）
-
-唯一的 opt-in 点是 `AggregateRoot.registerEvent()`，仓储只是可靠的捕获机制（保证先持久化成功后先清后入箱 + Outbox 同事务捕获），不是策略决定者：
-
-| 场景 | 通道 |
-|------|------|
-| 聚合行为方法产生事件（create/update/实体删除） | `registerEvent()` → 仓储 save/update/removeDomain(s) 自动捕获入箱 |
-| 按 ID 删除（无 Domain 对象，性能优化路径） | 事件工厂重载 `removeDomainById(id, eventFactory)` |
-| 非聚合根想发事件 | 建模信号 → 升级为聚合根；纯技术特例 → Handler 注入 `DomainEventPublisher` 手动发（自担时序契约） |
-| 抑制自动捕获（如 Saga 补偿） | save 前显式 `clearDomainEvents()` |
-
-为什么不改成全手动发布、为什么 save/update 没有事件工厂重载 → 设计决策详见 [common-ddd.md 领域事件节](../../common/common-ddd.md)。
-
-#### 事件类型与消费方式
-
-| 事件类型 | 位置 | 消费方式 | 暴露范围 |
-|---------|------|---------|--------|
-| **领域事件** | `domain/{aggregate}/event/domain/` | Spring `@EventListener`（进程内） | 不对外 |
-| **集成事件** | `contract/{aggregate}/dto/event/integration/` | MQ / RPC（跨服务） | 对外发布 |
-
-微服务拆分时：领域事件仍留在服务内部；需要跨服务通知时，由 application 层 Capture（出站捕获）将领域事件翻译为集成事件并捕获入集成 Outbox，框架排空器负责投递 MQ。
-
-#### 事件监听器事务传播
-
-领域事件经 Outbox 同事务捕获、由框架排空器（`OutboxRelay` 领域实例）在**其自有事务内**
-派发（详见 [common-ddd.md Outbox 节](../../common/common-ddd.md)）——监听器执行时
-**有活动事务**（排空事务），「内部反应 + 集成入箱 + 标记完成」原子提交：
-
-| 注解 | 线程 | 事务 | 监听器异常的影响 |
-|------|------|------|----------------|
-| `@EventListener`（域内反应默认） | 同线程（排空线程） | **加入排空事务**（无库写时无需注解） | 排空事务回滚 → 行保持待投 → 退避重投 |
-| `@EventListener + @Transactional`（REQUIRED，带库写副作用） | 同线程 | **加入排空事务**，副作用与标记完成原子提交 | 同上，副作用随回滚不产生双份 |
-| `REQUIRES_NEW` / `@Async` | — | **禁用** | 撕碎「副作用 + 集成入箱 + 标记完成」原子性，重试时产生双份副作用 |
-
-选择原则：
-- 纯反应（日志 / 出站翻译捕获）→ `@EventListener`
-- 带数据库写入的补偿副作用 → `@EventListener` + 普通 `@Transactional`（加入排空事务）
-- 对外通知 → 委托 Capture 翻译 + 集成 Outbox 捕获（仍在排空事务内），**禁止**监听器直接 HTTP / 发 MQ
-- **禁用** `@TransactionalEventListener`：派发由排空器驱动，不依赖 Spring 事务阶段回调
 
 ### 多数据源策略
 
@@ -243,6 +178,5 @@ domain/
 | 使用 common-ddd 构建块 | 引入 Spring / MyBatis / 任何框架注解 |
 | 聚合根内封装业务规则 | 暴露 setter 或 public 字段 |
 | Repository 定义为接口 | 在 Domain 层实现 Repository |
-| 领域事件 extends DomainEvent | 在领域事件中引用 Infrastructure 类 |
 | 跨聚合通过 Repository 读取 | 跨聚合直接修改对方内部状态 |
 | 通过显式 if-throw + 错误码报错 | 定义具名领域异常类 |

@@ -6,8 +6,6 @@
 docs/
 ├── glossary.md                          # 项目术语表
 ├── references.md                        # 架构理论参考（采纳 / 未采纳及原因）
-├── sql/
-│   └── event.example.sql                # 事件表建表样例（供数据抽取层，搬运/归档指引）
 └── application/
     ├── module-design/                   # 应用架构设计（分层职责、组件、规则）
     │   ├── contract.md
@@ -23,7 +21,6 @@ docs/
         ├── README.md
         ├── write-path.md
         ├── read-path.md
-        ├── event-flow.md
         ├── policy-pattern.md
         ├── gateway.md
         └── new-aggregate.md
@@ -33,7 +30,6 @@ docs/
 - 想了解**包怎么组织** → [application/directory-structure/](application/directory-structure/)
 - 想了解**具体怎么写** → [application/cookbook/](application/cookbook/)
 - 想了解**为什么这么选** → [references.md](references.md)
-
 - 想了解**术语定义** → [glossary.md](glossary.md)
 
 ## 与 .agents/ 的关系

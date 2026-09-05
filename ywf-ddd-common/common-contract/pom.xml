@@ -11,7 +11,7 @@
 
     <artifactId>common-contract</artifactId>
     <name>common-contract</name>
-    <description>CQRS 契约标记接口（Command / Query / IntegrationEvent）—— 供 contract jar 与服务端共享</description>
+    <description>CQRS 契约标记接口（Command / Query / CO / IntegrationEvent）—— 供 contract jar 与服务端共享</description>
 
     <dependencies>
         <!-- Jakarta Validation 注解（纯注解 jar，用于契约层参数约束声明，运行时由服务端执行校验） -->

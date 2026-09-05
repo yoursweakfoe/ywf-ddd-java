@@ -1,7 +1,7 @@
 # 定时任务全链路
 
 > 设计原理 → [module-design/adapter.md](../module-design/adapter.md)
-> 同类入口参照 → [event-flow.md](event-flow.md)（MQ 入口）/ [write-path.md](write-path.md)（web 入口）
+> 同类入口参照 → [write-path.md](write-path.md)（web 入口）
 
 ## 业务场景
 
@@ -13,26 +13,20 @@
 
 | 如果把调度逻辑写在别处 | 独立 Scheduler 入口 |
 |---|---|
-| 触发逻辑散落在 Controller / 事件监听器里 | 时间触发集中在 `@Scheduled` 方法，一处可见 |
+| 触发逻辑散落在 Controller / 各处业务代码里 | 时间触发集中在 `@Scheduled` 方法，一处可见 |
 | 无法被架构规则定位与约束 | `ScheduledAdapter` 标记 + ArchUnit R14a/R14b 守护 |
 | 批量编排与业务规则混杂 | 纯透传 AppService，批量编排在 Handler |
 
-## 三类入口对照
+## 两类入口对照
 
-adapter 层共有三类 driving adapter（协议适配入口），Scheduler 是其中由**时间**驱动的一类：
+adapter 层框架内置两类 driving adapter（协议适配入口），Scheduler 是其中由**时间**驱动的一类：
 
 | 入口标记 | 驱动源 | 包位置 | 架构规则 |
 |---------|--------|--------|---------|
 | `RestAdapter` | HTTP 请求 | `adapter/{agg}/rest/controller` | R8a / R8b |
-| `IntegrationEventConsumer` | MQ 消息 | `adapter/{agg}/event/consumer` | R9a / R9b |
 | **`ScheduledAdapter`** | **时间类调度（自建 @Scheduled 或 XXL-Job / Quartz 等平台化）** | **`adapter/{agg}/task/scheduler`** | **R14a / R14b** |
 
-> 注意区分：框架的 Outbox 排空调度器（`OutboxRelayScheduler`，common-ddd
-> `infrastructure/event/outbox/scheduler/`）也用 `@Scheduled`，但它是**框架管线**
-> （基础设施自驱排空 outbox 表——参考表 `ddd_domain_event_outbox` /
-> `ddd_integration_event_outbox`，实现归使用方，不含业务编排），**不实现**
-> `ScheduledAdapter` 标记，不属于本文的业务定时入口
-> （见 [event-flow.md](event-flow.md) 排空器节）。
+> MQ 消费类入口按同一「协议伞 / 角色」惯例落位，与 rest / task 同构、纯透传。
 
 ## 链路全景
 
@@ -42,8 +36,8 @@ Spring @Scheduled 触发（cron 到点）
     → OrderAppService.autoDeliverExpiredOrders()           ② 用例门面（委托 Handler）
       → AutoDeliverExpiredOrdersHandler.handle()           ③ 批量编排（@Transactional）
         → orderRepository.findShippedBefore(threshold)     ④ 条件查询（超时 SHIPPED 订单）
-        → order.deliver() × N                              ⑤ 聚合行为（状态机变迁，可注册事件）
-        → orderRepository.updateDomainBatch(expiredOrders) ⑥ 批量落库（逐条 validate + 事件发布）
+        → order.deliver() × N                              ⑤ 聚合行为（状态机变迁）
+        → orderRepository.updateDomainBatch(expiredOrders) ⑥ 批量落库（逐条 validate）
 ```
 
 ## 链路图
@@ -57,7 +51,7 @@ graph TB
 
     H --> Q[findShippedBefore<br/>条件查询]
     Q --> AGG[Order.deliver × N<br/>聚合行为]
-    AGG --> UPD[updateDomainBatch<br/>批量落库 + 事件发布]
+    AGG --> UPD[updateDomainBatch<br/>批量落库（逐条 validate）]
     UPD --> DONE[批量处理完成<br/>返回处理条数]
 ```
 
@@ -139,10 +133,10 @@ public class AutoDeliverExpiredOrdersHandler {
         OffsetDateTime threshold = OffsetDateTime.now().minusDays(15);
         List<Order> expiredOrders = orderRepository.findShippedBefore(threshold);
 
-        expiredOrders.forEach(order -> {           // 聚合行为：deliver() 内部可 registerEvent
+        expiredOrders.forEach(order -> {           // 聚合行为：deliver() 状态机守卫
             order.deliver();
         });
-        orderRepository.updateDomainBatch(expiredOrders);   // 逐条 validate + 事件发布
+        orderRepository.updateDomainBatch(expiredOrders);   // 逐条 validate
 
         return expiredOrders.size();
     }
@@ -162,11 +156,11 @@ public class Application {
 }
 ```
 
-## 与事件链路的组合
+## 下游协调
 
-定时任务入口与 [event-flow.md](event-flow.md) 的事件链路天然衔接：Handler 内的聚合行为方法
-（如 `order.deliver()`）照常 `registerEvent`，仓储 `updateDomainBatch` 逐条「先落库后发布」，
-后续的域内反应 / 集成事件出站完全复用事件链路——**时间只是第三种触发源，下游管线不变**。
+Handler 内的聚合行为方法（如 `order.deliver()`）只做状态变迁与校验；需要联动其他聚合时由
+Handler / DomainService **同事务直调**——
+**时间只是又一种触发源，下游与各入口完全一致**。
 
 ## 5. 平台化调度变体（XXL-Job / ElasticJob / Quartz）
 

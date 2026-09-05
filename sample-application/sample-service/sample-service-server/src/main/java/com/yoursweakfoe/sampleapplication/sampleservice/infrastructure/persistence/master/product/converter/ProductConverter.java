@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * 商品 Converter —— 纯手写显式映射（富领域模型）。
  *
- * <p>toDomain 通过 {@code Product.reconstitute()} 重建，不触发校验/事件；
+ * <p>toDomain 通过 {@code Product.reconstitute()} 重建，不触发校验；
  * toPO 提取领域对象当前状态快照。字段增删时必须同步修改本类并更新往返测试。
  *
  * <p>List/Set 集合方法由 {@code BasicConverter} default 实现提供。

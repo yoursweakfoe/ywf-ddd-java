@@ -1,13 +1,13 @@
 ---
 name: new-aggregate
-description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
+description: 从零创建 DDD 聚合（18 个文件，5 阶段）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
 ---
 
 # 新建聚合
 
 ## 前置阅读
 
-1. `docs/application/cookbook/new-aggregate.md`（完整 20 文件模板）
+1. `docs/application/cookbook/new-aggregate.md`（完整 18 文件模板）
 2. `.agents/rules/02-architecture.md`（分层 + 包结构）
 3. `.agents/rules/03-coding-conventions.md`（命名 + 泛型）
 
@@ -21,34 +21,32 @@ description: 从零创建 DDD 聚合（20 个文件，5 阶段）。当需要新
 2. `contract/{agg}/dto/Create{Agg}Command.java` — 写请求
 3. `contract/{agg}/dto/Get{Agg}Query.java` — 读请求
 4. `contract/{agg}/co/{Agg}CO.java` — 契约输出
-5. `contract/{agg}/dto/event/integration/{Agg}CreatedIntegrationEvent.java`（可选）
 
 ### Phase 2: domain 层
 
-6. `domain/{agg}/model/{Agg}.java` — 聚合根（extends AggregateRoot<UUID>）
-7. `domain/{agg}/model/{Agg}Status.java` — 状态枚举
-8. `domain/{agg}/event/domain/{Agg}CreatedEvent.java` — 领域事件
-9. `domain/{agg}/repository/domain/{Agg}Repository.java` — 仓储接口（写侧，对偶 infra repository/domain）
+5. `domain/{agg}/model/{Agg}.java` — 聚合根（extends AggregateRoot<UUID>，纯状态机 + validate）
+6. `domain/{agg}/model/{Agg}Status.java` — 状态枚举
+7. `domain/{agg}/repository/domain/{Agg}Repository.java` — 仓储接口（写侧，对偶 infra repository/domain）
 
 ### Phase 3: infrastructure 层
 
-10. `infrastructure/persistence/master/{agg}/mybatisplus/po/{Agg}PO.java` — 持久化对象（MyBatis-Plus 注解载体）
-11. `infrastructure/persistence/master/{agg}/mybatisplus/mapper/{Agg}Mapper.java` — MyBatis-Plus Mapper（extends BaseMapper）
-12. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器（框架 BasicConverter 桥）
-13. `infrastructure/persistence/master/{agg}/repository/domain/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPlusPersistence）
+8. `infrastructure/persistence/master/{agg}/mybatisplus/po/{Agg}PO.java` — 持久化对象（MyBatis-Plus 注解载体）
+9. `infrastructure/persistence/master/{agg}/mybatisplus/mapper/{Agg}Mapper.java` — MyBatis-Plus Mapper（extends BaseMapper）
+10. `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — 转换器（框架 BasicConverter 桥）
+11. `infrastructure/persistence/master/{agg}/repository/domain/{Agg}RepositoryImpl.java` — 仓储实现（继承 MybatisPlusPersistence）
 
 ### Phase 4: application 层
 
-14. `application/{agg}/dto/{Agg}DTO.java` — 内部视图
-15. `application/{agg}/assembler/{Agg}Assembler.java` — Domain → DTO
-16. `application/{agg}/presenter/{Agg}Presenter.java` — DTO → CO
-17. `application/{agg}/handler/Create{Agg}Handler.java` — 写 Handler
-18. `application/{agg}/handler/Get{Agg}Handler.java` — 读 Handler
-19. `application/{agg}/{Agg}AppService.java` — 聚合入口
+12. `application/{agg}/dto/{Agg}DTO.java` — 内部视图
+13. `application/{agg}/assembler/{Agg}Assembler.java` — Domain → DTO
+14. `application/{agg}/presenter/{Agg}Presenter.java` — DTO → CO
+15. `application/{agg}/handler/Create{Agg}Handler.java` — 写 Handler
+16. `application/{agg}/handler/Get{Agg}Handler.java` — 读 Handler
+17. `application/{agg}/{Agg}AppService.java` — 聚合入口
 
 ### Phase 5: adapter 层
 
-20. `adapter/web/{Agg}Controller.java` — REST 入口（@RestController 实现 contract 接口）
+18. `adapter/web/{Agg}Controller.java` — REST 入口（@RestController 实现 contract 接口）
 
 ## 验证
 

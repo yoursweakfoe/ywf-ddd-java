@@ -10,7 +10,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 
 import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaEnumConstant;
 
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
@@ -78,13 +80,8 @@ import com.tngtech.archunit.library.Architectures;
  *   <li>R5a —— domain Repository 必须是 interface</li>
  *   <li>R5b —— 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下</li>
  *   <li>R6 —— domain 不依赖 common-security（领域模型不感知认证上下文）</li>
- *   <li>R7a —— 域内反应监听器必须实现 {@code DomainEventListener} 标记（定型 application 层域内反应角色）</li>
- *   <li>R7b —— 集成事件出站捕获器必须实现 {@code IntegrationEventCapture} 标记（定型 application 层出站角色）</li>
- *   <li>R7c —— AppService 不得直接依赖集成事件出站捕获器（捕获只经 CommandHandler / DomainEventListener）</li>
  *   <li>R8a —— 实现 {@code RestAdapter} 标记的类必须位于 adapter 层（定型 REST 入口角色）</li>
  *   <li>R8b —— 类名以 ControllerImpl 结尾的类必须实现 {@code RestAdapter} 标记（堵命名漂移）</li>
- *   <li>R9a —— 实现 {@code IntegrationEventConsumer} 标记的类必须位于 adapter 层（定型 MQ 入站角色）</li>
- *   <li>R9b —— {@code ..event.consumer..} 包下的类必须实现 {@code IntegrationEventConsumer} 标记</li>
  *   <li>R10a —— 实现 {@code ApplicationDTO} 标记的类必须位于 application 层（定型应用层内部视图角色）</li>
  *   <li>R10b —— {@code ..application..dto..} 包下的顶层类必须实现 {@code ApplicationDTO} 标记</li>
  *   <li>R1b —— Infrastructure 对 Application 的访问仅限读端口类型锚点（QueryRepository 实现 / ApplicationDTO），收窄 R1 读侧整层例外</li>
@@ -211,7 +208,7 @@ public final class DDDArchitectureRules {
      * <p><strong>段匹配碰撞内置排除</strong>：{@code ..domain..} 按包段匹配，会同时命中
      * 其它层内部以 {@code domain} 命名的子包——本框架惯例用 {@code .domain} 后缀表达
      * 「某关注点的领域侧/领域对象」，如 infrastructure 下的
-     * {@code ..repository.domain..}（仓储实现）、{@code ..event.domain..}（事件冲刷）。
+     * {@code ..repository.domain..}（仓储实现）。
      * 这些类按更深前缀归属于其所在层（受 R1b 等该层规则管辖），不属于本规则的域层主语——
      * 故主语谓词显式排除任何位于 application / infrastructure / adapter 包下的类。
      */
@@ -270,59 +267,6 @@ public final class DDDArchitectureRules {
                     .as("R5b 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository 包下");
 
     /**
-     * R7a —— 域内反应监听器（{@code ..event.listener..} 包下）必须实现 {@code DomainEventListener}
-     * 标记接口。
-     *
-     * <p>{@code DomainEventListener}（common-ddd/application/event/listener/）为<strong>空标记</strong>，
-     * 价值在定型「application 层域内反应」角色：消费<strong>内部</strong>领域事件（Spring Event），
-     * 与 adapter 层处理外部集成事件的 Consumer 划清边界。本规则保证每个监听器都被显式标记，
-     * 使该角色可被其他架构规则定位。空集时允许通过（业务服务可能暂无监听器）。
-     */
-    public static final ArchRule EVENT_LISTENERS_ARE_MARKED =
-            classes()
-                    .that()
-                    .resideInAPackage("..event.listener..")
-                    .should()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.listener.DomainEventListener")
-                    .allowEmptyShould(true)
-                    .as("R7a 域内反应监听器必须实现 DomainEventListener 标记（..event.listener.. 包下）");
-
-    /**
-     * R7b —— 集成事件出站捕获器（{@code ..event.capture..} 包下）必须实现
-     * {@code IntegrationEventCapture} 标记接口。
-     *
-     * <p>{@code IntegrationEventCapture}（common-ddd/application/event/capture/）为<strong>空标记</strong>，
-     * 价值在定型「application 层集成事件出站捕获」角色：消费领域事件、翻译为契约 IntegrationEvent
-     * 并同事务捕获入集成 Outbox，与 domain 层进程内派发的 {@code DomainEventPublisher} 划清边界。
-     * 空集时允许通过（业务服务可能暂无出站捕获器）。
-     */
-    public static final ArchRule EVENT_CAPTURES_ARE_MARKED =
-            classes()
-                    .that()
-                    .resideInAPackage("..event.capture..")
-                    .should()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture")
-                    .allowEmptyShould(true)
-                    .as("R7b 集成事件出站捕获器必须实现 IntegrationEventCapture 标记（..event.capture.. 包下）");
-
-    /**
-     * R7c —— AppService 不得直接依赖集成事件出站捕获器。
-     *
-     * <p>文档契约（module-design/application.md）：「AppService 不直接依赖 publisher」——
-     * 出站捕获只经 CommandHandler 或 DomainEventListener 显式调用。本规则以
-     * {@code IntegrationEventCapture} 标记为锚点，将该约束从文档变为可强制执行的架构规则。
-     */
-    public static final ArchRule APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_CAPTURE =
-            noClasses()
-                    .that()
-                    .haveSimpleNameEndingWith("AppService")
-                    .should()
-                    .dependOnClassesThat()
-                    .implement("com.yoursweakfoe.common.ddd.application.event.capture.IntegrationEventCapture")
-                    .allowEmptyShould(true)
-                    .as("R7c AppService 不得直接依赖集成事件出站捕获器（捕获只经 CommandHandler / DomainEventListener）");
-
-    /**
      * R8a —— 实现 {@code RestAdapter} 标记的类（adapter 层 REST 入口）必须位于 adapter 层。
      *
      * <p>{@code RestAdapter}（common-ddd/adapter/rest/controller/）为<strong>空标记</strong>，定型「REST
@@ -352,41 +296,6 @@ public final class DDDArchitectureRules {
                     .implement("com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter")
                     .allowEmptyShould(true)
                     .as("R8b 类名以 ControllerImpl 结尾的类必须实现 RestAdapter 标记（识别锚点用类型而非名字）");
-
-    /**
-     * R9a —— 实现 {@code IntegrationEventConsumer} 标记的类（adapter 层 MQ 入站）必须位于 adapter 层。
-     *
-     * <p>{@code IntegrationEventConsumer}（common-ddd/adapter/event/consumer/）为<strong>空标记</strong>，
-     * 定型「集成事件入站」角色：接收 MQ 集成事件 → 反序列化 → 透传 ApplicationService。
-     * 与 application 层出站 {@code IntegrationEventCapture} 对偶。空集时允许通过
-     * （当前 common-mq 未建设，无实现类，标记为框架预留）。
-     */
-    public static final ArchRule EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER =
-            classes()
-                    .that()
-                    .implement("com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer")
-                    .should()
-                    .resideInAPackage("..adapter..")
-                    .allowEmptyShould(true)
-                    .as("R9a 实现 IntegrationEventConsumer 标记的类必须位于 adapter 层（MQ 入站角色）");
-
-    /**
-     * R9b —— {@code ..event.consumer..} 包下的<strong>非接口</strong>类必须实现
-     * {@code IntegrationEventConsumer} 标记。
-     *
-     * <p>与 R8b 同理：识别入站消费者用类型锚点而非包名猜测。排除接口自身
-     * （标记接口本身位于 {@code ..adapter.event.consumer..}，接口不实现自己）。
-     */
-    public static final ArchRule EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED =
-            classes()
-                    .that()
-                    .resideInAPackage("..event.consumer..")
-                    .and()
-                    .areNotInterfaces()
-                    .should()
-                    .implement("com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer")
-                    .allowEmptyShould(true)
-                    .as("R9b ..event.consumer.. 包下的类必须实现 IntegrationEventConsumer 标记");
 
     /**
      * R10a —— 实现 {@code ApplicationDTO} 标记的类（application 层内部视图）必须位于 application 层。
@@ -424,7 +333,7 @@ public final class DDDArchitectureRules {
                     .as("R10b ..application..dto.. 包下的顶层类必须实现 ApplicationDTO 标记（嵌套类除外）");
 
     /**
-     * C1 —— contract 纯契约模块（Service 接口 + CQE + CO + IntegrationEvent + 枚举），
+      * C1 —— contract 纯契约模块（Service 接口 + CQE + CO + 枚举），
      * 不得依赖 server 侧的 adapter / application / domain / infrastructure，
      * 也不得依赖 Spring / MyBatis 运行时基础设施（DI / Bean / 持久化）。
      *
@@ -528,7 +437,7 @@ public final class DDDArchitectureRules {
      *
      * <p>{@code ScheduledAdapter}（common-ddd/adapter/task/scheduler/）为<strong>空标记</strong>，
      * 定型「时间驱动入口」角色：{@code @Scheduled} 触发 → 透传 ApplicationService。
-     * 与 REST（R8）、MQ 入站（R9）并列的第三类 driving adapter。空集时允许通过
+      * 与 REST（R8）并列的 driving adapter。空集时允许通过
      * （当前示例应用无定时任务实现，标记为框架预留，模板见 cookbook/scheduled-task.md）。
      */
     public static final ArchRule SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER =
@@ -544,13 +453,11 @@ public final class DDDArchitectureRules {
      * R14b —— <strong>业务服务</strong> {@code ..adapter..scheduler..} 包下的<strong>非接口</strong>类必须实现
      * {@code ScheduledAdapter} 标记。
      *
-     * <p>与 R8b/R9b 同理：识别定时任务入口用类型锚点而非包名猜测。排除接口自身
+     * <p>与 R8b 同理：识别定时任务入口用类型锚点而非包名猜测。排除接口自身
      * （标记接口位于 {@code ..adapter.task.scheduler..}，接口不实现自己）。
      *
      * <p><strong>主语收窄至 {@code ..adapter..scheduler..}</strong>：本规则只约束业务服务的时间驱动
-     * <strong>入口</strong>（driving adapter，经 AppService 驱动用例）。<strong>框架管线排空器不受其约束</strong>——
-     * common-ddd 的 {@code OutboxRelayScheduler} 位于 {@code infrastructure.event.outbox.scheduler}
-     * （基础设施自驱、不含业务编排、不实现 {@code ScheduledAdapter}），属有意豁免：
+     * <strong>入口</strong>（driving adapter，经 AppService 驱动用例）。与 R8b 同一逻辑，
      * ArchUnit 守护业务分层，不反向约束框架内部结构。
      */
     public static final ArchRule SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED =
@@ -562,6 +469,5 @@ public final class DDDArchitectureRules {
                     .should()
                     .implement("com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter")
                     .allowEmptyShould(true)
-                    .as("R14b 业务 ..adapter..scheduler.. 包下的类必须实现 ScheduledAdapter 标记"
-                            + "（框架管线排空器豁免，见规则 Javadoc）");
+                    .as("R14b 业务 ..adapter..scheduler.. 包下的类必须实现 ScheduledAdapter 标记");
 }

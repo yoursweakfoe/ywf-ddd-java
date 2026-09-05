@@ -14,7 +14,7 @@
 **业务规则：**
 
 1. 只有 PENDING 状态的订单才能支付（状态机约束）
-2. 支付成功后订单状态变为 PAID，并触发 `OrderPaidEvent` 领域事件
+2. 支付成功后订单状态变为 PAID
 3. 支付失败（状态不合法）时抛出 BusinessException，前端收到 422 + i18n 错误码
 4. 乐观锁保护并发支付（两人同时点"支付"只有一人成功）
 
@@ -191,7 +191,6 @@ public class Order extends AggregateRoot<UUID> {
     public void pay() {
         requireStatus("order:err.status.pending", OrderStatus.PENDING);
         this.status = OrderStatus.PAID;
-        registerEvent(new OrderPaidEvent(id));
     }
 
     @Override
@@ -285,10 +284,8 @@ public class OrderRepositoryImpl
 
     private final OrderConverter converter;
 
-    public OrderRepositoryImpl(OrderMapper mapper,
-                               ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
-                               OrderConverter converter) {
-        super(mapper, outboxStoreProvider);
+    public OrderRepositoryImpl(OrderMapper mapper, OrderConverter converter) {
+        super(mapper);
         this.converter = converter;
     }
 
@@ -304,12 +301,7 @@ public class OrderRepositoryImpl
 }
 ```
 
-> 领域事件随持久化强制经 Outbox 同事务捕获（全链路 Outbox 可靠性规范，见
-> `docs/common/common-ddd.md` Outbox 节），仓储构造注入的
-> `ObjectProvider<DomainEventOutboxStore>` 即捕获的接线点；捕获实现归使用方
->（SPI-only，框架不提供缺省实现，参考实现见 sample），入箱后由框架排空器
-> `OutboxRelay` 在自有事务内派发（at-least-once）。无 Outbox Bean 时捕获 fail-fast
-> 回滚业务写入——要么不用事件，要么带上 Outbox，不存在直发降级。
+> 仓储只负责持久化与不变量校验（save/update 前自动 `validate()`）；跨聚合协调 = 同事务直调。
 
 ## 完整文件清单
 

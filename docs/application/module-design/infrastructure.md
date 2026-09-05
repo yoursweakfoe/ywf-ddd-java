@@ -96,8 +96,7 @@ infrastructure → 外部框架/SDK（MyBatis-Plus、Alipay SDK、OSS Client 等
 >
 > | 技术能力 | 归属 | 理由 |
 > |---------|------|------|
-> | 仓储基类 / 事件发布 | common-ddd（已有） | 所有服务都用，无业务逻辑 |
-> | MQ 生产者/消费者基类 | common-mq（待建） | 序列化、重试、幂等骨架是通用的 |
+> | 仓储基类 | common-ddd（已有） | 所有服务都用，无业务逻辑 |
 > | Redis 缓存工具 | common-cache（待建） | 连接配置、Cache-Aside 模板是通用的 |
 > | OSS 文件存储 | common-storage（待建） | 上传/下载/签名 URL 是通用的 |
 > | SMS/邮件通知 | common-notification（待建） | 发送能力是通用的 |

@@ -5,7 +5,7 @@ package com.yoursweakfoe.common.ddd.adapter.rest.controller;
  *
  * <p>位于 {@code adapter/rest/controller/}——包结构采用<strong>「协议伞 / 角色」两级式</strong>：
  * {@code rest} 为协议伞（HTTP 面），{@code controller} 为角色段；与
- * {@code task.scheduler}、{@code event.consumer} 完全对称，三类入口在目录树上等距对齐。
+ * {@code task.scheduler} 对称，入口在目录树上等距对齐。
  * 实现类为 {@code @RestController}（如 {@code OrderControllerImpl}
  * {@code implements OrderController, RestAdapter}）。本标记将这类组件显式定型为
  * <strong>REST 入口适配器</strong>（Ports &amp; Adapters 中的 driving adapter）：纯透传
@@ -30,12 +30,10 @@ package com.yoursweakfoe.common.ddd.adapter.rest.controller;
  *   <tr><th>协议伞</th><th>角色段</th><th>标记接口</th><th>驱动源</th><th>架构规则</th></tr>
  *   <tr><td>{@code rest}</td><td>{@code controller}</td><td>{@code RestAdapter}（本接口）</td><td>HTTP 请求</td><td>R8a / R8b</td></tr>
  *   <tr><td>{@code task}</td><td>{@code scheduler}</td><td>{@code ScheduledAdapter}</td><td>时间类调度</td><td>R14a / R14b</td></tr>
- *   <tr><td>{@code event}</td><td>{@code consumer}</td><td>{@code IntegrationEventConsumer}</td><td>MQ 消息</td><td>R9a / R9b</td></tr>
  * </table>
  *
  * @see com.yoursweakfoe.common.ddd.application.service.ApplicationService
  * @see com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter
- * @see com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer
  */
 public interface RestAdapter {
 }

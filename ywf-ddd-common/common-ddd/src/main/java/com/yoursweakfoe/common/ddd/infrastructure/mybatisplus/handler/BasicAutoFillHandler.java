@@ -16,8 +16,8 @@ import org.springframework.beans.factory.ObjectProvider;
  *
  * <p><strong>时间源注入</strong>：时间取自构造器注入的 {@link java.time.Clock}
  * （<strong>纯 JDK 类型，非 Spring 类</strong>——不引入任何新依赖）。自动配置提供
- * {@code @ConditionalOnMissingBean} 的 {@code Clock}（{@code systemDefaultZone}，
- * 与历史 {@code OffsetDateTime.now()} 行为一致）；业务测试可自定义固定 Clock Bean 覆盖，
+ * {@code @ConditionalOnMissingBean} 的 {@code Clock}（{@code systemUTC} —— 存储/运算一律 UTC，
+ * 与部署环境时区解耦，见 {@code ClockAutoConfiguration}）；业务测试可自定义固定 Clock Bean 覆盖，
  * 使审计时间断言确定化。
  *
  * <p><strong>填充触发前提（重要）</strong>：MyBatis-Plus 的 {@code MybatisParameterHandler}

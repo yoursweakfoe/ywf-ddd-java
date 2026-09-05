@@ -12,7 +12,7 @@
 
 1. 下单时需查询商品信息（Product 聚合）获取单价
 2. 下单时需扣减多个商品的库存（跨 Product 聚合批量操作）
-3. 下单时创建新订单（Order 聚合）并注册 OrderPlacedEvent
+3. 下单时创建新订单（Order 聚合），状态初始化为 PENDING
 4. 库存扣减逻辑不归属于任何单一聚合 → 封装为 **Domain Service**
 
 **为什么需要 Domain Service？**
@@ -110,7 +110,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
         // 2. 扣减库存（跨聚合协调，委托 Domain Service；其内部同样批量加载）
         inventoryDomainService.deductStock(items);
 
-        // 3. 创建订单并下单（OrderFactory：创建即合法——校验 + 注册 OrderPlacedEvent 一步到位）
+        // 3. 创建订单并下单（OrderFactory：创建即合法——校验一步到位；跨聚合联动已在本步之前同事务直调完成）
         Order order = orderFactory.create(command.getCustomerId(), items);
         orderRepository.save(order);
 

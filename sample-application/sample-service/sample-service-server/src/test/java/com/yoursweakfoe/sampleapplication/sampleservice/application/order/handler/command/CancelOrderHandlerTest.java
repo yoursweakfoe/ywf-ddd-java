@@ -10,6 +10,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.comma
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.domain.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
 import com.yoursweakfoe.sampleapplication.sampleservice.support.TestOrders;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.Optional;
@@ -21,13 +22,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * CancelOrderHandler 单元测试。
+ * CancelOrderHandler 单元测试 —— 取消与库存回补同事务直调。
  */
 @ExtendWith(MockitoExtension.class)
 class CancelOrderHandlerTest {
 
     @Mock
     private OrderRepository orderRepository;
+    @Mock
+    private InventoryDomainService inventoryDomainService;
     @InjectMocks
     private CancelOrderHandler handler;
 
@@ -48,6 +51,8 @@ class CancelOrderHandlerTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(order.getCancelReason()).isEqualTo("no longer needed");
         verify(orderRepository).update(order);
+        // 同事务补偿：回补以订单明细直调 DomainService
+        verify(inventoryDomainService).replenishStock(order.getItems());
     }
 
     @Test

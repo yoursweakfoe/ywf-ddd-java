@@ -13,7 +13,7 @@
     <description>公开契约 jar —— 服务接口契约、Command/Query、CO（消费方唯一依赖）</description>
 
     <dependencies>
-        <!-- CQRS 标记接口（Command / Query / IntegrationEvent） -->
+        <!-- CQRS 标记接口（Command / Query / CO / IntegrationEvent） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>
             <artifactId>common-contract</artifactId>

@@ -6,12 +6,10 @@ import com.yoursweakfoe.common.ddd.fixtures.model.Order;
 import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import com.yoursweakfoe.common.ddd.infrastructure.mybatisplus.persistence.MybatisPlusPersistence;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +19,8 @@ public class OrderRepository extends MybatisPlusPersistence<OrderMapper, OrderPO
 
     private final OrderConverter converter;
 
-    public OrderRepository(OrderMapper mapper,
-                           ObjectProvider<DomainEventOutboxStore> outboxStoreProvider,
-                           OrderConverter converter) {
-        super(mapper, outboxStoreProvider);
+    public OrderRepository(OrderMapper mapper, OrderConverter converter) {
+        super(mapper);
         this.converter = converter;
     }
 

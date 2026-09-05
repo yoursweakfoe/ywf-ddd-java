@@ -1,7 +1,5 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.event.domain.StockDeductedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.event.domain.StockRestoredEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;
@@ -46,7 +44,7 @@ public class Product extends AggregateRoot<UUID> {
         this.stock = stock;
     }
 
-    /** 重建构造器（持久化层 Converter 使用，跳过校验与事件注册） */
+    /** 重建构造器（持久化层 Converter 使用，跳过校验） */
     public static Product reconstitute(UUID id, String name, BigDecimal price, int stock,
                                        OffsetDateTime createAt, OffsetDateTime updateAt,
                                        Integer version) {
@@ -81,11 +79,10 @@ public class Product extends AggregateRoot<UUID> {
                     Map.of("productId", id, "required", quantity, "available", stock));
         }
         this.stock -= quantity;
-        registerEvent(new StockDeductedEvent(id, quantity));
     }
 
     /**
-     * 回补库存并注册领域事件。
+     * 回补库存。
      *
      * @param quantity 回补数量
      */
@@ -94,7 +91,6 @@ public class Product extends AggregateRoot<UUID> {
             throw new BusinessException("product:err.quantityMustBePositive");
         }
         this.stock += quantity;
-        registerEvent(new StockRestoredEvent(this.id, quantity));
     }
     // endregion
 

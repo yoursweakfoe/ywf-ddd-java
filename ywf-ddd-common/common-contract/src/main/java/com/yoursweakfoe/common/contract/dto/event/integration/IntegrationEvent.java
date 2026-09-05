@@ -10,14 +10,15 @@ package com.yoursweakfoe.common.contract.dto.event.integration;
  * <p>与领域事件（DomainEvent）的区别：
  *
  * <ul>
- *   <li>DomainEvent —— 领域内部产生，聚合根注册，进程内发布（Spring Event），不对外
- *   <li>IntegrationEvent（本接口） —— 跨服务边界，经 MQ / RPC 传输，出入站均为它
+ *   <li>DomainEvent —— 领域内部产生，仅进程内消费，不对外
+ *   <li>IntegrationEvent（本接口） —— 跨服务边界，经消息中间件传输，出入站均为它
  * </ul>
  *
  * <p>实现类应命名为 {@code XxxIntegrationEvent}，位于 {@code contract/{agg}/dto/event/integration/}，
- * 如 {@code PaymentCompletedIntegrationEvent}。
+ * 如 {@code PaymentCompletedIntegrationEvent}；载荷字段视为长期对外契约，增删须考虑兼容性。
  *
  * @see com.yoursweakfoe.common.contract.dto.command.Command
  * @see com.yoursweakfoe.common.contract.dto.query.Query
+ * @see com.yoursweakfoe.common.contract.dto.co.CO
  */
 public interface IntegrationEvent {}

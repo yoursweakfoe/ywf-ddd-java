@@ -26,7 +26,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 5. **adapter**：在 `{Agg}ServiceImpl` 新增方法
    - 纯透传：`return {agg}AppService.{action}(command);`
 6. **domain**（如需新行为）：在聚合根新增行为方法
-   - 内含显式 if-throw 校验 + 状态变迁 + registerEvent（可选）
+   - 内含显式 if-throw 校验 + 状态变迁（跨聚合联动由 Handler 同事务直调）
 
 ## 步骤（读操作）
 

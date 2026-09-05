@@ -8,10 +8,6 @@ domain/
 │   │   ├── {xxx}Item.java            # 聚合内实体 (extends Entity<ID>)
 │   │   ├── {xxx}VO.java              # 值对象 (implements ValueObject，推荐 record)
 │   │   └── {xxx}Enum.java          # 状态枚举等枚举（如有）
-│   ├── event/                      # 领域事件（对偶 common-ddd/domain/event/{domain,publisher}，事件不再归属 model/）
-│   │   ├── domain/                 # 领域事件定义（extends DomainEvent）
-│   │   │   └── {xxx}ActionEvent.java
-│   │   └── publisher/              # 业务自定义领域事件发布器（可选，默认框架 InProcessDomainEventPublisher）
 │   ├── repository/                 # 必有。Repository 接口（依赖倒置，实现在 Infrastructure）
 │   │   └── domain/                 #   XxxRepository（写侧，聚合生命周期；对偶 infra repository/domain）
 │   ├── portal/                     # 可选。外部资源访问接口（OSS/RPC/MQ/ES，实现在 infrastructure/gateway）
@@ -29,8 +25,6 @@ domain/
 | 子包 | 职责 | 准入规则 |
 |------|------|--------|
 | `model/` | 聚合根、实体、值对象、枚举 | 零框架依赖，纯 Java + common-ddd 构建块 |
-| `event/domain/` | 领域事件定义（extends DomainEvent） | 事件是模型的组成部分，仅进程内消费 |
-| `event/publisher/` | 业务自定义领域事件发布器 | 可选；默认使用框架 `InProcessDomainEventPublisher` |
 | `repository/domain/` | Repository 接口（写侧） | 必须为接口，实现在 infrastructure/persistence/{ds}/{agg}/repository/domain |
 | `portal/` | 外部资源访问接口（OSS/RPC/MQ/ES） | 必须为接口，实现在 infrastructure/gateway（含 ACL 翻译） |
 | `service/` | 聚合内领域服务 | 仅当逻辑不自然归属于任何实体时使用（见下方说明） |

@@ -1,7 +1,5 @@
 package com.yoursweakfoe.common.ddd.fixtures.model;
 
-import com.yoursweakfoe.common.ddd.fixtures.event.OrderCancelledEvent;
-import com.yoursweakfoe.common.ddd.fixtures.event.OrderPlacedEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
@@ -31,16 +29,15 @@ public class Order extends AggregateRoot<UUID> {
         this.customerId = customerId;
     }
 
-    /** 重建订单（持久化层 Converter 使用，跳过校验与事件注册） */
+    /** 重建订单（持久化层 Converter 使用，跳过校验） */
     public static Order reconstitute(UUID id, OrderStatus status, List<OrderItem> items,
                                      BigDecimal totalAmount, String customerId) {
         return new Order(id, status, items, totalAmount, customerId);
     }
 
-    /** 下单：校验不变量 + 注册领域事件 */
+    /** 下单：校验不变量 */
     public void place() {
         validate();
-        registerEvent(new OrderPlacedEvent(id, totalAmount));
     }
 
     /** 取消订单 */
@@ -49,7 +46,6 @@ public class Order extends AggregateRoot<UUID> {
             throw new BusinessException("order:err.alreadyCancelled");
         }
         this.status = OrderStatus.CANCELLED;
-        registerEvent(new OrderCancelledEvent(id, reason));
     }
 
     @Override

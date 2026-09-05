@@ -7,7 +7,6 @@
 - 禁止引入 Spring / MyBatis 框架**运行时**依赖（DI 容器、AOP、持久化 API 等）；唯一例外：`org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`）——注解是纯元数据，不影响分层纯净性（ArchUnit A2 白名单守护，见 ApplicationArchitectureTest）
 - 禁止暴露 setter 或 public 字段（状态变迁只通过行为方法）
 - 禁止在 Domain 层实现 Repository（实现必须在 Infrastructure）
-- 禁止在领域事件中引用 Infrastructure 类
 - 禁止跨聚合直接修改对方内部状态（通过 Repository 读取）
 - 禁止定义具名领域异常类（统一 BusinessException + 错误码）
 - 禁止使用 Lombok `@Data`（聚合根/实体/值对象手写 equals/toString）
@@ -54,7 +53,7 @@
 
 - 禁止 Mediator 模式（Handler 1:1 对应 CQE，无需中间路由）
 - 禁止在核心代码（src/ / sample-application/）中嵌入 AI 工具专属指令
-- 禁止使用 `LocalDateTime`（统一 `OffsetDateTime`，带时区无歧义）
+- 禁止 `LocalDateTime` / `ZonedDateTime` 作为持久化时间类型（统一 `OffsetDateTime`：前者写入依赖会话时区、读 `timestamptz` 抛异常；后者 pgjdbc 双向抛异常。论证见 common-ddd.md ADR-0006）
 
 > 注：Specification 模式已解除禁止（2026-08 决策修订）——common-ddd 提供的最小纯接口
 > 实现为既定采纳项（见 docs/references.md「采纳」表），可用于领域规则的 and/or/not 组合校验；

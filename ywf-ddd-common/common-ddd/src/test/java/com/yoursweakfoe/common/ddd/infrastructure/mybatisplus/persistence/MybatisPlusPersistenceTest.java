@@ -9,9 +9,6 @@ import com.yoursweakfoe.common.ddd.fixtures.OrderFixtures;
 import com.yoursweakfoe.common.ddd.fixtures.ProductFixtures;
 import com.yoursweakfoe.common.ddd.fixtures.converter.OrderConverter;
 import com.yoursweakfoe.common.ddd.fixtures.converter.ProductConverter;
-import com.yoursweakfoe.common.ddd.fixtures.event.OrderCancelledEvent;
-import com.yoursweakfoe.common.ddd.fixtures.event.OrderPlacedEvent;
-import com.yoursweakfoe.common.ddd.fixtures.event.StockDeductedEvent;
 import com.yoursweakfoe.common.ddd.fixtures.mapper.OrderMapper;
 import com.yoursweakfoe.common.ddd.fixtures.mapper.ProductMapper;
 import com.yoursweakfoe.common.ddd.fixtures.model.Order;
@@ -21,16 +18,9 @@ import com.yoursweakfoe.common.ddd.fixtures.po.OrderPO;
 import com.yoursweakfoe.common.ddd.fixtures.po.ProductPO;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.OrderRepository;
 import com.yoursweakfoe.common.ddd.fixtures.persistence.ProductRepository;
-import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventCodec;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.InMemoryDomainEventOutboxStore;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.scheduler.OutboxRelay;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,14 +29,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.context.event.EventListener;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @SpringBootTest(classes = MybatisPlusPersistenceTest.TestConfig.class)
 @ActiveProfiles("test")
@@ -67,67 +54,25 @@ class MybatisPlusPersistenceTest {
         ProductConverter productConverter() {
             return new ProductConverter();
         }
-
-        @Bean
-        TestEventCapture testEventCapture() {
-            return new TestEventCapture();
-        }
-
-        @Bean
-        InMemoryDomainEventOutboxStore inMemoryDomainEventOutboxStore() {
-            return new InMemoryDomainEventOutboxStore();
-        }
-    }
-
-    /**
-     * Captures domain events dispatched via Spring ApplicationEventPublisher.
-     *
-     * <p>全链路 Outbox 语义：聚合持久化时事件只被捕获入内存 outbox（与业务同事务语义由
-     * {@code DomainEventCapture} 编排担保），进程内派发只在排空器 drain 时发生。
-     * 因此事件断言统一为：save/update/remove → {@code drain(n)} → 断言 captured。
-     */
-    static class TestEventCapture {
-        final List<DomainEvent> captured = new ArrayList<>();
-
-        @EventListener
-        public void onEvent(DomainEvent event) {
-            captured.add(event);
-        }
     }
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final ProductMapper productMapper;
-    private final TestEventCapture eventCapture;
     private final JdbcTemplate jdbcTemplate;
-    private final InMemoryDomainEventOutboxStore outboxStore;
-    private final ApplicationEventPublisher applicationEventPublisher;
-    private final DomainEventCodec codec;
-    private final PlatformTransactionManager transactionManager;
-    private OutboxRelay relay;
 
     @Autowired
     MybatisPlusPersistenceTest(OrderRepository orderRepository,
                                  ProductRepository productRepository,
                                  OrderMapper orderMapper,
                                  ProductMapper productMapper,
-                                 TestEventCapture eventCapture,
-                                 JdbcTemplate jdbcTemplate,
-                                 InMemoryDomainEventOutboxStore outboxStore,
-                                 ApplicationEventPublisher applicationEventPublisher,
-                                 DomainEventCodec codec,
-                                 PlatformTransactionManager transactionManager) {
+                                 JdbcTemplate jdbcTemplate) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.orderMapper = orderMapper;
         this.productMapper = productMapper;
-        this.eventCapture = eventCapture;
         this.jdbcTemplate = jdbcTemplate;
-        this.outboxStore = outboxStore;
-        this.applicationEventPublisher = applicationEventPublisher;
-        this.codec = codec;
-        this.transactionManager = transactionManager;
     }
 
     @BeforeEach
@@ -135,39 +80,18 @@ class MybatisPlusPersistenceTest {
         // BlockAttackInnerInterceptor 禁止全表删除，通过 JDBC 绕过拦截器
         jdbcTemplate.execute("DELETE FROM orders.orders");
         jdbcTemplate.execute("DELETE FROM products.products");
-        // 内存 outbox 逐测试复位，避免残留行污染 drain 断言
-        outboxStore.clear();
-        eventCapture.captured.clear();
-        // 排空引擎直构（确定性测试接缝）：派发器与框架装配同形——codec 重建事件 → 进程内发布
-        relay = new OutboxRelay(outboxStore, transactionManager,
-                row -> applicationEventPublisher.publishEvent(
-                        codec.read(row.eventType(), row.payload(),
-                                UUID.fromString(row.id()), row.occurredOn())),
-                3, Duration.ofMinutes(5), Clock.systemUTC());
     }
 
     // ==================== save ====================
 
     @Test
-    void saveDomain_insertsAndPublishesEvents() {
+    void saveDomain_insertsRecord() {
         Order order = OrderFixtures.createOrder();
-        order.place(); // registers OrderPlacedEvent
-        UUID originalEventId = order.getDomainEvents().get(0).getEventId();
+        order.place();
 
         orderRepository.save(order);
 
-        // DB has record
         assertThat(orderRepository.findById(order.getId())).isPresent();
-        // Event was captured into outbox at save time; dispatch happens only when the relay drains
-        assertThat(relay.drain(10)).isEqualTo(1);
-        assertThat(eventCapture.captured)
-                .hasSize(1)
-                .first()
-                .isInstanceOf(OrderPlacedEvent.class);
-        // 事件身份经 outbox 行重建：eventId 跨序列化/重投保持稳定（幂等键契约）
-        assertThat(eventCapture.captured.get(0).getEventId()).isEqualTo(originalEventId);
-        // Events cleared on aggregate
-        assertThat(order.getDomainEvents()).isEmpty();
     }
 
     @Test
@@ -287,31 +211,6 @@ class MybatisPlusPersistenceTest {
                 .isInstanceOf(BusinessException.class);
     }
 
-    @Test
-    void updateDomain_publishesAndClearsEvents() {
-        Product product = ProductFixtures.createProduct(100);
-        productRepository.save(product);
-
-        // 从 DB 重新获取以拿到自增 ID（框架 saveDomain 不回写 ID）
-        Product savedProduct = productRepository.findById(
-                productMapper.selectOne(
-                        new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"))
-                        .getId())
-                .orElseThrow();
-        eventCapture.captured.clear();
-
-        savedProduct.deductStock(10); // registers StockDeductedEvent
-        productRepository.update(savedProduct);
-
-        // 事件随更新同事务入箱，排空后才进程内派发
-        assertThat(relay.drain(10)).isEqualTo(1);
-        assertThat(eventCapture.captured)
-                .hasSize(1)
-                .first()
-                .isInstanceOf(StockDeductedEvent.class);
-        assertThat(savedProduct.getDomainEvents()).isEmpty();
-    }
-
     // ==================== batch ====================
 
     @Test
@@ -387,178 +286,6 @@ class MybatisPlusPersistenceTest {
 
         assertThat(orderRepository.findById(o1.getId())).isEmpty();
         assertThat(orderRepository.findById(o2.getId())).isEmpty();
-    }
-
-    @Test
-    void removeDomainById_withEventFactory_publishesEventAfterDelete() {
-        Order order = OrderFixtures.createOrder();
-        orderRepository.save(order);
-        eventCapture.captured.clear();
-
-        orderRepository.removeDomainById(order.getId(),
-                id -> new OrderCancelledEvent(id, "deleted"));
-
-        assertThat(orderRepository.findById(order.getId())).isEmpty();
-        // 删除工厂事件同事务入箱，排空后派发
-        assertThat(relay.drain(10)).isEqualTo(1);
-        assertThat(eventCapture.captured)
-                .hasSize(1)
-                .first()
-                .isInstanceOf(OrderCancelledEvent.class);
-        assertThat(((OrderCancelledEvent) eventCapture.captured.get(0)).getOrderId())
-                .isEqualTo(order.getId());
-    }
-
-    @Test
-    void removeDomainById_withEventFactory_deleteFails_noEventPublished() {
-        assertThatThrownBy(() -> orderRepository.removeDomainById(UUID.randomUUID(),
-                id -> new OrderCancelledEvent(id, "deleted")))
-                .isInstanceOf(IllegalStateException.class);
-
-        // 删除失败 → 无事件入箱 → 排空无可认领行、无派发
-        assertThat(relay.drain(10)).isZero();
-        assertThat(eventCapture.captured).isEmpty();
-    }
-
-    @Test
-    void removeDomainByIds_withEventFactory_publishesEventPerId() {
-        Order o1 = OrderFixtures.createOrder();
-        Order o2 = OrderFixtures.createOrder();
-        orderRepository.save(o1);
-        orderRepository.save(o2);
-        eventCapture.captured.clear();
-
-        orderRepository.removeDomainByIds(
-                List.of(o1.getId(), o2.getId()),
-                id -> new OrderCancelledEvent(id, "deleted"));
-
-        assertThat(orderRepository.findById(o1.getId())).isEmpty();
-        assertThat(orderRepository.findById(o2.getId())).isEmpty();
-        assertThat(relay.drain(10)).isEqualTo(2);
-        assertThat(eventCapture.captured)
-                .hasSize(2)
-                .allMatch(OrderCancelledEvent.class::isInstance);
-    }
-
-    /**
-     * 存在性过滤：请求 ID 部分存在时（5 删 3 场景），仅为真实删除的实体发布事件，
-     * 不存在的 ID 静默跳过不报错。
-     */
-    @Test
-    void removeDomainByIds_withEventFactory_partialExisting_publishesOnlyForDeleted() {
-        Order o1 = OrderFixtures.createOrder();
-        Order o2 = OrderFixtures.createOrder();
-        orderRepository.save(o1);
-        orderRepository.save(o2);
-        UUID phantomId = UUID.randomUUID(); // 从未持久化
-        eventCapture.captured.clear();
-
-        orderRepository.removeDomainByIds(
-                List.of(o1.getId(), phantomId, o2.getId()),
-                id -> new OrderCancelledEvent(id, "deleted"));
-
-        assertThat(orderRepository.findById(o1.getId())).isEmpty();
-        assertThat(orderRepository.findById(o2.getId())).isEmpty();
-        assertThat(relay.drain(10)).isEqualTo(2);
-        assertThat(eventCapture.captured)
-                .hasSize(2)
-                .allMatch(OrderCancelledEvent.class::isInstance);
-        // 事件只携带真实删除的两个 ID，幻影 ID 不发事件
-        assertThat(eventCapture.captured)
-                .extracting(e -> ((OrderCancelledEvent) e).getOrderId())
-                .containsExactlyInAnyOrder(o1.getId(), o2.getId());
-    }
-
-    /** 全部 ID 均不存在时保持严格语义：抛 IllegalStateException，不发事件。 */
-    @Test
-    void removeDomainByIds_withEventFactory_noneExists_throwsIllegalState() {
-        assertThatThrownBy(() -> orderRepository.removeDomainByIds(
-                List.of(UUID.randomUUID(), UUID.randomUUID()),
-                id -> new OrderCancelledEvent(id, "deleted")))
-                .isInstanceOf(IllegalStateException.class);
-
-        // 无删除成功 → 无事件入箱 → 排空无可认领行、无派发
-        assertThat(relay.drain(10)).isZero();
-        assertThat(eventCapture.captured).isEmpty();
-    }
-
-    @Test
-    void removeDomain_publishesAndClearsRegisteredEvents() {
-        Product product = ProductFixtures.createProduct(100);
-        productRepository.save(product);
-        Product saved = productRepository.findById(
-                productMapper.selectOne(
-                        new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"))
-                        .getId())
-                .orElseThrow();
-        eventCapture.captured.clear();
-
-        saved.deductStock(10); // registers StockDeductedEvent
-        productRepository.removeDomain(saved);
-
-        assertThat(productRepository.findById(saved.getId())).isEmpty();
-        assertThat(relay.drain(10)).isEqualTo(1);
-        assertThat(eventCapture.captured)
-                .hasSize(1)
-                .first()
-                .isInstanceOf(StockDeductedEvent.class);
-        assertThat(saved.getDomainEvents()).isEmpty();
-    }
-
-    @Test
-    void removeDomains_publishesRegisteredEventsPerAggregate() {
-        productRepository.save(ProductFixtures.createProduct(100));
-        productRepository.save(ProductFixtures.createProduct(200));
-        // 通过 mapper 取回自增 ID，再用 findDomainsByIds 加载（读侧已 PO → DTO 直投，不再提供按条件加载领域列表）
-        List<Long> ids = productMapper.selectList(
-                        new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"))
-                .stream().map(ProductPO::getId).toList();
-        List<Product> savedList = productRepository.findDomainsByIds(ids);
-        assertThat(savedList).hasSize(2);
-        eventCapture.captured.clear();
-
-        savedList.forEach(p -> p.deductStock(10)); // each registers StockDeductedEvent
-        productRepository.removeDomains(savedList);
-
-        assertThat(productRepository.findDomainsByIds(ids)).isEmpty();
-        assertThat(relay.drain(10)).isEqualTo(2);
-        assertThat(eventCapture.captured)
-                .hasSize(2)
-                .allMatch(StockDeductedEvent.class::isInstance);
-        assertThat(savedList).allMatch(p -> p.getDomainEvents().isEmpty());
-    }
-
-    /**
-     * removeDomains 存在性过滤：传入列表含未持久化的幻影聚合时，
-     * 仅为真实删除的聚合发布事件；幻影聚合的已注册事件保留（未被冲刷）。
-     */
-    @Test
-    void removeDomains_partialExistence_publishesOnlyForExistingAggregates() {
-        productRepository.save(ProductFixtures.createProduct(100));
-        productRepository.save(ProductFixtures.createProduct(200));
-        List<Long> ids = productMapper.selectList(
-                        new LambdaQueryWrapper<ProductPO>().eq(ProductPO::getName, "Test Product"))
-                .stream().map(ProductPO::getId).toList();
-        List<Product> savedList = productRepository.findDomainsByIds(ids);
-        assertThat(savedList).hasSize(2);
-        eventCapture.captured.clear();
-
-        // 幻影聚合：从未持久化，但已注册事件
-        Product phantom = ProductFixtures.createProduct(300);
-        phantom.deductStock(10);
-
-        List<Product> mixed = new ArrayList<>(savedList);
-        mixed.add(phantom);
-        savedList.forEach(p -> p.deductStock(10)); // each registers StockDeductedEvent
-        productRepository.removeDomains(mixed);
-
-        assertThat(productRepository.findDomainsByIds(ids)).isEmpty();
-        assertThat(relay.drain(10)).isEqualTo(2);
-        assertThat(eventCapture.captured)
-                .hasSize(2) // 仅两个真实存在的聚合发事件，幻影不发
-                .allMatch(StockDeductedEvent.class::isInstance);
-        assertThat(savedList).allMatch(p -> p.getDomainEvents().isEmpty());
-        assertThat(phantom.getDomainEvents()).hasSize(1); // 未被删除 → 事件保留未冲刷
     }
 
     @Test
@@ -705,6 +432,13 @@ class MybatisPlusPersistenceTest {
                 "SELECT update_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
         assertThat(before).isNotNull();
 
+        // Windows 系统时钟粒度约 0.5–1ms：save 与 delete 背靠背执行时两次填充可能落在
+        // 同一 tick，严格大于断言偶发同值失败（flaky）。强制跨 tick，断言语义不变。
+        try {
+            Thread.sleep(3);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         orderRepository.deleteById(order.getId());
 
         // 绕过逻辑删除过滤，直接查物理行

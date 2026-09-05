@@ -3,11 +3,11 @@
 ## 职责
 
 定义服务的公开契约，是消费方（其他微服务）的**唯一依赖**。
-涵盖 REST 端点契约接口（Controller，东西向复用）、CQRS 输入（Command/Query）、契约输出对象（CO）、集成事件（Integration Event）。
+涵盖 REST 端点契约接口（Controller，东西向复用）、CQRS 输入（Command/Query）、契约输出对象（CO）。
 
 ## 设计原则
 
-- **纯类型定义**：仅包含接口、Command/Query、CO、Event，无任何实现
+- **纯类型定义**：仅包含接口、Command/Query、CO，无任何实现
 - **轻依赖**：仅依赖 `common-contract`（CQRS 标记接口）+ `swagger-annotations`（文档注解）+ `spring-web`（HTTP 映射注解，`provided` 不传递）
 - **按聚合分包**：顶层以聚合名划分，内部结构一致
 - **单通道复用**：对外 REST 与东西向复用同一契约接口；REST 路径在契约接口上声明（`@RequestMapping` + `@GetMapping`），东西向由消费方经 RestClient 调用提供方 REST 端点（HTTP 直连）
@@ -18,7 +18,7 @@
 
 → [directory-structure/contract/contract.md](../directory-structure/contract/contract.md)
 
-> 完整代码示例 → [cookbook/write-path.md](../cookbook/write-path.md)（Command / CO 定义）| [cookbook/event-flow.md](../cookbook/event-flow.md)（IntegrationEvent）
+> 完整代码示例 → [cookbook/write-path.md](../cookbook/write-path.md)（Command / CO 定义）
 
 ## 核心组件
 
@@ -28,7 +28,7 @@
 | Command | `{aggregate}/dto/command/` | 写操作命令，实现 `Command` 标记接口 |
 | Query / PageableQuery | `{aggregate}/dto/query/` | 读操作查询，实现 `Query` / `PageableQuery` 标记接口（分页带 pageNum/pageSize + @Min/@Max） |
 | CO | `{aggregate}/dto/co/` | Contract Object，对内部 DTO 清洗后的外部安全视图，`@Schema` 声明字段语义 |
-| Integration Event | `{aggregate}/dto/event/integration/` | 跨服务集成事件（MQ 载荷） |
+| IntegrationEvent | `{aggregate}/dto/event/integration/` | 跨服务事件契约（出站发布 / 入站消费），实现 `IntegrationEvent` 标记接口（common-contract） |
 | 枚举 | `{aggregate}/enums/` | 契约共享枚举 |
 
 ## 文档注解归属
@@ -93,8 +93,6 @@ contract（本模块）                             server
 adapter/rest/{Aggregate}Controller.java           ←──  adapter/rest/（ControllerImpl 实现接口，纯透传 AppService）
 {aggregate}/dto/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/command|query/（接收 CQE 执行用例）
 {aggregate}/dto/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
-{aggregate}/dto/dto/event/integration/XxxIntegrationEvent ←──  application/event/capture/（翻译 + 同事务捕获入集成 Outbox）
-{aggregate}/dto/dto/event/integration/XxxIntegrationEvent ──→  adapter/event/consumer/（接收 MQ 并透传 AppService）
 ```
 
 ### 消费方使用
@@ -121,7 +119,7 @@ ProductCO product = productRestClient.get()
 | 允许 | 禁止 |
 |------|------|
 | 接口定义 | 任何实现类 |
-| 纯数据载体（Command/Query/CO/Event） | 业务逻辑 |
+| 纯数据载体（Command/Query/CO） | 业务逻辑 |
 | 实现 common-contract 标记接口 | 依赖 Spring 运行时（IoC 容器）/ MyBatis |
 | `@Tag` / `@Operation` / `@GetMapping` / `@RequestMapping`（接口）、`@Schema`（CO/CQE） | 引入运行时框架 |
 | java.io.Serializable | 依赖 server 模块 |

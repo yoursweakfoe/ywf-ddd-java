@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
  * <h3>实现约定（纯手写显式映射）</h3>
  * <ul>
  *   <li>实现类为普通 {@code @Component} 类，逐字段显式映射，不使用代码生成器
- *   <li>{@code toDomain} —— 通过聚合根的 {@code reconstitute()} 静态工厂重建，不经过业务校验/事件注册
+ *   <li>{@code toDomain} —— 通过聚合根的 {@code reconstitute()} 静态工厂重建，不经过业务校验
  *   <li>{@code toPO} —— 提取领域对象当前状态的快照，不修改 Domain 任何状态
- *   <li>Domain 的状态变更只通过其行为方法（如 {@code place()}、{@code cancel()}），内聚校验 + 事件注册
+ *   <li>Domain 的状态变更只通过其行为方法（如 {@code place()}、{@code cancel()}），内聚校验
  *   <li>持久化前的不变量校验由 {@code MybatisPlusPersistence} 自动调用 {@code validate()}，Converter 不管校验
  *   <li>字段增删时必须同步修改映射方法，并以往返测试守护完整性
  * </ul>

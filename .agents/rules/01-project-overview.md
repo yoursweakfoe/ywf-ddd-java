@@ -35,7 +35,7 @@ Java 21 / Spring Boot 4.1 / Spring MVC REST（对外经 Higress 网关；东西�
 - common 模块 **零业务逻辑**：仅提供技术骨架和构建块
 - common 模块 **依赖最小化**：每个模块仅声明自身编译必需的最窄依赖
 - sample-application 是**教学示例**：展示框架最佳实践，非生产代码
-- 框架时间类型统一使用 **OffsetDateTime**（带时区，跨地域无歧义）；**唯一例外**：领域事件发生时刻 `DomainEvent.occurredOn` 用 `Instant`（绝对时刻，避免偏移歧义）
+- 框架时间类型统一使用 **OffsetDateTime**（带时区，跨地域无歧义）
 
 ## 关键路径
 

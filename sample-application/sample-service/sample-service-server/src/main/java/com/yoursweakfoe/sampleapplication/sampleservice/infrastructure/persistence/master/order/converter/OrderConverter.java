@@ -15,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * 订单 Converter —— 纯手写显式映射（富领域模型）。
  *
- * <p>toDomain 通过 {@code Order.reconstitute()} 重建，不触发校验/事件；
+ * <p>toDomain 通过 {@code Order.reconstitute()} 重建，不触发校验；
  * toPO 提取领域对象当前状态快照。字段增删时必须同步修改本类并更新往返测试。
  *
  * <p>订单项列表以 JSON 格式存储在 TEXT 列中。

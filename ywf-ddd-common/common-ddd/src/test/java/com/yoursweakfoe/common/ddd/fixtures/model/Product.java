@@ -1,6 +1,5 @@
 package com.yoursweakfoe.common.ddd.fixtures.model;
 
-import com.yoursweakfoe.common.ddd.fixtures.event.StockDeductedEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;
@@ -21,7 +20,7 @@ public class Product extends AggregateRoot<Long> {
         this.stock = stock;
     }
 
-    /** 重建产品（持久化层 Converter 使用，跳过校验与事件注册） */
+    /** 重建产品（持久化层 Converter 使用，跳过校验） */
     public static Product reconstitute(Long id, String name, int stock) {
         return new Product(id, name, stock);
     }
@@ -32,6 +31,5 @@ public class Product extends AggregateRoot<Long> {
             throw new BusinessException("product:err.insufficientStock");
         }
         this.stock -= qty;
-        registerEvent(new StockDeductedEvent(id, qty));
     }
 }

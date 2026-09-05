@@ -23,10 +23,3 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
 
-# Outbox 排空调度在测试中整体静默：排空一律由测试显式驱动排空引擎（确定性接缝），
-# 排空线程与测试线程互不干扰。
-ywf:
-  ddd:
-    outbox:
-      relay:
-        fixed-delay: 999999999

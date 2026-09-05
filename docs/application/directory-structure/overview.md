@@ -19,12 +19,10 @@ contract/
 └── {aggregate}/                     # 顶层按聚合分包
     ├── adapter/                     # 协议契约（对偶 server 的 adapter 层）
     │   └── rest/                    # Controller 契约接口（REST 端点契约，ControllerImpl 实现）
-    ├── dto/                         # 数据传输对象（CQE / CO / 集成事件）
+    ├── dto/                         # 数据传输对象（CQE / CO）
     │   ├── command/                 # Command（写操作意图）
     │   ├── query/                   # Query（读操作请求）
-    │   ├── co/                      # Contract Object（契约输出对象）
-    │   └── event/                   # Integration Event（集成事件）
-    │       └── integration/         # 集成事件（对偶抽取包 dto/event/integration）
+    │   └── co/                      # Contract Object（契约输出对象）
     └── enums/                       # 契约共享枚举
 ```
 
@@ -34,7 +32,7 @@ contract/
 | `{aggregate}/dto/co/` | Contract Object（对内部 DTO 进行字段清洗后的外部安全视图） |
 | `{aggregate}/dto/command/` | Command（写操作意图） |
 | `{aggregate}/dto/query/` | Query（读操作请求） |
-| `{aggregate}/dto/event/integration/` | Integration Event（跨服务集成事件） |
+| `{aggregate}/dto/event/integration/` | IntegrationEvent（跨服务事件契约） |
 | `{aggregate}/enums/` | 契约共享枚举 |
 
 ---
@@ -45,7 +43,6 @@ contract/
 server/
 ├── adapter/                         # 入站适配器（driving adapter）
 │   ├── rest/                          # REST 面：@RestController 实现 contract 的 Controller 契约接口（纯透传）
-│   ├── event/consumer/                # MQ 消费入口（Integration Event 入站）【按需】
 │   ├── scheduler/                     # 定时任务入口【按需】
 │   └── shared/                        # 跨聚合/系统级入口【按需】
 │
@@ -56,9 +53,6 @@ server/
 │       ├── handler/                   # CQRS Handler【按需】
 │       │   ├── command/               # CommandHandler（写用例）
 │       │   └── query/                 # QueryHandler（读用例）
-│       ├── event/                     # 事件处理【按需】
-│       │   ├── listener/              # DomainEventListener（域内反应）
-│       │   └── capture/               # Capture（出站捕获）
 │       ├── assembler/                 # Domain → DTO（手写显式映射）
 │       ├── presenter/                 # DTO → CO（手写显式映射）
 │       ├── dto/                       # 内部视图
@@ -68,7 +62,6 @@ server/
 ├── domain/                          # 领域模型
 │   ├── {aggregate}/
 │   │   ├── model/                     # 聚合根 + 实体 + 值对象 + 枚举
-│   │   │   └── event/                 # 领域事件
 │   │   ├── repository/                # Repository 接口（对偶 infra repository/domain）
 │   │   │   └── domain/                #   XxxRepository（写侧，聚合生命周期）
 │   │   ├── portal/                    # 外部资源访问接口【按需】

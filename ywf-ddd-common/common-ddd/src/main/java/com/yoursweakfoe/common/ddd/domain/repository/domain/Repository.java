@@ -9,7 +9,7 @@ import java.util.Optional;
  * <p>本接口定义在领域层（零基础设施依赖），是业务代码与持久化之间的唯一抽象边界。
  * 管理任何实现了 {@link Identifiable} 的领域对象；若对象同时是
  * {@link com.yoursweakfoe.common.ddd.domain.model.AggregateRoot}，
- * 则实现层会自动附加不变量校验和领域事件发布。
+ * 则实现层会自动附加不变量校验。
  *
  * <p>业务 Repository 接口应继承本接口，业务 Repository 实现类通过组合
  * {@code MybatisPlusPersistence} 获得具体能力，而非继承框架实现类。
@@ -74,7 +74,7 @@ public interface Repository<Domain extends Identifiable<ID>, ID> {
     /**
      * 保存新领域对象（INSERT）。
      *
-     * <p>实现应保证：若为聚合根，持久化前自动调用 {@code validate()}，持久化后发布领域事件。
+     * <p>实现应保证：若为聚合根，持久化前自动调用 {@code validate()}。
      *
      * @param domain 领域对象实例
      */

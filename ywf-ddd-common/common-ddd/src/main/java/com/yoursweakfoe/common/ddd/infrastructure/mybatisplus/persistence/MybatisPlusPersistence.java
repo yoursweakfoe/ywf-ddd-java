@@ -5,35 +5,27 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.yoursweakfoe.common.ddd.domain.event.domain.DomainEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.ddd.domain.model.Identifiable;
 import com.yoursweakfoe.common.ddd.infrastructure.converter.BasicConverter;
-import com.yoursweakfoe.common.ddd.infrastructure.event.domain.DomainEventCapture;
-import com.yoursweakfoe.common.ddd.infrastructure.event.outbox.DomainEventOutboxStore;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.exceptions.TooManyResultsException;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.GenericTypeResolver;
 
 /**
- * MyBatis 仓储支撑类 —— 封装 MyBatis-Plus 持久化 + 领域事件入箱。
+ * MyBatis 仓储支撑类 —— 封装 MyBatis-Plus 持久化 + 乐观锁 + validate 自动调用。
  *
  * <p>本类<strong>组合</strong>持有 {@link BaseMapper} 而非继承 {@code ServiceImpl}，
  * 避免将 {@code save(PO)} / {@code updateById(PO)} / {@code removeById(...)} 等
  * 直接操作 PO 的底层方法泄漏为公开 API。领域对象的持久化必须经本类提供的
  * {@code saveDomain} / {@code updateDomain} / {@code removeDomain*} 方法，
- * 这些方法统一保证「validate() → 持久化 → 领域事件先清后入箱」的契约，
- * 绕过它们直接操作 PO 会丢失不变量校验与事件捕获。
+ * 这些方法统一保证「validate() → 持久化」的契约，
+ * 绕过它们直接操作 PO 会丢失不变量校验。
  *
  * <p>乐观锁由 MyBatis-Plus {@code OptimisticLockerInnerInterceptor} 处理，
  * 仅对 PO 上声明了 {@code @Version} 字段的实体生效，领域层无需感知版本号。
@@ -42,16 +34,6 @@ import org.springframework.core.GenericTypeResolver;
  * <ul>
  *   <li>save/update 前自动调用 {@code AggregateRoot.validate()}
  *   <li>update/delete 失败时抛出 {@link IllegalStateException}（不静默失败）
- *   <li>领域事件在持久化成功后捕获入箱（先清后捕，保证原子性）——捕获逻辑委托 {@link DomainEventCapture}
- *   <li><b>事件事务语义（全链路 Outbox 规范）</b>：领域事件强制经 Outbox 捕获——与业务写入
- *       <strong>同事务</strong>入箱，「状态已提交 ⇒ 事件必然已落库」，业务回滚则事件随行回滚；
- *       入箱后由框架排空器（{@code OutboxRelay}）在自有事务内派发，监听器<strong>加入</strong>排空器事务
- *       （普通 {@code @EventListener} + 普通 {@code @Transactional}，禁用 {@code REQUIRES_NEW}/{@code @Async}）。
- *       有事件但无 Outbox 时 fail-fast 抛错回滚。投递语义 at-least-once，消费端以
- *       {@code DomainEvent.eventId} 幂等去重。详见 {@code DomainEventCapture}
- *   <li>删除同样覆盖事件：实体删除发布聚合已注册事件，按 ID 删除通过事件工厂重载发布；
- *       带事件的批量删除（{@code removeDomainByIds(ids, factory)} / {@code removeDomains(list)}）
- *       先预查真实存在的 ID，<b>仅为实际删除的实体发布事件</b>——请求中不存在的 ID 静默跳过不报错
  *   <li>每次 update 均执行全量 UPDATE（保证 update_time 等审计字段始终刷新）
  * </ul>
  *
@@ -92,11 +74,9 @@ import org.springframework.core.GenericTypeResolver;
  *
  * 删除：
  *   removeDomainById(id)                    → void
- *   removeDomainById(id, eventFactory)      → void（删除成功后发布 ID 事件）
  *   removeDomainByIds(ids)                  → void
- *   removeDomainByIds(ids, eventFactory)    → void（删除成功后逐 ID 发布事件）
- *   removeDomain(domain)                    → void（删除成功后发布聚合已注册事件）
- *   removeDomains(list)                     → void（删除成功后发布聚合已注册事件）
+ *   removeDomain(domain)                    → void（按实体内部 ID 删除）
+ *   removeDomains(list)                     → void
  * </pre>
  *
  * @param <Mapper> MyBatis-Plus Mapper 接口类型
@@ -114,24 +94,16 @@ public abstract class MybatisPlusPersistence<
     /** MyBatis-Plus Mapper（组合持有，不继承 ServiceImpl，避免泄漏底层 PO 直操方法） */
     protected final Mapper baseMapper;
 
-    /** 领域事件捕获器（先清后捕契约，委托独立组件以保持本类单一职责） */
-    private final DomainEventCapture domainEventCapture;
-
     /** PO 类型（构造期经泛型解析固化，供主键列名反射） */
     private final Class<PO> poClass;
 
     // region 依赖注入
     /**
      * @param baseMapper MyBatis-Plus Mapper 实例（由子类构造器注入具体 Mapper 类型）
-     * @param outboxStoreProvider 领域事件 Outbox 捕获存储（全链路 Outbox 规范：有事件时强制要求；
-     *        容器中无此 Bean 且聚合注册了事件时，捕获将 fail-fast 抛错回滚业务写入，
-     *        见 {@link DomainEventCapture}）
      */
     @SuppressWarnings("unchecked")
-    protected MybatisPlusPersistence(Mapper baseMapper,
-                                     ObjectProvider<DomainEventOutboxStore> outboxStoreProvider) {
+    protected MybatisPlusPersistence(Mapper baseMapper) {
         this.baseMapper = baseMapper;
-        this.domainEventCapture = new DomainEventCapture(outboxStoreProvider);
         this.poClass = (Class<PO>) GenericTypeResolver
                 .resolveTypeArguments(getClass(), MybatisPlusPersistence.class)[1];
     }
@@ -227,7 +199,7 @@ public abstract class MybatisPlusPersistence<
     /**
      * 保存领域实体（INSERT）。
      *
-     * <p>契约：持久化前自动调用 validate()，持久化后发布领域事件。
+     * <p>契约：持久化前自动调用 validate()。
      *
      * <p><b>事务说明</b>：本方法不声明 {@code @Transactional}，
      * 事务边界由应用层（Handler）控制。
@@ -239,14 +211,13 @@ public abstract class MybatisPlusPersistence<
         if (rows == 0) {
             throw new IllegalStateException("INSERT failed for entity ID: " + domain.getId());
         }
-        domainEventCapture.captureAndClear(domain);
     }
 
     /**
      * 批量保存领域实体。
      *
      * <p><b>语义</b>：batch = 单事务循环（逐条 insert），非多行 VALUES SQL——每条聚合须独立
-     * {@code validate()} + {@code registerEvent()} / 事件发布，多行 INSERT 无法触发逐聚合行为。
+     * {@code validate()}，多行 INSERT 无法触发逐聚合行为。
      * 需要真·多行性能优化时由调用方自行实现。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方
@@ -290,8 +261,6 @@ public abstract class MybatisPlusPersistence<
         if (rows == 0) {
             throwUpdateFailed(domain);
         }
-
-        domainEventCapture.captureAndClear(domain);
     }
 
     /**
@@ -320,7 +289,7 @@ public abstract class MybatisPlusPersistence<
      * 批量更新领域实体。
      *
      * <p><b>语义</b>：batch = 单事务循环（逐条 update），非多行 UPDATE SQL——每条聚合须独立
-     * {@code validate()} + {@code registerEvent()} / 事件发布，多行 UPDATE 无法触发逐聚合行为。
+     * {@code validate()}，多行 UPDATE 无法触发逐聚合行为。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      */
@@ -337,10 +306,6 @@ public abstract class MybatisPlusPersistence<
     /**
      * 根据 ID 删除领域实体。
      *
-     * <p>本重载不发布领域事件（无 Domain 对象，无事件可发）。
-     * 若删除具有业务含义（需通知其他聚合/服务），请使用
-     * {@link #removeDomainById(Serializable, Function)} 事件工厂重载。
-     *
      * @throws IllegalStateException 删除影响行数为 0 时（ID 不存在）
      */
     public void removeDomainById(ID id) {
@@ -351,33 +316,11 @@ public abstract class MybatisPlusPersistence<
     }
 
     /**
-     * 根据 ID 删除领域实体，并在删除成功后发布事件工厂构造的领域事件。
-     *
-     * <p>适用于"只查 ID 不加载 Domain"的性能优化删除路径：
-     * 删除事件通常只需携带聚合 ID，由事件工厂按 ID 构造（如 {@code id -> new OrderDeletedEvent(id)}），
-     * 无需为发事件而加载完整聚合。
-     *
-     * <p>契约与 save/update 一致：先持久化（删除）成功，后发布事件。
-     *
-     * @param id           实体 ID
-     * @param eventFactory 事件工厂（入参为被删除的 ID，返回值不能为 null）
-     * @throws IllegalStateException 删除影响行数为 0 时（ID 不存在）
-     */
-    public void removeDomainById(ID id, Function<? super ID, ? extends DomainEvent> eventFactory) {
-        removeDomainById(id);
-        domainEventCapture.captureAll(List.of(Objects.requireNonNull(
-                eventFactory.apply(id), "eventFactory must not return null")));
-    }
-
-    /**
      * 批量删除领域实体。
-     *
-     * <p>本重载不发布领域事件。若删除具有业务含义，请使用
-     * {@link #removeDomainByIds(Collection, Function)} 事件工厂重载。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      *
-     * <p><b>删除语义</b>：BEST_EFFORT——部分 ID 不存在时<b>静默跳过</b>（不报错、不发事件），
+     * <p><b>删除语义</b>：BEST_EFFORT——部分 ID 不存在时<b>静默跳过</b>（不报错），
      * 仅当全部 ID 均不存在时才抛异常。若需 STRICT 语义（任一不存在即报错），
      * 请逐条调用 {@link #removeDomainById(Serializable)}。
      */
@@ -397,58 +340,19 @@ public abstract class MybatisPlusPersistence<
     }
 
     /**
-     * 批量删除领域实体，并在删除成功后按 ID 逐个发布事件工厂构造的领域事件。
-     *
-     * <p><b>存在性过滤</b>：删除前预查真实存在的 ID（轻量主键列 SELECT），<strong>仅为
-     * 实际删除的实体发布事件</strong>——请求中不存在（或已被逻辑删除）的 ID 不发事件、不报错。
-     * 全部 ID 均不存在时仍抛 {@link IllegalStateException}（与无参重载一致的严格语义）。
-     *
-     * <p><b>并发窗口说明</b>：「存在性」以删除前的预查为准；若某实体在预查之后、DELETE 之前
-     * 被并发删除，事件仍会发布（消费方幂等可兜底，与 MQ at-least-once 重投语义一致）。
-     *
-     * <p>适用于"只查 ID 不加载 Domain"的批量删除路径，事件与被删除的 ID 一一对应。
-     *
-     * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
-     *
-     * @param ids          实体 ID 集合（空集合直接返回，不发 SQL 不发事件）
-     * @param eventFactory 事件工厂（入参为被删除的 ID，返回值不能为 null）
-     * @throws IllegalStateException 全部 ID 均不存在（0 行删除）时
-     */
-    public void removeDomainByIds(Collection<ID> ids,
-                                  Function<? super ID, ? extends DomainEvent> eventFactory) {
-        if (ids == null || ids.isEmpty()) {
-            return;
-        }
-        List<ID> existingIds = findExistingIds(ids);
-        if (existingIds.isEmpty()) {
-            throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + ids);
-        }
-        removeDomainByIds(existingIds);
-        domainEventCapture.captureAll(existingIds.stream()
-                .<DomainEvent>map(id -> Objects.requireNonNull(
-                        eventFactory.apply(id), "eventFactory must not return null"))
-                .toList());
-    }
-
-    /**
      * 删除领域实体（传入实体对象，内部提取 ID）。
-     *
-     * <p>契约与 save/update 一致：删除成功后自动捕获聚合根已注册的领域事件（先清后捕）。
-     * 典型用法：{@code order.markCancelled()}（内部 registerEvent）→ {@code removeDomain(order)}。
      *
      * @throws IllegalStateException 删除影响行数为 0 时
      */
     public void removeDomain(Domain domain) {
         removeDomainById(domain.getId());
-        domainEventCapture.captureAndClear(domain);
     }
 
     /**
-     * 批量删除领域实体（传入实体对象列表）。
+     * 批量删除领域实体（传入实体对象列表，内部提取 ID）。
      *
-     * <p><b>存在性过滤</b>：与 {@link #removeDomainByIds(Collection, Function)} 一致——
-     * 删除前预查真实存在的 ID，批量删除后<strong>仅为实际删除的聚合捕获其已注册事件</strong>（先清后捕）；
-     * 传入列表中不存在（或已被逻辑删除）的聚合不发事件、不报错。全部不存在时抛 {@link IllegalStateException}。
+     * <p>删除语义与 {@link #removeDomainByIds(Collection)} 一致（BEST_EFFORT）；
+     * 无 ID（从未持久化）的实体自动跳过。
      *
      * <p><b>事务边界上收</b>：本方法不声明 {@code @Transactional}，批量原子性由调用方（Handler）保证。
      */
@@ -456,18 +360,7 @@ public abstract class MybatisPlusPersistence<
         if (domainList == null || domainList.isEmpty()) {
             return;
         }
-        List<ID> requestedIds = domainList.stream().map(Domain::getId).toList();
-        Set<ID> existingIds = Set.copyOf(findExistingIds(requestedIds));
-        if (existingIds.isEmpty()) {
-            throw new IllegalStateException("Batch DELETE affected 0 rows for IDs: " + requestedIds);
-        }
-        removeDomainByIds(existingIds);
-        for (Domain domain : domainList) {
-            if (domain.getId() == null || !existingIds.contains(domain.getId())) {
-                continue; // 无 ID（从未持久化）或预查不存在的聚合：未删除，不发事件
-            }
-            domainEventCapture.captureAndClear(domain);
-        }
+        removeDomainByIds(domainList.stream().map(Domain::getId).filter(Objects::nonNull).toList());
     }
 
     // endregion
@@ -490,38 +383,6 @@ public abstract class MybatisPlusPersistence<
      */
     protected boolean existsById(Serializable id) {
         return baseMapper.exists(new QueryWrapper<PO>().eq(keyColumn(), id));
-    }
-
-    /**
-     * 预查集合中真实存在的领域 ID（供批量删除的事件过滤使用）。
-     *
-     * <p>一次仅查询主键列（{@code SELECT key FROM t WHERE key IN (...)}），不加载完整行；
-     * 经 MyBatis-Plus 逻辑删除机制自动过滤已删除行——「存在」与「可被 DELETE 影响」语义一致。
-     *
-     * <p>主键值匹配按字符串形式归一（规避底层驱动对整型的 Integer/Long 装箱差异）；
-     * {@code toPersistenceId} 在本方法内确定性映射，请求中的重复 ID 天然去重。
-     *
-     * @return 入参中真实存在的领域 ID（保持入参遍历顺序）
-     */
-    private List<ID> findExistingIds(Collection<ID> ids) {
-        Map<String, ID> keyToId = new LinkedHashMap<>();
-        for (ID id : ids) {
-            if (id == null) {
-                // 无 ID 的领域对象从未持久化，视为不存在（跳过而非进 IN 子句）
-                continue;
-            }
-            keyToId.put(String.valueOf(toPersistenceId(id)), id);
-        }
-        if (keyToId.isEmpty()) {
-            return List.of();
-        }
-        List<Object> existingKeys = baseMapper.selectObjs(
-                new QueryWrapper<PO>().select(keyColumn()).in(keyColumn(), keyToId.keySet()));
-        return existingKeys.stream()
-                .filter(Objects::nonNull)
-                .map(key -> keyToId.get(String.valueOf(key)))
-                .filter(Objects::nonNull)
-                .toList();
     }
 
     /** 反射 PO 的 {@code @TableId} 注解，返回真实主键列名。 */

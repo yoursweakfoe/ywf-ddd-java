@@ -123,7 +123,7 @@ public class PaymentCallbackRecordDTO {
     private OffsetDateTime receivedAt;     // 接收时间
 }
 
-// CommandHandler（入站集成事件经 adapter Consumer 转 Command 后进入）
+// CommandHandler（对账请求经 adapter 转 Command 后进入）
 @Component
 public class ReconcilePaymentHandler implements CommandHandler<ReconcilePaymentCommand, Void> {
     @Override

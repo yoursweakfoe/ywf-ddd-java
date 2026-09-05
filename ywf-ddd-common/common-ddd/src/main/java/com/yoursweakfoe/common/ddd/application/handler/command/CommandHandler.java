@@ -6,7 +6,7 @@ import com.yoursweakfoe.common.contract.dto.command.Command;
  * 命令处理器契约 —— 接收一个 Command 并执行写操作用例。
  *
  * <p>每个写操作用例（创建、修改、删除）对应一个 CommandHandler 实现，
- * 由应用层编排领域逻辑、持久化和事件发布。
+ * 由应用层编排领域逻辑与持久化。
  *
  * <p>基础设施层可基于此接口做统一 AOP 拦截（事务、审计日志、幂等校验等）。
  *

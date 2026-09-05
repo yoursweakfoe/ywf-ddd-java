@@ -23,7 +23,7 @@
 |----|------|------|----------|
 | 压缩宪法 | 根目录 `AGENTS.md` | 每次必读的核心约束（~10 条） | 全兼容**主动加载** |
 | 完整法条 | `.agents/rules/` | 按需详读的规则细节（01-05） | 靠 AGENTS.md 路由按需读 |
-| 可调用流程 | `.agents/skills/` | 任务技能（13 个 SKILL.md） | opencode / Pi **原生扫描** |
+| 可调用流程 | `.agents/skills/` | 任务技能（11 个 SKILL.md） | opencode / Pi **原生扫描** |
 
 ### 关于 rules 的一个关键约束
 
@@ -51,12 +51,10 @@
 └── skills/                ← 任务技能（Agent Skills 格式，可被 opencode 直接调用）
     ├── new-aggregate/SKILL.md
     ├── new-usecase/SKILL.md
-    ├── new-domain-event/SKILL.md
     ├── new-portal/SKILL.md
     ├── new-service/SKILL.md
     ├── new-test/SKILL.md
     ├── batch-operations/SKILL.md
-    ├── mq-consumer/SKILL.md
     ├── scheduled-task/SKILL.md
     ├── modify-common-module/SKILL.md
     ├── ddd-review/SKILL.md

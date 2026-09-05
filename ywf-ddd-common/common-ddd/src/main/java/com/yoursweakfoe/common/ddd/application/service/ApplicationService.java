@@ -14,7 +14,7 @@ package com.yoursweakfoe.common.ddd.application.service;
  *
  * <h3>命名约定：标记用全名，业务类缩写</h3>
  * <p>业务实现类沿用缩写命名 {@code XxxAppService}（{@code App} = Application 的缩写，
- * 仅为类名简洁），与 {@code IntegrationEventCapture ↔ XxxIntegrationEventCapture}
+ * 仅为类名简洁），与 {@code DomainService ↔ XxxDomainService}
  * （聚合前缀 + 标记全名）的命名惯例同构。标记接口保持语义完整，不受业务类名长度约束。
  *
  * <h3>为什么是空标记，而不是带方法的契约接口？</h3>

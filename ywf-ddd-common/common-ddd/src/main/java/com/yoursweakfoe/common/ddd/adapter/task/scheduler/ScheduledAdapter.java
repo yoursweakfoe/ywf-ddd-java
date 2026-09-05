@@ -5,13 +5,12 @@ package com.yoursweakfoe.common.ddd.adapter.task.scheduler;
  *
  * <p>位于 {@code adapter/task/scheduler/}——包结构采用<strong>「协议伞 / 角色」两级式</strong>：
  * {@code task} 为协议伞（时间面），{@code scheduler} 为角色段；与
- * {@code rest.controller}、{@code event.consumer} 完全对称，三类入口在目录树上等距对齐。
+ * {@code rest.controller} 对称，入口在目录树上等距对齐。
  * 实现类为普通 {@code @Component}，触发方式不限：自建 {@code @Scheduled}，或 XXL-Job /
  * ElasticJob / Quartz 等平台化调度的处理器回调（{@code @XxlJob} 注解方法等）。无论哪种触发技术，
  * 职责一致：到点触发 → 构建 Command（或直接调用批量用例）→ 透传 ApplicationService
- * （与 REST / MQ 入口同构，纯入口）。本标记将这类组件显式定型为<strong>时间驱动入口</strong>，
- * 与 web 入口 {@code RestAdapter}、MQ 入站 {@code IntegrationEventConsumer} 并列为
- * adapter 层的第三类 driving adapter。
+ * （与 REST 入口同构，纯入口）。本标记将这类组件显式定型为<strong>时间驱动入口</strong>，
+ * 与 web 入口 {@code RestAdapter} 并列（时间驱动入口）。
  *
  * <p>本接口为<strong>空标记</strong>：价值在「标识定时任务入口身份」（供架构规则/ArchUnit 识别，
  * 规则编号 R14a/R14b），而非约束方法签名或触发注解——cron / fixedDelay / 平台 handler 回调、
@@ -23,7 +22,6 @@ package com.yoursweakfoe.common.ddd.adapter.task.scheduler;
  *   <tr><th>协议伞</th><th>角色段</th><th>标记接口</th><th>驱动源</th><th>架构规则</th></tr>
  *   <tr><td>{@code rest}</td><td>{@code controller}</td><td>{@link com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter}</td><td>HTTP 请求</td><td>R8a / R8b</td></tr>
  *   <tr><td>{@code task}</td><td>{@code scheduler}</td><td>{@code ScheduledAdapter}（本接口）</td><td>时间类调度</td><td>R14a / R14b</td></tr>
- *   <tr><td>{@code event}</td><td>{@code consumer}</td><td>{@link com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer}</td><td>MQ 消息</td><td>R9a / R9b</td></tr>
  * </table>
  *
  * <p><strong>落地状态</strong>：本标记为框架预留——示例应用暂无定时任务实现，实现模板与
@@ -35,7 +33,6 @@ package com.yoursweakfoe.common.ddd.adapter.task.scheduler;
  * 两种模式的完整对比见 cookbook 对应章节。
  *
  * @see com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter
- * @see com.yoursweakfoe.common.ddd.adapter.event.consumer.IntegrationEventConsumer
  */
 public interface ScheduledAdapter {
 }

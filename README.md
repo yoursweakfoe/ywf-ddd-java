@@ -39,13 +39,13 @@ graph TB
 
     subgraph contract["contract jar - 消费方唯一依赖"]
         direction LR
-        SVC["Service接口 + CQE + CO + IntegrationEvent"]
+        SVC["Service接口 + CQE + CO"]
     end
 
     subgraph server["server 部署单元"]
         ADAPTER["adapter<br>Facade / Consumer / Scheduler<br>纯透传"]
         APP["application<br>AppService / Handler / Presenter<br>用例编排"]
-        DOMAIN["domain<br>聚合根 / 领域事件 / Repository接口 / Portal接口<br>零框架依赖"]
+        DOMAIN["domain<br>聚合根 / Repository接口 / Portal接口<br>零框架依赖"]
         INFRA["infrastructure<br>persistence / gateway / config<br>技术实现"]
     end
 
@@ -86,7 +86,7 @@ ywf-ddd-java/
 
 - **入口**：[`AGENTS.md`](AGENTS.md)（轻量路由器，厂商中立标准）
 - **规则**（`.agents/rules/`）：分层架构、编码规范、禁止清单
-- **技能**（`.agents/skills/`）：新建聚合、新增用例、新增事件、架构审查
+- **技能**（`.agents/skills/`）：新建聚合、新增用例、架构审查
 - **术语**：[`docs/glossary.md`](docs/glossary.md)
 
 任何 AI 编码工具（Cursor / Copilot / Claude Code / Qoder / Windsurf / Aider 等）均可接入。
@@ -128,14 +128,12 @@ docs/
         ├── write-path.md
         ├── read-path.md
         ├── cross-aggregate.md
-        ├── event-flow.md
         ├── policy-pattern.md
         ├── gateway.md
         ├── new-aggregate.md
         ├── error-handling.md
         ├── batch-operations.md
         ├── scheduled-task.md
-        ├── mq-consumer.md
         ├── distributed-transaction.md
         └── optimistic-lock-retry.md
 ```

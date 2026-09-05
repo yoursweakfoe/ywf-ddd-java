@@ -26,9 +26,7 @@ class DddArchitectureTest {
      * 容纳 {@code MybatisPlusDddAutoConfiguration} 等根包自动配置类，避免其跨层引用被误报。
      *
      * <p>Application 允许被 Infrastructure 访问：与通用 R1 的依赖倒置语义对齐——
-     * 应用层端口由基础设施层实现（读侧 {@code QueryRepository} 先例；全链路 Outbox 后
-     * 新增捕获端口 {@code IntegrationEventOutboxStore}（application/event/outbox），
-     * 参考实现位于 sample-application 的 infrastructure/event/outbox 包）。
+     * 应用层读端口（{@code QueryRepository}）由基础设施层实现（读侧先例）。
      */
     @ArchTest
     static final ArchRule r1 = Architectures.layeredArchitecture()
@@ -65,12 +63,6 @@ class DddArchitectureTest {
 
     @ArchTest
     static final ArchRule r8b = DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
-
-    @ArchTest
-    static final ArchRule r9a = DDDArchitectureRules.EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER;
-
-    @ArchTest
-    static final ArchRule r9b = DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
 
     // 框架包自身无 dto 实现类（标记接口位于 common-ddd/application/dto/，规则按空集通过）
     @ArchTest

@@ -30,9 +30,7 @@ class CompleteOrderHandlerTest {
     @InjectMocks private CompleteOrderHandler handler;
 
     private Order createDeliveredOrder() {
-        Order order = TestOrders.rebuilt(OrderStatus.DELIVERED);
-        order.clearDomainEvents();
-        return order;
+        return TestOrders.rebuilt(OrderStatus.DELIVERED);
     }
 
     @Test

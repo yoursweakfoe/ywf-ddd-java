@@ -13,8 +13,8 @@ import java.util.UUID;
  *
  * <ul>
  *   <li>{@link #rebuilt(OrderStatus)} / {@link #rebuilt(UUID, OrderStatus)} —— 惰性重建：
- *       任意状态、零事件，Handler/Listener/Converter 测试用（不依赖状态机链路）</li>
- *   <li>{@link #placed()} —— 创建即合法：全新已下单订单，携带 OrderPlacedEvent，
+ *       任意状态，Handler/Converter 测试用（不依赖状态机链路）</li>
+ *   <li>{@link #placed()} —— 创建即合法：全新已下单订单，
  *       新建路径与工厂语义的测试用</li>
  * </ul>
  */
@@ -28,12 +28,12 @@ public final class TestOrders {
     private TestOrders() {
     }
 
-    /** 随机 ID、指定状态的惰性重建订单（无事件）。 */
+    /** 随机 ID、指定状态的惰性重建订单。 */
     public static Order rebuilt(OrderStatus status) {
         return rebuilt(UUID.randomUUID(), status);
     }
 
-    /** 指定 ID、指定状态的惰性重建订单（无事件）。 */
+    /** 指定 ID、指定状态的惰性重建订单。 */
     public static Order rebuilt(UUID id, OrderStatus status) {
         return Order.reconstitute(id, status, List.of(ITEM),
                 ITEM.subtotal(), DEFAULT_CUSTOMER,

@@ -271,7 +271,6 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 | 经过 domain 层 | 是（聚合根 + Repository + Assembler） | **否**（读端口直连 PO） |
 | 返回类型 | 写侧 DTO（含 version） | 读侧 DTO（不含 version） |
 | 依赖 | Repository + Assembler + DomainService | OrderQueryRepository（读端口） |
-| 事件 | 触发 DomainEvent | 不触发 |
 | 固定模式 | load → 调用行为 → save → toDTO | findById/findPage → 返回读 DTO |
 
 ## 完整文件清单（读路径涉及）

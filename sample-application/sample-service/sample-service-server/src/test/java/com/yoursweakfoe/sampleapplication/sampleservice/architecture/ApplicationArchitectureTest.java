@@ -14,7 +14,6 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
 import com.yoursweakfoe.common.ddd.application.dto.ApplicationDTO;
-import com.yoursweakfoe.common.ddd.application.event.outbox.IntegrationEventOutboxStore;
 import com.yoursweakfoe.common.ddd.application.repository.application.QueryRepository;
 import com.yoursweakfoe.common.ddd.application.service.ApplicationService;
 import com.yoursweakfoe.common.ddd.domain.repository.domain.Repository;
@@ -54,16 +53,11 @@ class ApplicationArchitectureTest {
                     + "读侧例外：infrastructure 读实现可访问 application 读端口");
 
     /**
-     * R1b —— 收窄 Infrastructure 对 Application 的访问白名单：读端口类型锚点 + 集成事件捕获端口。
+     * R1b —— 收窄 Infrastructure 对 Application 的访问白名单：仅读端口类型锚点。
      *
      * <p>与 common-test 通用规则（{@code INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES}）
-     * 同构的本地覆写，仅扩展一类锚点：全链路 Outbox 的应用层捕获端口
-     * {@code IntegrationEventOutboxStore}（application/event/outbox）由基础设施参考实现
-     * {@code JdbcIntegrationEventOutboxStore}（infrastructure/event/outbox）实现——依赖倒置，
-     * 与读侧 {@code QueryRepository} 先例同构（框架自身 DddArchitectureTest 同款先例），
-     * 捕获装配 {@code OutboxReferenceConfig} 的 @Bean 签名亦引用该端口类型。
-     * Handler / AppService / Assembler / Presenter 等其余 application 组件对
-     * infrastructure 一律不可见。
+     * 同构的本地精确前缀覆写。Handler / AppService / Assembler / Presenter 等其余
+     * application 组件对 infrastructure 一律不可见。
      */
     @ArchTest
     static final ArchRule r1b_infra_access_application_only_ports = noClasses()
@@ -75,11 +69,10 @@ class ApplicationArchitectureTest {
                             .and(not(resideInAPackage("..infrastructure..")))
                             .and(not(assignableTo(QueryRepository.class)
                                     .or(assignableTo(ApplicationDTO.class))
-                                    .or(assignableTo(IntegrationEventOutboxStore.class))
                                     .or(nestedClassOfApplicationDtoImpl()))))
             .allowEmptyShould(true)
-            .as("R1b Infrastructure 对 Application 的访问仅限读端口类型与集成事件捕获端口"
-                    + "（QueryRepository 实现 / ApplicationDTO 及其嵌套类 / 捕获端口），其余一律禁止");
+            .as("R1b Infrastructure 对 Application 的访问仅限读端口类型"
+                    + "（QueryRepository 实现 / ApplicationDTO 及其嵌套类），其余一律禁止");
 
     /** ApplicationDTO 实现类的嵌套类（嵌套 DTO 随外层定型，见 R10b 约定，字节码上不携带标记）。 */
     private static DescribedPredicate<JavaClass> nestedClassOfApplicationDtoImpl() {
@@ -142,20 +135,9 @@ class ApplicationArchitectureTest {
     @ArchTest
     static final ArchRule c1_contract_pure = DDDArchitectureRules.CONTRACT_DOES_NOT_DEPEND_ON_SERVER;
 
-    /** R7a —— 域内反应监听器必须实现 DomainEventListener 标记。 */
-    @ArchTest
-    static final ArchRule r7a_event_listeners_marked = DDDArchitectureRules.EVENT_LISTENERS_ARE_MARKED;
-
-    /** R7b —— 集成事件出站捕获器必须实现 IntegrationEventCapture 标记。 */
-    @ArchTest
-    static final ArchRule r7b_event_captures_marked = DDDArchitectureRules.EVENT_CAPTURES_ARE_MARKED;
-
-    /** R7c —— AppService 不得直接依赖集成事件出站捕获器。 */
-    @ArchTest
-    static final ArchRule r7c_app_service_no_direct_capture =
-            DDDArchitectureRules.APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_CAPTURE;
-
-    /** R8a —— 实现 RestAdapter 标记的类必须位于 adapter 层。 */
+    /**
+     * R8a —— 实现 RestAdapter 标记的类必须位于 adapter 层。
+     */
     @ArchTest
     static final ArchRule r8a_rest_entries_marked_in_adapter =
             DDDArchitectureRules.REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER;
@@ -164,16 +146,6 @@ class ApplicationArchitectureTest {
     @ArchTest
     static final ArchRule r8b_controller_impl_must_be_marked =
             DDDArchitectureRules.CONTROLLER_IMPL_NAMING_MUST_BE_MARKED;
-
-    /** R9a —— 实现 IntegrationEventConsumer 标记的类必须位于 adapter 层。 */
-    @ArchTest
-    static final ArchRule r9a_event_consumers_marked_in_adapter =
-            DDDArchitectureRules.EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER;
-
-    /** R9b —— ..event.consumer.. 包下的类必须实现 IntegrationEventConsumer 标记。 */
-    @ArchTest
-    static final ArchRule r9b_event_consumer_package_marked =
-            DDDArchitectureRules.EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED;
 
     /** R14a —— 实现 ScheduledAdapter 标记的类必须位于 adapter 层。 */
     @ArchTest

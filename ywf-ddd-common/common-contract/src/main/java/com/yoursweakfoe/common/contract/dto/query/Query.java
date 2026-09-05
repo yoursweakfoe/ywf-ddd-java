@@ -9,6 +9,5 @@ package com.yoursweakfoe.common.contract.dto.query;
  * <p>基础设施层可基于此接口做统一拦截（只读路由、缓存、权限校验等）。
  *
  * @see com.yoursweakfoe.common.contract.dto.command.Command
- * @see com.yoursweakfoe.common.contract.dto.event.integration.IntegrationEvent
  */
 public interface Query {}

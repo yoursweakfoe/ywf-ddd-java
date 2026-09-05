@@ -44,7 +44,6 @@ public void pay() {
         throw new BusinessException("order:err.status.pending");
     }
     this.status = OrderStatus.PAID;
-    registerEvent(new OrderPaidEvent(id));
 }
 ```
 

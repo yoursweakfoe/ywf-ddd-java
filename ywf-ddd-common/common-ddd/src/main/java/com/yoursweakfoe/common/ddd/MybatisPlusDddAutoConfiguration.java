@@ -26,8 +26,7 @@ import org.springframework.context.annotation.Import;
  *
  * <p><strong>时间源不在此配置</strong>——{@code java.time.Clock} 是平台级横切关注点，
  * 由独立的 {@link ClockAutoConfiguration} 提供（硬编码 UTC 缺省，业务自定义 Clock Bean 时退位）；
- * {@link BasicAutoFillHandler} 经构造器注入该时间源。领域事件发布器同理由
- * {@code DomainEventAutoConfiguration} 注册，不受 MyBatis 门控影响。
+ * {@link BasicAutoFillHandler} 经构造器注入该时间源。
  */
 @AutoConfiguration(after = MybatisPlusAutoConfiguration.class)
 @ConditionalOnClass(BaseMapper.class)

@@ -26,13 +26,8 @@
 | `DOMAIN_REPOSITORIES_MUST_BE_INTERFACES` | R5a | Domain Repository 必须是接口 |
 | `REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE` | R5b | 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository |
 | `DOMAIN_DOES_NOT_DEPEND_ON_SECURITY` | R6 | Domain 不依赖 common-security（领域模型不感知认证上下文） |
-| `EVENT_LISTENERS_ARE_MARKED` | R7a | ..event.listener.. 包下类必须实现 DomainEventListener 标记 |
-| `EVENT_CAPTURES_ARE_MARKED` | R7b | ..event.capture.. 包下类必须实现 IntegrationEventCapture 标记 |
-| `APP_SERVICE_DOES_NOT_DEPEND_ON_EVENT_CAPTURE` | R7c | AppService 不得直接依赖集成事件出站捕获 |
 | `REST_ENTRIES_ARE_MARKED_AND_IN_ADAPTER` | R8a | 实现 RestAdapter 标记的类必须位于 adapter 层 |
 | `CONTROLLER_IMPL_NAMING_MUST_BE_MARKED` | R8b | 类名以 ControllerImpl 结尾必须实现 RestAdapter 标记 |
-| `EVENT_CONSUMERS_ARE_MARKED_AND_IN_ADAPTER` | R9a | 实现 IntegrationEventConsumer 标记的类必须位于 adapter 层 |
-| `EVENT_CONSUMER_PACKAGE_CLASSES_MUST_BE_MARKED` | R9b | ..event.consumer.. 包下非接口类必须实现 IntegrationEventConsumer 标记 |
 | `APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION` | R10a | 实现 ApplicationDTO 标记的类必须位于 application 层 |
 | `APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED` | R10b | ..application..dto.. 包下顶层类必须实现 ApplicationDTO 标记 |
 | `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制） |

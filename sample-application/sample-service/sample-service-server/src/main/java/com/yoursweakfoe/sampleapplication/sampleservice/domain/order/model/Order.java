@@ -1,12 +1,5 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCancelledEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderCompletedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderConfirmedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderDeliveredEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPaidEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderPlacedEvent;
-import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.event.domain.OrderShippedEvent;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import lombok.Getter;
@@ -44,7 +37,7 @@ public class Order extends AggregateRoot<UUID> {
 
     /**
      * 包私有业务构造器 —— 新建路径已收口至同包的 {@code OrderFactory}（创建即合法：
-     * 构造后立即 place() 完成校验与事件注册）。包结构在编译期锁死「谁能 new 一个订单」。
+     * 构造后立即 place() 完成校验）。包结构在编译期锁死「谁能 new 一个订单」。
      */
     Order(UUID id, List<OrderItem> items, String customerId) {
         this.id = id;
@@ -56,7 +49,7 @@ public class Order extends AggregateRoot<UUID> {
 
     /**
      * 私有全参构造器 —— 惰性重建专用：直接赋值快照，
-     * 不计算派生字段、不校验、不注册事件（重建绝不能把历史当新闻）。
+     * 不计算派生字段、不校验（重建绝不能改历史）。
      */
     private Order(UUID id, OrderStatus status, List<OrderItem> items, BigDecimal totalAmount,
                   String customerId, String trackingNumber, String cancelReason,
@@ -74,7 +67,7 @@ public class Order extends AggregateRoot<UUID> {
     }
 
     /**
-     * 重建构造器（持久化层 Converter 使用）—— 惰性：不触发校验、不注册事件。
+     * 重建构造器（持久化层 Converter 使用）—— 惰性：不触发校验。
      * 新建请走 {@code OrderFactory.create(...)}。
      */
     public static Order reconstitute(UUID id, OrderStatus status, List<OrderItem> items,
@@ -100,11 +93,10 @@ public class Order extends AggregateRoot<UUID> {
     // region 行为方法
 
     /**
-     * 下单：校验不变量 + 注册领域事件（状态保持 PENDING）。
+     * 下单：校验不变量（状态保持 PENDING）。
      */
     public void place() {
         validate();
-        registerEvent(new OrderPlacedEvent(id, totalAmount, customerId));
     }
 
     /**
@@ -115,7 +107,6 @@ public class Order extends AggregateRoot<UUID> {
     public void pay() {
         requireStatus("order:err.status.pending", OrderStatus.PENDING);
         this.status = OrderStatus.PAID;
-        registerEvent(new OrderPaidEvent(id));
     }
 
     /**
@@ -126,7 +117,6 @@ public class Order extends AggregateRoot<UUID> {
     public void confirm() {
         requireStatus("order:err.status.paid", OrderStatus.PAID);
         this.status = OrderStatus.CONFIRMED;
-        registerEvent(new OrderConfirmedEvent(id));
     }
 
     /**
@@ -139,7 +129,6 @@ public class Order extends AggregateRoot<UUID> {
         requireStatus("order:err.status.confirmed", OrderStatus.CONFIRMED);
         this.status = OrderStatus.SHIPPED;
         this.trackingNumber = trackingNumber;
-        registerEvent(new OrderShippedEvent(id, trackingNumber));
     }
 
     /**
@@ -150,7 +139,6 @@ public class Order extends AggregateRoot<UUID> {
     public void deliver() {
         requireStatus("order:err.status.shipped", OrderStatus.SHIPPED);
         this.status = OrderStatus.DELIVERED;
-        registerEvent(new OrderDeliveredEvent(id));
     }
 
     /**
@@ -161,7 +149,6 @@ public class Order extends AggregateRoot<UUID> {
     public void complete() {
         requireStatus("order:err.status.delivered", OrderStatus.DELIVERED);
         this.status = OrderStatus.COMPLETED;
-        registerEvent(new OrderCompletedEvent(id));
     }
 
     /**
@@ -174,7 +161,6 @@ public class Order extends AggregateRoot<UUID> {
         requireStatus("order:err.status.cancellable", OrderStatus.PENDING, OrderStatus.PAID);
         this.status = OrderStatus.CANCELLED;
         this.cancelReason = reason;
-        registerEvent(new OrderCancelledEvent(id, reason));
     }
     // endregion
 

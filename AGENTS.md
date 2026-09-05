@@ -11,7 +11,6 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 - **执行结构化任务时：** USE `.agents/skills/` 中对应技能
   - 新建聚合 → `.agents/skills/new-aggregate/SKILL.md`
   - 新增用例 → `.agents/skills/new-usecase/SKILL.md`
-  - 新增领域事件 → `.agents/skills/new-domain-event/SKILL.md`
   - 新增外部集成 → `.agents/skills/new-portal/SKILL.md`
   - 新建微服务 → `.agents/skills/new-service/SKILL.md`
 - **完成编码后自查：** USE `.agents/skills/ddd-review/SKILL.md`（架构合规）
@@ -31,6 +30,5 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 5. 依赖倒置：Domain 定义 Repository/Portal 接口，Infrastructure 实现；Application 永不直接引用 Mapper/PO
 6. Assembler（Domain→DTO）与 Presenter（DTO→CO）强制分离
 7. 异常统一 `BusinessException` + i18n 位点（`{aggregate}:err.{scene}`），禁止具名领域异常
-8. 领域事件不可变（字段 final）；聚合根 `registerEvent`，Repository 持久化后自动发布
-9. 时间统一 `OffsetDateTime`；虚拟线程下禁止 `synchronized`（用 `ReentrantLock`）
-10. Lombok：Domain 层禁 `@Data`（仅 `@Getter`），PO / DTO / CQE / CO 用 `@Data`
+8. 时间统一 `OffsetDateTime`；虚拟线程下禁止 `synchronized`（用 `ReentrantLock`）
+9. Lombok：Domain 层禁 `@Data`（仅 `@Getter`），PO / DTO / CQE / CO 用 `@Data`

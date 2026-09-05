@@ -6,7 +6,7 @@ CQRS 契约标记接口（Command / Query / PageableQuery / IntegrationEvent）�
 
 ## 1. 定位与边界
 
-契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query / IntegrationEvent 对象即可被基础设施层统一识别与拦截，契约接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
+契约层公共构建块，含纯标记接口 + `jakarta.validation-api` 校验注解 + `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解，零运行时逻辑。业务服务的 `xxx-contract` 模块引入本包后，Command / Query 对象即可被基础设施层统一识别与拦截，契约接口即可声明完整 REST 契约。任何需要定义 CQRS 请求对象或 REST 契约的模块都应引入。
 
 > 契约 = 完整 REST 定义（HTTP 映射 + 文档注解 + 类型一体），但零运行时：注解均为纯元数据，由服务端 Spring MVC 与消费方各自解释。
 
@@ -38,7 +38,7 @@ com.yoursweakfoe.common.contract
 | `Command` | 「请做这件事」— 变更系统状态 | `XxxCommand` | 事务、审计日志、幂等校验 |
 | `Query` | 「请给我这个」— 读取数据 | `XxxQuery` | 只读路由、缓存、权限校验 |
 | `PageableQuery` | 「给我一页」— 分页读取 | `GetXxxPageQuery` | 同 Query + 分页参数约束 |
-| `IntegrationEvent` | 「这件事发生了」— 跨服务事实通知 | `XxxIntegrationEvent` | 消息确认、重试、死信 |
+| `IntegrationEvent` | 「已经发生、需跨服务协作」— 跨边界事件契约 | `XxxIntegrationEvent` | —（传输通道为业务自持消息中间件，框架不拦截） |
 
 ### PageableQuery API
 
@@ -52,14 +52,6 @@ com.yoursweakfoe.common.contract
 | `safePageSize()` | `default int` | 防御性每页大小：钳制到 `1..MAX_PAGE_SIZE`（读侧推荐消费入口） |
 
 > **record 优先**：组件名 `pageNum`/`pageSize` 与抽象方法同签名，业务 record 实现本接口**零覆写**。读侧仓储统一消费 `safe*()` 取钳制值；未经校验的非法参数也不会产生非法分页。
-
-### IntegrationEvent vs DomainEvent
-
-| | IntegrationEvent（本模块） | DomainEvent（common-ddd） |
-|---|---|---|
-| 来源 | 跨服务边界（MQ / RPC），出入站均为它 | 领域内部产生（聚合根注册） |
-| 发布方 | 本服务 Capture（出站）/ 外部系统（入站） | 本进程 Spring Event |
-| 处理入口 | adapter 层 Consumer（入站）/ Capture（出站，翻译 + Outbox 捕获） | `@EventListener`（框架排空事务内派发，见 common-ddd.md Outbox 节） |
 
 ## 3. 使用方式
 
