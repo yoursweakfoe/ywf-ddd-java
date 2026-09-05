@@ -1,9 +1,9 @@
-package com.yoursweakfoe.common.ddd.application.event.listener;
+package com.yoursweakfoe.common.ddd.application.event.subscriber;
 
 /**
  * 领域事件订阅者标记接口 —— 标识 application 层对领域事件作出<strong>域内反应</strong>的监听组件。
  *
- * <p>位于 {@code application/{aggregate}/event/listener/}。实现类以 Spring
+ * <p>位于 {@code application/{aggregate}/event/subscriber/}。实现类以 Spring
  * {@code @EventListener} / {@code @TransactionalEventListener} 监听
  * {@code DomainEventPublisher} 发布的进程内事件，按「接事件 → 加载聚合 → 委托
  * DomainService / Handler」的薄编排契约作出反应。本标记将这类组件显式定型为
@@ -18,9 +18,9 @@ package com.yoursweakfoe.common.ddd.application.event.listener;
  * <h3>与相关类型的关系</h3>
  * <table>
  *   <tr><th>类型</th><th>层级</th><th>方向</th></tr>
- *   <tr><td>{@code DomainEventSubscriber}（本接口）</td><td>application/event/listener</td><td>领域事件入（进程内）</td></tr>
+ *   <tr><td>{@code DomainEventSubscriber}（本接口）</td><td>application/event/subscriber</td><td>领域事件入（进程内）</td></tr>
  *   <tr><td>{@code DomainEventPublisher}</td><td>application/event/publisher</td><td>领域事件出（进程内，本角色的对偶）</td></tr>
- *   <tr><td>{@code IntegrationEventSubscriber}</td><td>adapter/event/consumer</td><td>集成事件入（MQ）</td></tr>
+ *   <tr><td>{@code IntegrationEventSubscriber}</td><td>adapter/event/subscriber</td><td>集成事件入（MQ）</td></tr>
  * </table>
  *
  * @see com.yoursweakfoe.common.ddd.domain.event.DomainEvent

@@ -13,6 +13,6 @@ package com.yoursweakfoe.common.ddd.domain.event;
  * @see com.yoursweakfoe.common.contract.dto.event.IntegrationEvent
  * @see com.yoursweakfoe.common.ddd.domain.model.AggregateRoot
  * @see com.yoursweakfoe.common.ddd.application.event.publisher.DomainEventPublisher
- * @see com.yoursweakfoe.common.ddd.application.event.listener.DomainEventSubscriber
+ * @see com.yoursweakfoe.common.ddd.application.event.subscriber.DomainEventSubscriber
  */
 public interface DomainEvent {}

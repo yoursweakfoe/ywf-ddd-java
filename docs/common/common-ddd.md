@@ -34,8 +34,8 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis 仓�
 |------|------|------|
 | `DomainEventPublisher` | `application/event/publisher/` | 领域事件进程内发布（对 Spring 事件发布的薄包装） |
 | `IntegrationEventPublisher` | `application/event/publisher/` | 领域事实翻译为集成事件并出站（可靠性策略归业务：直发 / 本地消息表 / 事务消息） |
-| `DomainEventSubscriber` | `application/event/listener/` | 进程内领域事件接收，域内反应薄编排 |
-| `IntegrationEventSubscriber` | `adapter/event/consumer/` | 外部集成事件入站消费（与 REST / 定时任务入口同构的 driving adapter，消费端幂等归业务） |
+| `DomainEventSubscriber` | `application/event/subscriber/` | 进程内领域事件接收，域内反应薄编排 |
+| `IntegrationEventSubscriber` | `adapter/event/subscriber/` | 外部集成事件入站消费（与 REST / 定时任务入口同构的 driving adapter，消费端幂等归业务） |
 
 ### CQRS Handler 接口
 

@@ -21,7 +21,7 @@ package com.yoursweakfoe.common.ddd.application.event.publisher;
  *   <tr><th>类型</th><th>层级</th><th>方向</th></tr>
  *   <tr><td>{@code IntegrationEventPublisher}（本接口）</td><td>application/event/publisher</td><td>集成事件出（跨进程）</td></tr>
  *   <tr><td>{@link DomainEventPublisher}</td><td>application/event/publisher</td><td>领域事件出（进程内）</td></tr>
- *   <tr><td>{@code IntegrationEventSubscriber}</td><td>adapter/event/consumer</td><td>集成事件入（MQ，本角色的对偶）</td></tr>
+ *   <tr><td>{@code IntegrationEventSubscriber}</td><td>adapter/event/subscriber</td><td>集成事件入（MQ，本角色的对偶）</td></tr>
  * </table>
  *
  * @see com.yoursweakfoe.common.contract.dto.event.IntegrationEvent

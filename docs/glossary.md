@@ -14,8 +14,8 @@
 | IntegrationEvent | — | 集成事件标记接口（common-contract，`dto/event/`）。跨服务事件契约，出入站均为它；业务实现类位于 `contract/{agg}/dto/event/`，传输通道业务自持 |
 | DomainEventPublisher | — | application 层事件角色空标记（common-ddd，`application/event/publisher/`）：领域事件进程内发布的身份定型，框架无机制 |
 | IntegrationEventPublisher | — | application 层事件角色空标记（common-ddd，`application/event/publisher/`）：领域事实翻译为集成事件并出站的身份定型，投递可靠性策略归业务 |
-| DomainEventSubscriber | — | application 层事件角色空标记（common-ddd，`application/event/listener/`）：进程内领域事件域内反应的身份定型（Spring 事件监听路线） |
-| IntegrationEventSubscriber | — | adapter 层事件角色空标记（common-ddd，`adapter/event/consumer/`）：外部集成事件入站消费的身份定型，与 REST / 定时任务入口同构，消费端幂等归业务 |
+| DomainEventSubscriber | — | application 层事件角色空标记（common-ddd，`application/event/subscriber/`）：进程内领域事件域内反应的身份定型（Spring 事件监听路线） |
+| IntegrationEventSubscriber | — | adapter 层事件角色空标记（common-ddd，`adapter/event/subscriber/`）：外部集成事件入站消费的身份定型，与 REST / 定时任务入口同构，消费端幂等归业务 |
 | Portal | — | Domain 层定义的外部资源访问接口（如支付、存储）。语义："我需要什么外部能力" |
 | Gateway | — | Infrastructure 层实现 Portal 的类。包含技术调用 + ACL 模型翻译。语义："怎么对接外部" |
 | reconstitute | — | 从持久化数据重建完整领域对象的静态工厂方法。Converter.toDomain() 必须调用此方法（不走业务构造器） |
