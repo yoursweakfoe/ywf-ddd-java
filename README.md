@@ -94,46 +94,4 @@ ywf-ddd-java/
 
 ## 文档导航
 
-**公共框架（ywf-ddd-common）：**
-
-```
-docs/common/                          # common 模块详细文档（仓库根 docs/ 下）
-├── common-contract.md                # CQRS 契约标记接口
-├── common-ddd.md                     # DDD 战术框架（核心模块）
-├── common-exception.md               # 统一异常体系
-├── common-cloud.md                   # 微服务治理
-├── common-pg.md                      # PostgreSQL 类型映射
-├── common-security.md                # 身份上下文
-├── common-observability.md           # 可观测性
-└── common-test.md                    # 测试基础设施
-```
-
-**项目级（docs/）：**
-
-```
-docs/
-├── references.md                        # 架构理论参考（采纳 / 未采纳及原因）
-└── application/
-    ├── module-design/                   # 应用架构设计（分层职责、组件、规则）
-    │   ├── contract.md
-    │   ├── adapter.md
-    │   ├── application.md
-    │   ├── domain.md
-    │   └── infrastructure.md
-    ├── directory-structure/             # 目录结构参考（包结构速查）
-    │   ├── overview.md
-    │   ├── contract/contract.md
-    │   └── server/{adapter,application,domain,infrastructure}.md
-    └── cookbook/                        # 端到端代码实战（完整可编译示例）
-        ├── write-path.md
-        ├── read-path.md
-        ├── cross-aggregate.md
-        ├── policy-pattern.md
-        ├── gateway.md
-        ├── new-aggregate.md
-        ├── error-handling.md
-        ├── batch-operations.md
-        ├── scheduled-task.md
-        ├── distributed-transaction.md
-        └── optimistic-lock-retry.md
-```
+完整文档索引见 [docs/README.md](docs/README.md)——全仓文档唯一登记处（common 模块文档、应用架构设计、目录结构、cookbook、术语表、决策账本与 ADR 总索引均在其内）。

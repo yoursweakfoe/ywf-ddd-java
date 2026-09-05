@@ -24,10 +24,10 @@
 REST 请求
   → adapter/rest/controller/OrderControllerImpl（@RestController，参数包装）
     → application/order/service/OrderAppService（委托 Handler + Presenter 呈现）
-      → application/order/handler/PayOrderHandler（编排领域逻辑）
+      → application/order/handler/command/PayOrderHandler（编排领域逻辑）
         → domain/order/model/Order.pay()（业务规则 + 状态变迁）
-        → domain/order/repository/OrderRepository.update()（持久化抽象）
-          → infrastructure/persistence/.../OrderRepositoryImpl（纯 MyBatis + 手写 XML 落盘）
+        → domain/order/repository/domain/OrderRepository.update()（持久化抽象）
+          → infrastructure/.../repository/domain/OrderRepositoryImpl（纯 MyBatis + 手写 XML 落盘）
       → application/order/presenter/OrderPresenter（DTO → CO）
   ← OrderCO（返回调用方）
 ```
@@ -69,9 +69,9 @@ public interface OrderController {
     OrderCO payOrder(@PathVariable("orderId") UUID orderId);
 }
 
-// adapter/rest/controller/OrderControllerImpl.java（实现，仅标记协议 + 透传）
+// adapter/rest/controller/OrderControllerImpl.java（实现，仅标记协议 + 透传；RestAdapter 标记见规则 R8a/R8b）
 @RestController
-public class OrderControllerImpl implements OrderController {
+public class OrderControllerImpl implements OrderController, RestAdapter {
 
     private final OrderAppService orderAppService;
 
@@ -150,7 +150,11 @@ public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
         return dto;
     }
 
-    // 最小契约：仅 toDomain / toDTO（+ 集合委托）；toDomain 抛 UnsupportedOperationException（富领域模型走 reconstitute）
+    /** 富领域模型：Order 无 setter，DTO → Domain 方向不可逆，重建走 Order.reconstitute（Assembler 最小契约见 new-aggregate.md ⑧）。 */
+    @Override
+    public Order toDomain(OrderDTO dto) {
+        throw new UnsupportedOperationException("Rich domain model: use Order.reconstitute() instead");
+    }
 }
 ```
 
@@ -205,7 +209,7 @@ public class Order extends AggregateRoot<UUID> {
 }
 
 // 值对象：首选 record，天然不可变
-public record OrderItem(Long productId, int quantity, BigDecimal unitPrice) implements ValueObject {
+public record OrderItem(UUID productId, int quantity, BigDecimal unitPrice) implements ValueObject {
 
     public OrderItem {
         if (productId == null) throw new BusinessException("order:err.productIdRequired");
@@ -316,17 +320,17 @@ public class OrderRepositoryImpl
 | contract | `dto/command/PayOrderCommand.java` | 写操作意图 |
 | contract | `dto/co/OrderCO.java` | 契约输出 |
 | contract | `adapter/rest/OrderController.java` | Controller 契约接口 |
-| adapter | `rest/OrderControllerImpl.java` | 协议适配（透传） |
+| adapter | `rest/controller/OrderControllerImpl.java` | 协议适配（透传） |
 | application | `service/OrderAppService.java` | 聚合入口 |
-| application | `handler/PayOrderHandler.java` | 用例编排 |
+| application | `handler/command/PayOrderHandler.java` | 用例编排 |
 | application | `assembler/OrderAssembler.java` | Domain → DTO |
 | application | `presenter/OrderPresenter.java` | DTO → CO |
 | application | `dto/OrderDTO.java` | 内部视图 |
 | domain | `model/Order.java` | 聚合根（业务规则） |
 | domain | `model/OrderItem.java` | 值对象 |
-| domain | `repository/OrderRepository.java` | 持久化抽象 |
+| domain | `repository/domain/OrderRepository.java` | 持久化抽象 |
 | infrastructure | `mybatis/po/OrderPO.java` | 持久化对象（纯 POJO，零 ORM 注解） |
 | infrastructure | `converter/OrderConverter.java` | Domain ↔ PO（框架 BasicConverter 桥） |
 | infrastructure | `mybatis/mapper/OrderMapper.java` | Mapper（extends DddMapper，七条通用语句契约） |
 | resources | `mapper/order/OrderMapper.xml` | 手写 SQL（表名 / 版本条件 / 逻辑删除过滤逐条可见） |
-| infrastructure | `repository/OrderRepositoryImpl.java` | 仓储实现（继承 MybatisPersistence） |
+| infrastructure | `repository/domain/OrderRepositoryImpl.java` | 仓储实现（继承 MybatisPersistence） |

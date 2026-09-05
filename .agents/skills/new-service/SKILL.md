@@ -56,10 +56,11 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 4. 依赖 `common-contract`（标记接口 + OpenAPI 注解）
 5. 创建包结构：
    ```
-   contract/{agg}/api/       → Service 接口
-   contract/{agg}/dto/       → Command / Query
-   contract/{agg}/co/        → CO（契约输出）
-   contract/{agg}/enums/     → 枚举（可选）
+   contract/{agg}/adapter/rest/   → Controller 契约接口（HTTP 映射 + 校验注解声明于此）
+   contract/{agg}/dto/command/    → Command
+   contract/{agg}/dto/query/      → Query
+   contract/{agg}/dto/co/         → CO（契约输出）
+   contract/{agg}/enums/          → 枚举（可选）
    ```
 
 ### Phase 3: server 模块
@@ -74,28 +75,20 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
    - `common-test`（test scope）
 7. 创建分层包结构：
    ```
-   adapter/web/（Controller；东西向同样经 HTTP 消费契约接口）
-   application/{agg}/handler/ + assembler/ + presenter/ + dto/ + repository/application/
+   adapter/rest/controller/（ControllerImpl；东西向同样经 HTTP 消费契约接口，一期 RestClient 直连）
+   application/{agg}/service/ + handler/command/ + handler/query/ + assembler/ + presenter/ + dto/ + repository/application/
    domain/{agg}/model/ + repository/domain/ + portal/
    domain/shared/service/
-    infrastructure/persistence/master/{agg}/mybatis/po/ + mybatis/mapper/ + converter/ + repository/
+   infrastructure/persistence/master/{agg}/mybatis/po/ + mybatis/mapper/ + converter/ + repository/domain/ + repository/application/
     （SQL 手写 XML 归 resources/mapper/{agg}/）
-    infrastructure/gateway/
-    infrastructure/config/
-    ```
+   infrastructure/gateway/
+   infrastructure/config/
+   ```
  8. 创建 `Application.java`（@SpringBootApplication）
 
 ### Phase 4: 配置文件
 
-9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis / Actuator）——数据源用普通单 `spring.datasource`（多数据源需求经 dynamic-datasource opt-in，见 docs/application/module-design/infrastructure.md）；MyBatis 用 `mybatis.*` 命名空间：
-   ```yaml
-   mybatis:
-     type-aliases-package: com.xxx.{service}.infrastructure.persistence.master
-     mapper-locations: classpath*:/mapper/**/*.xml
-     configuration:
-       map-underscore-to-camel-case: true
-       log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-   ```
+9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis / Actuator）——数据源用普通单 `spring.datasource`（多数据源需求经 dynamic-datasource opt-in）；MyBatis 用 `mybatis.*` 命名空间，**yaml 块 canonical 见 `docs/application/module-design/infrastructure.md`**（`type-aliases-package` 指向 `infrastructure.persistence.master`、`mapper-locations: classpath*:/mapper/**/*.xml`、`map-underscore-to-camel-case: true`、`log-impl: Slf4jImpl` 四键，照抄不重写）
 10. `application-dev.yml`（开发环境：与 prod 的差异项，如 Nacos 配置中心预留）
 11. `application-prod.yml`（生产环境：springdoc 禁用 + 管理端口收紧）
 

@@ -23,8 +23,8 @@ adapter 层框架内置两类 driving adapter（协议适配入口），Schedule
 
 | 入口标记 | 驱动源 | 包位置 | 架构规则 |
 |---------|--------|--------|---------|
-| `RestAdapter` | HTTP 请求 | `adapter/{agg}/rest/controller` | R8a / R8b |
-| **`ScheduledAdapter`** | **时间类调度（自建 @Scheduled 或 XXL-Job / Quartz 等平台化）** | **`adapter/{agg}/task/scheduler`** | **R14a / R14b** |
+| `RestAdapter` | HTTP 请求 | `adapter/rest/controller` | R8a / R8b |
+| **`ScheduledAdapter`** | **时间类调度（自建 @Scheduled 或 XXL-Job / Quartz 等平台化）** | **`adapter/task/scheduler`** | **R14a / R14b** |
 
 > MQ 消费类入口按同一「协议伞 / 角色」惯例落位，与 rest / task 同构、纯透传。
 
@@ -35,24 +35,9 @@ Spring @Scheduled 触发（cron 到点）
   → OrderAutoDeliverScheduler.autoDeliverExpiredOrders()   ① 时间驱动入口（纯透传）
     → OrderAppService.autoDeliverExpiredOrders()           ② 用例门面（委托 Handler）
       → AutoDeliverExpiredOrdersHandler.handle()           ③ 批量编排（@Transactional）
-        → orderRepository.findShippedBefore(threshold)     ④ 条件查询（超时 SHIPPED 订单）
+        → orderRepository.findShippedBefore(threshold)     ④ 条件查询（超时 SHIPPED 订单，业务子接口具名方法）
         → order.deliver() × N                              ⑤ 聚合行为（状态机变迁）
-        → orderRepository.updateDomainBatch(expiredOrders) ⑥ 批量落库（逐条 validate）
-```
-
-## 链路图
-
-```mermaid
-graph TB
-    CLOCK[时间触发<br/>@Scheduled cron] --> SCH[OrderAutoDeliverScheduler<br/>implements ScheduledAdapter]
-
-    SCH -->|纯透传| AS[OrderAppService]
-    AS --> H[AutoDeliverExpiredOrdersHandler<br/>@Transactional]
-
-    H --> Q[findShippedBefore<br/>条件查询]
-    Q --> AGG[Order.deliver × N<br/>聚合行为]
-    AGG --> UPD[updateDomainBatch<br/>批量落库（逐条 validate）]
-    UPD --> DONE[批量处理完成<br/>返回处理条数]
+        → RepositoryImpl 继承基类 updateDomainBatch        ⑥ 批量落库（MybatisPersistence 基行为，逐条 validate）
 ```
 
 ## 实现状态
@@ -68,8 +53,8 @@ graph TB
 ## 1. Adapter — Scheduler 入口
 
 ```java
-// adapter/order/task/scheduler/OrderAutoDeliverScheduler.java
-package com.yoursweakfoe.sampleapplication.sampleservice.adapter.order.task.scheduler;
+// adapter/task/scheduler/OrderAutoDeliverScheduler.java
+package com.yoursweakfoe.sampleapplication.sampleservice.adapter.task.scheduler;
 
 import com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.service.OrderAppService;
@@ -101,7 +86,7 @@ public class OrderAutoDeliverScheduler implements ScheduledAdapter {   // ← R1
 ```
 
 要点：
-- 位于 `adapter/{agg}/task/scheduler/`，**实现 `ScheduledAdapter` 标记**（R14a：标记类必须在 adapter 层；R14b：包下类必须带标记）
+- 位于 `adapter/task/scheduler/`，**实现 `ScheduledAdapter` 标记**（R14a：标记类必须在 adapter 层；R14b：包下类必须带标记）
 - 触发注解按调度模式选择：自建 `@Scheduled`（Spring 原生，无需额外依赖）或平台化 handler 注解（如 XXL-Job 的 `@XxlJob`）——标记与规则对两者一视同仁
 - **纯透传** AppService，不含业务逻辑
 - 日志记录执行开始/结束（运维可观测）
@@ -118,30 +103,37 @@ public int autoDeliverExpiredOrders() {
 ## 3. Application — Handler
 
 ```java
-// application/order/handler/AutoDeliverExpiredOrdersHandler.java
+// application/order/handler/command/AutoDeliverExpiredOrdersHandler.java
 @Component
 public class AutoDeliverExpiredOrdersHandler {
 
     private final OrderRepository orderRepository;
+    private final Clock clock;                    // 框架统一时间源（ClockAutoConfiguration 提供，ADR-0006）
 
-    public AutoDeliverExpiredOrdersHandler(OrderRepository orderRepository) {
+    public AutoDeliverExpiredOrdersHandler(OrderRepository orderRepository, Clock clock) {
         this.orderRepository = orderRepository;
+        this.clock = clock;
     }
 
     @Transactional(rollbackFor = Exception.class)
     public int handle() {
-        OffsetDateTime threshold = OffsetDateTime.now().minusDays(15);
+        // 时间一律经注入 Clock 派生，禁止裸调 OffsetDateTime.now()（与审计填充同一时间源，可测试可冻结）
+        OffsetDateTime threshold = OffsetDateTime.now(clock).minusDays(15);
         List<Order> expiredOrders = orderRepository.findShippedBefore(threshold);
 
         expiredOrders.forEach(order -> {           // 聚合行为：deliver() 状态机守卫
             order.deliver();
         });
-        orderRepository.updateDomainBatch(expiredOrders);   // 逐条 validate
+        orderRepository.updateDomainBatch(expiredOrders);   // 基类批量行为（见下文说明），逐条 validate
 
         return expiredOrders.size();
     }
 }
 ```
+
+要点：
+- `updateDomainBatch` 属 `MybatisPersistence` 基类（`RepositoryImpl` 继承后暴露的基行为），**不是** domain `Repository` 五方法生命周期契约的成员；批量原子性由 Handler 的 `@Transactional` 保证（框架方法本身不标注）
+- `findShippedBefore` 是决策型读，按业务命名追加在 `OrderRepository` 子接口上、由具名 Mapper 方法实现（契约见 [new-aggregate.md](new-aggregate.md) ⑭/⑰）
 
 ## 4. 启用定时任务
 
@@ -202,8 +194,8 @@ public class OrderAutoDeliverScheduler implements ScheduledAdapter {   // 标记
 | 层 | 文件 | 职责 |
 |----|------|------|
 | common-ddd | `adapter/task/scheduler/ScheduledAdapter.java` | 入口角色标记（✅ 框架已备） |
-| adapter | `scheduler/OrderAutoDeliverScheduler.java` | 定时触发入口（实现标记，⛔ 待落地） |
-| application | `OrderAppService.java` | 委托 Handler |
-| application | `handler/AutoDeliverExpiredOrdersHandler.java` | 批量编排 |
-| domain | `repository/OrderRepository.java` | 新增 `findShippedBefore` 方法 |
-| infrastructure | `repository/OrderRepositoryImpl.java` | 实现条件查询 |
+| adapter | `task/scheduler/OrderAutoDeliverScheduler.java` | 定时触发入口（实现标记，⛔ 待落地） |
+| application | `service/OrderAppService.java` | 委托 Handler |
+| application | `handler/command/AutoDeliverExpiredOrdersHandler.java` | 批量编排 |
+| domain | `repository/domain/OrderRepository.java` | 新增 `findShippedBefore` 具名方法 |
+| infrastructure | `repository/domain/OrderRepositoryImpl.java` | 条件查询实现 + 基类批量行为 |

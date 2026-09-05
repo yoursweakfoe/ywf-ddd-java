@@ -10,7 +10,6 @@ contract/
 │   │   ├── query/              # Query（读操作请求）
 │   │   └── co/                 # Contract Object
 │   └── enums/                  # 契约共享枚举
-└── README.md
 ```
 
 ## 目录职责
@@ -21,5 +20,5 @@ contract/
 | `{aggregate}/dto/co/` | Contract Object（契约输出对象，对内部 DTO 进行字段清洗） |
 | `{aggregate}/dto/command/` | Command（写操作意图） |
 | `{aggregate}/dto/query/` | Query（读操作请求） |
-| `{aggregate}/dto/event/integration/` | IntegrationEvent（跨服务事件契约，出站发布 / 入站消费） |
+| `{aggregate}/dto/event/integration/` | IntegrationEvent（跨服务事件契约）——完整表述见 canonical [module-design/contract.md](../../module-design/contract.md) 核心组件表 |
 | `{aggregate}/enums/` | 契约共享枚举 |

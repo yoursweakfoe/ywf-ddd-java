@@ -6,7 +6,7 @@
 
 Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数据 ↔ 契约 CO）之间，需要**语义明确的后缀**来区分不同用途的数据对象，而不是用泛化的 `DTO`。
 
-三种典型场景：
+一个写侧基线 `DTO` + 三种扩展场景对象：
 
 | 场景 | 后缀 | 方向 | 示例 |
 |------|------|------|------|
@@ -19,7 +19,7 @@ Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数
 
 ## 写/读投影：DTO vs ViewDTO
 
-写侧与读侧 DTO **解耦**（避免"一个肥 DTO 贯穿所有层"的耦合）：
+DTO（内部视图）与 CO（契约输出）的职责分工规范表 canonical 在 `.agents/rules/03-coding-conventions.md`（DTO / CO 强制分离），本文不复制。在其之上，写侧与读侧 DTO 进一步**解耦**（避免"一个肥 DTO 贯穿所有层"的耦合）：
 
 | DTO | 承载 | Presenter | 说明 |
 |-----|------|-----------|------|
@@ -32,7 +32,7 @@ Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数
 // 写侧 DTO —— Command 执行后的聚合状态投影（含 version）
 // application/order/dto/OrderDTO.java
 @Data
-public class OrderDTO implements Serializable {
+public class OrderDTO implements ApplicationDTO, Serializable {
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
     private List<OrderItemDTO> items;
@@ -43,7 +43,7 @@ public class OrderDTO implements Serializable {
 // 读侧 DTO —— Query 的 PO 直接投影（不含 version，绕过 domain）
 // application/order/dto/OrderViewDTO.java
 @Data
-public class OrderViewDTO implements Serializable {
+public class OrderViewDTO implements ApplicationDTO, Serializable {
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
     private List<OrderItemViewDTO> items;
@@ -83,9 +83,9 @@ public class OrderCreationParamsDTO {
 
 // Handler
 @Component
-public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderViewDTO> {
+public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
     @Override
-    public OrderViewDTO handle(PlaceOrderCommand command) {
+    public OrderDTO handle(PlaceOrderCommand command) {
         OrderCreationParamsDTO params = enrich(command);
         Order order = OrderFactory.create(params);  // 参数对象，非裸 Command
         orderRepository.save(order);
@@ -95,7 +95,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     private OrderCreationParamsDTO enrich(PlaceOrderCommand cmd) {
         OrderCreationParamsDTO params = new OrderCreationParamsDTO();
         params.setCustomerId(cmd.getCustomerId());
-        params.setOperatorId(SecurityUtil.getCurrentUserId());
+        params.setOperatorId(SecurityUtil.getString("uid"));  // 按名取 claim（common-security：字段名无规范，不预定义）
         params.setRegion(configService.getRegion());
         params.setTotalAmount(priceService.calculate(cmd.getItems()));
         return params;
@@ -117,10 +117,11 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 // application/order/dto/PaymentCallbackRecordDTO.java —— 防腐层中间格式
 @Data
 public class PaymentCallbackRecordDTO {
-    private String externalTransactionId;  // 外部系统交易 ID
-    private String externalStatus;         // 外部系统状态码（如 "SUCCESS" / "FAILED"）
-    private String rawPayload;             // 原始消息体（审计用）
-    private OffsetDateTime receivedAt;     // 接收时间
+    private String orderId;                  // 关联的本地订单 ID（外部报文携带或由 Handler 解析）
+    private String externalTransactionId;    // 外部系统交易 ID
+    private String externalStatus;           // 外部系统状态码（如 "SUCCESS" / "FAILED"）
+    private String rawPayload;               // 原始消息体（审计用）
+    private OffsetDateTime receivedAt;       // 接收时间
 }
 
 // CommandHandler（对账请求经 adapter 转 Command 后进入）
@@ -128,10 +129,11 @@ public class PaymentCallbackRecordDTO {
 public class ReconcilePaymentHandler implements CommandHandler<ReconcilePaymentCommand, Void> {
     @Override
     public Void handle(ReconcilePaymentCommand command) {
-        PaymentCallbackRecordDTO record = toRecord(command);
-        Order order = orderRepository.findById(record.toOrderId()).orElseThrow();
-        order.reconcilePayment(record.externalTransactionId());  // 领域方法用内部类型
-        orderRepository.save(order);
+        PaymentCallbackRecordDTO record = toRecord(command);   // 外部报文 → 内部格式
+        Order order = orderRepository.findById(UUID.fromString(record.getOrderId()))
+                .orElseThrow(() -> new BusinessException("order:err.notFound"));
+        order.reconcilePayment(record.getExternalTransactionId());  // 领域方法用内部类型
+        orderRepository.update(order);                              // 已存在聚合走 update
         return null;
     }
 }
@@ -149,4 +151,4 @@ public class ReconcilePaymentHandler implements CommandHandler<ReconcilePaymentC
 | **`ParamsDTO`** | Handler → Domain Factory | 入参需要富化（查库/查配置/安全上下文） |
 | **`RecordDTO`** | External → Handler → Domain | 外部数据格式与领域模型差异大 |
 
-如果没有多视图、没有富化、没有外部格式差异 → 不需要这些中间对象，Assembler 直接产 CO 即可。
+如果没有多视图、没有富化、没有外部格式差异 → 不需要这些中间对象，沿用 Handler 产 DTO + Presenter 产 CO 的标准链路即可（Assembler 不得跨层直产 CO）。

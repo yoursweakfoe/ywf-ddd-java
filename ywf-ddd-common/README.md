@@ -31,7 +31,7 @@ common-pg           PG TypeHandler 扩展（仅依赖 MyBatis / PG 驱动 / Jack
 ── 编译依赖链 ──
 
 common-ddd  →  common-contract + common-exception    DDD 框架
-common-cloud → common-security                       微服务治理（东西向 JWT 透传）
+common-cloud →  common-security（optional）          微服务治理（东西向 JWT 透传，消费方按需显式声明）
 
 ── 测试依赖（test scope） ──
 

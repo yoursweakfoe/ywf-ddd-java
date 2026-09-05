@@ -41,32 +41,16 @@ order.pay() → repository.update(order)
 
 ## 1. 默认行为（无需额外代码）
 
-框架已内置完整的乐观锁冲突处理链（版本条件由 UPDATE 语句的手写 XML 文本携带，无运行时拦截器）：
+UPDATE 影响行数 0 时，`MybatisPersistence.updateDomain()` 在失败路径补一次存在性探测做语义分类：**实体仍在** → 版本被并发事务推进 → `OptimisticLockConflictException`（extends `IllegalStateException`，可安全重试）；**实体已消失** → 普通 `IllegalStateException`（重试无意义，勿被重试器吞掉）。该分类契约（含代码与措辞约定）canonical 收录于 [docs/common/common-ddd.md](../../common/common-ddd.md) §2「持久化支撑（MybatisPersistence）」——版本条件由手写 XML 的 UPDATE 语句文本自身携带，无运行时拦截器，框架之外无需感知。
 
-```java
-// MybatisPersistence.updateDomain() 内部（audit F-01 后的语义分类）
-int rows = mapper.updateById(po);   // XML: SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false
-if (rows == 0) {
-    // 失败路径存在性探测：影响行数为 0 无法区分「版本冲突」与「实体消失」，补一次探测
-    if (existsDomainById(domain.getId())) {
-        throw new OptimisticLockConflictException(   // extends IllegalStateException，可安全重试
-            "UPDATE affected 0 rows for entity ID: " + domain.getId()
-            + " (optimistic lock version conflict)");
-    }
-    throw new IllegalStateException(                 // 重试无意义，勿被重试器吞掉
-        "UPDATE affected 0 rows for entity ID: " + domain.getId()
-        + " (entity not found or concurrently deleted)");
-}
-```
-
-→ `GlobalRestExceptionHandler` 自动映射为 HTTP 409（冲突类型 IS-A IllegalStateException）：
+→ `GlobalRestExceptionHandler` 自动映射为 HTTP 409（冲突类型 IS-A `IllegalStateException`；`detail` 为泛化文案，原始消息仅记服务端日志）：
 
 ```json
 {
   "type": "about:blank",
   "title": "Conflict",
   "status": 409,
-  "detail": "UPDATE affected 0 rows for entity ID: 550e8400-... (optimistic lock version conflict)",
+  "detail": "Conflict",
   "instance": "/api/orders/550e8400-..."
 }
 ```
@@ -79,7 +63,7 @@ if (rows == 0) {
 > 下文以 PayOrder 为例保留教学模板形态，结构与真实实现一致。
 
 ```java
-// application/order/handler/RetryablePayOrderHandler.java
+// application/order/handler/command/RetryablePayOrderHandler.java
 import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.OptimisticLockConflictException;
 
 @Component
@@ -141,12 +125,11 @@ public class RetryablePayOrderHandler {
 
 | 层 | 文件 | 职责 |
 |----|------|------|
-| application | `handler/RetryablePlaceOrderHandler.java` | 重试包装（**已落地**，PlaceOrder 链路；PayOrder 场景按下文模板仿写） |
-| application | `handler/PlaceOrderHandler.java` / `PayOrderHandler.java` | 标准写路径（被包装复用） |
+| application | `handler/command/RetryablePlaceOrderHandler.java` | 重试包装（**已落地**，PlaceOrder 链路；PayOrder 场景按下文模板仿写） |
+| application | `handler/command/PlaceOrderHandler.java` / `handler/command/PayOrderHandler.java` | 标准写路径（被包装复用） |
 | infrastructure | `MybatisPersistence.updateDomain()` | 冲突检测 + 抛异常（框架内置，版本条件由 XML SQL 文本承担） |
 | common-exception | `GlobalRestExceptionHandler` | 409 响应翻译（框架内置） |
 
 > 契约说明：冲突识别为**编译期类型契约**——框架抛
-> `OptimisticLockConflictException extends IllegalStateException`（audit F-01），
-> 消费方按类型捕获即可，无消息文本耦合。历史版本曾以消息含 `affected 0 rows` 判定；
-> 该核心字样在框架侧保留为兼容期过渡，**新代码禁止依赖消息文本做语义判断**。
+> `OptimisticLockConflictException extends IllegalStateException`，
+> 消费方按类型捕获即可，无消息文本耦合。消息中的 `affected 0 rows` 字样仅在框架侧保留为兼容期过渡，**新代码禁止依赖消息文本做语义判断**。

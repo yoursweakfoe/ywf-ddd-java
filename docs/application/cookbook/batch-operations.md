@@ -20,7 +20,7 @@
 REST 请求（BatchConfirmOrderCommand）
   → adapter/rest/controller/OrderControllerImpl
     → application/order/service/OrderAppService
-      → application/order/handler/BatchConfirmOrderHandler
+      → application/order/handler/command/BatchConfirmOrderHandler
         → 循环：repository.findById → order.confirm()
         → repository.updateDomainBatch(orders)
       → application/order/presenter/OrderPresenter
@@ -46,7 +46,7 @@ public class BatchConfirmOrderCommand implements Command, Serializable {
 ## 2. Application — 批量 Handler
 
 ```java
-// application/order/handler/BatchConfirmOrderHandler.java
+// application/order/handler/command/BatchConfirmOrderHandler.java
 @Component
 public class BatchConfirmOrderHandler implements CommandHandler<BatchConfirmOrderCommand, List<OrderDTO>> {
 
@@ -121,6 +121,6 @@ public BatchResultDTO handle(BatchImportCommand command) {
 | 层 | 文件 | 职责 |
 |----|------|------|
 | contract | `dto/command/BatchConfirmOrderCommand.java` | 批量命令（含 ID 列表） |
-| application | `handler/BatchConfirmOrderHandler.java` | 批量编排 |
+| application | `handler/command/BatchConfirmOrderHandler.java` | 批量编排 |
 | application | `service/OrderAppService.java` | 委托 + 呈现 |
-| adapter | `rest/OrderControllerImpl.java` | 透传 |
+| adapter | `rest/controller/OrderControllerImpl.java` | 透传 |

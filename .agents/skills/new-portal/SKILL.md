@@ -13,15 +13,7 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 
 ## 概念
 
-```
-Domain 层（接口）          Infrastructure 层（实现）
-┌─────────────────┐       ┌──────────────────────────┐
-│ PaymentPortal   │ ←实现 │ AlipayPaymentGateway     │
-│  (extends Portal)│       │  - 调用外部 SDK          │
-│  - pay(...)     │       │  - ACL 模型翻译          │
-│  - refund(...)  │       │  - 容错（超时/降级/重试） │
-└─────────────────┘       └──────────────────────────┘
-```
+> Portal（Domain 层接口）与 Gateway（Infrastructure 层实现，技术调用 + ACL 翻译 + 容错）的角色对照与调用链路图 → 见 `docs/application/cookbook/gateway.md`「调用链路」节（canonical，含 PaymentPortal / AlipayPaymentGateway 完整走查）。
 
 ## 步骤
 
@@ -70,7 +62,7 @@ public class AlipayPaymentGateway implements PaymentPortal {
 ### 4. 调用方
 
 - Domain Service 或 Handler 通过 Portal 接口调用（依赖倒置）
-- 禁止在 Domain 层 `@Autowired`（构造器注入，Bean 注册在 infra config）
+- 禁止在 Domain 层 `@Autowired`（统一构造器注入；Gateway 经 `@Component` 组件扫描注册，DomainService 经 `@Service` stereotype 注册即 A2 白名单允许）
 
 ## 验证
 

@@ -46,7 +46,7 @@ JSONB 字段必须在 XML 语句中显式指定 `typeHandler`（参数位 `#{pro
 |------|------|
 | Java 值为 `null` | 写入 SQL NULL，读取返回 null |
 | 空数组 `[]` | 写入 PG 空数组 `'{}'`，读取返回空 Java 数组 |
-| 空字符串 / 非法 JSON（JsonbTypeHandler） | 抛出 `IllegalStateException`（不静默失败） |
+| JSON 非法（JsonNodeTypeHandler 读取解析失败） | 抛 `SQLException`（显式失败，不静默返回 null）；`JsonbTypeHandler` 为 String 直通不校验，空串 / 非法 JSON 由 PG 服务端拒写 |
 | PGobject 值为 null | 读取返回 null |
 
 ## 3. 使用方式

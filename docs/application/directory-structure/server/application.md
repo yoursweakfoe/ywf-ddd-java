@@ -10,8 +10,9 @@ application/
     │   └── query/                      # QueryHandler（读用例，与 CQE 1:1）
     ├── assembler/                      # Domain → DTO（手写显式映射）
     ├── presenter/                      # DTO → CO（手写显式映射）
-    └── dto/                            # 内部视图
-
+    ├── dto/                            # 内部视图
+    └── repository/                     # 读端口（CQRS 查询接口）【按需】
+        └── application/                #   {Agg}QueryRepository（绕过 domain 的读端口）
 ```
 
 ## 目录职责
@@ -23,3 +24,4 @@ application/
 | `{aggregate}/assembler/` | Domain → DTO 转换（手写显式映射） |
 | `{aggregate}/presenter/` | DTO → CO 呈现/清洗（手写显式映射） |
 | `{aggregate}/dto/` | 内部视图对象（不对外暴露，可能含乐观锁，审计等内部字段）。顶层 DTO 实现 `ApplicationDTO` 标记（common-ddd/application/dto/），嵌套项随外层定型 |
+| `{aggregate}/repository/application/` | 读端口接口（`{Agg}QueryRepository` extends `QueryRepository` 标记，common-ddd/application/repository/application/），由 infra `persistence/{ds}/{agg}/repository/application/` 实现、PO → 读 DTO 直接投影——canonical → [cookbook/read-path.md](../../cookbook/read-path.md) |

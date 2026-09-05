@@ -14,26 +14,7 @@ sample-service/
 
 ## Contract 模块
 
-```
-contract/
-└── {aggregate}/                     # 顶层按聚合分包
-    ├── adapter/                     # 协议契约（对偶 server 的 adapter 层）
-    │   └── rest/                    # Controller 契约接口（REST 端点契约，ControllerImpl 实现）
-    ├── dto/                         # 数据传输对象（CQE / CO）
-    │   ├── command/                 # Command（写操作意图）
-    │   ├── query/                   # Query（读操作请求）
-    │   └── co/                      # Contract Object（契约输出对象）
-    └── enums/                       # 契约共享枚举
-```
-
-| 目录 | 职责 |
-|------|------|
-| `{aggregate}/adapter/rest/` | Controller 契约接口定义（方法签名 + HTTP 映射 + 文档注解的单一事实源） |
-| `{aggregate}/dto/co/` | Contract Object（对内部 DTO 进行字段清洗后的外部安全视图） |
-| `{aggregate}/dto/command/` | Command（写操作意图） |
-| `{aggregate}/dto/query/` | Query（读操作请求） |
-| `{aggregate}/dto/event/integration/` | IntegrationEvent（跨服务事件契约） |
-| `{aggregate}/enums/` | 契约共享枚举 |
+→ 目录树与目录职责表（canonical）见 [contract/contract.md](contract/contract.md)；IntegrationEvent 路径的唯一完整表述在 [module-design/contract.md](../module-design/contract.md) 核心组件表。
 
 ---
 
@@ -41,9 +22,11 @@ contract/
 
 ```
 server/
-├── adapter/                         # 入站适配器（driving adapter）
-│   ├── rest/                          # REST 面：@RestController 实现 contract 的 Controller 契约接口（纯透传）
-│   ├── scheduler/                     # 定时任务入口【按需】
+├── adapter/                         # 入站适配器（driving adapter，协议伞/角色两级式）
+│   ├── rest/
+│   │   └── controller/                # @RestController 实现 contract 的 Controller 契约接口（纯透传）
+│   ├── task/
+│   │   └── scheduler/                 # 定时任务入口【按需】
 │   └── shared/                        # 跨聚合/系统级入口【按需】
 │
 ├── application/                     # 用例编排
@@ -76,16 +59,16 @@ server/
 └── infrastructure/                  # 基础设施
     ├── persistence/                   # 持久化（实现 Domain Repository）
     │   ├── master/                    # 主数据源（框架默认回退值）
-│   │   └── {aggregate}/           # 按聚合命名空间隔离
-│   │       ├── mybatis/               # MyBatis 技术位（撤换 ORM 时整体删除）
-│   │       │   ├── po/                # 持久化对象（纯 POJO，零 ORM 注解）
-│   │       │   └── mapper/            # Mapper 接口（extends DddMapper）
-│   │       │                          #   SQL 全部手写：resources/mapper/{aggregate}/XxxMapper.xml
-│   │       ├── converter/             # Domain ↔ PO 转换（框架 BasicConverter 桥）
-│   │       └── repository/            # Repository 实现
-│   │           ├── application/       # XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
-│   │           └── domain/            # XxxRepositoryImpl（写侧，对偶 domain Repository）
-│   │   └── {other}/                   # 其他数据源（结构同 master）【按需】
+    │   │   └── {aggregate}/           # 按聚合命名空间隔离
+    │   │       ├── mybatis/           # MyBatis 技术位（撤换 ORM 时整体删除）
+    │   │       │   ├── po/            # 持久化对象（纯 POJO，零 ORM 注解）
+    │   │       │   └── mapper/        # Mapper 接口（extends DddMapper）
+    │   │       │                      #   SQL 全部手写：resources/mapper/{aggregate}/XxxMapper.xml
+    │   │       ├── converter/         # Domain ↔ PO 转换（框架 BasicConverter 桥）
+    │   │       └── repository/        # Repository 实现
+    │   │           ├── application/   # XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
+    │   │           └── domain/        # XxxRepositoryImpl（写侧，对偶 domain Repository）
+    │   └── {other}/                   # 其他数据源（结构同 master）【按需】
     ├── gateway/                       # 外部系统网关（实现 Domain Portal）
     │   └── {capability}/              # 按外部能力分包
     └── config/                        # Spring @Configuration
@@ -101,11 +84,7 @@ adapter ──→ application ──→ domain ←── infrastructure
       contract
 ```
 
-- **adapter** 依赖 application（透传用例调用）+ contract（实现 Controller 契约接口、使用 CO / CQE）
-- **application** 依赖 domain（编排领域对象）+ contract（使用 CO / CQE）
-- **infrastructure** 依赖 domain（实现 Repository / Portal 接口）
-- **domain** 零外部依赖（纯 Java + common-ddd 构建块）
-- **contract** 零内部依赖（仅依赖 common-contract 框架包）
+> 各层依赖方向的逐条法条与职责一句话 → canonical 见 [.agents/rules/02-architecture.md](../../../.agents/rules/02-architecture.md)「依赖方向」与「各层职责」表，此处不复述。
 
 ---
 

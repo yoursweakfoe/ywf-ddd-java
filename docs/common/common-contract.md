@@ -86,7 +86,7 @@ public record GetOrderPageQuery(
 | 层 | 职责 | 做法 |
 |---|---|---|
 | contract（声明约束） | 在 CQE 字段上声明校验注解 | `@NotNull` / `@NotBlank` / `@NotEmpty` / `@Min` / `@Max` / `@Size` |
-| adapter（触发校验） | Controller 用 `@Valid` 触发 | `@Valid @RequestBody XxxCommand` |
+| adapter（触发校验） | `@Valid` 声明于**契约接口方法参数**，Controller 实现继承、HTTP 绑定期触发 | `@Valid @RequestBody XxxCommand`（写在契约接口上） |
 | 全局异常处理 | 统一翻译校验失败 | `MethodArgumentNotValidException` → 400 + fieldErrors（common-exception 已提供） |
 
 要点：
@@ -107,7 +107,7 @@ common-contract（独立，无内部模块依赖）
 └── spring-web（HTTP 映射注解，@GetMapping/@RequestMapping 等）
 ```
 
-> **声明与执行分离**：本包只声明校验约束（注解），不执行校验。`jakarta.validation-api` 是纯 API jar（无实现）。校验实现（Hibernate Validator）由服务端提供：通常经 `common-exception` → `spring-boot-starter-validation`（compile 传递）自动获得；若服务仅引入本包，则需自行引入 `spring-boot-starter-validation`。校验在 Controller 层经 `@Valid` 触发。
+> **声明与执行分离**：本包只声明校验约束（注解），不执行校验。`jakarta.validation-api` 是纯 API jar（无实现）。校验实现（Hibernate Validator）由服务端提供：通常经 `common-exception` → `spring-boot-starter-validation`（compile 传递）自动获得；若服务仅引入本包，则需自行引入 `spring-boot-starter-validation`。校验经契约接口上声明的 `@Valid` 在服务端 HTTP 绑定期触发（Controller 实现继承，见 §3.1）。
 
 ## 5. 设计原则
 
@@ -133,21 +133,9 @@ common-contract（独立，无内部模块依赖）
 
 **确认**：`Query.java` / `Command.java` 无泛型参数。
 
-### ADR-0002 不含 REST/RPC 注解
+### ADR-0002 轻契约（不含 REST/RPC 注解）
 
-- 状态：superseded（被 ADR-0003 取代）
-
-**背景**：契约对象是否需要携带 REST/RPC 呈现注解。
-
-**选项**：
-- 挂注解：契约 jar 自带路径/序列化定义
-- 纯类型：呈现由服务端 Controller 显式声明
-
-**决策**：选纯类型。REST 面由服务端 Controller（spring-web 注解）显式声明；东西向复用同一契约接口，契约 jar 保持纯类型。
-
-**后果**：契约 jar 与具体通信协议解耦，可复用于 HTTP/RPC/事件多种通道。
-
-**确认**：`common-contract` 无任何 spring-web / jax-rs / swagger 注解。
+- 状态：已废弃，由 ADR-0003（重契约）取代。
 
 ### ADR-0003 契约承载 HTTP 映射 + 文档注解（重契约）
 
@@ -174,4 +162,4 @@ common-contract（独立，无内部模块依赖）
 | 项 | 说明 |
 |---|---|
 | 边界：CQE 基类 / 抽象类 | 标记接口足够；基类强制继承关系，与 record 不兼容 |
-| 边界：校验执行 | 契约层只声明约束（纯 API）；Hibernate Validator 实现由服务端提供（经 common-exception 传递或显式引入），在 Handler 层经 @Valid 触发 |
+| 边界：校验执行 | 契约层只声明约束（纯 API）；Hibernate Validator 实现由服务端提供（经 common-exception 传递或显式引入），经契约接口上声明的 `@Valid` 在 Controller 绑定期触发（Handler 层不做 Bean Validation） |

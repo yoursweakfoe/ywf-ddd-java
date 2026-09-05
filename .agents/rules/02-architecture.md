@@ -26,27 +26,27 @@ adapter → application → domain ← infrastructure
 
 ## contract 模块
 
-- 仅包含：Service 接口、Command/Query、CO、枚举
+- 仅包含：Controller 契约接口（`adapter/rest/`）、Command/Query、CO、枚举
 - 仅依赖 `common-contract`（标记接口）
-- 东西向消费方依赖 contract jar，经 HTTP（RestClient）调用提供方 REST 端点
+- 东西向消费方依赖 contract jar；东西向一期为 RestClient 直连（静态地址），Feign 经 common-cloud opt-in（JWT RequestInterceptor 自动透传）
 
 ## 依赖倒置
 
-- Domain 层定义 `Repository` 接口（`domain/{agg}/repository/`）
+- Domain 层定义 `Repository` 接口（`domain/{agg}/repository/domain/`）
 - Domain 层定义 `Portal` 接口（`domain/{agg}/portal/`）
 - Infrastructure 层提供实现（`infrastructure/persistence/` / `infrastructure/gateway/`）
 - Application 层通过 Domain 接口间接使用 Infrastructure（永远不直接引用 Mapper / PO）
 
 ## 按聚合自包含
 
-每层内部以聚合名分包，打开一个聚合目录即可看到该聚合在该层的全部代码：
+domain / application / infrastructure / contract 内部以聚合名分包，打开一个聚合目录即可看到该聚合在该层的全部代码（例外：server 的 adapter 层不按聚合分包）：
 
 ```
-domain/order/          → model/ + repository/ + portal/ + service/
-application/order/     → OrderAppService + handler/ + assembler/ + presenter/ + dto/
-infrastructure/.../order/ → po/ + converter/ + mapper/ + repository/
-adapter/order/         → web/（Controller）
-contract/order/        → api/ + dto/ + co/ + enums/
+domain/order/             → model/ + repository/domain/ + portal/ + service/ + policy/【按需】
+application/order/        → service/（AppService）+ handler/{command,query}/ + assembler/ + presenter/ + dto/ + repository/application/（读端口）
+infrastructure/.../order/ → mybatis/{po,mapper}/ + converter/ + repository/{domain,application}/
+adapter/rest/controller/  → {Agg}ControllerImpl（实现 contract 契约接口，纯透传）
+contract/order/           → adapter/rest/（Controller 契约接口）+ dto/{command,query,co}/ + enums/
 ```
 
 → 详见 `docs/application/module-design/{layer}.md`

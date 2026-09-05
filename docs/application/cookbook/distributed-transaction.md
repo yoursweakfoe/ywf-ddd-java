@@ -14,17 +14,17 @@
 2. 扣库存失败时订单必须回滚（数据一致性）
 3. 同一服务内优先使用本地事务（`@Transactional`），仅跨服务时才启用分布式事务
 
-## Dependencies
+## 依赖引入
 
 ```xml
-<!-- common-cloud 已聚合引入 seata-spring-boot-starter -->
+<!-- common-cloud 聚合引入 seata-spring-boot-starter（optional 标记——业务服务依赖 common-cloud 或直接自备声明；示例应用当前未引入 common-cloud/Seata） -->
 <dependency>
     <groupId>com.yoursweakfoe</groupId>
     <artifactId>common-cloud</artifactId>
 </dependency>
 ```
 
-## Configuration
+## 配置
 
 ```yaml
 # application.yml
@@ -53,8 +53,12 @@ seata:
 
 ## 1. 跨服务场景 — @GlobalTransactional
 
+> **落地状态 ⛔ 未落地**：示例应用为单服务（Order 与 Product 同数据源），本节及下文 XID 透传、
+> `DeductStockCommand` 均为跨服务**示意模板**——sample 中不存在 `RestClient` 注入与
+> `@GlobalTransactional` 用法；服务内真实形态见 §2（与 [cross-aggregate.md](cross-aggregate.md) 同链路）。
+
 ```java
-// application/order/handler/PlaceOrderHandler.java（跨服务版本）
+// application/order/handler/command/PlaceOrderHandler.java（跨服务示意版）
 @Component
 public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
 
@@ -139,12 +143,13 @@ public class SeataXidBindFilter implements Filter {
 ## 2. 同服务场景 — 本地事务即可
 
 ```java
-// 当前 sample 的实际做法（Order + Product 在同一服务/同一数据源）
+// 当前 sample 的实际做法（Order + Product 在同一服务/同一数据源）——节选，完整形态见 cross-aggregate.md §2
 @Override
 @Transactional(rollbackFor = Exception.class)  // 本地事务，无需 Seata
 public OrderDTO handle(PlaceOrderCommand command) {
-    inventoryDomainService.deductStock(command.getProductId(), command.getQuantity());
-    Order order = orderFactory.create(command.getCustomerId(), command.toItems());
+    List<OrderItem> items = buildItems(command);              // 商品批量加载取真实单价（cross-aggregate.md §2）
+    inventoryDomainService.deductStock(items);                // 跨聚合扣库存（DomainService 批量契约）
+    Order order = orderFactory.create(command.getCustomerId(), items);
     orderRepository.save(order);
     return orderAssembler.toDTO(order);
 }
@@ -163,10 +168,10 @@ TM（Transaction Manager）—— @GlobalTransactional 标注的方法
 
 ## 完整文件清单
 
-| 层 | 文件 | 职责 |
-|----|------|------|
-| application | `handler/PlaceOrderHandler.java` | @GlobalTransactional 入口 |
-| contract | `product/dto/command/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） |
-| infrastructure | `config/SeataXidClientInterceptor.java` | 出站：RootContext.getXID() 写入 TX_XID header |
-| infrastructure | `config/SeataXidBindFilter.java` | 入站：读取 header 并 bind/unbind RootContext |
-| infrastructure | Seata 自动代理 DataSource | 无需手写代码 |
+| 层 | 文件 | 职责 | 状态 |
+|----|------|------|------|
+| application | `handler/command/PlaceOrderHandler.java` | `@GlobalTransactional` 入口（跨服务示意版） | ⛔ 未落地 |
+| contract | `product/dto/command/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） | ⛔ 未落地 |
+| infrastructure | `config/SeataXidClientInterceptor.java` | 出站：`RootContext.getXID()` 写入 TX_XID header | ⛔ 未落地 |
+| infrastructure | `config/SeataXidBindFilter.java` | 入站：读取 header 并 bind/unbind RootContext | ⛔ 未落地 |
+| infrastructure | Seata 自动代理 DataSource | 无需手写代码 | ⛔ 未落地 |

@@ -4,7 +4,7 @@
 
 DDD 战术模式微服务框架骨架 + 示例应用。目标是将 DDD 落地为可复用公共模块 + 可参照的教学示例。
 
-> **当前状态**：v0.0.1 纯骨架阶段，稳定性优先，未经历真实生产考验。
+> **当前状态**：探索性脚手架项目，外围环境暂未备齐，未经历真实生产考验；适合结构参考与学习，暂不推荐直接用于生产。
 
 ## 仓库结构
 
@@ -27,7 +27,7 @@ ywf-ddd-java/
 
 ## 技术栈
 
-Java 21 / Spring Boot 4.1 / Spring MVC REST（对外经 Higress 网关；东西向服务间 HTTP/RestClient 直连，一期静态地址）/ MyBatis 3.5（纯 MyBatis + 手写 XML SQL）/ PostgreSQL / Nacos 客户端（预留）/ Seata 2.6 / Higress
+Java 21 / Spring Boot 4.1 / Spring MVC REST / MyBatis（手写 XML SQL）/ PostgreSQL / Seata。完整技术栈与网关、东西向调用口径见根 `README.md` §项目背景。
 
 ## 模块设计原则
 

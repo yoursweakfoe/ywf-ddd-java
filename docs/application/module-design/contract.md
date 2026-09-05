@@ -8,9 +8,9 @@
 ## 设计原则
 
 - **纯类型定义**：仅包含接口、Command/Query、CO，无任何实现
-- **轻依赖**：仅依赖 `common-contract`（CQRS 标记接口）+ `swagger-annotations`（文档注解）+ `spring-web`（HTTP 映射注解，`provided` 不传递）
+- **轻依赖**：服务契约模块仅依赖 `common-contract`（CQRS 标记接口，其传递提供 `swagger-annotations` 文档注解 + `spring-web` HTTP 映射注解 + `jakarta.validation-api` 校验注解——均为注解级依赖）
 - **按聚合分包**：顶层以聚合名划分，内部结构一致
-- **单通道复用**：对外 REST 与东西向复用同一契约接口；REST 路径在契约接口上声明（`@RequestMapping` + `@GetMapping`），东西向由消费方经 RestClient 调用提供方 REST 端点（HTTP 直连）
+- **单通道复用**：对外 REST 与东西向复用同一契约接口；REST 路径在契约接口上声明（`@RequestMapping` + `@GetMapping`），东西向一期为 RestClient 直连（静态地址）；Feign 经 common-cloud opt-in（JWT RequestInterceptor 自动透传）
 - **契约 = 类型 + 语义**：契约包含方法签名（类型）与能力/字段语义（文档注解）。语义是消费方理解接口的必要部分，应随契约分发，而非留在服务端实现里
 - **契约承载 HTTP 映射 + 文档注解**：`@Tag` / `@RequestMapping` / `@Operation` / `@GetMapping`（含路径）声明在 Controller 契约接口，`@Schema` 声明在 CO / CQE 字段；ControllerImpl 仅标记 `@RestController` 并透传，不重复声明路径与语义
 
@@ -90,9 +90,9 @@ contract jar 本质是**东西向**产物（内部 Java 服务间类型契约）
 ```
 contract（本模块）                             server
 ─────────────                             ──────
-adapter/rest/{Aggregate}Controller.java           ←──  adapter/rest/（ControllerImpl 实现接口，纯透传 AppService）
-{aggregate}/dto/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/command|query/（接收 CQE 执行用例）
-{aggregate}/dto/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
+adapter/rest/{Aggregate}Controller.java            ←──  adapter/rest/controller/（ControllerImpl 实现接口，纯透传 AppService）
+{aggregate}/dto/command/XxxCommand / dto/query/XxxQuery     ←──  application/handler/command|query/（接收 CQE 执行用例）
+{aggregate}/dto/co/XxxCO                      ←──  application/presenter/（DTO → CO 输出）
 ```
 
 ### 消费方使用

@@ -6,7 +6,7 @@
 
 ## 1. 定位与边界
 
-聚合 pom + 东西向 JWT 身份传播（内置 Feign RequestInterceptor）。**所有依赖均为 optional opt-in**——本模块自身的两个类（`JwtPropagationRequestInterceptor` + `FeignJwtPropagationAutoConfiguration`）仅依赖 Feign 接口与 common-security，且经 `@ConditionalOnClass` 门控（缺依赖时静默不激活）。Feign、JWT 透传、Nacos、Seata、LoadBalancer、CircuitBreaker **消费方用到哪个就显式声明哪个**（见 §3.1「能力 → 需显式声明的依赖」清单）。面向使用分布式事务与东西向 HTTP 调用的微服务。
+聚合 pom + 东西向 JWT 身份传播（内置 Feign RequestInterceptor）。**所有依赖均为 optional opt-in**——本模块自身代码（`JwtPropagationRequestInterceptor` + `FeignJwtPropagationAutoConfiguration` + 配置 record）仅依赖 Feign 接口与 common-security（`Jwt`）类型，自动装配入口经 `@ConditionalOnClass`（Feign 与 JWT 类均在位）门控，缺依赖时静默不激活。Feign、JWT 透传、Nacos、Seata、LoadBalancer、CircuitBreaker **消费方用到哪个就显式声明哪个**（见 §3.1「能力 → 需显式声明的依赖」清单）。面向使用分布式事务与东西向 HTTP 调用的微服务。
 
 > 统一异常体系（common-exception）不在本包分发，由业务服务按需显式引入。
 
@@ -106,23 +106,23 @@ common-cloud → spring-cloud-starter-openfeign                    （optional�
              → spring-cloud-starter-circuitbreaker-resilience4j  （optional）
 ```
 
-> 依赖树以 `mvn dependency:tree` 为准，本清单可能滞后。**全部 optional 依赖不传递**——本模块自身两个类经 `@ConditionalOnClass` 门控，缺依赖时不激活；消费方用到相应能力时须自行显式声明（见 §3.1）。
+> 依赖树以 `mvn dependency:tree` 为准，本清单可能滞后。**全部 optional 依赖不传递**——消费方用到相应能力时须自行显式声明（门控机制见 §1）。
 > Spring Cloud 组件版本由 spring-cloud-dependencies BOM 管理；SCA 组件版本由 spring-cloud-alibaba-dependencies BOM 管理；nacos-client / seata 版本独立声明覆盖 SCA BOM。**BOM 不传递**，消费方需自行 import 对齐版本。
 
 ## 5. 设计原则
 
-- **全 optional opt-in**：所有依赖不传递，消费方用到哪个能力就显式声明哪个；本模块代码经 `@ConditionalOnClass` 门控，缺依赖时安全静默
+- **全 optional opt-in**：所有依赖不传递，消费方用到哪个能力就显式声明哪个（`@ConditionalOnClass` 门控细节见 §1）
 - **聚合不封装**：直接传递官方 starter，业务服务直接使用原生 API
-- **统一 HTTP**：对外 REST 经 Higress 网关，东西向 Feign 直连
+- **统一 HTTP**：对外 REST 经 Higress 网关；东西向一期为 RestClient 直连（静态地址），Feign 经 common-cloud opt-in（JWT RequestInterceptor 自动透传）
 - **零信任东西向**：服务间调用透传已验签 JWT，下游自验签，不靠内网可信
 
 ## 6. 设计决策
 
-### ADR-0001 东西向通信统一 HTTP（移除 gRPC）
+### ADR-0001 东西向通信统一 HTTP
 
 - 状态：accepted
 
-**背景**：迁移计划原定移除 Dubbo 后东西向走 Spring gRPC，后全仓移除 gRPC、统一 HTTP。
+**背景**：东西向（服务间）调用协议选型收敛为最终态——**东西向统一 HTTP（RestClient 直连一期；Feign 经 common-cloud opt-in）**。
 
 **选项**：
 - gRPC：强类型编译期绑定，但内部接口量少、收益有限

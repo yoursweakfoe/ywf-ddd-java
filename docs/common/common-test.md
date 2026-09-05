@@ -14,7 +14,7 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DDDArchitectureRules` 类（规则编号与类级 Javadoc 清单一致）：
+公开常量位于 `DDDArchitectureRules` 类（每条规则的 `as(...)` 描述文本自带 R 编号前缀，与下表一致）：
 
 | 常量名 | 编号 | 守护内容 |
 |--------|------|---------|
@@ -33,6 +33,8 @@
 | `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制） |
 | `DOMAIN_HAS_NO_PUBLIC_SETTERS` | R12 | Domain 层禁止 public setter（守护充血模型不变量） |
 | `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口） |
+| `SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER` | R14a | 实现 ScheduledAdapter 标记的类必须位于 adapter 层（定时任务入口角色） |
+| `SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED` | R14b | 业务 `..adapter..scheduler..` 包下非接口类必须实现 ScheduledAdapter 标记 |
 | `MYBATIS_PLUS_BANNED` | R15 | 全仓禁止依赖 `com.baomidou..`（MyBatis-Plus 剥离回归守护，论证见 common-ddd.md ADR-0007；规则名中的 MYBATIS_PLUS 即禁令所指） |
 | `CONTRACT_DOES_NOT_DEPEND_ON_SERVER` | C1 | Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施 |
 
@@ -83,7 +85,7 @@ class OrderAppServiceTest {
     @Test
     void placeOrder_shouldCreatePendingOrder() {
         PlaceOrderCommand command = new PlaceOrderCommand("customer-1",
-                List.of(new PlaceOrderCommand.OrderItemDTO(1L, 2)));
+                List.of(new PlaceOrderCommand.OrderItemView(UUID.randomUUID(), 2)));
         OrderCO result = orderAppService.placeOrder(command);
         assertThat(result).isNotNull();
         assertThat(result.getStatus()).isEqualTo("PENDING");
@@ -93,26 +95,9 @@ class OrderAppServiceTest {
 
 ### 场景 3：单元测试（Mockito）
 
-```java
-@ExtendWith(MockitoExtension.class)
-class PayOrderHandlerTest {
-    @Mock private OrderRepository orderRepository;
-    @Mock private OrderAssembler orderAssembler;
-    @InjectMocks private PayOrderHandler handler;
+> 测试模板 canonical：`.agents/skills/new-test/SKILL.md`（模板 A = Handler 单元测试 `PayOrderHandlerTest`——Mock 写侧仓储 + Assembler，断言聚合状态变迁与 `update` 调用），本文不承载业务测试体。
 
-    @Test
-    void handle_shouldTransitionToPaid() {
-        Order order = new Order(UUID.randomUUID(), List.of(item), "customer-1");
-        when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderDTO());
-
-        OrderDTO result = handler.handle(new PayOrderCommand(order.getId()));
-
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
-        verify(orderRepository).update(order);
-    }
-}
-```
+与架构守护的分工：Handler 单元测试断言**行为语义**（状态变迁、异常路径），写侧事务边界与读侧读写隔离的**结构约束**由 §2 规则表中的 ArchUnit R11 / R13 机器保证——同一违规只需在一处拦截，测试与规则互不代偿。
 
 ## 4. 依赖关系
 

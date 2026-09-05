@@ -52,7 +52,7 @@
 | AggregateRoot | common-ddd/domain/model/ | `{aggregate}/model/` |
 | Entity | common-ddd/domain/model/ | `{aggregate}/model/` |
 | ValueObject | common-ddd/domain/model/ | `{aggregate}/model/` |
-| Repository | common-ddd/domain/repository/ | `{aggregate}/repository/` |
+| Repository（写侧） | common-ddd/domain/repository/domain/ | `{aggregate}/repository/domain/` |
 | Factory | common-ddd/domain/factory/ | `{aggregate}/factory/` |
 | DomainService | common-ddd/domain/service/ | `{aggregate}/service/` 或 `shared/service/` |
 
@@ -78,7 +78,7 @@ adapter ──→ application ──→ domain ←── infrastructure
 - 不变量校验使用显式 `if + throw new BusinessException(key)`，失败抛 BusinessException
 - 提供 `reconstitute()` 静态工厂供 Converter 重建
 
-→ 完整代码见 [cookbook/write-path.md](../cookbook/write-path.md)#8-domain--聚合根行为 | [cookbook/new-aggregate.md](../cookbook/new-aggregate.md)##domain--聚合根
+→ 完整代码见 [cookbook/write-path.md §4 Domain — 聚合根 + 值对象](../cookbook/write-path.md) | [cookbook/new-aggregate.md](../cookbook/new-aggregate.md)（Domain 聚合根模板）
 
 ### Entity vs ValueObject
 
@@ -129,40 +129,13 @@ domain/
 
 #### Policy 的三种形态
 
-| 形态 | 顺序要求 | 主流程逻辑 | 典型场景 |
-|------|---------|-----------|--------|
-| 互斥型 | 严格（`@Order`） | 命中第一个即返回 | 折扣计算、风控拦截 |
-| 叠加型 | 无关 | 遍历累加 | 运费减免、优惠叠加 |
-| 精准路由型 | 无关 | Map.get(type) | 多租户策略、支付渠道路由 |
-
-**互斥型**：`@Order(1)` / `@Order(2)` 控制优先级，命中第一个即返回。
-
-**叠加型**：所有满足条件的 Policy 都生效，结果累加，顺序无关。
-
-**精准路由型**：每个 Policy 声明业务标识（`getType()`），主流程 List 转 Map，O(1) 命中。
+互斥型（命中第一个即返回）/ 叠加型（遍历累加）/ 精准路由型（Map.get 命中）——形态对照表与每种形态的完整代码 → [cookbook/policy-pattern.md「三种组合形态」](../cookbook/policy-pattern.md)（canonical）。
 
 ### 异常策略
 
-> **决定**：Domain 层不定义具名领域异常（如 `InsufficientStockException`），
-> 统一使用 `BusinessException` + i18n 错误码。
->
-> **原因**：
-> 1. 前端对接需要统一的错误码体系（`"product:err.insufficientStock"`），具名异常仍需转换为错误码，多一层间接
-> 2. 具名异常会导致类爆炸（每个错误场景一个类），维护成本高
-> 3. 显式 `if + throw new BusinessException(key)` 已足够表达领域层内的业务规则校验
-> 4. i18n 错误码天然支持多语言前端展示，无需额外映射
->
-> **用法**：
-> ```java
-> if (status != OrderStatus.PENDING) {
->     throw new BusinessException("order:err.invalidTransition");
-> }
-> if (stock < quantity) {
->     throw new BusinessException("product:err.insufficientStock");
-> }
-> ```
->
-> 因此 Domain 层目录中**不设 `exception/` 包**。
+**决定**：Domain 层不定义具名领域异常（如 `InsufficientStockException`），统一使用 `BusinessException` + i18n 错误码（`"{aggregate}:err.{场景}"`）；Domain 层目录中**不设 `exception/` 包**。
+
+> 未采纳原因账本 → [docs/references.md](../../references.md)「具名领域异常」行；聚合根内 if-throw 完整示例 → [docs/common/common-ddd.md](../../common/common-ddd.md) 场景 1。
 
 ### 为什么不按类型分包（entity/ + vo/ + service/）？
 
@@ -175,7 +148,7 @@ domain/
 
 | 允许 | 禁止 |
 |------|------|
-| 使用 common-ddd 构建块 | 引入 Spring / MyBatis / 任何框架注解 |
+| 使用 common-ddd 构建块 | 引入框架**运行时**依赖（DI 容器 / AOP / 持久化 API 等）——唯一例外 `org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`），ArchUnit A2 白名单守护 |
 | 聚合根内封装业务规则 | 暴露 setter 或 public 字段 |
 | Repository 定义为接口 | 在 Domain 层实现 Repository |
 | 跨聚合通过 Repository 读取 | 跨聚合直接修改对方内部状态 |

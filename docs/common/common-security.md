@@ -19,7 +19,7 @@
 ```
 com.yoursweakfoe.common.security
 ├── SecurityAutoConfiguration   # 自动装配（@AutoConfiguration，零信任资源服务器链）
-├── SecurityProperties          # 配置属性（ywf.security.roles-claim）
+├── SecurityProperties          # 配置属性（ywf.security.*：enabled / roles-claim / authority-prefix）
 ├── context/                    # 安全上下文
 │   └── SecurityUtil            # 按名字读取当前 JWT claim
 └── jwt/                        # 验签可插拔
@@ -32,7 +32,7 @@ com.yoursweakfoe.common.security
 客户端 → 认证服务（签发 JWT）
        → Higress 网关（PEP：转发 JWT，不注入身份 Header）
        → 服务（BearerTokenAuthenticationFilter + JwtDecoder 自验签 → Jwt）
-       └ 东西向 → Feign（RequestInterceptor 透传同一 JWT）→ 下游服务自验签
+       └ 东西向 → HTTP（一期 RestClient 直连；Feign 经 common-cloud opt-in，RequestInterceptor 自动透传同一 JWT）→ 下游服务自验签
 ```
 
 ### 身份模型：不投影，原生 Jwt
@@ -79,9 +79,9 @@ JwtDecoder jwtDecoder() {
 
 | Bean | 条件 | 说明 |
 |------|------|------|
-| `JwtAuthenticationConverter` | 无条件 | 角色 claim（名可配置）→ `ROLE_*` 权限，principal 保持原生 `Jwt` |
-| 资源服务器 `SecurityFilterChain` | Servlet Web 应用 + 无自定义链 | `oauth2ResourceServer().jwt()` + CSRF 关闭 + 无状态 + permit-all |
-| `@EnableMethodSecurity` | 无条件 | 启用 `@PreAuthorize` / `@Secured` |
+| `JwtAuthenticationConverter` | `@ConditionalOnMissingBean` | 角色 claim（名与权限前缀可配）→ `ROLE_*` 权限，principal 保持原生 `Jwt`；消费方自定义 Bean 则框架退位 |
+| 资源服务器 `SecurityFilterChain` | `@ConditionalOnMissingBean(SecurityFilterChain)` | `oauth2ResourceServer().jwt()` + CSRF 关闭 + 无状态 + permit-all |
+| `@EnableWebSecurity` / `@EnableMethodSecurity` | 随配置类 `ywf.security.enabled` 门控（缺省启用） | 启用 `@PreAuthorize` / `@Secured`；`enabled=false` 时整类不激活 |
 
 ## 3. 使用方式
 
@@ -132,13 +132,11 @@ ywf:
 ### 场景 1：获取当前用户身份（字段自取）
 
 ```java
-// Controller：注入原生 Jwt
-@GetMapping("/orders/{id}")
-OrderCO get(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
-    return orderAppService.getOrder(id, jwt == null ? null : jwt.getSubject());
-}
+// 契约接口（真实 OrderController）：身份不进方法签名——principal 由安全链承载，Controller 纯透传
+@GetMapping("/orders/{orderId}")
+OrderCO getOrder(@PathVariable("orderId") UUID orderId);
 
-// Application / Adapter 层：SecurityUtil 按名字自取
+// Application / Adapter 层：SecurityUtil 按名字自取（domain 层禁止——R6 领域不感知认证上下文）
 String userId = SecurityUtil.getString("uid");   // 或 "sub" / "user_id" / 任意你们的名字
 Order order = new Order(command, userId);        // 审计字段、数据归属
 ```
@@ -192,11 +190,9 @@ common-security → spring-boot-starter-security
 
 ## 6. 设计决策
 
-### ADR-0001 网关验签 + 服务信任 Header
+### ADR-0001 Header 透传身份（网关验签 + 服务信任 Header）
 
-- 状态：superseded by ADR-0005
-
-**废弃原因**：零信任下违反「不信任网络、每跳验证」，Header 可伪造。
+- 状态：已废弃，由 ADR-0005 取代（零信任：不信任网络、每跳验证）。
 
 ### ADR-0003 边界 permit-all SecurityFilterChain
 

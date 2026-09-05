@@ -42,6 +42,8 @@ Adapter 层入口同样以**空标记**定型角色：
 
 - `RestAdapter`（`common-ddd/adapter/rest/controller/`）—— REST 入口适配器标记。业务 `XxxControllerImpl` 在实现 contract 的 `XxxController` 契约接口之外再实现之（contract 接口承载 HTTP 面，标记声明「adapter 层 REST 入口」身份，供 ArchUnit 识别）。不命名 `Controller`：与 contract 契约接口及 Spring `@Controller` 过宽/易混淆。同类标记还有 `ScheduledAdapter`（`adapter/task/scheduler/`，定时任务入口），二者构成「协议伞 / 角色」两级式的对称包结构
 
+application 层读端口同样以空标记定型：`QueryRepository`（`common-ddd/application/repository/application/`）—— 与 domain 层写侧 `Repository`（聚合生命周期五方法契约）对偶，读端口绕过聚合做 PO → 读 DTO 投影、方法签名自由（条件字段业务专属），标记身份供 ArchUnit 识别（R1b 读端口白名单锚点、R13 读写隔离）。
+
 ### 对象转换
 
 | 接口 | 层 | 方向 |
@@ -232,18 +234,17 @@ repository.removeDomainByIds(List.of(id1, id2));       // 按 ID 批量删除（
 ### 场景 4：PageResult 分页链路（读侧，绕过 domain）
 
 ```java
-// application 层：读端口返回读 DTO（PO → DTO 直接投影，不经过 domain）
-public interface OrderQueryRepository {
-    PageResult<OrderViewDTO> findPage(String status, String customerId, int pageNum, int pageSize);
+// application 层：读端口 extends QueryRepository 空标记，返回读 DTO（PO → DTO 直接投影，不经过 domain）
+public interface OrderQueryRepository extends QueryRepository {
+    PageResult<OrderViewDTO> findPage(GetOrderPageQuery query);
 }
 
-// application 层：Handler 直接取读 DTO
+// application 层：Handler 整体传入 Query 对象——分页参数由实现侧经 safePageNum()/safePageSize() 统一钳制
 @Component
 public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, PageResult<OrderViewDTO>> {
     @Override
     public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
-        return orderQueryRepository.findPage(
-                query.status(), query.customerId(), query.pageNum(), query.pageSize());
+        return orderQueryRepository.findPage(query);
     }
 }
 ```
@@ -268,7 +269,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 
 ## 5. 设计原则
 
-- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`ApplicationDTO`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`ScheduledAdapter`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` 属契约层（分页信封是消费方可见的契约类型）→ 放 `common-contract/dto/query`。
+- **对偶原则（包结构镜像）**：框架支撑类的包层级与业务使用它的层级对齐——业务在 domain 层用（`AggregateRoot`、`Repository`、`DomainService`）→ 放 `common-ddd/domain`；业务在 application 层用（`QueryHandler`、`BasicAssembler`、`ApplicationService`、`ApplicationDTO`）→ 放 `common-ddd/application`；业务在 adapter 层用（`RestAdapter`、`ScheduledAdapter`）→ 放 `common-ddd/adapter`；业务在 infrastructure 层用（`MybatisPersistence`、`BasicConverter`）→ 放 `common-ddd/infrastructure`。`PageResult`/`PageableQuery` → 放 `common-contract/dto/query`（契约层定位论证见 §2）。
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
@@ -276,6 +277,8 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 - **`@ConditionalOnMissingBean`**：`Clock` 等平台级 Bean 允许业务项目定义自己的 Bean 覆盖，框架配置整体退位
 
 ## 6. 设计决策
+
+> 编号注记：ADR-0003（领域事件自动发布）已废弃移除（2026-09 事件留白决策），编号空置、不重排。
 
 ### ADR-0001 基类不持有 id/version 字段
 
@@ -323,36 +326,17 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 
 ### ADR-0006 时间统一 OffsetDateTime + 统一注入 Clock
 
-- 状态：accepted（2026-09 补录，经一手源码调研论证）
+- 状态：accepted（2026-09 补录，论证经 pgjdbc / MyBatis / 业界 ORM 一手对照调研）
 
-**背景**：时间类型贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误是系统性风险（数据漂移、排序错乱、去重漏判）。技术栈为 PostgreSQL `timestamptz` + pgjdbc + MyBatis + Jackson。需以一手证据锁定唯一时间类型与唯一时间源。
+**决策**：全框架统一 `java.time.OffsetDateTime`，唯一时间源 = 框架级 `Clock` Bean（`ClockAutoConfiguration` 缺省 `Clock.systemUTC()`，`@ConditionalOnMissingBean` 类级退位，业务测试以 `Clock.fixed(instant, ZoneOffset.UTC)` 覆盖）。时间类型贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误是系统性风险，故收敛为一型一源。
 
-**决策**：全框架统一 `java.time.OffsetDateTime`；框架级 `Clock` Bean 统一注入（`ClockAutoConfiguration` 缺省 `Clock.systemUTC()`，类级 `@ConditionalOnMissingBean` 退位，业务测试以 `Clock.fixed(instant, ZoneOffset.UTC)` 覆盖）。
+**关键事实（三条）**：
 
-**论证（类型对照，证据链见各来源）**：
+1. **写入丢弃偏移**：`timestamptz` 被 PG 归一化为绝对瞬时、以 UTC 存储，原始偏移不保留（PG 官方文档 §8.5.3）
+2. **读回恒 +00:00**：pgjdbc 二进制 / 文本路径均恒以 UTC 偏移返回——与会话时区、JVM 时区、传输模式无关；`OffsetDateTime` 亦是 pgjdbc 映射矩阵中 timestamptz 唯一双向原生类型、MyBatis 3.5.0+ 内置原生 TypeHandler、Hibernate 6 / jOOQ / Spring Data JDBC 的同一收敛选择
+3. **禁用 LocalDateTime / ZonedDateTime 的原因**：ZonedDateTime 双向 `PSQLException`（驱动不支持）；LocalDateTime 写入依赖会话时区（值漂移）、读 timestamptz 抛异常；Instant 非原生（仅 `Timestamp` 桥，跨库语义漂移），不作迁移目标
 
-| Java 类型 | pgjdbc 原生绑定 | MyBatis 路径 | timestamptz 往返 | 判定 |
-|---|---|---|---|---|
-| **OffsetDateTime** | ✔ 官方矩阵中 timestamptz 的**唯一**双向原生类型 | ✔ 原生 `setObject`/`getObject`（MyBatis 3.5.0+） | 瞬时恒对；读回偏移恒 +00:00 | **采纳** |
-| Instant | ✘ 驱动从未支持（2023 年 PR #2943 被维护者关闭未合并） | ⚠ 恒走 `java.sql.Timestamp` 桥 | 瞬时碰巧正确，非原生、跨库语义漂移 | 不作迁移目标 |
-| ZonedDateTime | ✘ 双向抛 `PSQLException` | ✘ 原生调用必炸 | — | **禁用** |
-| LocalDateTime | 仅 `timestamp`（无时区）列 | ✔ 原生 | 写依赖会话时区（值漂移）；读 timestamptz 抛异常 | **禁止映射 timestamptz** |
-
-**关键事实**：
-
-1. **偏移往返语义**：写入时偏移被丢弃（PG 归一化为绝对瞬时、以 UTC 存储，原始偏移不保留——PG 官方文档 §8.5.3）；读回时驱动**恒定返回 +00:00**（二进制路径硬编码 `OffsetDateTime.ofInstant(instant, ZoneOffset.UTC)`，文本路径同样归一）——与会话时区、JVM 时区、传输模式全部无关。`timestamptz` + `OffsetDateTime` 的实质是「带类型纪律的绝对瞬时」
-2. **MyBatis 路径**：`OffsetDateTime` 走 MyBatis 原生 `TypeHandler`（3.5.0+ 内置），无自定义时间 handler，绑定即 JDBC `setObject` / 读取即 `getObject`
-3. **业界收敛**：Hibernate 6 / jOOQ 默认 / Spring Data JDBC 均把 timestamptz 映射为 OffsetDateTime；jOOQ 虽增设 `SQLDataType.INSTANT`，作者原话 "For all practical purposes, Instant and OffsetDateTime are the same data type"
-4. **现代性核查**：Java 8→25 无新时间类型（Java 23 仅增 `Instant.until`）；ThreeTen-Extra 定位是 complement（补充）非替代；Joda-Time 官方宣告 finished 并建议迁移 java.time；JDK 25 javadoc 对 OffsetDateTime 的定位即 "communicating to a database"
-5. **Clock 同构论证**：`OffsetDateTime.now(systemUTC())` 产出偏移 `Z`，与 pgjdbc 读回的 `+00:00` **equals 相等**——写读往返断言稳定；`systemDefaultZone()` 则使每个非 UTC 主机制造「同瞬时不等值」地雷。JDK `Clock` javadoc 原文背书：`systemDefaultZone()` "hard codes a dependency to the default time-zone... recommended to avoid"；DI 注入 Clock 即官方推荐实践
-
-**配套规则**：
-
-1. **比较语义**：表达「同一瞬时」一律 `isEqual()` / `OffsetDateTime.timeLineOrder()`；`equals()` 仅作同 UTC 源值的往返断言（`equals` 要求偏移亦相等——JSR-310 著名陷阱，本框架 UTC 统一后在写读回路上被结构性消除）
-2. **精度**：PG 分辨率 1µs，pgjdbc 对 >499ns 执行 `+1µs` 舍入——Java 纳秒精度必然丢失；内存值与 DB 回显值比较时注意
-3. **展示层禁用 `getString()` 取时间**：`prepareThreshold`（默认 5）后结果集从文本切二进制，显示格式前后不一致，且按 JVM 客户端时区渲染
-4. **纵深防御**：容器统一 `TZ=UTC`，消除 `java.sql.Timestamp` 桥路径与日志格式的宿主时区残余泄漏
-5. **value-based class**：禁止对 `OffsetDateTime` 实例加锁（与虚拟线程规则同向）
+**配套规则**：表达「同一瞬时」一律 `isEqual()`（`equals` 要求偏移亦相等，写读恒 UTC 后被结构性消除）；PG 分辨率 1µs，Java 纳秒精度落库必丢失，内存值与 DB 回显比较时注意；展示层禁用 `getString()` 取时间（`prepareThreshold` 后文本 / 二进制切换致显示格式不一致）；容器统一 `TZ=UTC` 纵深防御；禁止对 `OffsetDateTime` 实例加锁（value-based，与虚拟线程规则同向）。
 
 **确认**：`ClockAutoConfiguration`（`systemUTC` 缺省）、`AuditFieldFiller`（`OffsetDateTime.now(clock)` 填充审计字段）、PO 审计列 `createAt`/`updateAt` 均为 `OffsetDateTime`。
 

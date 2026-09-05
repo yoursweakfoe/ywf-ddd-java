@@ -19,7 +19,7 @@
 | Assembler | — | Application 层组件，Domain → DTO 转换。由 Handler 调用 |
 | Presenter | — | Application 层组件，DTO → CO 转换。由 AppService 调用 |
 | Handler | — | 用例执行单元。CommandHandler（写）或 QueryHandler（读），与 CQE 1:1 对应 |
-| AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter。实现 `ApplicationService` 标记接口（common-ddd，位于 `application/{agg}/service/`） |
+| AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter，实现类位于服务侧 `application/{agg}/service/`；实现 common-ddd 的 `ApplicationService` 标记接口 |
 | DTO | — | Application 层内部视图对象（`application/{agg}/dto/`），写侧/读侧均实现 `ApplicationDTO` 标记接口（common-ddd），与 contract 层 `CO` 标记对偶（内部可含 version/审计，对外经 Presenter 清洗） |
 | Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口与 `RestAdapter` 标记接口（common-ddd），spring-web 注解声明 REST 路径，纯透传 AppService |
 | RestAdapter | — | common-ddd 空标记接口，定型「REST 入口适配器」角色（Ports & Adapters 的 driving adapter），供 ArchUnit R8a/R8b 识别与约束 |

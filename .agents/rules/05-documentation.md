@@ -22,6 +22,8 @@
 | 项目术语表 | `docs/glossary.md` |
 | Agent 规则（本目录） | `.agents/` |
 
+**索引唯一化**：`docs/README.md` 是全仓唯一文档总索引。新增/迁移/重命名文档**仅登记 `docs/README.md` 一处**；根 `README.md`、`AGENTS.md` 等入口只放指针，不再各自维护文档树/清单。
+
 ## cookbook 文档规范
 
 - 每篇 cookbook 文档**必须**以"业务场景"节开头（交代为什么需要这个模式）

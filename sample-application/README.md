@@ -60,6 +60,8 @@ mvn clean test
 docker compose up -d
 ```
 
+> **测试编写指引**（分层测试策略、ArchUnit 执行、fixtures 与 H2 约定）统一见 [`.agents/skills/new-test/SKILL.md`](../.agents/skills/new-test/SKILL.md)。
+
 ## 目录结构
 
 ```

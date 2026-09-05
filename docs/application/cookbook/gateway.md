@@ -35,13 +35,14 @@ Infrastructure 层实现（Gateway）
 // domain/order/portal/PaymentPortal.java
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.portal;
 
+import com.yoursweakfoe.common.ddd.domain.portal.Portal;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
  * 支付能力门户 —— Domain 层定义"我需要什么"，不关心"谁提供、怎么调"。
  */
-public interface PaymentPortal {
+public interface PaymentPortal extends Portal {
 
     PaymentResult pay(UUID orderId, BigDecimal amount, String currency);
 }
@@ -62,9 +63,9 @@ public record PaymentResult(
 ```
 
 要点：
-- 接口以 `Portal` 结尾，定义在 `domain/{aggregate}/portal/`
+- 接口以 `Portal` 结尾、`extends Portal`（common-ddd 空标记接口，标记「外部能力抽象」身份），定义在 `domain/{aggregate}/portal/`
 - 参数和返回值**全部是领域语言**（不引入 Alipay SDK 类型）
-- Domain 层零框架依赖
+- Domain 层零框架依赖（common-ddd 的纯标记接口除外）
 
 ## 2. Infrastructure — Gateway 实现
 
@@ -120,13 +121,20 @@ public class AlipayPaymentGateway implements PaymentPortal {
 
 ## 3. 使用方（Handler 或 Domain Service）
 
+> **变体：事务内调用 Portal（示意，示例工程未落地）**——示例应用的真实 `PayOrderHandler`
+> 只做 `findById → pay() → update → toDTO`，未注入任何 Portal；本节展示「若接入第三方扣款」
+> 时的正确挂接形态（依赖 Domain 接口而非 Gateway 实现，事务边界仍在 Handler）。
+
 ```java
-// application/order/handler/PayOrderHandler.java（节选）
+// application/order/handler/command/PayOrderHandler.java（节选 · 变体示意）
 @Component
 public class PayOrderHandler implements CommandHandler<PayOrderCommand, OrderDTO> {
 
     private final OrderRepository orderRepository;
+    private final OrderAssembler orderAssembler;
     private final PaymentPortal paymentPortal;  // 依赖 Domain 层接口，不依赖 Gateway 实现
+
+    // 构造器注入（省略）
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -158,13 +166,7 @@ public class PayOrderHandler implements CommandHandler<PayOrderCommand, OrderDTO
 
 ## Repository vs Gateway 对比
 
-| | Repository → persistence | Portal → gateway |
-|---|---|---|
-| Domain 接口 | `domain/{agg}/repository/` | `domain/{agg}/portal/` |
-| Infra 实现 | `infrastructure/persistence/` | `infrastructure/gateway/` |
-| 操作对象 | 聚合的持久化（DB） | 外部资源（OSS/RPC/MQ/ES/第三方 API） |
-| 语义 | "存取我的世界" | "打开传送门，获取外部能力" |
-| 翻译 | Converter（PO ↔ Domain） | ACL（外部模型 → 领域模型） |
+Repository → persistence 与 Portal → gateway 是「Domain 定义接口、Infra 实现」的对偶结构，两者的接口/实现包路径、操作对象、语义与翻译方式对照表 canonical 收录于 [module-design/infrastructure.md](../module-design/infrastructure.md)（persistence / gateway 章节），本文不复制；Portal/Gateway 的**代码模板**（接口定义、Gateway 实现、ACL 翻译、命名对偶）canonical 在本文。
 
 ## 完整文件清单
 

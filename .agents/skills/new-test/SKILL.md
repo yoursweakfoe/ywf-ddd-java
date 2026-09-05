@@ -15,7 +15,7 @@ description: 为已有聚合、Handler、Domain 模型或基础设施组件编�
 
 ### A. Handler 单元测试（Mockito）
 
-位置：`src/test/java/.../application/{agg}/handler/{Action}{Agg}HandlerTest.java`
+位置：`src/test/java/.../application/{agg}/handler/command/{Action}{Agg}HandlerTest.java`（读侧 Handler 测试对应位于 `handler/query/`，与被测类包路径镜像）
 
 ```java
 @ExtendWith(MockitoExtension.class)
@@ -28,12 +28,17 @@ class PayOrderHandlerTest {
     @InjectMocks
     private PayOrderHandler handler;
 
+    /** 造数入口：惰性重建任意状态（业务构造器已收私有，新建路径归 OrderFactory，见下方 Fixture 模式） */
+    private Order createPendingOrder() {
+        return TestOrders.rebuilt(OrderStatus.PENDING);
+    }
+
     @Test
     void handle_shouldTransitionToPaid() {
         // Given
-        Order order = new Order(UUID.randomUUID(), List.of(item), "customer-1");
+        Order order = createPendingOrder();
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
-        when(orderAssembler.toDTO(any())).thenReturn(new OrderDTO());
+        when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
         // When
         OrderDTO result = handler.handle(new PayOrderCommand(order.getId()));
@@ -60,16 +65,24 @@ class PayOrderHandlerTest {
 ```java
 class OrderTest {
 
+    private static final OrderItem ITEM = new OrderItem(UUID.randomUUID(), 2, BigDecimal.TEN);
+
+    /** 行为测试入口：惰性重建 PENDING（reconstitute 不过状态机；新建路径经 OrderFactory「创建即合法」单独测） */
+    private Order createPendingOrder() {
+        return Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING, List.of(ITEM),
+                ITEM.subtotal(), "customer-1", null, null, null, null, 0);
+    }
+
     @Test
     void pay_shouldTransitionFromPendingToPaid() {
-        Order order = new Order(UUID.randomUUID(), List.of(item), "customer-1");
+        Order order = createPendingOrder();
         order.pay();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
     }
 
     @Test
     void pay_shouldThrowWhenNotPending() {
-        Order order = new Order(UUID.randomUUID(), List.of(item), "customer-1");
+        Order order = createPendingOrder();
         order.pay();  // PENDING → PAID
 
         assertThatThrownBy(order::pay)
@@ -78,9 +91,10 @@ class OrderTest {
 
     @Test
     void validate_shouldThrowWhenItemsEmpty() {
-        Order order = new Order(UUID.randomUUID(), List.of(), "customer-1");
+        Order bad = Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING, List.of(),
+                BigDecimal.ZERO, "customer-1", null, null, null, null, 0);
 
-        assertThatThrownBy(order::validate)
+        assertThatThrownBy(bad::validate)
                 .isInstanceOf(BusinessException.class);
     }
 }
@@ -137,9 +151,10 @@ class OrderFlowIntegrationTest {
 
 ## Fixture 模式
 
-- 复用测试夹具工厂：参照 `common-ddd/src/test/.../fixtures/OrderFixtures.java`
-- 每个测试模块可建立 `fixtures/` 包存放共享测试数据
-- Fixture 方法命名：`create{Agg}()` / `build{Agg}PO()`
+- 复用测试夹具工厂：参照 `common-ddd/src/test/.../fixtures/OrderFixtures.java`；sample 侧造数工具参照 `.../sampleservice/support/TestOrders.java`
+- 每个测试模块可建立 `fixtures/` / `support/` 包存放共享测试数据
+- Fixture 方法命名：`create{Agg}()` / `create{Agg}PO()`（+ `WithStatus` 变体；惰性重建用 `rebuilt(...)`，工厂新建用 `placed()` 类语义命名）
+- 聚合业务构造器收私有后，测试**必须**经 Factory / `reconstitute()` 两条合法路径造数，禁止反射绕过
 
 ## 命名规范
 

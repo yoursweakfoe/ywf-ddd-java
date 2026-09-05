@@ -38,7 +38,7 @@
 | `MethodArgumentTypeMismatchException` | 400 | Bad Request |
 | 其他未捕获异常 | 500 | Internal Server Error |
 
-> `MethodArgumentTypeMismatchException`：路径变量 / 请求参数类型转换失败（如非法 UUID、错误枚举名）。不处理时会落入兜底 500——客户端传参错误必须返回 400，detail 格式为 `Parameter '{参数名}' has invalid value '{非法值}'`。
+> `MethodArgumentTypeMismatchException`：路径变量 / 请求参数类型转换失败（如非法 UUID、错误枚举名）。不处理时会落入兜底 500——客户端传参错误必须返回 400，detail 仅回显参数名与期望类型（`Parameter '{参数名}' must be of type {期望类型}`），不回显客户端原始值。
 
 响应格式（Content-Type: `application/problem+json`）：
 
@@ -132,17 +132,17 @@ common-exception → spring-boot-autoconfigure（AutoConfiguration）
 
 **决策**：采用 RFC 9457（`application/problem+json`），`type` 当前为 `about:blank`，待错误类型文档化后替换为绝对 URI；`params`/`fieldErrors` 为合规扩展字段。
 
-**确认**：`GlobalRestExceptionHandler` 返回 `Map<String, Object>`（`LinkedHashMap` 精确控制字段顺序），而非 Spring `ProblemDetail`。理由：① `params`/`fieldErrors` 为动态扩展字段，`Map` 直接 `put` 序列化最直观，`ProblemDetail` 需经 `setProperty` 间接承载、且序列化顺序不受控；② 响应体本身完全符合 RFC 9457 字段语义（`type`/`title`/`status`/`detail`/`instance` + 扩展成员），不引入 `ProblemDetail` 类型并未损失标准性；③ 保持 handler 返回值轻量（`Map`），避免为格式化引入额外抽象。
+**确认**：`GlobalRestExceptionHandler` 响应载体为 Spring 内建 `ProblemDetail`（`ResponseEntity<ProblemDetail>`，RFC 9457 标准成员 `type`/`title`/`status`/`detail`/`instance`），`params`/`fieldErrors` 经 `ProblemDetail` 扩展属性位（`setProperty`）注入为合规扩展成员（RFC 9457 §3.2），Content-Type 显式声明 `application/problem+json`。技术类异常的 detail 为稳定泛化文案（原始消息只进服务端日志，防内部信息外泄）。
 
 ### ADR-0003 IllegalStateException → 409
 
 - 状态：accepted
 
-**背景**：乐观锁冲突、状态机非法转换如何映射。
+**背景**：乐观锁版本冲突（UPDATE 影响行数 0 且实体仍在）如何映射 HTTP 状态。
 
-**决策**：统一映射 `IllegalStateException` → 409 Conflict。
+**决策**：`IllegalStateException` → 409 Conflict——409 通道即为乐观锁冲突预留（`OptimisticLockConflictException` 继承自它，「实体消失」的普通 ISE 同走此通道）；状态机非法转换属业务规则违反，聚合根抛 `BusinessException` 走缺省 422，不占用 409。
 
-**确认**：`GlobalRestExceptionHandler` 处理 `IllegalStateException` 返回 409。
+**确认**：`GlobalRestExceptionHandler` 处理 `IllegalStateException` 返回 409；sample 聚合状态守卫（如 `Order.pay()`）抛 `BusinessException`（`order:err.*`）→ 422。
 
 ## 7. 职责边界与技术债
 

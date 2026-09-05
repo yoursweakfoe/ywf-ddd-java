@@ -26,7 +26,7 @@
 | Controller | `XxxControllerImpl` | 实现 contract 的 Controller 契约接口（路径/语义/签名在接口声明），`@RestController` 标记协议，纯透传 AppService |
 | Scheduler | `XxxScheduler` | 定时任务入口 → 透传 AppService（实现 `ScheduledAdapter` 标记，规则 R14a/R14b；模板见 [cookbook/scheduled-task.md](../cookbook/scheduled-task.md)） |
 
-→ 完整代码见 [cookbook/write-path.md](../cookbook/write-path.md)#3-adapter纯透传
+→ 完整代码见 [cookbook/write-path.md §2 Adapter（Controller 契约接口 + 实现，纯透传）](../cookbook/write-path.md)
 
 ## 协作关系
 

@@ -84,18 +84,18 @@ public void deductStock(int quantity) {
 
 ```java
 // common-exception 模块（框架代码，业务服务无需编写）
-// GlobalRestExceptionHandler 通过 ExceptionAutoConfiguration 自动注册，引入 common-cloud 即生效
+// GlobalRestExceptionHandler 由 common-exception 自带的 ExceptionAutoConfiguration
+// （META-INF/spring/…AutoConfiguration.imports）注册——引入 common-exception（sample 直接依赖）
+// 即在 Servlet Web 环境生效，与 common-cloud 无关
 ```
 
 ### 异常类型 → HTTP 状态码映射
 
-| 异常类型 | HTTP 状态码 | title | 触发场景 |
-|---------|:-----------:|-------|---------|
-| `BusinessException` | 422 | Business Error | 业务规则违反 |
-| `ConstraintViolationException` | 400 | Validation Failed | 参数校验失败（@Valid） |
-| `IllegalStateException` | 409 | Conflict | 乐观锁冲突、状态机非法转换 |
-| `IllegalArgumentException` | 400 | Bad Request | 非法参数 |
-| 其他未捕获异常 | 500 | Internal Server Error | 系统错误 |
+完整映射表（BusinessException / 校验族 / IllegalStateException / 类型转换 / 其他未捕获异常等全部行）canonical 见 [docs/common/common-exception.md](../../common/common-exception.md) §2，本文不复制。核心三条，与上文传播链一致：
+
+- `BusinessException`（含状态机守卫失败等**领域规则违反**）→ 缺省 **422**（异常可显式携带其他状态码），`detail` = i18n messageKey
+- `IllegalStateException`（乐观锁冲突 `OptimisticLockConflictException` 即属此类）→ **409**
+- 参数校验 / 绑定 / 类型转换失败（`@Valid` 族）→ **400**
 
 ## 4. 前端收到的 HTTP 响应
 
@@ -140,10 +140,12 @@ Content-Type: application/problem+json
   "type": "about:blank",
   "title": "Conflict",
   "status": 409,
-  "detail": "UPDATE affected 0 rows for entity ID: xxx (optimistic lock version conflict)",
+  "detail": "Conflict",
   "instance": "/api/orders/550e8400-e29b-41d4-a716-446655440000/pay"
 }
 ```
+
+> 技术类异常的 `detail` 为稳定泛化文案（防内部实体 ID / SQL 片段外泄）；原始冲突消息只进服务端日志。识别乐观锁冲突请依赖**异常类型**（`OptimisticLockConflictException`），见 [optimistic-lock-retry.md](optimistic-lock-retry.md)。
 
 ## 5. 前端对接说明
 
@@ -168,6 +170,6 @@ const message = t(detail, params);  // i18next: t("order:err.status.pending")
 | 层 | 文件 | 职责 |
 |----|------|------|
 | domain | `model/Order.java` | 显式 if-throw 产生 BusinessException |
-| application | `handler/PayOrderHandler.java` | 异常向上传播（不 catch） |
+| application | `handler/command/PayOrderHandler.java` | 异常向上传播（不 catch） |
 | framework | `common-exception/GlobalRestExceptionHandler` | SPI 自动翻译为 HTTP 响应 |
 | contract | — | 无（异常不经过 contract） |

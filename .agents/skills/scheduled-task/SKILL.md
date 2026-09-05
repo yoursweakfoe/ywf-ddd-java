@@ -21,8 +21,8 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
    - **禁止**在 Scheduler 内写业务逻辑
 2. **application**：在 `{Agg}AppService` 新增方法
    - 委托对应 Handler
-3. **application**：创建 `application/{agg}/handler/{Action}Handler.java`
-   - 标注 `@Transactional(rollbackFor = Exception.class)`
+3. **application**：创建 `application/{agg}/handler/command/{Action}{Agg}Handler.java`
+   - 标注 `@Transactional(rollbackFor = Exception.class)`（R11）
    - 典型模式：条件查询 → 逐个调用领域行为 → updateDomainBatch
 4. **domain**（如需新查询方法）：在 Repository 接口新增方法签名
 5. **infrastructure**：在 RepositoryImpl 实现条件查询
@@ -30,21 +30,14 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 
 ## 分布式环境注意
 
-| 部署模式 | 策略 |
-|---------|------|
-| 单实例 | 直接 @Scheduled，无需额外处理 |
-| 多实例 | 需分布式锁（ShedLock / Redis SETNX），防止重复执行 |
-| 平台化调度 | XXL-Job / ElasticJob 由调度中心统一触发，天然无重复执行 |
-| 复杂调度 | 考虑 XXL-Job / ElasticJob |
-
-> 框架不内置分布式锁，多实例时由业务自行引入。
+> 选型 canonical → `docs/application/cookbook/scheduled-task.md` §6「调度模式选型与多实例」：自建 `@Scheduled`（单实例直接用；多实例需业务自行引入分布式锁如 ShedLock，框架不内置）vs 平台化调度（XXL-Job / ElasticJob，调度中心统一触发天然无重复）。触发注解按模式可换（`@Scheduled` / `@XxlJob`），`ScheduledAdapter` 标记与 R14a/R14b 对两者一视同仁。
 
 ## 验证
 
 - [ ] Scheduler 位于 `adapter/{agg}/task/scheduler/`
 - [ ] 实现 `ScheduledAdapter` 标记（R14a/R14b 通过）
 - [ ] 纯透传 AppService（无业务判断）
-- [ ] Handler 有 `@Transactional`
+- [ ] Handler 有 `@Transactional`（R11）
 - [ ] 启动类有 `@EnableScheduling`
 - [ ] 日志记录执行开始/结束/处理数量
 - [ ] 编译通过

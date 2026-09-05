@@ -15,28 +15,20 @@
 3. 查询是只读操作，不需要加载聚合根（无行为可调用），直接从 PO 投影 DTO 即可
 4. 返回给前端的是 CO（契约输出），不暴露 version、deleted 等内部字段
 
-**为什么读侧绕过 domain 层？**
+**为什么读侧绕过 domain？（全文教义块）**
 
-CQRS 读写分离：写侧需要聚合根是因为要调用行为方法（`order.pay()`）执行业务规则；读侧不做任何状态变更，只需"把数据查出来给前端看"。因此读侧**完全不经过 domain 层**——不 reconstitute 聚合根、不建领域读模型，直接在基础设施层从 PO 投影 DTO。
+CQRS 读写分离：写侧需要聚合根是因为要调用行为方法（`order.pay()`）执行业务规则；读侧不做任何状态变更，只需"把数据查出来给前端看"。因此读侧**完全不经过 domain 层**——不 reconstitute 聚合根、不建领域读模型、不经 Assembler，由基础设施层实现直接 `PO → 读 DTO` 投影。读端口（`OrderQueryRepository`）定义在 application 层、基础设施层实现之，是「写侧 infrastructure → domain」依赖倒置的读侧镜像「infrastructure → application」。读侧也没有业务判断：需要派生值的字段一律在写侧计算并物化——详见下文 §5「读侧业务判断放哪？」专节。
 
 ```
 REST 请求
   → adapter/rest/controller/OrderControllerImpl（参数包装）
     → application/order/service/OrderAppService（委托 + 呈现）
-  → application/order/handler/GetOrderHandler（查询编排）
+  → application/order/handler/query/GetOrderHandler（查询编排）
     → application/order/repository/application/OrderQueryRepository（读端口）
       → infrastructure/.../repository/application/OrderQueryRepositoryImpl（PO → 读 DTO 直接投影）
       → application/order/presenter/OrderViewPresenter（DTO → CO）
   ← OrderCO
 ```
-
-> **读侧分层关键**：读侧完全绕过 domain 层（不 reconstitute 聚合根、不建领域读模型），
-> 由基础设施层的 `OrderQueryRepositoryImpl` 直接 `PO → 读 DTO` 投影。读端口
-> （`OrderQueryRepository`）定义在 application 层、基础设施层实现之，是「写侧
-> infrastructure → domain」依赖倒置的读侧镜像「infrastructure → application」。
->
-> **读侧没有业务判断**：需要派生值的字段在**写侧**（领域聚合根）计算并物化到 PO 列，
-> 读侧只投影存储值。若某"读"需要现算业务逻辑，那是建模信号——该计算应下沉到写侧物化。
 
 ## 1. Contract — Query 定义
 
@@ -50,9 +42,9 @@ REST 请求
 @Schema(description = "查询订单详情")
 public class GetOrderQuery implements Query, Serializable {
 
-    /** 订单 ID */
+    /** 订单 ID（非法格式由 Web 层类型转换拦截 → 400） */
     @Schema(description = "订单 ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String orderId;
+    private UUID orderId;
 }
 ```
 
@@ -87,9 +79,9 @@ public interface OrderController {
     OrderCO getOrder(@PathVariable("orderId") UUID orderId);
 }
 
-// adapter/rest/controller/OrderControllerImpl.java（实现，仅标记协议 + 透传）
+// adapter/rest/controller/OrderControllerImpl.java（实现，仅标记协议 + 透传；RestAdapter 标记见规则 R8b）
 @RestController
-public class OrderControllerImpl implements OrderController {
+public class OrderControllerImpl implements OrderController, RestAdapter {
 
     private final OrderAppService orderAppService;
 
@@ -122,7 +114,7 @@ public class OrderAppService implements ApplicationService {
 ### 单条查询
 
 ```java
-// application/order/handler/GetOrderHandler.java
+// application/order/handler/query/GetOrderHandler.java
 @Component
 public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderViewDTO> {
 
@@ -145,7 +137,7 @@ public class GetOrderHandler implements QueryHandler<GetOrderQuery, OrderViewDTO
 ### 分页查询
 
 ```java
-// application/order/handler/GetOrderPageHandler.java
+// application/order/handler/query/GetOrderPageHandler.java
 @Component
 public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, PageResult<OrderViewDTO>> {
 
@@ -168,13 +160,13 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 - 实现 `QueryHandler<Q, R>`（common-ddd）
 - 无需 `@Transactional`（只读操作）
 - 分页返回 `PageResult<DTO>`，不返回 CO
-- **读侧完全绕过 domain**：Handler 只依赖读端口 `OrderQueryRepository`，不经 Assembler、不经聚合根
+- Handler 只依赖读端口 `OrderQueryRepository`，不经 Assembler、不经聚合根（教义见顶部教义块）
 
 ## 5. Application — 读端口（Query Port）
 
 ```java
 // application/order/repository/application/OrderQueryRepository.java
-public interface OrderQueryRepository {
+public interface OrderQueryRepository extends QueryRepository {   // 空标记（common-ddd）：读端口身份
 
     /** 按 ID 投影订单读 DTO（不存在返回 empty）。 */
     Optional<OrderViewDTO> findById(UUID id);
@@ -189,9 +181,10 @@ public interface OrderQueryRepository {
 ```
 
 要点：
-- 读端口定义在 **application 层**（不是 domain 层），返回**读 DTO**（应用层类型），不返回领域类型
+- `extends QueryRepository`（common-ddd 空标记）：标记「读端口」身份，供 R1b / R13 架构规则按类型识别；方法签名自由
+- 端口返回**读 DTO**（application 层类型），不返回领域类型
 - `PageResult<T>` 是框架级分页容器（common-contract，与 `PageableQuery` 同居契约层），业务在 application/infrastructure 用它，消费方从契约直接拿到分页元数据
-- 写侧 `OrderRepository`（domain 层）只保留聚合生命周期，读侧完全不经过它
+- 写侧 `OrderRepository`（domain 层）只保留聚合生命周期，读侧不经过它
 
 ### 读侧业务判断放哪？
 
@@ -259,8 +252,7 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 ```
 
 要点：
-- 读实现**不经过 Converter.toDomain()**（不 reconstitute 聚合根），**也不经过领域读模型**
-- 直接 PO → **读 DTO** 轻量投影（订单项 JSON 直接反序列化为应用层 DTO，不经过领域值对象）
+- 读实现**不经 Converter、不 reconstitute 聚合根**（教义见顶部教义块）：直接 PO → **读 DTO** 轻量投影，订单项 JSON 直接反序列化为应用层 DTO（不经过领域值对象）
 - 分页 = Mapper 具名方法 + 手写 XML 双语句（LIMIT/OFFSET 取数 + 同条件 COUNT），`PageResult<T>` 隔离底层分页形态，`map()` 支持链式转换
 
 分页双语句的声明与 SQL 文本（节选自 sample 实际实现）：
@@ -317,11 +309,11 @@ long countByCondition(@Param("status") String status,
 | contract | `dto/query/GetOrderQuery.java` | 单条查询 |
 | contract | `dto/query/GetOrderPageQuery.java` | 分页查询 |
 | contract | `dto/co/OrderCO.java` | 契约输出 |
-| adapter | `rest/OrderControllerImpl.java` | 协议适配 |
+| adapter | `rest/controller/OrderControllerImpl.java` | 协议适配 |
 | application | `service/OrderAppService.java` | 聚合入口 |
-| application | `handler/GetOrderHandler.java` | 单条查询编排 |
-| application | `handler/GetOrderPageHandler.java` | 分页查询编排 |
-| application | `repository/OrderQueryRepository.java` | 读端口（返回读 DTO） |
+| application | `handler/query/GetOrderHandler.java` | 单条查询编排 |
+| application | `handler/query/GetOrderPageHandler.java` | 分页查询编排 |
+| application | `repository/application/OrderQueryRepository.java` | 读端口（返回读 DTO） |
 | application | `presenter/OrderViewPresenter.java` | 读 DTO → CO |
 | infrastructure | `repository/application/OrderQueryRepositoryImpl.java` | 读实现（PO → 读 DTO 投影） |
 | resources | `mapper/order/OrderMapper.xml` | 分页双语句 + 动态条件（LIMIT/OFFSET + COUNT） |

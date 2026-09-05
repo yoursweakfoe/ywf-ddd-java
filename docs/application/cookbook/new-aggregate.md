@@ -15,7 +15,7 @@
 3. 支付与订单是多对一关系（一个订单可能多次支付尝试）
 4. 未来支付可能拆分为独立微服务
 
-因此将支付从 Order 聚合中拆出，建立独立的 Payment 聚合。本文列出从 contract 到 infrastructure 的 **19 个文件**完整模板。
+因此将支付从 Order 聚合中拆出，建立独立的 Payment 聚合。本文列出从 contract 到 infrastructure 的 **21 个文件**完整模板。
 
 ## 文件清单总览
 
@@ -25,8 +25,8 @@ sample-service/
 │   └── payment/
 │       ├── adapter/rest/PaymentController.java     ← ① Controller 契约接口
 │       ├── dto/co/PaymentCO.java                    ← ② 契约输出
-│       ├── dto/command/CreatePaymentCommand.java        ← ③ Command
-│       └── dto/query/GetPaymentQuery.java             ← ④ Query
+│       ├── dto/command/CreatePaymentCommand.java    ← ③ Command
+│       └── dto/query/GetPaymentQuery.java           ← ④ Query
 │
 └── sample-service-server/src/main/java/.../
     ├── adapter/rest/controller/
@@ -36,18 +36,20 @@ sample-service/
     │   ├── dto/PaymentDTO.java                  ← ⑦ 内部 DTO
     │   ├── assembler/PaymentAssembler.java      ← ⑧ Assembler
     │   ├── presenter/PaymentPresenter.java      ← ⑨ Presenter
-    │   └── handler/
-    │       ├── CreatePaymentHandler.java        ← ⑩ CommandHandler
-    │       └── GetPaymentHandler.java           ← ⑪ QueryHandler
+    │   ├── handler/
+    │   │   ├── command/CreatePaymentHandler.java ← ⑩ CommandHandler
+    │   │   └── query/GetPaymentHandler.java      ← ⑪ QueryHandler
+    │   └── repository/application/PaymentQueryRepository.java ← ⑳ 读端口（extends QueryRepository）
     ├── domain/payment/
     │   ├── model/Payment.java                   ← ⑫ 聚合根
     │   ├── model/PaymentStatus.java             ← ⑬ 枚举
     │   └── repository/domain/PaymentRepository.java ← ⑭ Repository 接口（写侧）
     └── infrastructure/persistence/master/payment/
         ├── mybatis/po/PaymentPO.java              ← ⑮ PO（纯 POJO，零 ORM 注解）
-        ├── mybatis/mapper/PaymentMapper.java      ← ⑰ Mapper（extends DddMapper）
         ├── converter/PaymentConverter.java        ← ⑯ Converter（框架 BasicConverter 桥）
-        └── repository/domain/PaymentRepositoryImpl.java ← ⑱ RepositoryImpl（继承 MybatisPersistence）
+        ├── mybatis/mapper/PaymentMapper.java      ← ⑰ Mapper（extends DddMapper）
+        ├── repository/domain/PaymentRepositoryImpl.java ← ⑱ RepositoryImpl（继承 MybatisPersistence）
+        └── repository/application/PaymentQueryRepositoryImpl.java ← ㉑ 读实现（PO → DTO 直投）
 
 sample-service-server/src/main/resources/
 └── mapper/payment/PaymentMapper.xml               ← ⑲ 手写 SQL（DddMapper 七条语句契约）
@@ -68,7 +70,7 @@ public interface PaymentController {
 
     @Operation(summary = "查询支付详情", description = "根据 ID 获取支付信息")
     @GetMapping("/{paymentId}")
-    PaymentCO getPayment(@PathVariable("paymentId") String paymentId);
+    PaymentCO getPayment(@PathVariable("paymentId") UUID paymentId);
 }
 ```
 
@@ -81,14 +83,14 @@ public interface PaymentController {
 
 | 类 | 标记接口 | 用途 |
 |----|---------|------|
-| `PaymentCO` | 无（纯输出） | 契约输出，仅含消费方需要的字段 |
+| `PaymentCO` | `CO` | 契约输出，仅含消费方需要的字段 |
 | `CreatePaymentCommand` | `Command` | 写操作入参 |
 | `GetPaymentQuery` | `Query` | 读操作入参 |
 
 ```java
 // CO 示例
 @Data @NoArgsConstructor @AllArgsConstructor
-public class PaymentCO implements Serializable {
+public class PaymentCO implements CO, Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
     private String id;
@@ -113,7 +115,7 @@ public class CreatePaymentCommand implements Command, Serializable {
 // 注意：实现类需追加实现 ScheduledAdapter 同族的 RestAdapter 标记
 // （com.yoursweakfoe.common.ddd.adapter.rest.controller.RestAdapter，规则 R8a/R8b）
 @RestController
-public class PaymentControllerImpl implements PaymentController {
+public class PaymentControllerImpl implements PaymentController, RestAdapter {
 
     private final PaymentAppService paymentAppService;
 
@@ -127,7 +129,7 @@ public class PaymentControllerImpl implements PaymentController {
     }
 
     @Override
-    public PaymentCO getPayment(String paymentId) {
+    public PaymentCO getPayment(UUID paymentId) {
         return paymentAppService.getPayment(new GetPaymentQuery(paymentId));
     }
 }
@@ -161,7 +163,9 @@ public class PaymentAppService {
 
 ```java
 @Data
-public class PaymentDTO {
+public class PaymentDTO implements ApplicationDTO, Serializable {
+    @Serial private static final long serialVersionUID = 1L;
+
     private String id;
     private String orderId;
     private String status;
@@ -189,7 +193,13 @@ public class PaymentAssembler implements BasicAssembler<Payment, PaymentDTO> {
         return dto;
     }
 
-    // 最小契约：仅 toDomain / toDTO（+ 集合委托）；toDomain 抛 UnsupportedOperationException（富领域模型走 reconstitute）
+    /** 富领域模型：Payment 无 setter，DTO → Domain 方向不可逆（重建走 reconstitute）。 */
+    @Override
+    public Payment toDomain(PaymentDTO dto) {
+        throw new UnsupportedOperationException("Rich domain model: use Payment.reconstitute() instead");
+    }
+
+    // 最小契约：仅 toDomain / toDTO（+ 集合委托）；富领域模型的 toDomain 不可逆，实现类抛 UnsupportedOperationException
 }
 ```
 
@@ -216,6 +226,7 @@ public class PaymentPresenter implements BasicPresenter<PaymentDTO, PaymentCO> {
 **CommandHandler**（写侧）：
 
 ```java
+// application/payment/handler/command/CreatePaymentHandler.java
 @Component
 public class CreatePaymentHandler implements CommandHandler<CreatePaymentCommand, PaymentDTO> {
 
@@ -238,22 +249,30 @@ public class CreatePaymentHandler implements CommandHandler<CreatePaymentCommand
 **QueryHandler**（读侧）：
 
 ```java
+// application/payment/handler/query/GetPaymentHandler.java
 @Component
 public class GetPaymentHandler implements QueryHandler<GetPaymentQuery, PaymentDTO> {
 
-    private final PaymentRepository paymentRepository;
-    private final PaymentAssembler paymentAssembler;
+    private final PaymentQueryRepository paymentQueryRepository;   // application 层读端口（见 ⑳）
 
-    // 构造器注入（省略）
+    public GetPaymentHandler(PaymentQueryRepository paymentQueryRepository) {
+        this.paymentQueryRepository = paymentQueryRepository;
+    }
 
     @Override
     public PaymentDTO handle(GetPaymentQuery query) {
-        Payment payment = paymentRepository.findById(UUID.fromString(query.getPaymentId()))
+        // 读侧绕过 domain：查询端口直接 PO → DTO 投影，不 reconstitute 聚合根（R13：QueryHandler 禁触写侧仓储）；
+        // 非法 UUID 已由 Web 层类型转换拦截（400），此处必为合法值
+        return paymentQueryRepository.findById(query.getPaymentId())
                 .orElseThrow(() -> new BusinessException("payment:err.notFound"));
-        return paymentAssembler.toDTO(payment);
     }
 }
 ```
+
+> 读侧不经 ⑭ `PaymentRepository`（domain 写侧契约）、不经 ⑧ Assembler——由读端口直接投影 DTO，
+> 教义与分页/多视图完整形态见 [read-path.md](read-path.md)（读侧 canonical）。
+> 本最小模板直接复用 ⑦ `PaymentDTO` 作读投影（Presenter 过滤 version 等内部字段）；
+> 需要读写独立演进时按 read-path.md 拆出 `PaymentViewDTO` + `PaymentViewPresenter`。
 
 ## ⑫⑬⑭ Domain — 聚合根 / 枚举 / Repository
 
@@ -323,6 +342,7 @@ public class PaymentPO {
     private OffsetDateTime updateAt;
     private String createdBy;          // 可选：容器存在 CurrentUserProvider 才填
     private String updatedBy;
+    private Boolean isDelete;          // 逻辑删除标记（INSERT 不枚举，靠 DB 默认 FALSE）
 }
 ```
 
@@ -348,8 +368,6 @@ public class PaymentConverter implements BasicConverter<Payment, PaymentPO> {
         po.setVersion(domain.getVersion());
         return po;
     }
-
-    // 最小契约：仅 toDomain / toPO（+ 集合委托）；不定义增量更新方法（富模型走 reconstitute 全量快照）
 }
 ```
 
@@ -361,7 +379,7 @@ public interface PaymentMapper extends DddMapper<PaymentPO> {
 }
 ```
 
-手写 XML（`src/main/resources/mapper/payment/PaymentMapper.xml`）——七条语句逐条可见。逻辑删除列 `is_delete` 不入 INSERT（靠 DB 默认值）、出现在每条 select/update/delete 的 WHERE 条件里；`updateById` 携带版本条件；删除语句消费基类传入的 `now` / `updatedBy` 审计参数（操作人列以 `<if>` 守卫）：
+手写 XML（`src/main/resources/mapper/payment/PaymentMapper.xml`）——七条语句逐条可见；各语句的列级语义（INSERT 不枚举 `is_delete`、UPDATE 携带版本条件、删除消费基类 `now` / `updatedBy` 审计参数等）以 [docs/common/common-ddd.md](../../common/common-ddd.md) §2 的 DddMapper 七语句契约表为准，本节只给完整模板：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -475,12 +493,57 @@ public class PaymentRepositoryImpl
 
 > 构造器注入四件框架依赖（`Clock` / `AuditProperties` / `ObjectProvider<CurrentUserProvider>` 加业务 Mapper 与 Converter）；`save/update` 自动 `validate()` 并经 `AuditFieldFiller` 显式填充审计字段；事务边界在 Handler（本类不标 `@Transactional`）；跨聚合协调 = 同事务直调。
 
+## ⑳㉑ 读端口 — PaymentQueryRepository + Impl（与 ⑪ 配对）
+
+```java
+// application/payment/repository/application/PaymentQueryRepository.java（application 层读端口）
+public interface PaymentQueryRepository extends QueryRepository {   // 空标记（common-ddd）：读端口身份
+
+    /** 按 ID 投影支付读 DTO（不存在返回 empty）。 */
+    Optional<PaymentDTO> findById(UUID id);
+}
+```
+
+```java
+// infrastructure/persistence/master/payment/repository/application/PaymentQueryRepositoryImpl.java
+@Component
+public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
+
+    private final PaymentMapper paymentMapper;
+
+    public PaymentQueryRepositoryImpl(PaymentMapper paymentMapper) {
+        this.paymentMapper = paymentMapper;
+    }
+
+    @Override
+    public Optional<PaymentDTO> findById(UUID id) {
+        PaymentPO po = paymentMapper.selectById(id.toString());
+        return po == null ? Optional.empty() : Optional.of(toDTO(po));
+    }
+
+    /** PO → 读 DTO 直接投影（不经过 domain、不 reconstitute 聚合根、不经 Converter）。 */
+    private PaymentDTO toDTO(PaymentPO po) {
+        PaymentDTO dto = new PaymentDTO();
+        dto.setId(po.getId());
+        dto.setOrderId(po.getOrderId());
+        dto.setStatus(po.getStatus());
+        dto.setAmount(po.getAmount());
+        dto.setCreateAt(po.getCreateAt());
+        return dto;   // version 不填充：读投影不承载写侧关注点
+    }
+}
+```
+
+要点：
+- 读端口接口位于 `application/payment/repository/application/`、`extends QueryRepository`——这是 R13（QueryHandler 禁触 domain 仓储）下的唯一合法读路径，R1b 白名单同时放行 infra 对该端口的实现依赖
+- 完整读侧形态（分页双语句 + `safe*()` 钳制 + ViewDTO / ViewPresenter 多视图）以 [read-path.md](read-path.md) 为 canonical，本节只登记新聚合清单所需的最小文件集
+
 ## 创建顺序建议
 
 1. **contract**（①-④）：先定义公开契约，确定接口边界
 2. **domain**（⑫-⑭）：核心模型，零依赖，可独立编译验证
-3. **infrastructure**（⑮-⑲）：持久化实现（PO → Mapper 接口 → XML → RepositoryImpl）
-4. **application**（⑥-⑪）：编排层，串联 domain + infrastructure
+3. **infrastructure**（⑮-⑲ + ㉑）：持久化实现（PO → Converter → Mapper 接口 → XML → 写侧 RepositoryImpl → 读实现）
+4. **application**（⑥-⑪ + ⑳）：编排层，串联 domain + infrastructure（读端口 ⑳ 与 QueryHandler ⑪ 配对）
 5. **adapter**（⑤）：最后接入协议层
 
 ## 验证清单
@@ -488,6 +551,8 @@ public class PaymentRepositoryImpl
 - [ ] `mvn compile` 通过（无循环依赖）
 - [ ] ArchUnit 测试通过（`common-test` 规则）
 - [ ] Domain 层无框架注解（零 Spring / MyBatis 依赖）
+- [ ] 应用层 DTO 实现 `ApplicationDTO` 标记（R10b）；CO 实现 `CO` 标记
+- [ ] 读端口 `extends QueryRepository` 且位于 `application/payment/repository/application/`（R13：QueryHandler 不得依赖 domain 仓储）
 - [ ] XML 语句表名含 schema 前缀（如 `payments.payments`）
 - [ ] PO 纯 `@Data` 零 ORM 注解；`updateById` 语句携带 `SET version = version + 1 ... AND version = #{version}`
 - [ ] 每条 select/update/delete 语句（逻辑删除聚合）显式携带 `AND is_delete = false`

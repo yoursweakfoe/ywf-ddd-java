@@ -81,7 +81,7 @@ common-observability（独立，无内部模块依赖）
 
 **背景**：链路追踪用 Agent 挂载还是引入 SDK 依赖。
 
-**决策**：选 Agent 挂载。零代码侵入；未挂 Agent 时无任何副作用（MDC 兜底显示空串）。
+**决策**：选 Agent 挂载。零代码侵入；未挂 Agent 时 classpath 无任何 OTel 类型、MDC 不含 `trace_id`/`span_id` 键（日志照常输出，无任何副作用）。
 
 **确认**：本包无任何 OTel Maven 依赖。
 

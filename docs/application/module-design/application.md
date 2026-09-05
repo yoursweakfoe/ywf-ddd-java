@@ -11,7 +11,7 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 - **Handler 返回 DTO**：Handler 负责编排领域逻辑，通过 Assembler 转为 DTO 返回
 - **AppService 做呈现**：接收 Handler 的 DTO，通过 Presenter 转为 CO 返回给调用方
 - **写侧不绕过 Domain**：CommandHandler 的业务决策始终在领域模型内，Handler 只做编排
-- **读侧可绕过聚合根**：QueryHandler 无需加载完整领域模型，通过 Repository 读优化方法直接投影 DTO
+- **读侧完全绕过 domain**：QueryHandler 不加载领域模型，依赖 application 层 `{Agg}QueryRepository` 读端口（`application/{agg}/repository/application/`），由 infra 读实现从 PO 直接投影读 DTO（canonical → [cookbook/read-path.md](../cookbook/read-path.md)）
 - **按聚合自包含**：每个聚合子包内含 AppService + handler + assembler + presenter + dto，打开即全貌
 
 ## 包结构
@@ -29,7 +29,7 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 - 有返回值：`presenter.present(handler.handle(command))`
 - 无返回值：直接 `handler.handle(command)`
 
-→ 完整代码见 [cookbook/write-path.md](../cookbook/write-path.md)#4-application--appservice聚合入口
+→ 完整代码见 [cookbook/write-path.md §3 Application（AppService）](../cookbook/write-path.md)
 
 ### Handler（用例执行单元）
 
@@ -46,10 +46,11 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 - **写侧**（经过 Domain）：load 聚合 → 调用行为 → save → Assembler.toDTO()
 - **读侧**（绕过 domain）：XxxQueryRepository（application 读端口）→ infra 实现 PO 直接投影读 DTO，不加载聚合
 
-→ 完整代码见 [cookbook/write-path.md](../cookbook/write-path.md)#5-application--commandhandler用例执行 | [cookbook/read-path.md](../cookbook/read-path.md)#4-application--queryhandler
+→ 完整代码见 [cookbook/write-path.md §3 Application（CommandHandler）](../cookbook/write-path.md) | [cookbook/read-path.md §4 Application（QueryHandler）](../cookbook/read-path.md)
 
-> Repository 接口定义在 Domain 层，实现在 Infrastructure 层（内部用 Mapper 投影）。
-> Application 层始终只依赖 Domain 层接口，不触碰 Mapper / PO。
+> 写侧 Repository 接口定义在 Domain 层、实现在 Infrastructure 层；读端口 `XxxQueryRepository`
+> 定义在 Application 层、实现在 Infrastructure 层（内部用 Mapper 投影 DTO）。Application 层
+> 始终只依赖接口，不触碰 Mapper / PO。
 
 ### Assembler + Presenter（两层转换）
 
@@ -71,8 +72,8 @@ adapter/facade ──→ AppService ──→ CommandHandler ──→ Domain（
 ```
 
 - **adapter** 透传调用 AppService
-- **domain** 被 CommandHandler 编排（聚合根行为）；QueryHandler 绕过聚合根但仍走 Repository 接口
-- **infrastructure** 实现 Repository 接口（写侧 reconstitute 聚合；读侧 Mapper 投影 DTO）
+- **domain** 被 CommandHandler 编排（聚合根行为 + Repository 存取）；QueryHandler 完全绕过 domain，改走 application 层读端口
+- **infrastructure** 实现 Domain 写侧 Repository 接口（reconstitute 聚合）与 application 读端口（Mapper 直接投影 DTO）
 - **contract** 提供 CO 类型定义，由 Presenter 产出
 
 ## 专题
@@ -83,11 +84,10 @@ DTO 和 CO 是**两个不同职责的边界对象**，强制分离，不可合�
 
 | | DTO（内部视图） | CO（契约输出） |
 |--|--|--|
-| 归属 | application 层内部 | contract 模块（对外发布） |
 | 职责 | 领域模型的完整内部投影 | 内部细节清洗后的外部安全视图 |
-| 可包含 | 审计字段、内部评分、软删除标记、分页元数据 | 仅消费方需要的字段 |
 | 变更影响 | 内部重构，无外部影响 | Breaking change，需协调消费方 |
-| 生产者 | Handler（通过 Assembler） | AppService（通过 Presenter） |
+
+> 归属 / 生产者 / 可包含字段等命名规范行 → 见 [.agents/rules/03-coding-conventions.md](../../../.agents/rules/03-coding-conventions.md)「DTO / CO 强制分离」表（canonical）。
 
 ```
 Handler 内部：Domain → Assembler.toDTO() → DTO
@@ -99,7 +99,7 @@ AppService：DTO → Presenter.present() → CO（返回给调用方）
 **单体阶段（当前）**：跨聚合 Handler 放在**用例发起方**的 `handler/` 下：
 
 ```
-application/order/handler/PlaceOrderHandler.java
+application/order/handler/command/PlaceOrderHandler.java
   → productRepository.findById(...)          // 跨 Product 聚合查询
   → inventoryDomainService.deductStock(...)  // 跨聚合协调（领域服务）
   → order.place(...)                         // 本聚合
@@ -118,9 +118,10 @@ application/order/handler/PlaceOrderHandler.java
 | 允许 | 禁止 |
 |------|------|
 | CommandHandler 调用 Repository 存取聚合根 | 在 Handler 内写业务规则 |
-| QueryHandler 调用 Repository 读优化方法投影 DTO | Handler 直接使用 Mapper / PO（破坏依赖方向） |
+| QueryHandler 调用 application 读端口 `{Agg}QueryRepository` 直接投影读 DTO（绕过 domain） | Handler 直接使用 Mapper / PO（破坏依赖方向） |
 | Handler 调用 Assembler 转 DTO | AppService 包含编排逻辑 |
 | AppService 调用 Presenter 转 CO | 包含 if-else 业务判断 |
-| Handler 调用 DomainService 同事务直调协调跨聚合动作 | Handler 返回 CO（应返回 DTO） |
 | AppService 返回 CO | CO 暴露内部实现细节 |
 | DTO 携带内部字段 | |
+
+> 完整禁止清单（含「禁止 Handler 返回 CO」等）→ [.agents/rules/04-forbidden-patterns.md](../../../.agents/rules/04-forbidden-patterns.md)「Application 层禁止」（法条 canonical，AGENTS 核心约束 #2 为规范行）。

@@ -26,17 +26,18 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 
 | 组件 | 命名规范 | 准入规则 | 归属 |
 |------|---------|--------|------|
-| PO | `XxxPO`，零 ORM 注解（纯 `@Data` POJO） | 纯数据载体，无业务逻辑；表名 / 版本条件 / 逻辑删除过滤由 XML SQL 文本承担 | `mybatis/po/` |
-| Mapper | `XxxMapper extends DddMapper<XxxPO>`，标注 `@Mapper` | 七条通用语句 + 全部业务查询一律手写 XML，无动态生成 | `mybatis/mapper/` |
+| PO | `XxxPO`，零 ORM 注解（纯 `@Data` POJO） | 纯数据载体，无业务逻辑（持久化语义见下方指针） | `mybatis/po/` |
+| Mapper | `XxxMapper extends DddMapper<XxxPO>`，标注 `@Mapper` | 七条通用语句契约 + 业务具名查询，全部手写 XML | `mybatis/mapper/` |
 | Mapper XML | `XxxMapper.xml`，namespace = Mapper 接口全限定名 | 每条真正执行的 SQL 的唯一事实源 | `resources/mapper/{agg}/` |
 | Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） | 聚合根 `converter/` |
-| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` | 聚合根 `repository/` |
+| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` | 聚合根 `repository/domain/`（写侧）；读实现在 `repository/application/` |
 
 > **mybatis/ 边界**：仅收「撤换 ORM（如换 Hibernate）时需彻底删除」的纯技术文件。PO 与其手写 XML 语句共同构成 MyBatis 家族的映射层（接口方法 ↔ 语句 ID 一一对应），撤换后整体重建为 Entity + 注解映射；Mapper 本身即 MyBatis 独有概念（`@Mapper` + XML namespace），Hibernate 世界不存在同名对应物。Converter / RepositoryImpl 撤换后仅部分修改（改参数类型 / 重写实现体），故不进此目录。
 
-`MybatisPersistence` 仅承载写侧聚合生命周期（load → 行为 → save）；读侧由独立的
-`XxxQueryRepositoryImpl`（infra 读实现）直接用 Mapper 从 PO 投影读 DTO（PO → DTO 直接投影，
-`PageResult<读 DTO>` 隔离底层分页形态），不经过 domain。
+`MybatisPersistence` 基类方法语义与 `DddMapper<PO>` 七条通用语句的 XML 契约（insert / updateById 乐观锁条件 / selectById / deleteById 逻辑删除 / existsById 等）→ canonical 详表见 [common-ddd §2 仓储支撑](../../common/common-ddd.md#2-核心能力)，此处不复述。分层职责只此一句：
+
+- **写侧**：`MybatisPersistence` 承载聚合生命周期（load → 行为 → save），事务由 CommandHandler 声明
+- **读侧**：独立 `XxxQueryRepositoryImpl` 用 Mapper 从 PO 直接投影读 DTO，不经过 domain（→ [read-path.md](../cookbook/read-path.md)）
 
 XML 每条语句的表名必须写死 schema 前缀（如 `orders.orders`），因为多数据源按聚合分包后，
 同一数据源内不同聚合可能对应不同 schema，不能依赖连接默认 search_path。
@@ -52,8 +53,7 @@ mybatis:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 ```
 
-XML 集中在 `src/main/resources/mapper/{agg}/`，namespace 绑定 Mapper 接口全限定名——
-接口方法与语句 ID 一一对应，与 PO 同聚合目录语义一致（`persistence/master/order/mybatis/` ↔ `resources/mapper/order/`）。
+XML 集中在 `src/main/resources/mapper/{agg}/`，与 PO 同聚合目录镜像对应（`persistence/master/order/mybatis/` ↔ `resources/mapper/order/`）；namespace 与语句 ID 的绑定规则属持久化契约，见上方 §2 指针。
 
 ### gateway/ — 外部系统网关实现
 
@@ -122,7 +122,7 @@ infrastructure → 外部框架/SDK（MyBatis、Alipay SDK、OSS Client 等）
 结构约束：
 
 - 每个数据源一个顶级目录（`master/`、`second/`），**永远平级，不嵌套**
-- 每个数据源内按聚合分包，聚合内部结构完全一致（mybatis/po/ + mybatis/mapper/ + converter/ + repository/，XML 归 `resources/mapper/{agg}/`）
+- 每个数据源内按聚合分包，聚合内部结构完全一致（mybatis/po/ + mybatis/mapper/ + converter/ + repository/domain/ + repository/application/，XML 归 `resources/mapper/{agg}/`）
 - `@MapperScan` 按数据源分别扫描
 - 默认数据源（master）的 RepositoryImpl 可省略 `@DS`
 - Domain 层完全不感知数据源归属

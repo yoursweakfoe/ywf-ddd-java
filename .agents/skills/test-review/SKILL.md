@@ -30,7 +30,7 @@ description: 测试工程师视角审查代码变更（覆盖率、边界情况�
 ### 3. Mock 策略
 
 - 单测是否使用 Mockito 隔离外部依赖（Repository / Portal）？
-- 集成测试是否验证真实 HTTP/RPC 通路（RestEndpointIntegrationTest / RpcEndpointIntegrationTest）？
+- 集成测试是否验证真实 HTTP 通路（RestEndpointIntegrationTest）与并发冲突行为（OptimisticLockConcurrencyTest）？
 - 是否存在"测试覆盖了不可达路径"的情况（反射注入造出的假场景）？
 - Mock 行为是否与真实实现一致（返回值语义、异常类型）？
 
