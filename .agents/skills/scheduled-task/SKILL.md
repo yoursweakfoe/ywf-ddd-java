@@ -1,4 +1,4 @@
----
+﻿---
 name: scheduled-task
 description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）。当需要周期性自动执行某业务逻辑时使用。
 ---
@@ -8,14 +8,14 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 ## 前置阅读
 
 - `knowledge/docs/how-to/scheduled-task.md`（完整模板 + 分布式锁提示）
-- `.agents/rules/03-coding-conventions.md`（Adapter 层纯透传约定）
+- `knowledge/specs/current/patterns/coding-conventions.md`（Adapter 层纯透传约定）
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 ## 步骤
 
-1. **adapter**：创建 `adapter/task/scheduler/{Agg}{Action}Scheduler.java`（server 的 adapter 层不按聚合分包，rules/02「按聚合自包含」例外条款）
+1. **adapter**：创建 `adapter/task/scheduler/{Agg}{Action}Scheduler.java`（server 的 adapter 层不按聚合分包，禁令卷「按聚合自包含」例外条款）
    - **实现 `ScheduledAdapter` 标记**（`com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter`，
      规则 R14a/R14b 强制；漏实现会被架构测试拦截）
    - `@Component` + `@Scheduled(cron = "...")`（或平台化调度注解，如 `@XxlJob`）

@@ -1,6 +1,6 @@
 ﻿# 文档防腐工具链（knowledge/scripts/ 三文件说明书）
 
-> **辖域**：`knowledge/scripts/` 是伞下的**执法区**——工具本体是装置不是知识（非描述/非契约/非判例），但守护知识的东西与知识同伞才内聚（2026-09-06 用户裁定，自顶层迁入；辖域隔离靠"每区各自的法律"——C6 只扫 `decisions/`，物理同居不产生自我执法，同日初裁"居伞外"已 supersede）。工具的**说明**属于知识 → 住本区字典架，本页即唯一说明入口（登记法见 [../README.md](../README.md)；法源：`.agents/rules/05` §1 执法行）。
+> **辖域**：`knowledge/scripts/` 是伞下的**执法区**——工具本体是装置不是知识（非描述/非契约/非判例），但守护知识的东西与知识同伞才内聚（2026-09-06 用户裁定，自顶层迁入；辖域隔离靠"每区各自的法律"——C6 只扫 `decisions/`，物理同居不产生自我执法，同日初裁"居伞外"已 supersede）。工具的**说明**属于知识 → 住本区字典架，本页即唯一说明入口（登记法见 [../README.md](../README.md)；法源：`knowledge/specs/current/patterns/attribution-law.md` §1 执法行）。
 
 ## 三文件一览
 
@@ -32,7 +32,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 | 全区 | 伞内全部 + `.agents/` + 根 README + AGENTS.md | C2 / C3 |
 | 定点 | 框架源码 ↔ 异常文档；`git diff HEAD`（只读） | C5 / C6 |
 
-`changes/`、`archive/`、`decisions/` 参与符号与计数校验但**豁免教学中立扫描**（案卷记录当时语，辖域条款见 `rules/05` §3）；`specs/current/` 法卷自 2026-09-06 宽严双份裁定起**入列 C1/C4**——严格件必须保持 `{agg}`/虚构家族的中立形状，由机器担保而非自觉。
+`changes/`、`archive/`、`decisions/` 参与符号与计数校验但**豁免教学中立扫描**（案卷记录当时语，辖域条款见 `归属法卷` §3）；`specs/current/` 法卷自 2026-09-06 宽严双份裁定起**入列 C1/C4**——严格件必须保持 `{agg}`/虚构家族的中立形状，由机器担保而非自觉。
 
 ### 六项检查各治什么病
 
@@ -47,7 +47,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 
 ### 变红之后的裁决纪律
 
-红 ≠ 一定是文档烂。先判性质：**文档错 → 修文档；工具误伤 → 修工具**（check-docs 自己是代码，可重构，不是禁区——但它管的三个知识区各自有各自的修法，见 rules/05 §1）。每次误伤若靠白名单兜底，要回头想是不是检测器逻辑该收窄。
+红 ≠ 一定是文档烂。先判性质：**文档错 → 修文档；工具误伤 → 修工具**（check-docs 自己是代码，可重构，不是禁区——但它管的三个知识区各自有各自的修法，见 归属法卷 §1）。每次误伤若靠白名单兜底，要回头想是不是检测器逻辑该收窄。
 
 ## check-docs.whitelist.txt —— C3 豁免清单
 
@@ -56,7 +56,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 1. **JDK / Spring / Jakarta 标准类**（如 `^BindException$`）——它们不在仓库源码里，C3 的"源码可查"判据会误伤；
 2. **虚构教例家族前缀**（如 `^Invoice`）——文档已标"虚构教例未实现"，故意出现的合法类名。**教例家族一旦真实落地，对应行必须删除——清单只删不增**。
 
-注意：**C4 的豁免不住这里**，在 ps1 内 `$fileSkipC4` 硬编码（tutorials 真实例手册、glossary 通用语言位等——每条对应 rules/05 的辖域裁定，属法源而非偏好，故不外置）。
+注意：**C4 的豁免不住这里**，在 ps1 内 `$fileSkipC4` 硬编码（tutorials 真实例手册、glossary 通用语言位等——每条对应 归属法卷 的辖域裁定，属法源而非偏好，故不外置）。
 
 ## lychee.toml —— 外联检查器配置
 
@@ -70,4 +70,4 @@ lychee --config knowledge/scripts/lychee.toml "knowledge/**/*.md" ".agents/**/*.
 
 ---
 
-*本页属 `reference/` 字典架：三文件行为变了（新增检查、改豁免类别、换 lychee 策略），本页必须跟着变——地图区守则，见 [../../specs/README.md](../../specs/README.md) 上方的归属法指针与 `rules/05` §1。*
+*本页属 `reference/` 字典架：三文件行为变了（新增检查、改豁免类别、换 lychee 策略），本页必须跟着变——地图区守则，见 [../../specs/README.md](../../specs/README.md) 上方的归属法指针与 `归属法卷` §1。*

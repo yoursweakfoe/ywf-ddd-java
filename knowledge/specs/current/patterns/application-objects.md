@@ -134,7 +134,7 @@ Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数
 
 ### 2.5 写/读投影承载对比
 
-DTO（内部视图）与 CO（契约输出）的职责分工规范表 canonical 在 `.agents/rules/03-coding-conventions.md`（DTO / CO 强制分离），本卷不复制。在其之上，写侧与读侧 DTO 进一步**解耦**（避免"一个肥 DTO 贯穿所有层"的耦合）：
+DTO（内部视图）与 CO（契约输出）的职责分工规范表 canonical 在 `knowledge/specs/current/patterns/coding-conventions.md`（DTO / CO 强制分离），本卷不复制。在其之上，写侧与读侧 DTO 进一步**解耦**（避免"一个肥 DTO 贯穿所有层"的耦合）：
 
 | DTO | 承载 | Presenter | 说明 |
 |-----|------|-----------|------|

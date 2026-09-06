@@ -2,7 +2,7 @@
 
 本区只立**框架/脚手架层**（common 模块自身）的行为法；**业务包的行为法不入伞**——住在镜像区 [`../../sample-application/specs/`](../../sample-application/specs/README.md)。契约写的就是生意，业务名只在那棵树合法；知识区承载的是通识。
 
-守则（详法见 `.agents/rules/05` 归属法 + 诸区分野条款；业务镜像区同文援引同一套规则，此处不复述）：
+守则（详法见 `knowledge/specs/current/patterns/attribution-law.md` 归属法 + 诸区分野条款；业务镜像区同文援引同一套规则，此处不复述）：
 
 1. **代码违反本法 = 改代码**，或走 `changes/` 流程正式修法；**禁止为迁就代码偷改本法**（那是把法律当地图画）。
 2. 修法唯一通道：`changes/<YYYY-MM-slug>/` 立三件套（proposal → spec-delta → tasks）→ 实现 → **归档折叠**进 `current/`，那一刻是文档同步义务唯一发生时点。

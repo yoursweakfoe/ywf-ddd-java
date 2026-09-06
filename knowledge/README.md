@@ -18,7 +18,7 @@
 
 | 区 | 态 | 守则一句话 | 法律全文 |
 |---|---|---|---|
-| `docs/` | **地图**（描述） | 代码变了它没跟 → 文档是 bug，修文档 | `.agents/rules/05`（归属法） |
+| `docs/` | **地图**（描述） | 代码变了它没跟 → 文档是 bug，修文档 | `knowledge/specs/current/patterns/attribution-law.md`（归属法） |
 | `specs/` | **法律**（框架契约：行为承诺 + 严格用法规范） | 代码违反它 → 修代码；要改法 → 走 changes/ 程序，禁止迁就代码偷改；docs 同题指引为宽松件，冲突法卷赢 | `specs/README.md` |
 | `decisions/` | **判例卷宗**（冻结） | 正文永不回改；推翻 = 新立案 + supersede 旧案 | `decisions/README.md` |
 | `scripts/` | **执法**（工具链） | 非知识，是守护前三区的机器检查；行为以代码本体为准，说明住字典架 | [docs/reference/doc-guards.md](docs/reference/doc-guards.md) |

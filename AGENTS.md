@@ -11,13 +11,13 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 | `knowledge/docs/` | 地图·描述 | 代码变了它必须跟着变，烂了修文档 |
 | `knowledge/specs/` | 法律·框架契约 | 代码违反它=修代码；改法走 `changes/`，禁止迁就代码偷改 |
 | `knowledge/decisions/` | 判例卷宗 | 正文永不回改；推翻=新立 ADR + supersede 旧案 |
-| `.agents/` | 工作台·方法 | 约束干活方式；按需详读，非每次必读 |
+| `.agents/` | 工作台·流程 | SOP 约束干活方式（skills only）；法律已入典——法条正文住 `knowledge/specs/current/` 法卷，本树不载法 |
 
-法律全文 = `.agents/rules/05`（事实归属法）；伞宣言 = `knowledge/README.md`。业务包契约不入伞，住镜像区 `sample-application/specs/`（框架法=knowledge/specs，业务法=sample 树内）。
+法律全文 = `knowledge/specs/current/patterns/attribution-law.md`（事实归属法）；伞宣言 = `knowledge/README.md`。业务包契约不入伞，住镜像区 `sample-application/specs/`（框架法=knowledge/specs，业务法=sample 树内）。
 
 ## Context routing（按需触发，非全量预读）
 
-- **动手改码前按层详读法条**：分层/依赖 → `rules/02`；命名/惯例 → `rules/03`；禁令全表 → `rules/04`；文档义务 → `rules/05`；项目背景 → `rules/01`
+- **动手改码前按层详读法条**：分层/依赖 → `禁令卷`；命名/惯例 → `编码公约卷`；禁令全表 → `禁令卷`；文档义务 → `归属法卷`；项目背景 → `根 README`
 - **新行为先立契约**：写码前在行为所属区的 `changes/<slug>/` 出三件套（框架 → `knowledge/specs/`，示例业务 → `sample-application/specs/`；模板统一在 `knowledge/specs/changes/_template/`），完成后归档折叠回所属区 `current/`——文档同步义务只在那一刻发生
 - **执行结构化任务 USE 对应技能**（11 个，全部显式点名）：
   - 创建：新建聚合 `new-aggregate` ｜ 新增用例 `new-usecase` ｜ 新建微服务 `new-service` ｜ 新增外部集成 `new-portal`
@@ -29,7 +29,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 
 ## Core constraints (quick reference)
 
-每次交互必须遵守的硬约束（完整法条见 `.agents/rules/`）：
+每次交互必须遵守的硬约束（完整法条见 `knowledge/specs/current/`）：
 
 1. 分层依赖单向：`adapter → application → domain ← infrastructure`；domain 零框架**运行时**依赖（stereotype 豁免；纯 Java + common-ddd）
 2. Handler 返回 DTO，AppService 返回 CO，Adapter 纯透传

@@ -1,4 +1,4 @@
----
+﻿---
 name: batch-operations
 description: 为已有聚合新增批量写操作（批量 Command + 批量 Handler）。当需要一次性处理多条记录时使用。
 ---
@@ -8,11 +8,11 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 ## 前置阅读
 
 - `knowledge/docs/how-to/batch-operations.md`（批量 Handler + 事务边界 + 三种失败策略）
-- `.agents/rules/03-coding-conventions.md`（写侧固定模式）
+- `knowledge/specs/current/patterns/coding-conventions.md`（写侧固定模式）
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 ## 步骤
 
 1. **contract**：创建 `contract/{agg}/dto/command/Batch{Action}{Agg}Command.java`

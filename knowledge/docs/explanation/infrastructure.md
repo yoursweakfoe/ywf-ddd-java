@@ -89,7 +89,7 @@ Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 
 本层实现 domain 定义的 Repository / Portal 接口（依赖倒置），application 经 domain 接口间接使用本层实现、本层不被 domain / application 直接引用；同时本层是服务内持有技术框架 / SDK（MyBatis、OSS Client 等，虚构教例）的唯一合法位——SDK 类型不外泄出本层。
 
-→ 依赖方向法条（含结构图）canonical 在 [.agents/rules/02-architecture.md](../../../.agents/rules/02-architecture.md)「依赖方向」「依赖倒置」两节，ArchUnit 执法，本文不复制图。
+→ 依赖方向法条（含结构图）canonical 在 [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「依赖方向」「依赖倒置」两节，ArchUnit 执法，本文不复制图。
 
 ## 专题
 

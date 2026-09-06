@@ -1,4 +1,4 @@
----
+﻿---
 name: new-service
 description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层包结构 + 配置）。当需要新增一个独立部署的业务服务时使用。
 ---
@@ -8,7 +8,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 ## 前置阅读
 
 1. `sample-application/`（完整参照）
-2. `.agents/rules/02-architecture.md`（分层 + 包结构）
+2. `knowledge/specs/current/patterns/prohibitions.md`（分层 + 包结构）
 3. `ywf-ddd-common/README.md`（模块依赖拓扑 + BOM 引入方式）
 
 ## 步骤
@@ -101,7 +101,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 - [ ] `mvn clean compile` 编译通过
 - [ ] BOM import 版本与 ywf-ddd-common 一致
-- [ ] 包结构符合 `.agents/rules/02-architecture.md`
+- [ ] 包结构符合 `knowledge/specs/current/patterns/prohibitions.md`
 - [ ] application.yml 数据源为普通单 `spring.datasource`（多数据源需显式引入 dynamic-datasource 并说明理由）
 - [ ] Dockerfile 默认 profile=prod，OTel 环境变量齐全
 - [ ] 无多余依赖（每个引入的 common 模块都有明确用途）

@@ -1,6 +1,6 @@
 ﻿# knowledge/docs/ —— 描述区索引（地图区 · 全仓唯一文档登记处）
 
-> **本区=地图（描述）**：代码变了这里必须跟着变，与代码不符即文档 bug。守则全文见 `.agents/rules/05`。
+> **本区=地图（描述）**：代码变了这里必须跟着变，与代码不符即文档 bug。守则全文见 `knowledge/specs/current/patterns/attribution-law.md`。
 > 契约在 `../specs/`、判例卷宗在 `../decisions/`——法律与卷宗**不登本索引**（各区自持索引，防双登记）。
 > 人类总入口 = 根 `README.md`；AI 入口 = `AGENTS.md`。
 

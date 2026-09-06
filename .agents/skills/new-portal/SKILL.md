@@ -1,4 +1,4 @@
----
+﻿---
 name: new-portal
 description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway 实现）。当需要对接支付、文件存储、短信、第三方 RPC 等外部能力时使用。
 ---
@@ -8,8 +8,8 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 ## 前置阅读
 
 1. `knowledge/docs/how-to/gateway.md`（完整代码走查）
-2. `.agents/rules/03-coding-conventions.md`（Portal / Gateway 节）
-3. `.agents/rules/04-forbidden-patterns.md`（Infrastructure 层禁止 + ACL 翻译）
+2. `knowledge/specs/current/patterns/coding-conventions.md`（Portal / Gateway 节）
+3. `knowledge/specs/current/patterns/prohibitions.md`（Infrastructure 层禁止 + ACL 翻译）
 
 ## 概念
 

@@ -87,7 +87,7 @@ DTO 和 CO 是**两个不同职责的边界对象**，强制分离，不可合�
 | 职责 | 领域模型的完整内部投影 | 内部细节清洗后的外部安全视图 |
 | 变更影响 | 内部重构，无外部影响 | Breaking change，需协调消费方 |
 
-> 归属 / 生产者 / 可包含字段等命名规范行 → 见 [.agents/rules/03-coding-conventions.md](../../../.agents/rules/03-coding-conventions.md)「DTO / CO 强制分离」表（canonical）。
+> 归属 / 生产者 / 可包含字段等命名规范行 → 见 [knowledge/specs/current/patterns/coding-conventions.md](../../specs/current/patterns/coding-conventions.md)「DTO / CO 强制分离」表（canonical）。
 
 ```
 Handler 内部：Domain → Assembler.toDTO() → DTO
@@ -124,4 +124,4 @@ application/{agg}/handler/command/{Xxx}CommandHandler.java
 | AppService 返回 CO | CO 暴露内部实现细节 |
 | DTO 携带内部字段 | |
 
-> 完整禁止清单（含「禁止 Handler 返回 CO」等）→ [.agents/rules/04-forbidden-patterns.md](../../../.agents/rules/04-forbidden-patterns.md)「Application 层禁止」（法条 canonical，AGENTS 核心约束 #2 为规范行）。
+> 完整禁止清单（含「禁止 Handler 返回 CO」等）→ [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「Application 层禁止」（法条 canonical，AGENTS 核心约束 #2 为规范行）。

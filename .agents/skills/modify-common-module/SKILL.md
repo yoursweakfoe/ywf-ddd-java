@@ -1,4 +1,4 @@
----
+﻿---
 name: modify-common-module
 description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。当需要变更框架核心代码时使用。
 ---
@@ -9,7 +9,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 1. `knowledge/docs/reference/api/common-{module}.md`（目标模块文档）
 2. `ywf-ddd-common/README.md`（模块依赖拓扑）
-3. `.agents/rules/04-forbidden-patterns.md`「Common 模块约束」节（构件身份二分法——依赖审查判据的单一事实源）
+3. `knowledge/specs/current/patterns/prohibitions.md`「Common 模块约束」节（构件身份二分法——依赖审查判据的单一事实源）
 
 ## 核心原则
 
@@ -21,7 +21,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 ### 1. 评估影响范围
 
-- 先查目标模块的**身份登记**（工具库 / 定型装配，rules 04「Common 模块约束」）——依赖审查判据按身份分叉：装配审「宣言在位 + 命运依赖被本包使用或封装」，工具库审「最小化」
+- 先查目标模块的**身份登记**（工具库 / 定型装配，禁令卷「Common 模块约束」）——依赖审查判据按身份分叉：装配审「宣言在位 + 命运依赖被本包使用或封装」，工具库审「最小化」
 - 确认修改的是公开 API（`public` / `protected`）还是内部实现（`private`）
 - 公开 API 变更需检查所有消费方（sample-application + 其他业务服务）
 - 使用 IDE "Find Usages" 或 `grep -r` 确认引用点
@@ -65,8 +65,8 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 - [ ] `mvn test -pl ywf-ddd-common/{module}` 现有测试 + 新测试通过
 - [ ] `mvn compile -pl sample-application/sample-service/sample-service-server` 消费方编译通过
 - [ ] `knowledge/docs/reference/api/common-{module}.md` 已同步更新
-- [ ] 依赖符合模块身份登记（rules 04「Common 模块约束」）：定型装配过「自我宣言在位 + 命运依赖被本包代码使用或封装、消费方经公开 API 触达」；工具库过「无新增超出编译需要的依赖」
-- [ ] 子 pom 声明处零 `<exclusions>`——排除只写在策略文件 depMgmt（rules 04「exclusions 卫生集中制」；局部清单整体覆盖 managed）
+- [ ] 依赖符合模块身份登记（禁令卷「Common 模块约束」）：定型装配过「自我宣言在位 + 命运依赖被本包代码使用或封装、消费方经公开 API 触达」；工具库过「无新增超出编译需要的依赖」
+- [ ] 子 pom 声明处零 `<exclusions>`——排除只写在策略文件 depMgmt（禁令卷「exclusions 卫生集中制」；局部清单整体覆盖 managed）
 - [ ] 无业务逻辑泄漏（common 模块纯技术骨架）
 
 ## 文档同步

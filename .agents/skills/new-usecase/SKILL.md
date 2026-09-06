@@ -1,4 +1,4 @@
----
+﻿---
 name: new-usecase
 description: 为已有聚合新增写操作（Command）或读操作（Query）。当需要添加新的业务用例时使用。
 ---
@@ -9,11 +9,11 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 - 写操作：`knowledge/docs/how-to/write-path.md`
 - 读操作：`knowledge/docs/how-to/read-path.md`（读端口流程）
-- `.agents/rules/03-coding-conventions.md`（写侧/读侧固定模式）
+- `knowledge/specs/current/patterns/coding-conventions.md`（写侧/读侧固定模式）
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 ## 步骤（写操作）
 
 1. **contract**：创建 `contract/{agg}/dto/command/{Action}{Agg}Command.java`
@@ -25,7 +25,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 实现 `CommandHandler<{Action}{Agg}Command, {Agg}DTO>`
    - 固定模式：load → 行为 → save → assembler.toDTO()
    - 标注 `@Transactional(rollbackFor = Exception.class)`（R11 强制：事务边界在 CommandHandler.handle）
-   - UPDATE 影响 0 行由 `MybatisPersistence` 经存在性探测分类为 `OptimisticLockConflictException`（可重试）或 `IllegalStateException`（实体已消失，业务竞态走 409）；INSERT / DELETE 影响 0 行是第三通道 `SilentWriteLossException`（写丢失级不可能状态，500 + ERROR 告警、勿重试）。法条见 `.agents/rules/04-forbidden-patterns.md`「持久化与 SQL」，实现见 `MybatisPersistence.throwUpdateFailed` javadoc
+   - UPDATE 影响 0 行由 `MybatisPersistence` 经存在性探测分类为 `OptimisticLockConflictException`（可重试）或 `IllegalStateException`（实体已消失，业务竞态走 409）；INSERT / DELETE 影响 0 行是第三通道 `SilentWriteLossException`（写丢失级不可能状态，500 + ERROR 告警、勿重试）。法条见 `knowledge/specs/current/patterns/prohibitions.md`「持久化与 SQL」，实现见 `MybatisPersistence.throwUpdateFailed` javadoc
 4. **application**：在 `application/{agg}/service/{Agg}AppService.java` 新增方法
    - `return {agg}Presenter.present({action}{Agg}Handler.handle(command));`
 5. **adapter**：在 `adapter/rest/controller/{Agg}ControllerImpl.java` 新增方法
@@ -48,7 +48,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 7. **application**：在 `{Agg}AppService` 新增方法（经 Presenter 转 `CO` / `PageResult<CO>`）
 8. **adapter**：在 `adapter/rest/controller/{Agg}ControllerImpl.java` 新增透传方法
 
-> **R13（类型锚点）**：读方法只进读端口 `application/{agg}/repository/{Agg}QueryRepository`；写端口 `domain/{agg}/repository/{Agg}Repository` 仅承载聚合生命周期。ArchUnit 以 `Repository` 类型为锚监控 QueryHandler 的依赖（读侧完全绕过 domain，见 rules 03「读侧固定模式」）。
+> **R13（类型锚点）**：读方法只进读端口 `application/{agg}/repository/{Agg}QueryRepository`；写端口 `domain/{agg}/repository/{Agg}Repository` 仅承载聚合生命周期。ArchUnit 以 `Repository` 类型为锚监控 QueryHandler 的依赖（读侧完全绕过 domain，见 编码公约卷「读侧固定模式」）。
 
 ## 验证
 

@@ -23,7 +23,7 @@
 
 ## 相关
 
-- **SecurityUtil 获取当前用户** → `knowledge/docs/reference/api/common-security.md` + `.agents/rules/03-coding-conventions.md`（SecurityUtil 使用层归属）
+- **SecurityUtil 获取当前用户** → `knowledge/docs/reference/api/common-security.md` + `knowledge/specs/current/patterns/coding-conventions.md`（SecurityUtil 使用层归属）
 - **common-pg TypeHandler** → `knowledge/docs/reference/api/common-pg.md`（UUID/JSONB/数组自动映射）
 - **Factory 复杂创建** → [../explanation/domain.md](../explanation/domain.md)（Factory 章节）
 

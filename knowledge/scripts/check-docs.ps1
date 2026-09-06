@@ -79,7 +79,7 @@ $pathAllow = 'domain/order|application/order|contract/order|infrastructure/[^`]*
 $classRefs = 'OrderFactory|ProductFactory|OrderRepository|OrderQueryRepository|ProductRepository|ProductQueryRepository|OrderController|ProductController|OrderCO|ProductCO|OrderDTO|ProductDTO|ProductViewDTO|OrderPO|ProductPO|OrderItem|OrderItemDTO|OrderStatus|ProductStatus|OrderAppService|ProductAppService|OrderMapper|ProductMapper|OrderMapper\.xml|OrderConverter|ProductConverter|OrderPresenter|OrderAssembler|ProductPresenter|ProductAssembler|PayOrder|PlaceOrder|CancelOrder|ShipOrder|ShipOrderForm|DeliverOrder|ConfirmOrder|CompleteOrder|CreateProduct|GetOrderPage|GetOrderQuery|GetProductQuery|AutoDeliver|RetryablePlace|OrderAutoDeliverScheduler|OrderQueryRepositoryImpl|ProductQueryRepositoryImpl|ProductFixtures|OrderFixtures|OrdersTable|ProductTable|GetOrderPageHandler|GetProductHandler|OrderControllerImpl|ProductControllerImpl|OrderAggregateTest|OrderAppServiceTest|PayOrderHandlerTest|ConfirmOrderHandler'
 $fileSkipC4 = @(
     # (new-test SKILL 豁免已拆除——D6 迁移完成，模板只住 how-to/testing.md)
-    'rules/01-project-overview\.md',
+    '根 README-project-overview\.md',
     'knowledge/docs/tutorials/',           # operations manual on the real sample (business words inherent, exempt per doctrine)
     'glossary\.md',                 # 业务词汇+命名映射节 = 通用语言/真实例之家（§2.1 辖域裁定）
     'docs/README\.md$|/README\.md$'

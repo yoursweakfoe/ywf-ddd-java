@@ -7,7 +7,7 @@
 | 术语（全称） | 一句话 | canonical |
 |------|------|------|
 | CO（Contract Object） | 经 Presenter 清洗后的对外安全视图，消费方唯一可见的数据结构 | → 见 [common-ddd.md §2 对象转换](api/common-ddd.md)、[common-contract.md](api/common-contract.md) |
-| DTO（Data Transfer Object） | 应用层内部视图（可含 version / 审计），不出服务边界；写侧 `XxxDTO` / 读侧 `XxxViewDTO` 均实现 `ApplicationDTO` 标记 | → 见 [common-ddd.md §2 对象转换](api/common-ddd.md)、`.agents/rules/03` |
+| DTO（Data Transfer Object） | 应用层内部视图（可含 version / 审计），不出服务边界；写侧 `XxxDTO` / 读侧 `XxxViewDTO` 均实现 `ApplicationDTO` 标记 | → 见 [common-ddd.md §2 对象转换](api/common-ddd.md)、`knowledge/specs/current/patterns/coding-conventions.md` |
 | CQE（Command / Query） | 请求对象统称，与 Handler 1:1 对应 | → 见 [common-contract.md §2](api/common-contract.md) |
 | Command | 「请做这件事」——写请求标记接口 | → 见 [common-contract.md §2](api/common-contract.md) |
 | Query | 「请给我这个」——读请求标记接口 | → 见 [common-contract.md §2](api/common-contract.md) |
@@ -52,7 +52,7 @@
 | 术语 | 一句话 | canonical |
 |------|------|------|
 | 知识伞 | 根级 `knowledge/`：三类知识三个法律区 + 执法工具链同伞收纳，伞自身不立法 | → [knowledge/README.md](../../README.md) |
-| 诸区分野（四态） | 一区一法律：地图 / 契约（法律）/ 判例卷宗 / 方法（+ 执法工具链） | → `.agents/rules/05` §1 |
+| 诸区分野（四态） | 一区一法律：地图 / 契约（法律）/ 判例卷宗 / 方法（+ 执法工具链） | → `knowledge/specs/current/patterns/attribution-law.md` §1 |
 | 判据一句话 | 「这句话能机械化执行吗？能→法卷；不能→docs」——内容归属的唯一问句 | → [knowledge/README §2](../../README.md)、`specs/README` 宽严双份 |
 | 宽严双份 | 法卷=严格件（唯一权威），docs=宽松件（语感与指针，禁条款编号与精确参数表）；冲突法卷赢 | → `specs/README` §宽严双份 |
 | 法卷 | `specs/current/{modules,patterns}/`——条款 + 取证源 + 规范形状 + 生效登记的严格件容器 | → `specs/README` |
@@ -63,8 +63,8 @@
 | 归档折叠 | delta 合入 current、案卷进 archive 的那一刻——文档同步义务唯一时点 | → `specs/README` 守则 2 |
 | 生效登记 | 法卷末节：条款 ✅ 生效 / ⛔ 未落地在册声明（未生效不装死） | → 各法卷 §生效登记（如 [batch-write §3](../../specs/current/patterns/batch-write.md)） |
 | 业务不入伞 | 契约天然记生意：业务法与业务词不入知识伞（D4 教义第二兑现） | → [knowledge/README](../../README.md)、`sample-application/specs/README` |
-| 真实例指针位 | 教学文档引用 sample 真实类的唯一形式：代码块外 + 「真实例」标注同行 | → `.agents/rules/05` §3 |
-| 虚构教例 / 教例家族 | 中立教学位：Payment / Reservation / Invoice 等虚构系，首现必标「虚构教例，sample 未实现」 | → `.agents/rules/05` §3 |
+| 真实例指针位 | 教学文档引用 sample 真实类的唯一形式：代码块外 + 「真实例」标注同行 | → `knowledge/specs/current/patterns/attribution-law.md` §3 |
+| 虚构教例 / 教例家族 | 中立教学位：Payment / Reservation / Invoice 等虚构系，首现必标「虚构教例，sample 未实现」 | → `knowledge/specs/current/patterns/attribution-law.md` §3 |
 | `{agg}` / `{Agg}` | 聚合名占位符，C1 对真实聚合逐个实例化对源码核验 | → [doc-guards C1](doc-guards.md) |
 | 幽灵路径 | 文档写了源码不存在的目录层级——C1 治的头号病 | → [doc-guards](doc-guards.md) |
 | 六校验 | check-docs 机器闸（C1–C6），退出码=FAIL 数，非零即返工 | → [doc-guards](doc-guards.md) |
@@ -75,18 +75,7 @@
 
 ## 命名映射规范
 
-本项目中目录、Maven 坐标、Java 包名的对应关系（完整命名法条见 `.agents/rules/03`，本表只载结构映射）：
-
-| 层面 | 规则 | 示例 |
-|------|------|------|
-| 目录名 | kebab-case | `sample-application/`、`common-ddd/` |
-| groupId（common） | `com.yoursweakfoe` | `com.yoursweakfoe:common-ddd` |
-| groupId（业务服务） | `com.yoursweakfoe.application` | `com.yoursweakfoe.application:sample-service` |
-| Java 包名 | 全小写无分隔符 | `com.yoursweakfoe.sampleapplication.sampleservice` |
-| artifactId | kebab-case | `sample-service-server`、`common-exception` |
-| 服务名（Spring） | 纯小写 | `service`（`spring.application.name`） |
-
-> **新建服务约定**：groupId 统一用 `com.yoursweakfoe.application`，Java 包名取目录名去连字符（`my-new-service` → `com.yoursweakfoe.mynewservice`）。
+已迁出：目录/Maven/包名的结构映射属可机械化的用法规范，canonical 归 [coding-conventions 法卷 §2](../../specs/current/patterns/coding-conventions.md)（CC-2/CC-3）。本表不复述（归属法：一词一身）。
 
 ## 业务词汇（订单域通用语言）
 

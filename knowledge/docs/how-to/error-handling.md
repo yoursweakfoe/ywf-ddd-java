@@ -1,6 +1,6 @@
 ﻿# 异常处理 · 设计卡
 
-> **本篇=设计卡（2026-09-06 统一用法归卷裁定）**：只回答"异常从哪抛、沿什么路径、前端怎么对接"。传播链、抛出与响应形状、映射通道、前端契约全部条款见法卷 → [../../specs/current/modules/exception.md](../../specs/current/modules/exception.md)；条款冲突以法卷为准（rules/05 §2）。本篇零形状复写。
+> **本篇=设计卡（2026-09-06 统一用法归卷裁定）**：只回答"异常从哪抛、沿什么路径、前端怎么对接"。传播链、抛出与响应形状、映射通道、前端契约全部条款见法卷 → [../../specs/current/modules/exception.md](../../specs/current/modules/exception.md)；条款冲突以法卷为准（归属法卷 §2）。本篇零形状复写。
 
 > 设计原理 → [../explanation/domain.md](../explanation/domain.md)（异常策略章节）。
 

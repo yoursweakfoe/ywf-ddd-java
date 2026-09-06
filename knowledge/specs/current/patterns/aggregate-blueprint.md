@@ -605,7 +605,7 @@ server infrastructure/ persistence/{ds}/{agg}/(mybatis/{po,mapper} + converter +
 resources/             mapper/**/*.xml（手写 SQL 语句面）
 ```
 
-真实包树**不设二手地图**——包路径/文件数的 canonical 是源码本身（rules/05 §2 第一行），要图直接 glob 源码树；本通式只裁「一个服务该有哪些目录、各目录住什么」，逐槽形状由 §1 清单 + §2/§4 条款约束。
+真实包树**不设二手地图**——包路径/文件数的 canonical 是源码本身（归属法卷 §2 第一行），要图直接 glob 源码树；本通式只裁「一个服务该有哪些目录、各目录住什么」，逐槽形状由 §1 清单 + §2/§4 条款约束。
 
 ## 生效登记
 

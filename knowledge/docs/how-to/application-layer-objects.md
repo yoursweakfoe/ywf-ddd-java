@@ -6,7 +6,7 @@
 
 ## 什么时候需要内部对象
 
-Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数据 ↔ 契约 CO）之间，需要语义明确的后缀区分不同用途的数据对象，而不是泛化的 DTO。写侧投影 DTO 是基线；读侧多视图、入路径富化、外部报文防腐是三个扩展场景，分别对应 ViewDTO / ParamsDTO / RecordDTO（虚构教例名）——四对象角色总表、写/读承载对比、准入选择表均在法卷 §2.4~§2.6。DTO 与 CO 的职责分工 canonical 在 `.agents/rules/03-coding-conventions.md`（本卡不复述）。
+Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数据 ↔ 契约 CO）之间，需要语义明确的后缀区分不同用途的数据对象，而不是泛化的 DTO。写侧投影 DTO 是基线；读侧多视图、入路径富化、外部报文防腐是三个扩展场景，分别对应 ViewDTO / ParamsDTO / RecordDTO（虚构教例名）——四对象角色总表、写/读承载对比、准入选择表均在法卷 §2.4~§2.6。DTO 与 CO 的职责分工 canonical 在 `knowledge/specs/current/patterns/coding-conventions.md`（本卡不复述）。
 
 ## 决策点
 

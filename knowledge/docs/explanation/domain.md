@@ -53,7 +53,7 @@
 
 domain 是被依赖的核心、不依赖任何外层：application 经其接口编排聚合行为（load → 行为 → save），infrastructure 反向依赖实现其 Repository / Portal 接口（依赖倒置），并做到零外部依赖（纯 Java + common-ddd）。
 
-→ 分层依赖方向法条（含结构图）canonical 在 [.agents/rules/02-architecture.md](../../../.agents/rules/02-architecture.md)「依赖方向」，ArchUnit 执法，本文不复制图。
+→ 分层依赖方向法条（含结构图）canonical 在 [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「依赖方向」，ArchUnit 执法，本文不复制图。
 
 ## 专题
 

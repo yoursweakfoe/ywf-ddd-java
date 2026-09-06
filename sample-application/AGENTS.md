@@ -1,6 +1,6 @@
 # sample-application/AGENTS.md
 
-本树=示例业务服务，**全仓唯一「真实例」之家**。进入本目录先读根 `AGENTS.md` 九条；法条在 `.agents/rules/02-04`，此处不复述。
+本树=示例业务服务，**全仓唯一「真实例」之家**。进入本目录先读根 `AGENTS.md` 九条；法条在 `knowledge/specs/current/patterns/（禁令卷/编码公约卷）`，此处不复述。
 
 ## 本树局部守则（nearest-wins）
 

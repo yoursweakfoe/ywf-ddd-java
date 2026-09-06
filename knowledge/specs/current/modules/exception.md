@@ -47,11 +47,11 @@ public class {Agg} extends AggregateRoot<UUID> {
 
 | # | SHALL | 取证 | 背书 |
 |---|---|---|---|
-| EV-1 | 业务失败一律 `throw new BusinessException(messageKey, params)`；**禁止**定义具名领域异常（反例 `InsufficientStockException` 为在册反面教学例，白名单登记）；domain 层不设 `exception/` 包 | AGENTS 九条 7；`rules/03` 异常策略节 | C3 白名单 |
-| EV-2 | messageKey 格式 `{aggregate}:err.{scene}`——前端渲染位点，服务端不维护 messages.properties；禁止硬编码可读文案作 key；全仓 key 清单唯一登记处 = `knowledge/docs/how-to/error-handling.md`（宽松件的登记职责，非条款） | rules/05 §5 | — |
+| EV-1 | 业务失败一律 `throw new BusinessException(messageKey, params)`；**禁止**定义具名领域异常（反例 `InsufficientStockException` 为在册反面教学例，白名单登记）；domain 层不设 `exception/` 包 | AGENTS 九条 7；`编码公约卷` 异常策略节 | C3 白名单 |
+| EV-2 | messageKey 格式 `{aggregate}:err.{scene}`——前端渲染位点，服务端不维护 messages.properties；禁止硬编码可读文案作 key；全仓 key 清单唯一登记处 = `knowledge/docs/how-to/error-handling.md`（宽松件的登记职责，非条款） | 归属法卷 §5 | — |
 | EV-3 | `params` 序列化进响应体：禁止携带堆栈、Token、内部 ID 映射、SQL 片段等敏感信息 | 本卷 §3 安全注意（一期内嵌）；error-handling 禁令段入法 | 评审项 |
 | EV-4 | INSERT/DELETE 影响 0 行属静默写丢失：`SilentWriteLossException` → 500 + `detail` 固定文案（不泄露内部信息、不走告警通道外的 409）；与 `OptimisticLockConflictException`（409 冲突通道）严格分道 | 框架 `GlobalRestExceptionHandler` javadoc；OL-1 互指 | C5 |
-| EV-5 | 异常→HTTP 映射表的 canon = `GlobalRestExceptionHandler` javadoc；`reference/api/common-exception.md` §2 为字典镜像，改表必须同 PR 双更 | rules/05 §2 归属表 + §4 同步行 | **C5 对账** |
+| EV-5 | 异常→HTTP 映射表的 canon = `GlobalRestExceptionHandler` javadoc；`reference/api/common-exception.md` §2 为字典镜像，改表必须同 PR 双更 | 归属法卷 §2 归属表 + §4 同步行 | **C5 对账** |
 | EV-6 | messageKey 命名细则：全小写、场景段驼峰用 `.` 分隔；第一段为聚合名（与包名一致）；`err.` 固定前缀；场景名简洁表达"期望什么"或"出了什么问题" | 原篇「错误码命名规范」规则四条入法；形状 §5.3 | 评审项 |
 | EV-7 | 业务异常在聚合行为方法内抛出后**沿调用栈向上传播**：Handler / AppService / Adapter 不 catch、不包装，终止翻译唯一由 `GlobalRestExceptionHandler`（`@RestControllerAdvice`）完成 | 原篇「异常传播链路」+ 业务场景步骤 3 入法；形状 §5.1 | 评审项 |
 | EV-8 | 异常→HTTP 核心映射通道：`BusinessException` 缺省 **422**（可显式携带其他状态码，`detail` = messageKey）；`IllegalStateException`（`OptimisticLockConflictException` 按 IS-A 命中）**409** + 稳定泛化文案；`@Valid` 族（Bind / ConstraintViolation / 类型不匹配）**400** + `fieldErrors`；其余未捕获 → **500** 泛化兜底 | 原篇「核心通道」五条入法；canon = `GlobalRestExceptionHandler` javadoc（EV-5）；形状 §5.5 | C5 对账 |

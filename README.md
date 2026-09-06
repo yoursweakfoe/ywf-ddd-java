@@ -85,7 +85,7 @@ ywf-ddd-java/
 本项目采用 [dotagents](https://github.com/bgreenwell/dotagents) 约定，提供工具中立的 AI 辅助开发规范：
 
 - **入口**：[`AGENTS.md`](AGENTS.md)（轻量路由器，厂商中立标准）
-- **规则**（`.agents/rules/`）：分层架构、编码规范、禁止清单
+- **法律**（`knowledge/specs/current/`）：法典区——用法规范、禁令全表、编码公约、归属法，机器遵循的唯一权威
 - **技能**（`.agents/skills/`）：新建聚合、新增用例、架构审查
 - **术语**：[`knowledge/docs/reference/glossary.md`](knowledge/docs/reference/glossary.md)
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: new-test
 description: 为已有聚合、Handler、Domain 模型或基础设施组件编写测试。当需要补充单元测试或集成测试时使用。
 ---

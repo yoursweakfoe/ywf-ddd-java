@@ -1,6 +1,6 @@
 ﻿# 测试编写 · 设计卡
 
-> **本篇=设计卡（2026-09-06 统一用法归卷裁定）**：只回答"该测什么、四类怎么分"。四型模板、Fixture、命名、验收终板与全部条款见法卷 → [../../specs/current/patterns/testing-conformance.md](../../specs/current/patterns/testing-conformance.md)；条款冲突以法卷为准（rules/05 §2）。技能 `.agents/skills/new-test` 的模板指向将随本归卷重定向至法卷（技能文件本次不动）。
+> **本篇=设计卡（2026-09-06 统一用法归卷裁定）**：只回答"该测什么、四类怎么分"。四型模板、Fixture、命名、验收终板与全部条款见法卷 → [../../specs/current/patterns/testing-conformance.md](../../specs/current/patterns/testing-conformance.md)；条款冲突以法卷为准（归属法卷 §2）。技能 `.agents/skills/new-test` 的模板指向将随本归卷重定向至法卷（技能文件本次不动）。
 
 > 立场：教「这一类东西怎么测」；「为什么这样测」的论证在 [../explanation/](../explanation/) 与 [../reference/api/common-test.md](../reference/api/common-test.md)。
 

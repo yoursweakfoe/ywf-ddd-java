@@ -1,4 +1,4 @@
----
+﻿---
 name: new-aggregate
 description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最小闭环 + 读端口配对 2 文件）。当需要新增一个完整聚合（如 Payment、Shipment）时使用。
 ---
@@ -8,12 +8,12 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 ## 前置阅读
 
 1. `knowledge/docs/how-to/new-aggregate.md`（①-㉒ 全部代码模板——本技能只承载顺序与清单，逐文件模板以该文档编号为准）
-2. `.agents/rules/02-architecture.md`（分层 + 包结构）
-3. `.agents/rules/03-coding-conventions.md`（命名 + 泛型）
+2. `knowledge/specs/current/patterns/prohibitions.md`（分层 + 包结构）
+3. `knowledge/specs/current/patterns/coding-conventions.md`（命名 + 泛型）
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 ## 步骤
 
 按阶段顺序创建（与 how-to 篇「创建顺序建议」一致；条目编号 = how-to/new-aggregate.md 文件清单 ①-㉒）：
@@ -37,7 +37,7 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 9. ⑮ `infrastructure/persistence/master/{agg}/mybatis/po/{Agg}PO.java` — 纯 `@Data` POJO，零 ORM 注解（表名 / 版本条件 / 逻辑删除全在 SQL 文本，见 how-to 篇 ⑮）
 10. ⑰ `infrastructure/persistence/master/{agg}/mybatis/mapper/{Agg}Mapper.java` — `@Mapper extends DddMapper<{Agg}PO>`（见 how-to 篇 ⑰）
 11. ⑯ `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — `BasicConverter` 桥，`toDomain()` 走 `reconstitute()`（见 how-to 篇 ⑯）
-12. ⑲ `src/main/resources/mapper/{agg}/{Agg}Mapper.xml` — 手写 DddMapper 七条语句（法条见 rules 04「持久化与 SQL」，逐条模板见 how-to 篇 ⑲）
+12. ⑲ `src/main/resources/mapper/{agg}/{Agg}Mapper.xml` — 手写 DddMapper 七条语句（法条见 禁令卷「持久化与 SQL」，逐条模板见 how-to 篇 ⑲）
 13. ⑱ `infrastructure/persistence/master/{agg}/repository/{Agg}RepositoryImpl.java` — 继承 `MybatisPersistence`，构造器注入 Mapper + Converter + `Clock` + `AuditProperties` + `ObjectProvider<CurrentUserProvider>`；不标 `@Transactional`（R11，见 how-to 篇 ⑱）
 
 ### Phase 4: application 层（⑥-⑪）
@@ -61,7 +61,7 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 - [ ] ArchUnit 通过：`mvn test -pl sample-application/sample-service/sample-service-server -Dtest="*ArchitectureTest"`（DddArchitectureTest + ApplicationArchitectureTest；规则编号表见 `knowledge/docs/reference/api/common-test.md` §2）
 - [ ] Handler 返回 DTO，AppService 返回 CO（经 Presenter）
 - [ ] Domain 零框架运行时依赖（唯一例外 `org.springframework.stereotype`，R4 白名单）
-- [ ] 持久化契约满足（法条 rules 04「持久化与 SQL」：PO 零 ORM 注解；XML 七语句含 schema 前缀 / version 条件 / `AND is_delete = false` / insert 不枚举 is_delete / existsById 恒返回一行 boolean）
+- [ ] 持久化契约满足（法条 禁令卷「持久化与 SQL」：PO 零 ORM 注解；XML 七语句含 schema 前缀 / version 条件 / `AND is_delete = false` / insert 不枚举 is_delete / existsById 恒返回一行 boolean）
 - [ ] 契约枚举（㉒）与 domain 状态机枚举（⑬）奇偶锁生效：新枚举对已登记进 `ContractEnumParityTest` 的 `PAIRS` 清单
 - [ ] 事务边界在 Handler（RepositoryImpl 不标注，R11）
 
