@@ -51,57 +51,11 @@ JSONB 字段必须在 XML 语句中显式指定 `typeHandler`（参数位 `#{pro
 
 ## 3. 使用方式
 
-```xml
-<dependency>
-    <groupId>com.yoursweakfoe</groupId>
-    <artifactId>common-pg</artifactId>
-</dependency>
-```
-
-### 场景 1：UUID 主键（自动映射）
-
-```java
-@Data
-public class OrderPO {
-    private UUID id;  // 自动使用 UUIDTypeHandler（@MappedTypes 全局注册，XML 无需显式指定）
-    private String status;
-}
-```
-
-### 场景 2：JSONB 字段（XML 语句中必须显式指定）
-
-```java
-@Data
-public class ProductPO {
-    private UUID id;
-    private String extraInfo;   // String → jsonb，需显式 typeHandler
-    private JsonNode metadata;  // JsonNode → jsonb，推荐显式指定以确保清晰
-}
-```
-
-```xml
-<!-- 手写 XML：参数位与结果位显式声明 typeHandler -->
-<resultMap id="productResultMap" type="...po.ProductPO">
-    <id     column="id"         property="id"/>
-    <result column="extra_info" property="extraInfo"
-            typeHandler="com.yoursweakfoe.common.pg.handler.JsonbTypeHandler"/>
-    <result column="metadata"   property="metadata"
-            typeHandler="com.yoursweakfoe.common.pg.handler.JsonNodeTypeHandler"/>
-</resultMap>
-
-<!-- INSERT / UPDATE 参数位 -->
-INSERT INTO products.products (id, extra_info, metadata)
-VALUES (#{id}, #{extraInfo, typeHandler=com.yoursweakfoe.common.pg.handler.JsonbTypeHandler},
-        #{metadata, typeHandler=com.yoursweakfoe.common.pg.handler.JsonNodeTypeHandler})
-```
-
-### 场景 3：数组字段（自动映射）
-
-```java
-private String[] tags;          // text[]，自动 StringArrayTypeHandler
-private Integer[] viewCounts;   // integer[]，自动 IntegerArrayTypeHandler
-private UUID[] relatedIds;      // uuid[]，自动 UUIDArrayTypeHandler
-```
+> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/
+pg
+.md](../../../specs/current/modules/
+pg
+.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
 
 ## 4. 依赖关系
 

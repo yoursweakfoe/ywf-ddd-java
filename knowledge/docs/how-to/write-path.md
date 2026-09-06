@@ -1,5 +1,7 @@
 # 写路径全链路
 
+> **宽松件（宽严双份，2026-09-06 裁定）**：本篇=任务菜谱与教学走查。其用法规范条款已入法卷 → [../../specs/current/patterns/write-chain.md](../../specs/current/patterns/write-chain.md)；条款冲突以法卷为准（rules/05 §2），本篇代码为教学全套。
+
 > 设计原理 → [module-design/application.md](../explanation/application.md)
 
 ## 业务场景

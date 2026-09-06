@@ -28,11 +28,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 
 | 档 | 覆盖 | 用于 |
 |---|---|---|
-| 教学区 | `knowledge/docs/` + `.agents/` + 根 `AGENTS.md` | C1 / C4 |
+| 教学区 | `knowledge/docs/` + `.agents/` + 根 `AGENTS.md` + `knowledge/specs/current/` | C1 / C4 |
 | 全区 | 伞内全部 + `.agents/` + 根 README + AGENTS.md | C2 / C3 |
 | 定点 | 框架源码 ↔ 异常文档；`git diff HEAD`（只读） | C5 / C6 |
 
-specs/decisions 两区参与符号与计数校验，但**豁免教学中立扫描**（契约与判例天然记业务——辖域条款见 `rules/05` §3）。
+`changes/`、`archive/`、`decisions/` 参与符号与计数校验但**豁免教学中立扫描**（案卷记录当时语，辖域条款见 `rules/05` §3）；`specs/current/` 法卷自 2026-09-06 宽严双份裁定起**入列 C1/C4**——严格件必须保持 `{agg}`/虚构家族的中立形状，由机器担保而非自觉。
 
 ### 六项检查各治什么病
 

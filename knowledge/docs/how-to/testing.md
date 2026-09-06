@@ -1,5 +1,7 @@
 ﻿# 测试编写指南
 
+> **宽松件（宽严双份，2026-09-06 裁定）**：本篇=任务菜谱与教学走查。其用法规范条款已入法卷 → [../../specs/current/patterns/testing-conformance.md](../../specs/current/patterns/testing-conformance.md)；条款冲突以法卷为准（rules/05 §2），本篇代码为教学全套。
+
 > 归属：本文=测试模板唯一载体（D6 裁决：模板住 how-to，`.agents/skills/new-test` 只留步骤+指向本文）。
 > v1 曾用 Payment 具体虚构方法名（confirm 等）——**与 new-aggregate 的 Payment canon（仅 create/validate）打架**，遂改 {Agg} 通式骨架（判例：common-exception 场景2 的「{Agg} 教学占位」形态）。具体形状的真实例一律走文末「真实例」指针位。
 > 立场：教「这一类东西怎么测」；「为什么这样测」的论证在 explanation/ 与 `reference/api/common-test.md`。

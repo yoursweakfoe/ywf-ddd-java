@@ -57,48 +57,11 @@ com.yoursweakfoe.common.contract
 
 ## 3. 使用方式
 
-```xml
-<dependency>
-    <groupId>com.yoursweakfoe</groupId>
-    <artifactId>common-contract</artifactId>
-</dependency>
-```
-
-引入即生效。业务 CQE 对象实现对应标记接口，并在字段上声明校验约束：
-
-```java
-public record PlaceOrderCommand(
-        @NotBlank String customerId,
-        @NotEmpty List<@Valid OrderItemDTO> items
-) implements Command {}
-
-public record GetOrderPageQuery(
-        String status,
-        @Min(1) int pageNum,
-        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) int pageSize
-) implements PageableQuery {}
-// 组件名 pageNum/pageSize 与接口抽象方法天然匹配——零覆写样板。
-// 校验注解必须声明在组件上（见 §3.1）。
-```
-
-### 3.1 参数校验规范
-
-契约层声明约束、服务端执行校验，三层协作：
-
-| 层 | 职责 | 做法 |
-|---|---|---|
-| contract（声明约束） | 在 CQE 字段上声明校验注解 | `@NotNull` / `@NotBlank` / `@NotEmpty` / `@Min` / `@Max` / `@Size` |
-| adapter（触发校验） | `@Valid` 声明于**契约接口方法参数**，Controller 实现继承、HTTP 绑定期触发 | `@Valid @RequestBody XxxCommand`（写在契约接口上） |
-| 全局异常处理 | 统一翻译校验失败 | `MethodArgumentNotValidException` → 400 + fieldErrors（common-exception 已提供） |
-
-要点：
-
-- **嵌套校验**：容器元素用类型参数注解 `List<@Valid Xxx>`；不要在 `List` 字段上加 `@Valid`（Hibernate Validator 已弃用该用法）
-- **record 分页字段**：`@Min/@Max` 声明在 record **组件上**（接口方法注解不被组件继承）；运行期防线由 `safePageNum()/safePageSize()` 兜底，两层互为冗余
-- **字符串 ID 用 `@NotBlank`，对象 ID 用 `@NotNull`，集合用 `@NotEmpty`**
-- **业务规则校验不在此列**：库存够不够、状态对不对属 Domain 层 `validate()` + 显式 if-throw，不用 Bean Validation
-
-无运行时配置：本模块为纯接口 + 注解 jar，无 SPI、无 AutoConfiguration、无 Spring Bean。
+> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/
+contract
+.md](../../../specs/current/modules/
+contract
+.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
 
 ## 4. 依赖关系
 

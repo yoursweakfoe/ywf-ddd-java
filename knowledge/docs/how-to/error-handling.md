@@ -1,5 +1,7 @@
 # 异常全链路
 
+> **宽松件（宽严双份，2026-09-06 裁定）**：本篇=任务菜谱与教学走查。其用法规范条款已入法卷 → [../../specs/current/modules/exception.md](../../specs/current/modules/exception.md)；条款冲突以法卷为准（rules/05 §2），本篇代码为教学全套。
+
 > 设计原理 → [module-design/domain.md](../explanation/domain.md)（异常策略章节）
 
 ## 业务场景

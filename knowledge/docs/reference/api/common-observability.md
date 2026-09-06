@@ -40,14 +40,11 @@ OTel Java Agent 自动向 SLF4J MDC 注入 `trace_id` / `span_id` / `trace_flags
 
 ## 3. 使用方式
 
-```xml
-<dependency>
-    <groupId>com.yoursweakfoe</groupId>
-    <artifactId>common-observability</artifactId>
-</dependency>
-```
-
-引入即生效。日志格式随 Profile 自动切换，Actuator 端点自动暴露。接入采集系统（SLS / Loki / ELK）只需配置 logging-driver 或 DaemonSet，应用侧零改动。
+> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/
+observability
+.md](../../../specs/current/modules/
+observability
+.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
 
 ## 4. 依赖关系
 

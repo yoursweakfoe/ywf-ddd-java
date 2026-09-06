@@ -23,7 +23,7 @@
 | 包路径/类名/方法签名 | 高 | 源代码本身 | 一句规范 + `→ 见 path`；**md 禁手抄结构树** | check-docs C1/C3 |
 | 异常→HTTP 映射、错误码格式 | 高 | `GlobalRestExceptionHandler` javadoc（代码）+ `reference/api/common-exception.md` §2 表（docs 唯一法源） | 一行 + 指针 | C5 对账（表行↔处理器覆盖） |
 | 结构速查（树图） | 高 | `reference/structure.md`（**生成物，禁手改**） | 指针 | 重跑生成脚本即对齐 |
-| 代码模板（教学用） | 中 | `how-to/` 篇内联——业务无关独立教例，永不挂钩 sample 源码；命名中立 `{agg}` 占位或虚构聚合，禁业务词 | skill 指针引用，**skill 内零模板** | C4 扫描 + C2 计数 |
+| 用法规范/规范代码形状（严格件） | 中 | `specs/current/modules/*.md`（8 卷）+ `specs/current/patterns/*.md`（11 卷）——条款+取证源+规范形状的唯一权威，机器遵循 | docs 同题仅**宽松指引**：菜谱/走查/语感 + 节级指针，禁条款编号与精确参数表；冲突以法卷为准（2026-09-06 宽严双份裁定，两期法案已成册） | C1/C3/C4 扫法卷 |
 | 规范行（必须/禁止） | 中 | rules/（本目录） | 一句复述 + 指针；AGENTS.md 九条例外 | 每行挂 R##/测试名 |
 | 设计论证（为什么） | 低 | `explanation/` | 指针 | —（低易变，允许就近重述） |
 | 架构决策 | 冻结 | `decisions/`（全局编号） | `ADR-NNN` 限定名引用 | C6 diff-scope + Confirmation 节必填 |
@@ -37,7 +37,7 @@
 
 - 教学文档是通用抽取不是业务镜像：代码围栏与反引号路径/类名内禁 `order/Order/product/Product`；通配 `{agg}`/`{Agg}` 或虚构教例家族（现行两族：Payment=新建聚合教例、Reservation=读写链路教例），虚构首现标「虚构教例，sample 未实现」。`tutorials/` 为真实例操作手册，业务词豁免。
 - **真实例指针位**（代码块外 + 标注）是全仓业务名合法位之一。
-- 辖域：C4 仅扫 `knowledge/docs` + `.agents`；**`knowledge/specs`、`knowledge/decisions`、`tutorials/` 豁免**（specs 区内含历史案卷带业务引、判例记录当时语、tutorials 是真实例手册）。业务契约已分居 `sample-application/specs/`——本树在 C4 扫描面外，业务合法性由辖域保证；框架契约文书依法用框架词汇。
+- 辖域：C4 扫 `knowledge/docs` + `.agents` + **`knowledge/specs/current/`**（法卷是严格件，必须保持 `{agg}`/虚构家族的中立形状，机器担保）；`changes/`、`archive/`、`knowledge/decisions`、`tutorials/` 豁免（案卷记录当时语、判例记当时言、教程是真实例手册）。业务契约分居 `sample-application/specs/`——本树在扫描面外，业务合法性由辖域保证；框架法卷依法用框架词汇。
 - ~~「代码示例必须与 sample 实际实现保持一致」~~ → 新文：「模板与框架 API 自洽即可」；整段编译验证明文不做（残余风险接受，判据：D4 裁决）。
 
 ## 4. 强制同步规则（伞化修订）
@@ -48,6 +48,7 @@
 | 改 `MybatisPersistence` 通道行为 | 同 PR 改其 javadoc + `reference/api/common-ddd.md` §2 |
 | 重构本树包结构（sample/common） | 当天按 check-docs C1/C3 报告修全部指名文档行 |
 | 新增/变更**框架行为** | 先立 `knowledge/specs/changes/<slug>/` 三件套；归档折叠本区 `current/`（首案开册） |
+| 修订法卷条款 | 同 PR 核对 docs 同题宽松指引无矛盾；有矛盾改 docs（法卷赢） |
 | 新增/变更**示例业务聚合行为** | 先立 `sample-application/specs/changes/<slug>/` 三件套；归档折叠本区 `current/<agg>.md` |
 | 新设计决策 | `decisions/` 新立 ADR（MADR 骨架，Confirmation 必填）；`explanation/theory-map.md` 账本登记 |
 | 新增文档 | 仅登记 `knowledge/docs/README.md` 一处（唯一索引；`knowledge/README.md` 只写三态法律） |

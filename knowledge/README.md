@@ -19,7 +19,7 @@
 | 区 | 态 | 守则一句话 | 法律全文 |
 |---|---|---|---|
 | `docs/` | **地图**（描述） | 代码变了它没跟 → 文档是 bug，修文档 | `.agents/rules/05`（归属法） |
-| `specs/` | **法律**（框架契约） | 代码违反它 → 修代码；要改法 → 走 changes/ 程序，禁止迁就代码偷改 | `specs/README.md` |
+| `specs/` | **法律**（框架契约：行为承诺 + 严格用法规范） | 代码违反它 → 修代码；要改法 → 走 changes/ 程序，禁止迁就代码偷改；docs 同题指引为宽松件，冲突法卷赢 | `specs/README.md` |
 | `decisions/` | **判例卷宗**（冻结） | 正文永不回改；推翻 = 新立案 + supersede 旧案 | `decisions/README.md` |
 | `scripts/` | **执法**（工具链） | 非知识，是守护前三区的机器检查；行为以代码本体为准，说明住字典架 | [docs/reference/doc-guards.md](docs/reference/doc-guards.md) |
 
@@ -33,10 +33,10 @@
 
 | | 学习 | 工作 |
 |---|---|---|
-| **动手** | `tutorials/` 教程：零基础练习场，线性步骤带你完成第一次 | `how-to/` 手册：真实任务的菜谱，目标导向，允许多解 |
-| **认知** | `explanation/` 解读：背景、权衡、设计原理——讲"为什么" | `reference/` 字典：描述性事实，结构严格，供查证 |
+| **动手** | `tutorials/` 教程：零基础练习场，线性步骤带你完成第一次 | `how-to/` 手册：真实任务的菜谱，目标导向，允许多解（宽松指引；严格规范在法卷） |
+| **认知** | `explanation/` 解读：背景、权衡、设计原理——讲"为什么" | `reference/` 字典：描述性事实，结构严格，供查证（用法条款已入法卷） |
 
-一篇文档按读者处境进一个架，不拆写四份——这是摆架的全部意义。
+一篇文档按读者处境进一个架，不拆写四份——这是摆架的全部意义。**但象限只管描述**：规定句（"必须/禁止/应当这样写"）在四格里没有执照，一律上移一层住 `specs/` 法卷（2026-09-06 宽严双份裁定）。判据：**这句话能机械化执行吗？能→法卷；不能（语气/步骤/语境）→ docs。**
 
 ## 3 · 树
 
@@ -48,7 +48,7 @@ knowledge/
 │   ├── how-to/     任务手册（{agg} 中立教例模板，零业务镜像）
 │   ├── reference/  structure.md 生成树图 · api/ 框架模块 8 篇 · doc-guards.md 工具说明
 │   └── explanation/ 分层设计 5 篇 + theory-map 理论账本
-├── specs/          法律·框架 | changes/ 审议稿 + archive/ 存档（current/ 首案开册；业务法→ ../sample-application/specs/）
+├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 全局唯一编号，append-only
 └── scripts/        执法 | check-docs.ps1 六校验 + 豁免白名单 + lychee 配置
 ```

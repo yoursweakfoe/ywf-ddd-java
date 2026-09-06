@@ -1,5 +1,7 @@
 # 新聚合 Checklist
 
+> **宽松件（宽严双份，2026-09-06 裁定）**：本篇=任务菜谱与教学走查。其用法规范条款已入法卷 → [../../specs/current/patterns/aggregate-blueprint.md](../../specs/current/patterns/aggregate-blueprint.md)；条款冲突以法卷为准（rules/05 §2），本篇代码为教学全套。
+
 > 包结构参考 → [directory-structure/overview.md](../reference/structure.md)
 
 ## 业务场景
@@ -19,42 +21,7 @@
 
 ## 文件清单总览
 
-```
-sample-service/
-├── sample-service-contract/src/main/java/.../contract/
-│   └── payment/
-│       ├── adapter/rest/controller/PaymentController.java ← ① Controller 契约接口
-│       ├── dto/co/PaymentCO.java                    ← ② 契约输出
-│       ├── dto/command/CreatePaymentCommand.java    ← ③ Command
-│       ├── dto/query/GetPaymentQuery.java           ← ④ Query
-│       └── enums/PaymentStatus.java                 ← ㉒·契约段：契约枚举（CO 值域镜像 domain 状态机）
-│
-└── sample-service-server/src/main/java/.../
-    ├── adapter/rest/controller/
-    │   └── PaymentControllerImpl.java           ← ⑤ Controller 实现（REST 入口）
-    ├── application/payment/
-    │   ├── service/PaymentAppService.java       ← ⑥ AppService
-    │   ├── dto/PaymentDTO.java                  ← ⑦ 内部 DTO
-    │   ├── assembler/PaymentAssembler.java      ← ⑧ Assembler
-    │   ├── presenter/PaymentPresenter.java      ← ⑨ Presenter
-    │   ├── handler/
-    │   │   ├── command/CreatePaymentHandler.java ← ⑩ CommandHandler
-    │   │   └── query/GetPaymentHandler.java      ← ⑪ QueryHandler
-    │   └── repository/PaymentQueryRepository.java ← ⑳ 读端口（extends QueryRepository）
-    ├── domain/payment/
-    │   ├── model/Payment.java                   ← ⑫ 聚合根
-    │   ├── model/PaymentStatus.java             ← ⑬ 枚举
-    │   └── repository/PaymentRepository.java    ← ⑭ Repository 接口（写侧）
-    └── infrastructure/persistence/master/payment/
-        ├── mybatis/po/PaymentPO.java              ← ⑮ PO（纯 POJO，零 ORM 注解）
-        ├── converter/PaymentConverter.java        ← ⑯ Converter（框架 BasicConverter 桥）
-        ├── mybatis/mapper/PaymentMapper.java      ← ⑰ Mapper（extends DddMapper）
-        ├── repository/PaymentRepositoryImpl.java  ← ⑱ RepositoryImpl（继承 MybatisPersistence）
-        └── repository/PaymentQueryRepositoryImpl.java ← ㉑ 读实现（PO → DTO 直投，与 ⑱ 同包）
-
-sample-service-server/src/main/resources/
-└── mapper/payment/PaymentMapper.xml               ← ⑲ 手写 SQL（DddMapper 七条语句契约）
-```
+> 清单为建筑宪条款（BP-1），已整迁法卷 → [../../specs/current/patterns/aggregate-blueprint.md](../../specs/current/patterns/aggregate-blueprint.md) §1。本架保留 ①-㉒ 逐件教学走查。
 
 ## ① Contract — Controller 契约接口
 
@@ -550,24 +517,10 @@ public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
 - 读端口接口位于 `application/payment/repository/`、`extends QueryRepository`——这是 R13（QueryHandler 禁触 domain 仓储）下的唯一合法读路径，R1b 白名单同时放行 infra 对该端口的实现依赖
 - 完整读侧形态（分页双语句 + `safe*()` 钳制 + ViewDTO / ViewPresenter 多视图）以 [read-path.md](read-path.md) 为 canonical，本节只登记新聚合清单所需的最小文件集
 
-## 创建顺序建议
+## 创建顺序
 
-1. **contract**（①-④ + ㉒）：先定义公开契约，确定接口边界（CO 状态字段用契约枚举 ㉒，值域镜像 domain ⑬）
-2. **domain**（⑫-⑭）：核心模型，零依赖，可独立编译验证
-3. **infrastructure**（⑮-⑲ + ㉑）：持久化实现（PO → Converter → Mapper 接口 → XML → 写侧 RepositoryImpl → 读实现）
-4. **application**（⑥-⑪ + ⑳）：编排层，串联 domain + infrastructure（读端口 ⑳ 与 QueryHandler ⑪ 配对）
-5. **adapter**（⑤）：最后接入协议层
+> 顺序条款已入法（BP-3），以法卷为准，此处不复述。
 
 ## 验证清单
 
-- [ ] `mvn compile` 通过（无循环依赖）
-- [ ] ArchUnit 测试通过（`common-test` 规则）
-- [ ] Domain 层无框架注解（零 Spring / MyBatis 依赖）
-- [ ] 应用层 DTO 实现 `ApplicationDTO` 标记（R10b）；CO 实现 `CO` 标记
-- [ ] 读端口 `extends QueryRepository` 且位于 `application/payment/repository/`（R13：QueryHandler 不得依赖 domain 仓储）
-- [ ] XML 语句表名含 schema 前缀（如 `payments.payments`）
-- [ ] PO 纯 `@Data` 零 ORM 注解；`updateById` 语句携带 `SET version = version + 1 ... AND version = #{version}`
-- [ ] 每条 select/update/delete 语句（逻辑删除聚合）显式携带 `AND is_delete = false`
-- [ ] `insert` 不枚举 `is_delete`（DB 默认值）；`existsById` 恒返回一行 boolean
-- [ ] Mapper XML 位于 `resources/mapper/{agg}/` 且 namespace = Mapper 接口全限定名
-- [ ] Converter.toDomain 使用 `reconstitute()` 重建
+> 验收单已入法（法卷 §3，逐条可机械化）→ 交付前以 [aggregate-blueprint.md](../../specs/current/patterns/aggregate-blueprint.md) §3 勾验。

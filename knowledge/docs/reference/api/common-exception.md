@@ -66,43 +66,11 @@
 
 ## 3. 使用方式
 
-```xml
-<dependency>
-    <groupId>com.yoursweakfoe</groupId>
-    <artifactId>common-exception</artifactId>
-</dependency>
-```
-
-引入即生效。REST 异常处理器由 `ExceptionAutoConfiguration` 自动注册。
-
-### 场景 1：抛出业务异常
-
-```java
-throw new BusinessException("payment:err.notFound");
-
-throw new BusinessException("payment:err.statusPending",
-        Map.of("current", "FAILED", "required", "PENDING"));
-
-// 显式指定 HTTP 状态（默认 422）
-throw new BusinessException("payment:err.notFound", 404);
-throw new BusinessException("payment:err.statusSuccess",
-        Map.of("current", "REFUNDED", "required", "SUCCESS"), 409);
-```
-
-> **安全注意**：`params` 内容会序列化到 HTTP 响应体，禁止放入敏感信息。
-
-### 场景 2：领域层显式抛出
-
-聚合根内的状态守卫（`{Agg}` 为聚合根类名占位，教学占位例——订单类聚合是典型使用方）：
-
-```java
-public class {Agg} extends AggregateRoot<UUID> {
-    public void pay() {
-        requireStatus("{aggregate}:err.status.pending", Status.PENDING);
-        this.status = Status.PAID;
-    }
-}
-```
+> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/
+exception
+.md](../../../specs/current/modules/
+exception
+.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
 
 ## 4. 依赖关系
 
