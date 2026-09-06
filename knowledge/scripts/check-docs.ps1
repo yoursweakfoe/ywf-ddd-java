@@ -6,6 +6,8 @@
   C1 pattern-instantiation  C2 file-count consistency  C3 framework symbols
   C4 business-word neutrality in pedagogy code  C5 exception mapping table parity  C6 decisions append-only
   Exit code = number of failing checks. -SelfTest asserts detection of injected violations.
+.NOTES
+  Sole explanation entry: knowledge/docs/reference/doc-guards.md
 #>
 [CmdletBinding()]
 param(
@@ -16,6 +18,8 @@ $ErrorActionPreference = 'Stop'
 if (-not $RootPath) {
     $here = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
     $RootPath = Split-Path -Parent $here
+    while ($RootPath -and -not (Test-Path (Join-Path $RootPath 'AGENTS.md'))) { $RootPath = Split-Path -Parent $RootPath }
+    if (-not $RootPath) { throw 'repo root (AGENTS.md marker) not found above script location' }
 }
 $root = (Resolve-Path $RootPath).Path
 

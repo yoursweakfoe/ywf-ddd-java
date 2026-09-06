@@ -4,7 +4,7 @@
 
 ## 本树局部守则（nearest-wins）
 
-- **本树是结构事实的真相源**：`knowledge/` 与 `.agents/` 的每个 `{agg}` 模板路径（代入 order/product 后）、每个类符号，由 `scripts/check-docs.ps1` C1/C3 对照本树校验。**重构本树（改包/改名/移类）当天，check-docs 会指名要同步的文档行——修文档是重构的一部分，不是之后的债。**（判例：83ee2ff 扁平化后 docs 滞留 32 处幽灵路径、靠人肉审计发现，本次重组要根除的模式。）
+- **本树是结构事实的真相源**：`knowledge/` 与 `.agents/` 的每个 `{agg}` 模板路径（代入 order/product 后）、每个类符号，由 `knowledge/scripts/check-docs.ps1` C1/C3 对照本树校验。**重构本树（改包/改名/移类）当天，check-docs 会指名要同步的文档行——修文档是重构的一部分，不是之后的债。**（判例：83ee2ff 扁平化后 docs 滞留 32 处幽灵路径、靠人肉审计发现，本次重组要根除的模式。）
 - **业务词在本树合法、出树即违规**：教学文档引用本树真实类只走「真实例」指针位（代码块外+标注，或实现状态表）——D4 教义的另一面。
 - **契约先行（spec-first 的落地形态）**：新增/变更行为先立 `knowledge/specs/changes/<YYYY-MM-slug>/`（proposal→delta→tasks）；实现完成后 delta 归档折叠进 `capabilities/`。文档同步义务只在归档那一刻发生。
 - **状态表惯例**：教学教例未落地件（batch/scheduler/gateway/distributed-transaction）在对应 how-to 篇维护「实现状态表」（判例 scheduled-task 篇）；新增未实现的教学内容必须同步登记，`⛔ 虚构教例，sample 未实现` 是其身份标记。

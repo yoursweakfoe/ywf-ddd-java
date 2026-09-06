@@ -1,4 +1,5 @@
 ﻿# check-docs.whitelist.txt — C3 豁免清单（每行一个正则；新增条目须 PR 评审并附理由，防白名单膨胀复现 F 病）
+# 说明与辖域：见 knowledge/docs/reference/doc-guards.md（C3 专用豁免；新增须 PR 评审写理由，清单只删不增）
 # 类别一：JDK / Spring / Jakarta 标准类（框架源码中本就不存在，合法引用）
 ^IllegalStateException$
 ^IllegalArgumentException$

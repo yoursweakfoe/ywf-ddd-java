@@ -11,8 +11,9 @@
 | `knowledge/specs/` | 契约（法律） | 意图/约定 | 与代码不符 = 二者之一必修；改法必须走 `changes/`，禁止迁就代码偷改 | 代码之前，发起者主动 |
 | `knowledge/decisions/` | 判例卷宗 | 过去的决策事件 | 正文永不回改；推翻 = 新立 ADR + 旧篇仅 Status 行变 superseded | 决策定稿当刻 |
 | `.agents/` | 方法 | 不适用（约束 worker） | 不腐烂、不被违反，只被执行 | 观察犯错后追加 |
+| `knowledge/scripts/` | 执法（工具链） | 不适用（不描述事实，守护事实） | 文档红=修文档或修工具，按"磁盘实证"裁决；说明唯一入口 = docs 架 `reference/doc-guards.md` | 随探测器演化 |
 
-伞 `knowledge/` 与区 `docs|specs|decisions` 本身不立法；方法树拒入伞（工具可弃，知识/契约不可弃）。
+伞 `knowledge/` 与区 `docs|specs|decisions|scripts` 本身不立法；方法树拒入伞（工具可弃，知识/契约不可弃）。执法工具链居伞内 `knowledge/scripts/`（2026-09-06 内聚裁定，同日 supersede 初裁"居伞外"）：辖域是每区各自的法律、不是物理相邻——C6 只扫 `decisions/`，工具不因搬家获得或丧失辖域。
 
 ## 2. 事实归属表
 
@@ -27,6 +28,7 @@
 | 架构决策 | 冻结 | `decisions/`（全局编号） | `ADR-NNN` 限定名引用 | C6 diff-scope + Confirmation 节必填 |
 | 需求/行为规格 | 随变更 | `specs/capabilities/`（真相）+ `changes/`（工作区） | skill 首步产出 delta | 归档折叠 = 同步义务唯一时点 |
 | 任务流程（顺序+清单） | 低 | `skills/`（≤500 行） | rules 指过来 | C2/C3 |
+| 防腐工具行为与用法 | 中 | `knowledge/scripts/` 代码本体（行为即法）+ `reference/doc-guards.md`（说明唯一入口） | 一行 + 指针 | 人肉跑主机 + ddd-review 末步 |
 
 **易变性分层**：低易变教义就近重述是有益冗余（agent 执行时看得见）；高易变事实重述是纯债——只禁后者。
 
@@ -55,6 +57,6 @@
 
 ## 6. 防复发
 
-- `scripts/check-docs.ps1` 六校验：PR 门跑 changed-files-only、夜间全量；`ddd-review` 末步必跑，非零即返工。
-- 豁免清单外置于 `scripts/check-docs.whitelist.txt`，**新增豁免须 PR 评审并写理由**——防白名单膨胀复现本文件要治的病。
+- `knowledge/scripts/check-docs.ps1` 六校验（工具说明唯一入口：`knowledge/docs/reference/doc-guards.md`）：PR 门跑 changed-files-only、夜间全量；`ddd-review` 末步必跑，非零即返工。
+- 豁免清单外置于 `knowledge/scripts/check-docs.whitelist.txt`，**新增豁免须 PR 评审并写理由**——防白名单膨胀复现本文件要治的病。
 - 判例法：被 check-docs 抓过 / 审计定过性的写法，在归属表增行，不另发明第五种载体。

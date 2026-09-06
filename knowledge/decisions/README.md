@@ -1,6 +1,6 @@
 # knowledge/decisions/ —— 判例卷宗（态3：冻结）
 
-**本区法律（append-only）**：卷宗正文永不回改。推翻旧决定 = 新立一案，旧案仅 Status 行改为 `Superseded by ADR-NNNN`。机器执法：`scripts/check-docs.ps1` C6（diff 超出「新增文件 / Status 行」即红）。
+**本区法律（append-only）**：卷宗正文永不回改。推翻旧决定 = 新立一案，旧案仅 Status 行改为 `Superseded by ADR-NNNN`。机器执法：`knowledge/scripts/check-docs.ps1` C6（diff 超出「新增文件 / Status 行」即红）。
 
 ## 已知历史违例（史注，不掩盖）
 

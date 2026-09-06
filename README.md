@@ -71,9 +71,8 @@ graph TB
 ywf-ddd-java/
 ├── ywf-ddd-common/        # 公共基础框架
 ├── sample-application/    # 示例业务服务
-├── knowledge/             # 知识伞：docs 地图 / specs 法律 / decisions 判例卷宗
+├── knowledge/             # 知识伞：docs 地图 / specs 法律 / decisions 判例卷宗 / scripts 执法工具链
 ├── .agents/               # AI 辅助开发规范（dotagents 约定，工具中立）
-├── scripts/               # 文档防腐机器法（check-docs 六校验 + lychee 配置）
 └── AGENTS.md              # AI 代理入口文件（厂商中立标准）
 ```
 

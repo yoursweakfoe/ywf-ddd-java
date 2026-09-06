@@ -25,7 +25,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
   - 审查：架构合规自查 `ddd-review`（编码完成必跑）｜ 生产就绪 `ops-review` ｜ 测试充分性 `test-review`
 - **查知识（指针驱动，用到才取）**：结构速查→ `knowledge/docs/reference/structure.md`（生成物禁手改）；框架 API→ `reference/api/common-*.md`；为什么→ `explanation/`；当年决策→ `decisions/README.md`（先查旧判例再拍新板）；行为现状→ `knowledge/specs/capabilities/`；术语→ `knowledge/docs/glossary.md`；全索引→ `knowledge/docs/README.md`
 - **进入模块目录时就近读**：`ywf-ddd-common/AGENTS.md`、`sample-application/AGENTS.md`（nearest-wins）
-- **文档防腐**：交付前跑 `scripts/check-docs.ps1`（六校验；ddd-review 末步已内置）
+- **文档防腐**：交付前跑 `knowledge/scripts/check-docs.ps1`（六校验；ddd-review 末步已内置）；工具说明见 `knowledge/docs/reference/doc-guards.md`
 
 ## Core constraints (quick reference)
 

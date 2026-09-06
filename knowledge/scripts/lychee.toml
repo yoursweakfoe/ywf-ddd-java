@@ -1,5 +1,6 @@
-# scripts/lychee.toml
-# lychee link checker config (docs-restructure WP-5; run: lychee --config scripts/lychee.toml "knowledge/**/*.md" ".agents/**/*.md" "AGENTS.md" "README.md")
+# knowledge/scripts/lychee.toml
+# lychee link checker config (docs-restructure WP-5; run: lychee --config knowledge/scripts/lychee.toml "knowledge/**/*.md" ".agents/**/*.md" "AGENTS.md" "README.md")
+# Explanation (sole doc entry): knowledge/docs/reference/doc-guards.md
 max_concurrency = 4
 timeout = 20
 retry_wait = 3
