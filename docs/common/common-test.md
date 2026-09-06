@@ -22,7 +22,7 @@
 | `INFRA_ACCESS_TO_APPLICATION_ONLY_FOR_READ_PORT_TYPES` | R1b | 收窄 R1 读侧例外：Infrastructure 对 Application 的访问仅限 QueryRepository 实现 / ApplicationDTO 类型锚点 |
 | `ADAPTER_ONLY_DEPENDS_ON_APPLICATION` | R2 | Adapter 只依赖 Application/Contract，不得直连 Domain 或 Infrastructure |
 | `DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS` | R3 | Domain 不依赖 application/infrastructure/adapter/contract |
-| `DOMAIN_MODEL_IS_PURE` | R4 | 领域模型纯净（domain.model 不依赖 Spring Stereotype/JPA；持久化技术栈禁令见 R15） |
+| `DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE` | R4 | Domain 框架中立：禁 Spring 运行时依赖（`org.springframework.stereotype` 装配注解唯一豁免）与 JPA 注解（旧常量 `DOMAIN_MODEL_IS_PURE` 因相邻段匹配永空转已重写，见类头变更记录） |
 | `DOMAIN_REPOSITORIES_MUST_BE_INTERFACES` | R5a | Domain Repository 必须是接口 |
 | `REPOSITORY_IMPL_LIVES_IN_INFRASTRUCTURE` | R5b | 仓储实现（*RepositoryImpl）必须位于 infrastructure.persistence..repository |
 | `DOMAIN_DOES_NOT_DEPEND_ON_SECURITY` | R6 | Domain 不依赖 common-security（领域模型不感知认证上下文） |
@@ -32,16 +32,17 @@
 | `APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED` | R10b | ..application..dto.. 包下顶层类必须实现 ApplicationDTO 标记 |
 | `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制） |
 | `DOMAIN_HAS_NO_PUBLIC_SETTERS` | R12 | Domain 层禁止 public setter（守护充血模型不变量） |
-| `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁止触碰写侧仓储（CQRS 读侧只走 QueryRepository 读端口） |
+| `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁依赖任何写侧 `Repository` 类型——2026-09 起宾语从段匹配切换为**类型锚点**（assignableTo Repository，布局无关）；CQRS 读侧只走 QueryRepository 读端口 |
 | `SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER` | R14a | 实现 ScheduledAdapter 标记的类必须位于 adapter 层（定时任务入口角色） |
 | `SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED` | R14b | 业务 `..adapter..scheduler..` 包下非接口类必须实现 ScheduledAdapter 标记 |
-| `MYBATIS_PLUS_BANNED` | R15 | 全仓禁止依赖 `com.baomidou..`（MyBatis-Plus 剥离回归守护，论证见 common-ddd.md ADR-0007；规则名中的 MYBATIS_PLUS 即禁令所指） |
 | `CONTRACT_DOES_NOT_DEPEND_ON_SERVER` | C1 | Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施 |
 
-> **段匹配碰撞提示**：`..domain..` / `..application..` 按包段精确匹配（非子串），但会同时命中
-> infrastructure 下按「实现哪层接口」命名的 `repository.domain` / `repository.application` 子包。
-> 业务服务若需精确分层语义，请在测试中用根包前缀覆写相关规则（参见 sample-service 的
-> ApplicationArchitectureTest 对 R1/R3/R6 的写法）。
+> **段匹配碰撞沿革（已根治，勿再覆写）**：历史上 infrastructure 按「实现哪层接口」命名的
+> `repository.domain` / `repository.application` 子包会同时命中 `..domain..` / `..application..`
+> 段，业务测试需以根包前缀覆写 R1/R3/R6。2026-09-05 包扁平化迁移确立了「保留段唯一语义」不变量
+> （adapter / application / domain / infrastructure / contract 五段只允许出现在其真实层位置，
+> 读写与接口归属改由类名后缀 + 标记接口表达），现行规则直接用裸段谓词、零层排除——sample 的
+> ApplicationArchitectureTest 已全量挂载共享常量、零本地覆写，旧防撞姿势随之退役。
 
 ### Spring Boot Test 统一版本
 
@@ -65,11 +66,11 @@ JUnit 5 + Mockito + AssertJ + Spring Test，版本由 Spring Boot BOM 管理。
         importOptions = ImportOption.DoNotIncludeTests.class)
 public class ArchitectureTest {
     @ArchTest
-    static final ArchRule r1 = DDDArchitectureRules.LAYERED_ARCHITECTURE;
+    static final ArchRule r1 = DddArchitectureRules.LAYERED_ARCHITECTURE;
     @ArchTest
-    static final ArchRule r2 = DDDArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
+    static final ArchRule r2 = DddArchitectureRules.ADAPTER_ONLY_DEPENDS_ON_APPLICATION;
     @ArchTest
-    static final ArchRule r3 = DDDArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
+    static final ArchRule r3 = DddArchitectureRules.DOMAIN_DOES_NOT_DEPEND_ON_OUTER_LAYERS;
     // ... 其余规则同式引用
 }
 ```
@@ -142,7 +143,7 @@ common-test（独立，test scope 使用）
 
 **背景**：规则如何暴露给业务服务。
 
-**决策**：公开静态常量。业务服务直接引用 `DDDArchitectureRules.XXX`，无需重复定义。
+**决策**：公开静态常量。业务服务直接引用 `DddArchitectureRules.XXX`，无需重复定义。
 
 **确认**：`DddArchitectureRules` 类公开 `ArchRule` 静态字段。
 

@@ -20,36 +20,47 @@
 | `BusinessException(String messageKey, Map<String,Object> params)` | 构造（携带占位符参数，状态缺省 422） |
 | `BusinessException(String messageKey, int httpStatus)` | 构造（显式 HTTP 状态，如 404 / 409） |
 | `BusinessException(String messageKey, Map<String,Object> params, int httpStatus)` | 构造（占位符参数 + 显式 HTTP 状态） |
-| `getMessage()` | 返回 messageKey（如 `"order:err.insufficientStock"`） |
+| `getMessage()` | 返回 messageKey（位点格式 `"{aggregate}:err.{scene}"`，如 `"payment:err.notFound"`） |
 | `getParams()` | 返回占位符参数（不可变 Map，空表示无插值） |
 | `getHttpStatus()` | 返回显式指定的 HTTP 状态；未指定时为 `null`（REST 通道缺省映射 422） |
 
 ### GlobalRestExceptionHandler（REST 通道）
 
-`@RestControllerAdvice`，将异常翻译为 RFC 9457 HTTP 响应：
+`@RestControllerAdvice`，将异常翻译为 RFC 9457 HTTP 响应。**本表是 docs 侧异常 → HTTP 映射的唯一完整副本**（与 `GlobalRestExceptionHandler` 类 javadoc 映射表、`@ExceptionHandler` 实配一一对齐；其余文档需要时指针引用本表，不复制行）：
 
 | 异常类型 | HTTP 状态码 | title |
 |---------|:-----------:|-------|
 | `BusinessException` | 异常自带状态，缺省 422 | Business Error |
 | `ConstraintViolationException` | 400 | Validation Failed |
 | `MethodArgumentNotValidException` | 400 | Validation Failed |
-| `IllegalStateException` | 409 | Conflict |
-| `IllegalArgumentException` | 400 | Bad Request |
+| `BindException` | 400 | Validation Failed |
+| `HttpMessageNotReadableException` | 400 | Bad Request |
+| `MissingServletRequestParameterException` | 400 | Bad Request |
 | `MethodArgumentTypeMismatchException` | 400 | Bad Request |
-| 其他未捕获异常 | 500 | Internal Server Error |
+| `NoResourceFoundException` | 404 | Not Found |
+| `HttpRequestMethodNotSupportedException` | 405 | Method Not Allowed |
+| `HttpMediaTypeNotSupportedException` | 415 | Unsupported Media Type |
+| `IllegalStateException` | 409 | Conflict |
+| `SilentWriteLossException` | **500（独立通道）** | Internal Server Error |
+| `IllegalArgumentException` | 400 | Bad Request |
+| 其他未捕获异常（`Exception` 兜底） | 500 | Internal Server Error |
 
+> `MethodArgumentNotValidException` 是 `BindException` 的子类——`@RequestBody` 校验失败优先命中专属 handler，纯参数绑定失败由 `BindException` 承接；两者都返回 400 + `fieldErrors` 扩展成员，detail 为稳定泛化文案。
 > `MethodArgumentTypeMismatchException`：路径变量 / 请求参数类型转换失败（如非法 UUID、错误枚举名）。不处理时会落入兜底 500——客户端传参错误必须返回 400，detail 仅回显参数名与期望类型（`Parameter '{参数名}' must be of type {期望类型}`），不回显客户端原始值。
+> `SilentWriteLossException`（静默写丢失）**单列 500 通道，刻意不入 ISE 的 409 通道**：INSERT / DELETE 影响 0 行是合法语句的不可能状态——写丢失、schema 事故或调用链缺陷，**重试无意义、需人工介入**；按 ERROR 日志（带栈）记录作为运维告警抓取信号，若混入 409/WARN 通道将静默躲过告警。对外仅回泛化 500 文案，原始消息（含实体 ID / SQL 语义字样）只进服务端日志（抛出链路与三分通道见 `common-ddd.md` §2 仓储支撑）。
 
 响应格式（Content-Type: `application/problem+json`）：
+
+> §2–§3 示例用虚构教例 Payment 家族（与 `docs/application/cookbook/new-aggregate.md` 同族）：虚构教例，sample 未实现（真实例形态见 sample-application，同构）；`payment:err.*` 为其错误码位点。
 
 ```json
 {
   "type": "about:blank",
   "title": "Business Error",
   "status": 422,
-  "detail": "order:err.insufficientStock",
-  "instance": "/api/orders",
-  "params": { "sku": "A001", "required": 10, "available": 3 }
+  "detail": "payment:err.statusPending",
+  "instance": "/api/payments",
+  "params": { "current": "FAILED", "required": "PENDING" }
 }
 ```
 
@@ -67,26 +78,28 @@
 ### 场景 1：抛出业务异常
 
 ```java
-throw new BusinessException("order:err.notFound");
+throw new BusinessException("payment:err.notFound");
 
-throw new BusinessException("order:err.insufficientStock",
-        Map.of("sku", "A001", "required", 10, "available", 3));
+throw new BusinessException("payment:err.statusPending",
+        Map.of("current", "FAILED", "required", "PENDING"));
 
 // 显式指定 HTTP 状态（默认 422）
-throw new BusinessException("order:err.notFound", 404);
-throw new BusinessException("order:err.alreadyConfirmed",
-        Map.of("id", "A001"), 409);
+throw new BusinessException("payment:err.notFound", 404);
+throw new BusinessException("payment:err.statusSuccess",
+        Map.of("current", "REFUNDED", "required", "SUCCESS"), 409);
 ```
 
 > **安全注意**：`params` 内容会序列化到 HTTP 响应体，禁止放入敏感信息。
 
 ### 场景 2：领域层显式抛出
 
+聚合根内的状态守卫（`{Agg}` 为聚合根类名占位，教学占位例——订单类聚合是典型使用方）：
+
 ```java
-public class Order extends AggregateRoot<UUID> {
+public class {Agg} extends AggregateRoot<UUID> {
     public void pay() {
-        requireStatus("order:err.status.pending", OrderStatus.PENDING);
-        this.status = OrderStatus.PAID;
+        requireStatus("{aggregate}:err.status.pending", Status.PENDING);
+        this.status = Status.PAID;
     }
 }
 ```

@@ -6,7 +6,7 @@
 
 延续示例应用的电商场景（参见 [write-path.md](write-path.md) 业务场景节）。
 
-本文以 **"下单 = 创建订单 + 扣减库存（跨服务）"** 为案例，展示 Seata AT 模式分布式事务的使用方式。
+本文以 **"下单 = 创建订单 + 扣减库存（跨服务）"** 为案例，展示 Seata AT 模式分布式事务的使用方式。跨服务示意版为**虚构教例**（`invoice` / `inventory` 聚合系，与 [cross-aggregate.md](cross-aggregate.md) 同一虚构系）；同服务真实形态有 sample 落位（见 §2）。
 
 **业务需求：**
 
@@ -58,38 +58,40 @@ seata:
 > `@GlobalTransactional` 用法；服务内真实形态见 §2（与 [cross-aggregate.md](cross-aggregate.md) 同链路）。
 
 ```java
-// application/order/handler/command/PlaceOrderHandler.java（跨服务示意版）
+// application/invoice/handler/command/CreateInvoiceGlobalTxHandler.java（跨服务示意版，虚构教例）
 @Component
-public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
+public class CreateInvoiceGlobalTxHandler
+        implements CommandHandler<CreateInvoiceCommand, InvoiceDTO> {
 
-    private final OrderRepository orderRepository;
-    private final OrderAssembler orderAssembler;
-    private final OrderFactory orderFactory;
-    private final RestClient productRestClient;  // 远程服务（HTTP，静态 baseUrl 直连）
+    private final InvoiceRepository invoiceRepository;
+    private final InvoiceAssembler invoiceAssembler;
+    private final InvoiceFactory invoiceFactory;
+    private final RestClient inventoryRestClient;  // 远程服务（HTTP，静态 baseUrl 直连）
 
     @Override
     @GlobalTransactional(rollbackFor = Exception.class)  // Seata 全局事务
-    public OrderDTO handle(PlaceOrderCommand command) {
-        // 1. 远程扣库存（跨服务 HTTP 调用，XID 经出站拦截器写入 TX_XID header 透传，Seata 分支事务）
-        productRestClient.post()
-                .uri("/products/internal/deduct-stock")
-                .body(new DeductStockCommand(command.getProductId(), command.getQuantity()))
+    public InvoiceDTO handle(CreateInvoiceCommand command) {
+        // 1. 远程扣减额度（跨服务 HTTP 调用，XID 经出站拦截器写入 TX_XID header 透传，Seata 分支事务）
+        inventoryRestClient.post()
+                .uri("/inventory/internal/deduct-stock")
+                .body(new DeductStockCommand(command.getRefId(), command.getQuantity()))
                 .retrieve()
                 .toBodilessEntity();
 
-        // 2. 本地创建订单（OrderFactory 创建即合法；Seata 分支事务，同一全局事务内）
-        Order order = orderFactory.create(command.getCustomerId(), command.toItems());
-        orderRepository.save(order);
+        // 2. 本地创建订单（InvoiceFactory 创建即合法；Seata 分支事务，同一全局事务内）
+        Invoice invoice = invoiceFactory.create(command.getCustomerId(), command.toItems());
+        invoiceRepository.save(invoice);
 
-        return orderAssembler.toDTO(order);
+        return invoiceAssembler.toDTO(invoice);
     }
 }
 ```
 
 要点：
+
 - `@GlobalTransactional` 标注在发起方（TC 协调入口）
 - 消费方 RestClient 以静态 baseUrl 构建（一期静态地址直连），请求/响应类型复用 contract 中的 CQE/CO
-- 远程服务（Product）的扣库存端点自动注册为分支事务（Seata Agent 拦截 DataSource）
+- 远程服务（库存）的扣减端点自动注册为分支事务（Seata Agent 拦截 DataSource）
 - 任一分支失败 → TC 通知所有分支回滚（undo_log 逆向补偿）
 
 ### XID 透传（HTTP）
@@ -143,17 +145,19 @@ public class SeataXidBindFilter implements Filter {
 ## 2. 同服务场景 — 本地事务即可
 
 ```java
-// 当前 sample 的实际做法（Order + Product 在同一服务/同一数据源）——节选，完整形态见 cross-aggregate.md §2
+// application/invoice/handler/command/CreateInvoiceHandler.java（虚构教例版，同构于 sample 真实形态）——节选，完整形态见 cross-aggregate.md §2
 @Override
 @Transactional(rollbackFor = Exception.class)  // 本地事务，无需 Seata
-public OrderDTO handle(PlaceOrderCommand command) {
-    List<OrderItem> items = buildItems(command);              // 商品批量加载取真实单价（cross-aggregate.md §2）
-    inventoryDomainService.deductStock(items);                // 跨聚合扣库存（DomainService 批量契约）
-    Order order = orderFactory.create(command.getCustomerId(), items);
-    orderRepository.save(order);
-    return orderAssembler.toDTO(order);
+public InvoiceDTO handle(CreateInvoiceCommand command) {
+    List<InvoiceItem> items = buildItems(command);            // 批量加载取真实单价（cross-aggregate.md §2）
+    inventoryDomainService.deductStock(items);                // 跨聚合扣减额度（DomainService 批量契约）
+    Invoice invoice = invoiceFactory.create(command.getCustomerId(), items);
+    invoiceRepository.save(invoice);
+    return invoiceAssembler.toDTO(invoice);
 }
 ```
+
+> 真实例（示例应用即为此形态，Order + Product 同服务同数据源）：对照 `sample-application/.../application/order/handler/command/PlaceOrderHandler.java`（真实例映射位，`@Transactional` 本地事务、无 Seata）。
 
 ## 3. Seata AT 模式工作原理
 
@@ -170,8 +174,8 @@ TM（Transaction Manager）—— @GlobalTransactional 标注的方法
 
 | 层 | 文件 | 职责 | 状态 |
 |----|------|------|------|
-| application | `handler/command/PlaceOrderHandler.java` | `@GlobalTransactional` 入口（跨服务示意版） | ⛔ 未落地 |
-| contract | `product/dto/command/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） | ⛔ 未落地 |
+| application | `handler/command/CreateInvoiceGlobalTxHandler.java` | `@GlobalTransactional` 入口（跨服务示意版，虚构教例） | ⛔ 未落地 |
+| contract | `inventory/dto/command/DeductStockCommand.java` | 东西向请求对象（HTTP 载荷，复用同一契约） | ⛔ 未落地 |
 | infrastructure | `config/SeataXidClientInterceptor.java` | 出站：`RootContext.getXID()` 写入 TX_XID header | ⛔ 未落地 |
 | infrastructure | `config/SeataXidBindFilter.java` | 入站：读取 header 并 bind/unbind RootContext | ⛔ 未落地 |
 | infrastructure | Seata 自动代理 DataSource | 无需手写代码 | ⛔ 未落地 |

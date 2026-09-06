@@ -9,7 +9,8 @@ contract/
 │   ├── dto/                    # 数据传输对象（CQE / CO）
 │   │   ├── command/            # Command（写操作意图）
 │   │   ├── query/              # Query（读操作请求）
-│   │   └── co/                 # Contract Object
+│   │   ├── co/                 # Contract Object
+│   │   ├── event/              # IntegrationEvent（跨服务事件契约）【按需，sample 现无落地事件】
 │   └── enums/                  # 契约共享枚举
 ```
 

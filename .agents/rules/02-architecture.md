@@ -42,11 +42,11 @@ adapter → application → domain ← infrastructure
 domain / application / infrastructure / contract 内部以聚合名分包，打开一个聚合目录即可看到该聚合在该层的全部代码（例外：server 的 adapter 层不按聚合分包）：
 
 ```
-domain/order/             → model/ + repository/（写端口）+ portal/ + service/ + policy/【按需】
-application/order/        → service/（AppService）+ handler/{command,query}/ + assembler/ + presenter/ + dto/ + repository/（读端口）
-infrastructure/.../order/ → mybatis/{po,mapper}/ + converter/ + repository/（写读两侧 Impl 同包，类名后缀 RepositoryImpl / QueryRepositoryImpl 区分）
+domain/{agg}/             → model/ + repository/（写端口）+ portal/ + service/ + policy/【按需】
+application/{agg}/        → service/（AppService）+ handler/{command,query}/ + assembler/ + presenter/ + dto/ + repository/（读端口）
+infrastructure/.../{agg}/ → mybatis/{po,mapper}/ + converter/ + repository/（写读两侧 Impl 同包，类名后缀 RepositoryImpl / QueryRepositoryImpl 区分）
 adapter/rest/controller/  → {Agg}ControllerImpl（实现 contract 契约接口，纯透传）
-contract/order/           → adapter/rest/controller/（Controller 契约接口）+ dto/{command,query,co}/ + enums/
+contract/{agg}/           → adapter/rest/controller/（Controller 契约接口）+ dto/{command,query,co}/ + enums/
 ```
 
 → 详见 `docs/application/module-design/{layer}.md`

@@ -14,7 +14,7 @@
 | [common-pg.md](common/common-pg.md) | PostgreSQL 类型映射（UUID / JSONB / 数组 TypeHandler 自动注册） |
 | [common-security.md](common/common-security.md) | 零信任身份：服务自验 JWT（资源服务器）+ 边界 permit-all 链 + 方法级鉴权 |
 | [common-observability.md](common/common-observability.md) | 可观测性：结构化日志（stdout）+ Actuator + OTel Java Agent |
-| [common-test.md](common/common-test.md) | 测试基础设施：ArchUnit 规则集（R1–R15 系）+ Spring Boot Test 支撑 |
+| [common-test.md](common/common-test.md) | 测试基础设施：ArchUnit 规则集（R1–R14/C1 系；R15 已删除作废）+ Spring Boot Test 支撑 |
 
 ## docs/application/module-design/ — 应用架构设计（5 篇，「每层怎么设计」）
 

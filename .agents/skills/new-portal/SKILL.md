@@ -37,7 +37,7 @@ public interface PaymentPortal extends Portal {
 
 ### 3. Infrastructure 层：实现 Gateway
 
-- 位置：`infrastructure/gateway/{Xxx}Gateway.java`
+- 位置：`infrastructure/gateway/{capability}/{Xxx}Gateway.java`（按外部能力建子包，如 `gateway/payment/`——分包表 → `docs/application/cookbook/gateway.md`）
 - 标注 `@Component`
 - 职责三件套：
   1. **技术调用**：注入外部 SDK Client，发起调用
@@ -68,7 +68,7 @@ public class AlipayPaymentGateway implements PaymentPortal {
 
 - [ ] Portal 接口在 `domain/{agg}/portal/` 包下
 - [ ] Portal 继承 `Portal` 标记接口
-- [ ] Gateway 在 `infrastructure/gateway/` 包下
+- [ ] Gateway 位于 `infrastructure/gateway/{capability}/` 子包（非扁平落 gateway 根包）
 - [ ] Gateway 方法中无领域逻辑（仅翻译 + 容错）
 - [ ] Domain 层无外部 SDK import
 - [ ] 外部调用失败时抛出 `BusinessException`（i18n 位点）

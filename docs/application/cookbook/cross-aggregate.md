@@ -4,39 +4,39 @@
 
 ## 业务场景
 
-延续示例应用的电商场景（参见 [write-path.md](write-path.md) 业务场景节）。
+> 本文为**虚构教例**（`invoice` / `inventory` 聚合系，是对示例应用真实下单链路的同构改写，规则与结构逐一对应）；真实例见文末映射行。
 
-本文以 **"下单"** 为案例，展示一个涉及多聚合协调的复杂写操作：
+本文以 **"开票"** 为案例，展示一个涉及多聚合协调的复杂写操作：
 
 **业务规则：**
 
-1. 下单时需查询商品信息（Product 聚合）获取单价
-2. 下单时需扣减多个商品的库存（跨 Product 聚合批量操作）
-3. 下单时创建新订单（Order 聚合），状态初始化为 PENDING
-4. 库存扣减逻辑不归属于任何单一聚合 → 封装为 **Domain Service**
+1. 开票时需查询库存项（Inventory 聚合）获取单价
+2. 开票时需扣减多个库存项的额度（跨 Inventory 聚合批量操作）
+3. 开票时创建新账单（Invoice 聚合），状态初始化为 PENDING
+4. 扣减逻辑不归属于任何单一聚合 → 封装为 **Domain Service**
 
 **为什么需要 Domain Service？**
 
-| 如果放在 Order 聚合内 | 用 Domain Service |
+| 如果放在 Invoice 聚合内 | 用 Domain Service |
 |---|---|
-| Order 需要注入 ProductRepository（聚合间耦合） | Order 只管自己的状态变迁 |
-| 库存扣减逻辑散落在 Order 的行为方法中 | 跨聚合协调逻辑内聚于一处 |
-| 取消订单时的库存回补要复制一份 | deductStock / replenishStock 对称复用 |
+| Invoice 需要注入 InventoryRepository（聚合间耦合） | Invoice 只管自己的状态变迁 |
+| 扣减逻辑散落在 Invoice 的行为方法中 | 跨聚合协调逻辑内聚于一处 |
+| 作废账单时的额度回补要复制一份 | deductStock / replenishStock 对称复用 |
 
 ## 调用链路
 
 ```
-REST 请求（PlaceOrderCommand）
-  → adapter/rest/controller/OrderControllerImpl
-    → application/order/service/OrderAppService
-      → application/order/handler/command/RetryablePlaceOrderHandler（乐观锁冲突重试包装，见 optimistic-lock-retry.md）
-        → application/order/handler/command/PlaceOrderHandler（复杂用例，跨 2 个聚合，@Transactional）
-          → domain/product/repository/domain/ProductRepository.findAllById()   ← 批量查询商品（单次 IN）
-          → domain/shared/service/InventoryDomainService.deductStock()  ← 跨聚合扣库存（productId 升序加锁）
-          → domain/order/model/Order（创建 + place()）                  ← 创建订单
-          → domain/order/repository/domain/OrderRepository.save()       ← 持久化
-      → application/order/presenter/OrderPresenter
-  ← OrderCO
+REST 请求（CreateInvoiceCommand）
+  → adapter/rest/controller/InvoiceControllerImpl
+    → application/invoice/service/InvoiceAppService
+      → application/invoice/handler/command/RetryableCreateInvoiceHandler（乐观锁冲突重试包装，见 optimistic-lock-retry.md）
+        → application/invoice/handler/command/CreateInvoiceHandler（复杂用例，跨 2 个聚合，@Transactional）
+          → domain/inventory/repository/InventoryRepository.findAllById()   ← 批量查询（单次 IN）
+          → domain/shared/service/InventoryDomainService.deductStock()  ← 跨聚合扣减（ID 升序加锁）
+          → domain/invoice/model/Invoice（创建 + place()）               ← 创建账单
+          → domain/invoice/repository/InvoiceRepository.save()           ← 持久化
+      → application/invoice/presenter/InvoicePresenter
+  ← InvoiceCO
 ```
 
 ## 1. Domain — Domain Service（@Service 组件扫描注册）
@@ -46,76 +46,77 @@ REST 请求（PlaceOrderCommand）
 @Service
 public class InventoryDomainService implements DomainService {
 
-    private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
 
-    public InventoryDomainService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    public InventoryDomainService(InventoryRepository inventoryRepository) {
+        this.inventoryRepository = inventoryRepository;
     }
 
-    /** 批量扣减库存（下单时调用）：批量加载 + 同商品数量合并 */
-    public void deductStock(List<OrderItem> items) {
-        Map<UUID, Product> products = loadProducts(items);
-        quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
-            Product product = requireProduct(products, productId);
-            product.deductStock(totalQuantity);
-            productRepository.update(product);
+    /** 批量扣减（开票时调用）：批量加载 + 同项数量合并 */
+    public void deductStock(List<InvoiceItem> items) {
+        Map<UUID, Inventory> inventoryMap = loadInventories(items);
+        quantitiesByRef(items).forEach((refId, totalQuantity) -> {
+            Inventory inventory = requireInventory(inventoryMap, refId);
+            inventory.deductStock(totalQuantity);
+            inventoryRepository.update(inventory);
         });
     }
 
-    /** 批量回补库存（取消订单时调用） */
-    public void replenishStock(List<OrderItem> items) {
-        Map<UUID, Product> products = loadProducts(items);
-        quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
-            Product product = requireProduct(products, productId);
-            product.restoreStock(totalQuantity);
-            productRepository.update(product);
+    /** 批量回补（作废账单时调用） */
+    public void replenishStock(List<InvoiceItem> items) {
+        Map<UUID, Inventory> inventoryMap = loadInventories(items);
+        quantitiesByRef(items).forEach((refId, totalQuantity) -> {
+            Inventory inventory = requireInventory(inventoryMap, refId);
+            inventory.restoreStock(totalQuantity);
+            inventoryRepository.update(inventory);
         });
     }
 }
 ```
 
 关键约束：
+
 - 实现 `DomainService` 标记接口（common-ddd），标注 `@Service` 由 Spring 组件扫描自动注册
   （Spring 是生态基座，标注注解即标准做法，不手写注册样板；领域层允许 stereotype 注解，见 A2 规则）
 - 可调用 Repository、可修改实体状态（与 Policy 的区别：Policy 无副作用）
-- 商品按 ID 集合**单次 IN 批量查询**（`findAllById`），杜绝逐项 `findById` 的 N+1 问题；
-  同一商品出现在多个订单项时数量合并为一次聚合行为 + 一次持久化
+- 按 ID 集合**单次 IN 批量查询**（`findAllById`，签名为 `List<{Agg}> findAllById(Collection<UUID> ids)`），杜绝逐项 `findById` 的 N+1 问题；
+  同一项出现在多个明细时数量合并为一次聚合行为 + 一次持久化
   （避免对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空）
 
 ## 2. Application — 复杂 CommandHandler（跨聚合编排）
 
 ```java
 @Component
-public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
+public class CreateInvoiceHandler implements CommandHandler<CreateInvoiceCommand, InvoiceDTO> {
 
-    private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
     private final InventoryDomainService inventoryDomainService;
-    private final OrderRepository orderRepository;
-    private final OrderAssembler orderAssembler;
-    private final OrderFactory orderFactory;
+    private final InvoiceRepository invoiceRepository;
+    private final InvoiceAssembler invoiceAssembler;
+    private final InvoiceFactory invoiceFactory;
 
     // 构造器注入（省略）
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderDTO handle(PlaceOrderCommand command) {
-        // 1. 批量加载商品（单次 IN 查询），以真实单价构建订单项
-        Map<UUID, Product> products = productRepository.findAllById(productIds(command)).stream()
-                .collect(Collectors.toMap(Product::getId, Function.identity()));
-        List<OrderItem> items = command.getItems().stream()
-                .map(dto -> new OrderItem(dto.getProductId(), dto.getQuantity(),
-                        requireProduct(products, dto.getProductId()).getPrice()))
+    public InvoiceDTO handle(CreateInvoiceCommand command) {
+        // 1. 批量加载（单次 IN 查询），以真实单价构建账单明细
+        Map<UUID, Inventory> inventoryMap = inventoryRepository.findAllById(refIds(command)).stream()
+                .collect(Collectors.toMap(Inventory::getId, Function.identity()));
+        List<InvoiceItem> items = command.getItems().stream()
+                .map(dto -> new InvoiceItem(dto.getRefId(), dto.getQuantity(),
+                        requireInventory(inventoryMap, dto.getRefId()).getPrice()))
                 .toList();
 
-        // 2. 扣减库存（跨聚合协调，委托 Domain Service；其内部同样批量加载）
+        // 2. 扣减额度（跨聚合协调，委托 Domain Service；其内部同样批量加载）
         inventoryDomainService.deductStock(items);
 
-        // 3. 创建订单并下单（OrderFactory：创建即合法——校验一步到位；跨聚合联动已在本步之前同事务直调完成）
-        Order order = orderFactory.create(command.getCustomerId(), items);
-        orderRepository.save(order);
+        // 3. 创建账单并开票（InvoiceFactory：创建即合法——校验一步到位；跨聚合联动已在本步之前同事务直调完成）
+        Invoice invoice = invoiceFactory.create(command.getCustomerId(), items);
+        invoiceRepository.save(invoice);
 
         // 4. 返回 DTO
-        return orderAssembler.toDTO(order);
+        return invoiceAssembler.toDTO(invoice);
     }
 }
 ```
@@ -126,16 +127,20 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
 ## 完整文件清单
 
+> 通式模板落位（虚构教例）；本链路在示例应用**已真实落地**为下单形态，真实例映射行见下表之后。
+
 | 层 | 文件 | 职责 |
 |----|------|------|
-| contract | `adapter/rest/controller/OrderController.java` | Controller 契约接口 |
-| contract | `dto/command/PlaceOrderCommand.java` | 下单命令（含订单项列表） |
-| adapter | `rest/controller/OrderControllerImpl.java` | 协议适配（透传） |
-| application | `handler/command/RetryablePlaceOrderHandler.java` | 乐观锁冲突重试包装（AppService 实际注入的是本类） |
-| application | `handler/command/PlaceOrderHandler.java` | 跨聚合编排（@Transactional，被上者包装） |
-| domain | `shared/service/InventoryDomainService.java` | 跨聚合库存协调 |
-| domain | `order/model/Order.java` | 订单聚合根（place 行为） |
-| domain | `product/model/Product.java` | 商品聚合根（deductStock 行为） |
+| contract | `adapter/rest/controller/InvoiceController.java` | Controller 契约接口 |
+| contract | `dto/command/CreateInvoiceCommand.java` | 开票命令（含明细列表） |
+| adapter | `rest/controller/InvoiceControllerImpl.java` | 协议适配（透传） |
+| application | `handler/command/RetryableCreateInvoiceHandler.java` | 乐观锁冲突重试包装（AppService 实际注入的是本类） |
+| application | `handler/command/CreateInvoiceHandler.java` | 跨聚合编排（@Transactional，被上者包装） |
+| domain | `shared/service/InventoryDomainService.java` | 跨聚合额度协调 |
+| domain | `invoice/model/Invoice.java` | 账单聚合根（place 行为） |
+| domain | `inventory/model/Inventory.java` | 库存聚合根（deductStock 行为） |
+
+> 真实例（sample-application 实际文件，非虚构）：对照 `sample-application/.../application/order/handler/command/PlaceOrderHandler.java`、`.../handler/command/RetryablePlaceOrderHandler.java`、`.../domain/shared/service/InventoryDomainService.java`、`.../domain/order/model/Order.java`、`.../domain/product/model/Product.java`（真实例映射位）——其中 `InventoryDomainService` 连名字都是真实的，虚构系仅替换了 Order/Product 两个聚合名。
 
 ## 相关模式
 

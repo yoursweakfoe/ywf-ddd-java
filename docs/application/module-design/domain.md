@@ -21,14 +21,7 @@
 
 ### 聚合内部组件
 
-| 组件 | 职责 | 准入规则 |
-|------|------|--------|
-| 聚合根 / 实体 / 值对象 / 枚举 | 领域模型 | 零框架依赖，纯 Java + common-ddd 构建块 |
-| Repository 接口 | 持久化抽象 | 必须为接口，实现在 Infrastructure 层 |
-| Portal 接口 | 外部资源访问（OSS/RPC/MQ/ES） | 必须为接口，实现在 infrastructure/gateway（含 ACL 翻译） |
-| 领域服务 | 聚合内业务逻辑 | 仅当逻辑不自然归属于任何实体时使用 |
-| Factory | 复杂创建逻辑 | 仅当构造器不足以表达创建语义时使用 |
-| Policy | 可插拔领域规则 | 无状态、纯计算、无副作用 |
+聚合内部子包清单与逐包准入规则（model / repository / portal / service / factory / policy）→ canonical 见 [directory-structure/server/domain.md「目录职责」](../directory-structure/server/domain.md)，本文不复制表格。本文只强调两条贯穿全部组件的设计纪律：领域构件**零框架运行时依赖**（纯 Java + common-ddd 构建块）、接口与实现分离（Repository / Portal 定义在本层、实现在 Infrastructure 层）。
 
 > **充血模型的渐进式实践**：理想状态是所有业务逻辑内聚于聚合根方法（完全充血）。
 > 但实践中允许**渐进式充血**——初期可将部分逻辑放在领域服务中，
@@ -52,22 +45,15 @@
 | AggregateRoot | common-ddd/domain/model/ | `{aggregate}/model/` |
 | Entity | common-ddd/domain/model/ | `{aggregate}/model/` |
 | ValueObject | common-ddd/domain/model/ | `{aggregate}/model/` |
-| Repository（写侧） | common-ddd/domain/repository/domain/ | `{aggregate}/repository/domain/` |
+| Repository（写侧） | common-ddd/domain/repository/ | `{aggregate}/repository/` |
 | Factory | common-ddd/domain/factory/ | `{aggregate}/factory/` |
 | DomainService | common-ddd/domain/service/ | `{aggregate}/service/` 或 `shared/service/` |
 
 ## 协作关系
 
-```
-adapter ──→ application ──→ domain ←── infrastructure
-                               │
-                          零外部依赖
-                     （纯 Java + common-ddd）
-```
+domain 是被依赖的核心、不依赖任何外层：application 经其接口编排聚合行为（load → 行为 → save），infrastructure 反向依赖实现其 Repository / Portal 接口（依赖倒置），并做到零外部依赖（纯 Java + common-ddd）。
 
-- **application** 编排 Domain 对象（调用聚合根行为、通过 Repository 接口存取）
-- **infrastructure** 实现 Domain 定义的接口（Repository / Portal）
-- Domain 层**不依赖**任何外层，是被依赖的核心
+→ 分层依赖方向法条（含结构图）canonical 在 [.agents/rules/02-architecture.md](../../../.agents/rules/02-architecture.md)「依赖方向」，ArchUnit 执法，本文不复制图。
 
 ## 专题
 
@@ -99,9 +85,9 @@ Domain 层**不感知数据源**。无论聚合的持久化目标是 master 还�
 
 ```
 domain/
-├── order/       ← 可能持久化到 master
-├── product/     ← 可能持久化到 master
-└── report/      ← 可能持久化到 second（但 domain 层无感知）
+├── {aggregate-x}/   ← 可能持久化到 master
+├── {aggregate-y}/   ← 可能持久化到 master
+└── {aggregate-z}/   ← 可能持久化到 second（但 domain 层无感知）
 ```
 
 ### 领域策略（Domain Policy）
@@ -135,7 +121,9 @@ domain/
 
 **决定**：Domain 层不定义具名领域异常（如 `InsufficientStockException`），统一使用 `BusinessException` + i18n 错误码（`"{aggregate}:err.{场景}"`）；Domain 层目录中**不设 `exception/` 包**。
 
-> 未采纳原因账本 → [docs/references.md](../../references.md)「具名领域异常」行；聚合根内 if-throw 完整示例 → [docs/common/common-ddd.md](../../common/common-ddd.md) 场景 1。
+**异常出 domain 后的三通道**（一句话概览，完整映射表不在此复述）：`BusinessException` → 缺省 422、`IllegalStateException`（含其子类 `OptimisticLockConflictException`，乐观锁冲突可重试）→ 409 + WARN、`SilentWriteLossException`（框架持久化层抛出的 INSERT/DELETE 0 影响行不可能状态，非领域异常、领域无感知）→ 500 + ERROR 告警。
+
+> 映射表 docs 侧 canonical → [docs/common/common-exception.md](../../common/common-exception.md)（与源码 `GlobalRestExceptionHandler` javadoc 映射表对表）；未采纳原因账本 → [docs/references.md](../../references.md)「具名领域异常」行；聚合根内 if-throw 完整示例 → [docs/common/common-ddd.md](../../common/common-ddd.md) 场景 1。
 
 ### 为什么不按类型分包（entity/ + vo/ + service/）？
 

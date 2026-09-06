@@ -30,12 +30,12 @@ DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis 仓�
 
 框架为事件协作定义了「2 种事件 × 2 个方向」的角色词汇，全部是空标记接口——**不内建任何发布、订阅、投递、去重机制**。业务需要时实现对应标记定型身份：进程内路线通常是 Spring `ApplicationEventPublisher` + `@EventListener`，跨服务路线是业务自持的消息中间件。
 
-| 标记 | 位置 | 角色 |
+| 标记 | 位置 | 角色定型（实现方承担，框架不执行） |
 |------|------|------|
-| `DomainEventPublisher` | `application/event/publisher/` | 领域事件进程内发布（对 Spring 事件发布的薄包装） |
-| `IntegrationEventPublisher` | `application/event/publisher/` | 领域事实翻译为集成事件并出站（可靠性策略归业务：直发 / 本地消息表 / 事务消息） |
-| `DomainEventSubscriber` | `application/event/subscriber/` | 进程内领域事件接收，域内反应薄编排 |
-| `IntegrationEventSubscriber` | `adapter/event/subscriber/` | 外部集成事件入站消费（与 REST / 定时任务入口同构的 driving adapter，消费端幂等归业务） |
+| `DomainEventPublisher` | `application/event/publisher/` | 领域事件进程内发布的身份定型（典型实现是对 Spring `ApplicationEventPublisher` 的薄包装，实现归业务） |
+| `IntegrationEventPublisher` | `application/event/publisher/` | 领域事实翻译为集成事件并出站的身份定型（可靠性策略归业务：直发 / 本地消息表 / 事务消息） |
+| `DomainEventSubscriber` | `application/event/subscriber/` | 进程内领域事件接收、域内反应薄编排的身份定型 |
+| `IntegrationEventSubscriber` | `adapter/event/subscriber/` | 外部集成事件入站消费的身份定型（与 REST / 定时任务入口同构的 driving adapter，消费端幂等归业务） |
 
 ### CQRS Handler 接口
 
@@ -53,7 +53,7 @@ Adapter 层入口同样以**空标记**定型角色：
 
 - `RestAdapter`（`common-ddd/adapter/rest/controller/`）—— REST 入口适配器标记。业务 `XxxControllerImpl` 在实现 contract 的 `XxxController` 契约接口之外再实现之（contract 接口承载 HTTP 面，标记声明「adapter 层 REST 入口」身份，供 ArchUnit 识别）。不命名 `Controller`：与 contract 契约接口及 Spring `@Controller` 过宽/易混淆。同类标记还有 `ScheduledAdapter`（`adapter/task/scheduler/`，定时任务入口），二者构成「协议伞 / 角色」两级式的对称包结构
 
-application 层读端口同样以空标记定型：`QueryRepository`（`common-ddd/application/repository/application/`）—— 与 domain 层写侧 `Repository`（聚合生命周期五方法契约）对偶，读端口绕过聚合做 PO → 读 DTO 投影、方法签名自由（条件字段业务专属），标记身份供 ArchUnit 识别（R1b 读端口白名单锚点、R13 读写隔离）。
+application 层读端口同样以空标记定型：`QueryRepository`（`common-ddd/application/repository/`）—— 与 domain 层写侧 `Repository`（聚合生命周期五方法契约）对偶，读端口绕过聚合做 PO → 读 DTO 投影、方法签名自由（条件字段业务专属），标记身份供 ArchUnit 识别（R1b 读端口白名单锚点、R13 读写隔离）。业务读端口接口按聚合放在自己的 `application/{agg}/repository/` 下。
 
 ### 对象转换
 
@@ -72,10 +72,10 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 组合持有业务 Mapper（`DddMapper<PO>` 的扩展接口），直接操作 PO 的底层方法不泄漏为公开 API，封装写侧「load → 行为 → save」链路：
 
 - `saveDomain` / `updateDomain` — 持久化前自动 `validate()`（聚合根不变量校验）+ 经 `AuditFieldFiller` 显式填充审计字段
-- `removeDomain` / `removeDomains` — 传实体删除（内部提取 ID）；`removeDomains` 为 **BEST_EFFORT** 批量语义：不存在的 ID 静默跳过，仅当全部不存在时才抛 `IllegalStateException`
-- `removeDomainById` / `removeDomainByIds` — 按 ID 删除；`removeDomainById` 为 STRICT（ID 不存在即抛 `IllegalStateException`），`removeDomainByIds` 为 BEST_EFFORT（与 `removeDomains` 一致）
+- `removeDomain` / `removeDomains` — 传实体删除（内部提取 ID，走 `removeDomainById` / `removeDomainByIds` 同一严格/宽松语义）
+- `removeDomainById` / `removeDomainByIds` — 按 ID 删除；`removeDomainById` 为 STRICT（按存在的 ID 删除却 0 命中即抛 `SilentWriteLossException`），`removeDomainByIds` 为 BEST_EFFORT（部分未命中静默跳过，整批 0 命中才抛 `SilentWriteLossException`，与 `removeDomains` 一致）
 - `findDomainById` / `findDomainsByIds` / `existsDomainById` — 写侧加载聚合（load → 行为 → save 链路）
-- 乐观锁版本冲突 → `OptimisticLockConflictException`（继承 `IllegalStateException`，HTTP 409）——UPDATE 影响行数 0 时基类经存在性探测区分「版本冲突（可重试）」与「实体消失（重试无意义）」
+- **0 影响行三分通道**：UPDATE 影响行数 0 → 基类经存在性探测分类——实体仍在 → `OptimisticLockConflictException`（版本被并发推进，**可重试**；继承 `IllegalStateException`，HTTP 409）；实体已消失 → 普通 `IllegalStateException`（并发删除属业务竞态，重试无意义，HTTP 409）。INSERT / DELETE 影响行数 0 → `SilentWriteLossException`（静默写丢失——合法语句 0 行属基础设施级事故信号而非业务冲突，**勿重试**、需人工介入；刻意不继承 ISE，避免混入 409/WARN 通道躲过告警，HTTP 500 + ERROR；三异常均在 common-exception `exception/type`，完整异常 → HTTP 映射表见 `common-exception.md` §2）
 - 业务唯一键单条查询由子类以**具名 Mapper 方法**实现（普通 selectOne 语义），基类不设通用条件查询
 - **事务边界上收**：本类不声明 `@Transactional`，事务由应用层 Handler 控制（批量原子性由调用方包裹事务保证）
 
@@ -104,7 +104,7 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 
 ### MyBatis 持久化自动配置
 
-`MybatisDddAutoConfiguration`：`@ConditionalOnClass(SqlSessionFactory.class)` 门控（纯领域消费方不被强制 MyBatis 运行时）、after mybatis-spring-boot-starter 的 `MybatisAutoConfiguration` 排序、`@Import(AuditFieldFiller)` + `@EnableConfigurationProperties(AuditProperties)`；`Clock` 由独立的 `ClockAutoConfiguration` 提供。
+`MybatisDddAutoConfiguration`：装配自检**双卫兵**——`@ConditionalOnClass(SqlSessionFactory.class)`（classpath 剔除 starter 时挡住）+ `@ConditionalOnBean(SqlSessionFactory.class)`（容器级缺席挡住，如排除 `MybatisAutoConfiguration` / 自备 ORM），两路都优雅退化、不产半残 Bean。注意其语义是自检而非「保护纯领域消费方」——common-ddd 是定型装配（opinionated starter），所有采用服务都是单 jar 全套四层、不存在纯领域消费方；after mybatis-spring-boot-starter 的 `MybatisAutoConfiguration` 排序、`@Import(AuditFieldFiller)` + `@EnableConfigurationProperties(AuditProperties)`；`Clock` 由独立的 `ClockAutoConfiguration` 提供。
 
 **零运行时插件**——框架不注册任何 MyBatis `Interceptor`：分页（XML LIMIT/OFFSET 双语句）、乐观锁（UPDATE 文本的版本条件）均由手写 SQL 承担；防全表 UPDATE/DELETE 不设运行时拦截器，手写 XML 使每条语句可见、可 review，「无 WHERE 全表操作」是评审可见项而非运行时黑盒（论证见 ADR-0007）。业务侧经标准 `mybatis.*` 配置命名空间自定义（`configuration.*` / `type-aliases-package` / `mapper-locations`）。
 
@@ -119,49 +119,50 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 
 ### 场景 1：聚合根（状态机 + 不变量校验）
 
+> §3 场景 1–4 共用同一套虚构教例 Payment 家族（与 `docs/application/cookbook/new-aggregate.md` 同族）：虚构教例，sample 未实现（真实例形态见 sample-application，同构）。字段形状与该篇现状对齐、按场景取所需子集。
+
 ```java
-public class Order extends AggregateRoot<UUID> {
+public class Payment extends AggregateRoot<UUID> {
     private UUID id;
-    private OrderStatus status;
-    private List<OrderItem> items;
-    private BigDecimal totalAmount;
+    private UUID orderId;
+    private PaymentStatus status;
+    private BigDecimal amount;
     private Integer version;
 
-    /** 业务构造器（创建新订单） */
-    public Order(UUID id, List<OrderItem> items) {
+    /** 业务构造器（创建新支付） */
+    public Payment(UUID id, UUID orderId, BigDecimal amount) {
         this.id = id;
-        this.items = new ArrayList<>(items);
-        this.status = OrderStatus.PENDING;
-        this.totalAmount = calculateTotal();
+        this.orderId = orderId;
+        this.amount = amount;
+        this.status = PaymentStatus.PENDING;
     }
 
     /** 重建构造器（Converter 使用） */
-    public static Order reconstitute(UUID id, OrderStatus status, List<OrderItem> items,
-                                     BigDecimal totalAmount, Integer version) {
-        Order order = new Order(id, items);
-        order.status = status;
-        order.totalAmount = totalAmount;
-        order.version = version;
-        return order;
+    public static Payment reconstitute(UUID id, UUID orderId, PaymentStatus status,
+                                       BigDecimal amount, Integer version) {
+        Payment payment = new Payment(id, orderId, amount);
+        payment.status = status;
+        payment.version = version;
+        return payment;
     }
 
     @Override public UUID getId() { return id; }
 
-    /** 支付：状态机校验 + 状态变迁 */
-    public void pay() {
-        if (status != OrderStatus.PENDING) {
-            throw new BusinessException("order:err.invalidTransition");
+    /** 支付成功：状态机校验 + 状态变迁 */
+    public void succeed() {
+        if (status != PaymentStatus.PENDING) {
+            throw new BusinessException("payment:err.statusPending");
         }
-        this.status = OrderStatus.PAID;
+        this.status = PaymentStatus.SUCCESS;
     }
 
     /** 不变量校验（仓储 save/update 前自动调用） */
     @Override public void validate() {
-        if (items == null || items.isEmpty()) {
-            throw new BusinessException("order:err.itemsEmpty");
+        if (orderId == null) {
+            throw new BusinessException("payment:err.orderIdRequired");
         }
-        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("order:err.totalMustBePositive");
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("payment:err.amountPositive");
         }
     }
 }
@@ -173,10 +174,11 @@ PO 是**零 ORM 注解**的纯 `@Data` POJO——表名、主键、版本条件�
 
 ```java
 @Data
-public class OrderPO {
+public class PaymentPO {
     private String id;                 // 业务铸造（UUIDv7 文本），INSERT 显式传参
+    private UUID orderId;              // FK 列取原生 uuid 类型，common-pg UUIDTypeHandler 自动直映射（零转换代码）
     private String status;
-    private BigDecimal totalAmount;
+    private BigDecimal amount;
     private Integer version;           // 版本条件由 UPDATE 语句文本携带
     private OffsetDateTime createAt;   // AuditFieldFiller 填充
     private OffsetDateTime updateAt;
@@ -187,9 +189,9 @@ Mapper 扩展框架契约接口，通用七条语句 + 业务查询同一篇 XML
 
 ```java
 @Mapper
-public interface OrderMapper extends DddMapper<OrderPO> {
-    // 分页双语句 + 业务专有查询，实现在 resources/mapper/order/OrderMapper.xml
-    List<OrderPO> selectPageByCondition(@Param("status") String status, @Param("offset") long offset, @Param("limit") long limit);
+public interface PaymentMapper extends DddMapper<PaymentPO> {
+    // 分页双语句 + 业务专有查询，实现在 resources/mapper/payment/PaymentMapper.xml
+    List<PaymentPO> selectPageByCondition(@Param("status") String status, @Param("offset") long offset, @Param("limit") long limit);
     long countByCondition(@Param("status") String status);
 }
 ```
@@ -198,31 +200,31 @@ RepositoryImpl 继承 `MybatisPersistence`，构造器注入四件依赖（Mappe
 
 ```java
 @Component
-public class OrderRepositoryImpl
-        extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
-        implements OrderRepository {
+public class PaymentRepositoryImpl
+        extends MybatisPersistence<PaymentMapper, PaymentPO, Payment, UUID>
+        implements PaymentRepository {
 
-    private final OrderConverter converter;
+    private final PaymentConverter converter;
 
-    public OrderRepositoryImpl(OrderMapper mapper,
-                               OrderConverter converter,
-                               Clock clock,
-                               AuditProperties auditProperties,
-                               ObjectProvider<CurrentUserProvider> currentUserProvider) {
+    public PaymentRepositoryImpl(PaymentMapper mapper,
+                                 PaymentConverter converter,
+                                 Clock clock,
+                                 AuditProperties auditProperties,
+                                 ObjectProvider<CurrentUserProvider> currentUserProvider) {
         super(mapper, clock, auditProperties, currentUserProvider);
         this.converter = converter;
     }
 
-    @Override protected BasicConverter<Order, OrderPO> getConverter() { return converter; }
+    @Override protected BasicConverter<Payment, PaymentPO> getConverter() { return converter; }
 
     /** 领域 ID（UUID）→ PO 主键（String）；类型一致时无需覆写 */
     @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
 
-    @Override public Optional<Order> findById(UUID id) { return findDomainById(id); }
+    @Override public Optional<Payment> findById(UUID id) { return findDomainById(id); }
 
-    @Override public void save(Order domain) { saveDomain(domain); }
+    @Override public void save(Payment domain) { saveDomain(domain); }
 
-    @Override public void update(Order domain) { updateDomain(domain); }
+    @Override public void update(Payment domain) { updateDomain(domain); }
 
     @Override public void deleteById(UUID id) { removeDomainById(id); }
 }
@@ -233,29 +235,29 @@ public class OrderRepositoryImpl
 `saveDomainBatch` / `updateDomainBatch` 语义为**单事务循环**（逐条 insert/update），非多行 VALUES SQL——每条聚合须独立 `validate()`，多行 UPDATE/INSERT 无法触发逐聚合行为；批量原子性由调用方（Handler 标 `@Transactional`）保证。
 
 ```java
-repository.saveDomainBatch(List.of(order1, order2, order3));           // 批量保存
-repository.updateDomainBatch(List.of(order1, order2));                // 批量更新
-List<Order> orders = repository.findDomainsByIds(List.of(id1, id2));  // 批量写侧加载
+repository.saveDomainBatch(List.of(payment1, payment2, payment3));      // 批量保存
+repository.updateDomainBatch(List.of(payment1, payment2));              // 批量更新
+List<Payment> payments = repository.findDomainsByIds(List.of(id1, id2)); // 批量写侧加载
 
-order.markCancelled();
-repository.removeDomain(order);                        // 实体删除（不存在则抛 IllegalStateException）
-repository.removeDomainByIds(List.of(id1, id2));       // 按 ID 批量删除（BEST_EFFORT：不存在的静默跳过）
+payment.refund();
+repository.removeDomain(payment);                        // 实体删除（0 命中抛 SilentWriteLossException——写丢失告警，勿重试）
+repository.removeDomainByIds(List.of(id1, id2));         // 按 ID 批量删除（BEST_EFFORT：部分未命中静默跳过，整批 0 命中抛 SilentWriteLossException）
 ```
 
 ### 场景 4：PageResult 分页链路（读侧，绕过 domain）
 
 ```java
 // application 层：读端口 extends QueryRepository 空标记，返回读 DTO（PO → DTO 直接投影，不经过 domain）
-public interface OrderQueryRepository extends QueryRepository {
-    PageResult<OrderViewDTO> findPage(GetOrderPageQuery query);
+public interface PaymentQueryRepository extends QueryRepository {
+    PageResult<PaymentViewDTO> findPage(GetPaymentPageQuery query);
 }
 
 // application 层：Handler 整体传入 Query 对象——分页参数由实现侧经 safePageNum()/safePageSize() 统一钳制
 @Component
-public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, PageResult<OrderViewDTO>> {
+public class GetPaymentPageHandler implements QueryHandler<GetPaymentPageQuery, PageResult<PaymentViewDTO>> {
     @Override
-    public PageResult<OrderViewDTO> handle(GetOrderPageQuery query) {
-        return orderQueryRepository.findPage(query);
+    public PageResult<PaymentViewDTO> handle(GetPaymentPageQuery query) {
+        return paymentQueryRepository.findPage(query);
     }
 }
 ```
@@ -270,7 +272,7 @@ public class GetOrderPageHandler implements QueryHandler<GetOrderPageQuery, Page
 
 ```
 common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记接口）
-           → common-exception（BusinessException）
+           → common-exception（BusinessException / OptimisticLockConflictException / SilentWriteLossException）
            → mybatis-spring-boot-starter 4.1.0（Boot 4.1.0 / mybatis 3.5.19 / mybatis-spring 4.1.0）
            → dynamic-datasource-spring-boot4-starter（test scope，多数据源路由兼容性验证；独立模块，非 ORM 增强的一部分）
            → h2（test scope，持久化测试的内嵌库）
@@ -285,7 +287,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
 - **SQL 文本即契约**：每条执行的语句都在仓库里（手写 XML），无动态生成、无运行时织入（ADR-0007）
-- **`@ConditionalOnMissingBean`**：`Clock` 等平台级 Bean 允许业务项目定义自己的 Bean 覆盖，框架配置整体退位
+- **`@ConditionalOnMissingBean`**：`Clock` 等平台级 Bean 允许业务项目定义自己的 Bean 覆盖，该 Bean 退位（`@Bean` 方法级条件，非类级整体退位，见 ADR-0006）
 
 ## 6. 设计决策
 
@@ -339,7 +341,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 
 - 状态：accepted（2026-09 补录，论证经 pgjdbc / MyBatis / 业界 ORM 一手对照调研）
 
-**决策**：全框架统一 `java.time.OffsetDateTime`，唯一时间源 = 框架级 `Clock` Bean（`ClockAutoConfiguration` 缺省 `Clock.systemUTC()`，`@ConditionalOnMissingBean` 类级退位，业务测试以 `Clock.fixed(instant, ZoneOffset.UTC)` 覆盖）。时间类型贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误是系统性风险，故收敛为一型一源。
+**决策**：全框架统一 `java.time.OffsetDateTime`，唯一时间源 = 框架级 `Clock` Bean（`ClockAutoConfiguration` 缺省 `Clock.systemUTC()`，`@ConditionalOnMissingBean(Clock.class)` 挂在 `@Bean` 方法级退位——Boot 正统姿势，类级条件会依据不可靠的求值顺序误判，业务测试以 `Clock.fixed(instant, ZoneOffset.UTC)` 覆盖）。时间类型贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误是系统性风险，故收敛为一型一源。
 
 **关键事实（三条）**：
 
@@ -383,7 +385,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 
 - 正面：每条真正执行的 SQL 都在仓库里（可 grep、可 review、可被 AI 直接引用）；运行时插件栈归零，行为与 SQL 文本一一对应；依赖树纯净（仅 `org.mybatis` 系）；PO 零 ORM 注解，domain / infrastructure 边界更干净
 - 成本：每聚合新增约 80–100 行手写 XML（通用 7 条 + 业务查询）；逻辑删除过滤、版本条件由「每语句一条 `AND`」保证，漏写风险由 XML 评审 checklist + 行为等价测试承接（防超卖并发测试为关键证人）
-- 守护：ArchUnit R15（`DDDArchitectureRules.MYBATIS_PLUS_BANNED`）全仓禁入 `com.baomidou..` 代码依赖，防回归；dynamic-datasource 仅存于 common-ddd test scope（兼容验证），永不成为任何层代码依赖
+- 守护：ArchUnit R15（`DddArchitectureRules.MYBATIS_PLUS_BANNED`，2026-09 后续版本已删除该规则、编号作废——理由「规则库不为项目选择不用的库立特别法」，论证见 common-test.md 规则集类头变更记录；本 ADR 按冻结教义保留原文）全仓禁入 `com.baomidou..` 代码依赖，防回归；dynamic-datasource 仅存于 common-ddd test scope（兼容验证），永不成为任何层代码依赖
 
 **确认**：`MybatisPersistence` / `DddMapper` / `AuditFieldFiller`（§2 仓储支撑）；sample PO 零注解 + `resources/mapper/` 手写 XML；`mybatis.*` 配置命名空间；`mvn dependency:tree` 无 MyBatis-Plus 相关构件。
 

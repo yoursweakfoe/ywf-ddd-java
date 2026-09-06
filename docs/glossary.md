@@ -1,46 +1,45 @@
 # 术语表
 
-本项目中使用的特有术语及其精确定义。
+本项目特有术语的唯一登记处。本表定位 = **术语 → canonical 指针**：每行只给一句话身份定位，定义与论证在指针目标处单源维护，本表不复述（避免压缩副本与原文漂移）。业务词汇（文末）是领域通用语言本身，保留业务名。
 
-| 术语 | 全称 | 含义 |
+| 术语（全称） | 一句话 | canonical |
 |------|------|------|
-| CO | Contract Object | 契约输出对象。对内部 DTO 清洗后的外部安全视图，定义在 contract 模块，是消费方唯一可见的数据结构 |
-| DTO | Data Transfer Object | 应用层内部视图。可含审计字段、version、内部评分等，不出服务边界 |
-| CQE | Command / Query | 请求对象的统称。Command=写，Query=读，与 Handler 1:1 对应 |
-| Command | — | 写操作请求对象，实现 `common-contract` 的 `Command` 标记接口 |
-| Query | — | 读操作请求对象，实现 `common-contract` 的 `Query` 标记接口 |
-| PageableQuery | — | 分页查询对象，实现 `PageableQuery` 接口（自带 pageNum/pageSize） |
-| DomainEvent | — | 领域事件标记接口（common-ddd，`domain/event/`）。表达「领域已发生的事实」，仅进程内产生与消费，不跨服务序列化 |
-| IntegrationEvent | — | 集成事件标记接口（common-contract，`dto/event/`）。跨服务事件契约，出入站均为它；业务实现类位于 `contract/{agg}/dto/event/`，传输通道业务自持 |
-| DomainEventPublisher | — | application 层事件角色空标记（common-ddd，`application/event/publisher/`）：领域事件进程内发布的身份定型，框架无机制 |
-| IntegrationEventPublisher | — | application 层事件角色空标记（common-ddd，`application/event/publisher/`）：领域事实翻译为集成事件并出站的身份定型，投递可靠性策略归业务 |
-| DomainEventSubscriber | — | application 层事件角色空标记（common-ddd，`application/event/subscriber/`）：进程内领域事件域内反应的身份定型（Spring 事件监听路线） |
-| IntegrationEventSubscriber | — | adapter 层事件角色空标记（common-ddd，`adapter/event/subscriber/`）：外部集成事件入站消费的身份定型，与 REST / 定时任务入口同构，消费端幂等归业务 |
-| Portal | — | Domain 层定义的外部资源访问接口（如支付、存储）。语义："我需要什么外部能力" |
-| Gateway | — | Infrastructure 层实现 Portal 的类。包含技术调用 + ACL 模型翻译。语义："怎么对接外部" |
-| reconstitute | — | 从持久化数据重建完整领域对象的静态工厂方法。Converter.toDomain() 必须调用此方法（不走业务构造器） |
-| ACL | Anti-Corruption Layer | 防腐层。Gateway 内将外部 SDK 模型翻译为领域模型，防止外部概念污染 Domain |
-| Assembler | — | Application 层组件，Domain → DTO 转换。由 Handler 调用 |
-| Presenter | — | Application 层组件，DTO → CO 转换。由 AppService 调用 |
-| Handler | — | 用例执行单元。CommandHandler（写）或 QueryHandler（读），与 CQE 1:1 对应 |
-| AppService | — | 聚合协调入口。一个聚合一个类，委托 Handler + Presenter，实现类位于服务侧 `application/{agg}/service/`；实现 common-ddd 的 `ApplicationService` 标记接口 |
-| DTO | — | Application 层内部视图对象（`application/{agg}/dto/`），写侧/读侧均实现 `ApplicationDTO` 标记接口（common-ddd），与 contract 层 `CO` 标记对偶（内部可含 version/审计，对外经 Presenter 清洗） |
-| Controller | — | Adapter 层 web 组件（@RestController），实现 contract 接口与 `RestAdapter` 标记接口（common-ddd），spring-web 注解声明 REST 路径，纯透传 AppService |
-| RestAdapter | — | common-ddd 空标记接口，定型「REST 入口适配器」角色（Ports & Adapters 的 driving adapter），供 ArchUnit R8a/R8b 识别与约束 |
-| ApplicationDTO | — | common-ddd 空标记接口（`application/dto/`），定型「应用层内部视图」角色（写侧 DTO + 读侧 DTO），供 ArchUnit R10a/R10b 识别；与 contract 层 `CO` 标记对偶 |
-| Policy | — | 可插拔领域规则（Strategy 模式）。无状态、纯计算、无副作用 |
-| PageResult | — | 框架级分页容器（record），定义在 contract 层（与 PageableQuery 同居），隔离底层分页形态（手写 XML 的 LIMIT/OFFSET + COUNT 双语句），提供 map() 支持逐层转换 |
-| BasicConverter | — | Infrastructure 层转换器接口（Domain ↔ PO），手动实现（富领域模型需 reconstitute） |
-| MybatisPersistence | — | common-ddd 提供的仓储支撑基类（`infrastructure/mybatis/persistence/`），组合持有 `DddMapper`，封装手写 XML 持久化 + 乐观锁冲突分类 + validate 自动调用 + 审计显式填充；不声明 `@Transactional`（事务边界上收至 Handler） |
-| DddMapper | — | common-ddd 框架级通用 Mapper 接口（`infrastructure/mybatis/mapper/`），定义每聚合手写 XML 必须实现的 7 条语句契约（insert / updateById / selectById / selectByIds / deleteById / deleteByIds / existsById）；逻辑删除过滤与版本条件由 SQL 文本自身承担 |
-| AuditFieldFiller | — | common-ddd 审计字段填充器（`infrastructure/mybatis/handler/`），基于 MyBatis 核心 `MetaObject` 按字段名反射；由 `MybatisPersistence` 在写库前**显式调用**：INSERT 填 createAt + updateAt（+ 可选 createdBy/updatedBy），UPDATE 刷新 updateAt |
-| DomainService | — | Domain 层标记接口（common-ddd），跨聚合协调的无状态服务。实现类标注 @Service 由组件扫描注册 |
-| Scheduler | — | Adapter 层组件，定时任务入口（@Scheduled），透传 AppService |
-| opt-in | — | common 模块设计原则：业务服务按需引入，不强制全量依赖 |
-| PgArrayType | — | common-pg 枚举，定义 Java 数组类型与 PG 数组类型名的映射（如 INTEGER → `integer[]`） |
-| DDDArchitectureRules | — | common-test 中的 ArchUnit 规则常量类，提供 DDD 分层守护规则集 |
-| RFC 9457 | Problem Details for HTTP APIs | HTTP 错误响应标准（原 RFC 7807），定义 type/title/status/detail/instance 字段 + `application/problem+json` 媒体类型 |
-| 枚举双份（contract / domain） | — | 同名枚举在 contract 与 domain 各存一份是**刻意的上下文隔离**（如 `contract/order/enums/OrderStatus` 与 `domain/order/model/OrderStatus`）：对外契约的稳定性与对内建模的自由度解耦，两边字段演进互不牵连。禁止为「去重」而合并共享 |
+| CO（Contract Object） | 经 Presenter 清洗后的对外安全视图，消费方唯一可见的数据结构 | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md)、[common-contract.md](common/common-contract.md) |
+| DTO（Data Transfer Object） | 应用层内部视图（可含 version / 审计），不出服务边界；写侧 `XxxDTO` / 读侧 `XxxViewDTO` 均实现 `ApplicationDTO` 标记（两代旧定义已合一于此） | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md)、.agents/rules/03 |
+| CQE（Command / Query） | 请求对象统称，与 Handler 1:1 对应 | → 见 [common-contract.md §2](common/common-contract.md) |
+| Command | 「请做这件事」——写请求标记接口 | → 见 [common-contract.md §2](common/common-contract.md) |
+| Query | 「请给我这个」——读请求标记接口 | → 见 [common-contract.md §2](common/common-contract.md) |
+| PageableQuery | 分页查询契约（pageNum/pageSize + `safe*()` 钳制，record 零覆写） | → 见 [common-contract.md §2 PageableQuery API](common/common-contract.md) |
+| DomainEvent | 领域事件标记接口（`domain/event/`）——「领域已发生的事实」，仅进程内，框架无发布机制 | → 见 [common-ddd.md §2 领域建模基类](common/common-ddd.md) |
+| IntegrationEvent | 跨服务事件契约（common-contract `dto/event/`），出入站均为它，传输通道业务自持 | → 见 [common-contract.md §2](common/common-contract.md) |
+| DomainEventPublisher | 事件角色空标记：进程内发布领域事件的身份定型（无机制） | → 见 [common-ddd.md §2 事件角色标记](common/common-ddd.md) |
+| IntegrationEventPublisher | 事件角色空标记：领域事实翻译为集成事件并出站的身份定型（可靠性归业务） | → 见 [common-ddd.md §2 事件角色标记](common/common-ddd.md) |
+| DomainEventSubscriber | 事件角色空标记：进程内领域事件域内反应的身份定型 | → 见 [common-ddd.md §2 事件角色标记](common/common-ddd.md) |
+| IntegrationEventSubscriber | 事件角色空标记：外部集成事件入站消费的身份定型（driving adapter，幂等归业务） | → 见 [common-ddd.md §2 事件角色标记](common/common-ddd.md) |
+| Portal | Domain 层定义的外部资源访问接口（「我需要什么外部能力」） | → 见 [common-ddd.md §2 领域建模基类](common/common-ddd.md) |
+| Gateway | Infrastructure 层实现 Portal 的类（技术调用 + ACL 翻译，「怎么对接外部」） | → 见 [module-design/infrastructure.md §gateway/](application/module-design/infrastructure.md) |
+| reconstitute | 从持久化数据重建聚合根的静态工厂（`Converter.toDomain()` 专用，不走业务构造器） | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md) |
+| ACL（Anti-Corruption Layer） | 防腐层——Gateway 内把外部 SDK 模型翻译为领域语言，防外部概念污染 Domain | → 见 [module-design/infrastructure.md §gateway/](application/module-design/infrastructure.md) |
+| Assembler | 应用层组件，Domain → DTO（由 Handler 调用） | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md) |
+| Presenter | 应用层组件，DTO → CO 单向呈现（由 AppService 调用） | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md) |
+| Handler | 用例执行单元（`CommandHandler` 写 / `QueryHandler` 读），与 CQE 1:1 | → 见 [common-ddd.md §2 CQRS Handler 接口](common/common-ddd.md) |
+| AppService（ApplicationService） | 聚合协调入口，一个聚合一个类，委托 Handler + Presenter，返回 CO | → 见 [common-ddd.md §2 CQRS Handler 接口](common/common-ddd.md) |
+| Controller | 契约接口 `XxxController`（contract 层）+ 实现 `XxxControllerImpl`（adapter 层纯透传） | → 见 [common-ddd.md §2](common/common-ddd.md)、[module-design/adapter.md](application/module-design/adapter.md) |
+| RestAdapter | REST 入口适配器空标记（`adapter/rest/controller/`），ArchUnit R8a/R8b 锚点 | → 见 [common-ddd.md §2](common/common-ddd.md)、[common-test.md §2](common/common-test.md) |
+| ApplicationDTO | 应用层内部视图空标记（`application/dto/`），ArchUnit R10a/R10b 锚点，与 `CO` 对偶 | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md)、[common-test.md §2](common/common-test.md) |
+| Policy | 可插拔领域规则（Strategy 模式，`isApplicable` + 行为），无状态纯计算无副作用 | → 见 [common-ddd.md §2 领域建模基类](common/common-ddd.md) |
+| PageResult | 框架级分页容器 record（contract `dto/query`，与 PageableQuery 同居），`map()` 逐层转换 | → 见 [common-ddd.md §2 CQRS Handler 接口](common/common-ddd.md) |
+| BasicConverter | 基础设施层转换器接口（Domain ↔ PO，手写逐字段） | → 见 [common-ddd.md §2 对象转换](common/common-ddd.md) |
+| MybatisPersistence | 仓储支撑基类（`infrastructure/mybatis/persistence/`）：封装手写 XML 持久化 + validate 自动调用 + 审计显式填充 + 0 影响行三分通道（乐观锁冲突 / 实体消失 / 静默写丢失）；不声明 `@Transactional` | → 见 [common-ddd.md §2 仓储支撑](common/common-ddd.md) |
+| DddMapper | 通用七条语句契约接口（`infrastructure/mybatis/mapper/`），逻辑删除过滤与版本条件由 SQL 文本承担 | → 见 [common-ddd.md §2 DddMapper](common/common-ddd.md) |
+| AuditFieldFiller | 审计字段显式填充器（`infrastructure/mybatis/handler/`），基于 `MetaObject` 反射，由基类写库前显式调用 | → 见 [common-ddd.md §2 AuditFieldFiller](common/common-ddd.md) |
+| DomainService | 跨聚合协调的无状态领域服务标记接口 | → 见 [common-ddd.md §2 领域建模基类](common/common-ddd.md) |
+| Scheduler（ScheduledAdapter） | 定时任务入口（`@Scheduled`）实现 `ScheduledAdapter` 标记，透传 AppService | → 见 [cookbook/scheduled-task.md](application/cookbook/scheduled-task.md)、[common-test.md §2 R14](common/common-test.md) |
+| opt-in | common 模块按需引入设计：依赖不强制传递，用到才声明 | → 见 [common-cloud.md §1 / §5](common/common-cloud.md) |
+| PgArrayType | common-pg 枚举：Java 数组类型 → PG 数组类型名映射 | → 见 [common-pg.md §2](common/common-pg.md) |
+| DddArchitectureRules | ArchUnit 预置规则常量类（R1–R14/C1 系；R15 已删除、编号作废） | → 见 [common-test.md §2](common/common-test.md) |
+| RFC 9457 | Problem Details for HTTP APIs（原 RFC 7807）：type/title/status/detail/instance + `application/problem+json` | → 见 [common-exception.md §2](common/common-exception.md) |
+| 枚举双份（contract / domain） | 同名枚举在 contract 与 domain 各存一份是**刻意的上下文隔离**（`contract/{agg}/enums/` 与 `domain/{agg}/model/`）：契约稳定与建模自由解耦，字段演进互不牵连，**禁止为「去重」合并共享**（canonical 即本行；sample 有真实双份可对照） | 本行 |
 
 ## 命名映射规范
 

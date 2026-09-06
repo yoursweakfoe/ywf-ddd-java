@@ -10,10 +10,10 @@ Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数
 
 | 场景 | 后缀 | 方向 | 示例 |
 |------|------|------|------|
-| 写侧投影（Command 结果） | **`DTO`** | Domain → Contract | `OrderDTO`（含 version） |
-| 读侧投影（Query 结果） | **`ViewDTO`** | PO → Contract | `OrderViewDTO`（不含 version） |
-| 入路径富化 | **`ParamsDTO`** | Command → Domain | `OrderCreationParamsDTO` |
-| 防腐层中间数据 | **`RecordDTO`** | External → Domain | `PaymentCallbackRecordDTO` |
+| 写侧投影（Command 结果） | **`DTO`** | Domain → Contract | `{Agg}DTO`（含 version） |
+| 读侧投影（Query 结果） | **`ViewDTO`** | PO → Contract | `{Agg}ViewDTO`（不含 version） |
+| 入路径富化 | **`ParamsDTO`** | Command → Domain | `{Agg}CreationParamsDTO` |
+| 防腐层中间数据 | **`RecordDTO`** | External → Domain | `PaymentCallbackRecordDTO`（虚构教例） |
 
 ---
 
@@ -23,42 +23,44 @@ DTO（内部视图）与 CO（契约输出）的职责分工规范表 canonical 
 
 | DTO | 承载 | Presenter | 说明 |
 |-----|------|-----------|------|
-| 写侧 `DTO` | 含乐观锁 version | `OrderPresenter` | Command 执行后的聚合状态投影 |
-| 读侧 `ViewDTO` | 不含 version | `OrderViewPresenter` | Query 的 PO 直接投影（绕过 domain） |
+| 写侧 `DTO` | 含乐观锁 version | `{Agg}Presenter` | Command 执行后的聚合状态投影 |
+| 读侧 `ViewDTO` | 不含 version | `{Agg}ViewPresenter` | Query 的 PO 直接投影（绕过 domain） |
 
-**代码示例**（示例应用已实现）：
+**代码示例**（示例应用已实现，模板以 `{Agg}` 通式表述）：
 
 ```java
 // 写侧 DTO —— Command 执行后的聚合状态投影（含 version）
-// application/order/dto/OrderDTO.java
+// application/{agg}/dto/{Agg}DTO.java
 @Data
-public class OrderDTO implements ApplicationDTO, Serializable {
+public class {Agg}DTO implements ApplicationDTO, Serializable {
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
-    private List<OrderItemDTO> items;
+    private List<{Agg}ItemDTO> items;
     private OffsetDateTime createAt, updateAt;  // 内部审计字段
     private Integer version;                     // 写侧关注点，不暴露给外部
 }
 
 // 读侧 DTO —— Query 的 PO 直接投影（不含 version，绕过 domain）
-// application/order/dto/OrderViewDTO.java
+// application/{agg}/dto/{Agg}ViewDTO.java
 @Data
-public class OrderViewDTO implements ApplicationDTO, Serializable {
+public class {Agg}ViewDTO implements ApplicationDTO, Serializable {
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
-    private List<OrderItemViewDTO> items;
+    private List<{Agg}ItemViewDTO> items;
     private OffsetDateTime createAt, updateAt;
 }
 
 // 读侧 Presenter 按场景裁剪
 @Component
-public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO> {
+public class {Agg}ViewPresenter implements BasicPresenter<{Agg}ViewDTO, {Agg}CO> {
     // 详情：全字段
-    public OrderCO present(OrderViewDTO view) { ... }
+    public {Agg}CO present({Agg}ViewDTO view) { ... }
     // 列表：精简字段
-    public OrderSummaryCO presentSummary(OrderViewDTO view) { ... }
+    public {Agg}SummaryCO presentSummary({Agg}ViewDTO view) { ... }
 }
 ```
+
+> 真实例映射位：sample-application/.../application/order/dto/OrderDTO.java、OrderViewDTO.java（真实例，示例应用已实现，字段形态与上文一致）。
 
 **关键点**：同一读侧 `ViewDTO` → 多个 CO，Presenter 做裁剪；写侧 `DTO` 与读侧 `ViewDTO` 分离，各自独立演进，不互相复用。
 
@@ -71,11 +73,11 @@ public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO>
 **代码示例**（示例应用未实现，展示模式）：
 
 ```java
-// application/order/dto/OrderCreationParamsDTO.java —— 富化后的入参
+// application/{agg}/dto/{Agg}CreationParamsDTO.java —— 富化后的入参
 @Data
-public class OrderCreationParamsDTO {
+public class {Agg}CreationParamsDTO {
     private String customerId;
-    private List<OrderItemParams> items;
+    private List<{Agg}ItemParams> items;
     private String operatorId;      // 从安全上下文注入
     private String region;          // 从配置中心注入
     private BigDecimal totalAmount; // 查库计算
@@ -83,17 +85,17 @@ public class OrderCreationParamsDTO {
 
 // Handler
 @Component
-public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, OrderDTO> {
+public class {Action}{Agg}Handler implements CommandHandler<{Action}{Agg}Command, {Agg}DTO> {
     @Override
-    public OrderDTO handle(PlaceOrderCommand command) {
-        OrderCreationParamsDTO params = enrich(command);
-        Order order = OrderFactory.create(params);  // 参数对象，非裸 Command
-        orderRepository.save(order);
-        return orderAssembler.toDTO(order);
+    public {Agg}DTO handle({Action}{Agg}Command command) {
+        {Agg}CreationParamsDTO params = enrich(command);
+        {Agg} {agg} = {Agg}Factory.create(params);  // 参数对象，非裸 Command
+        {agg}Repository.save({agg});
+        return {agg}Assembler.toDTO({agg});
     }
 
-    private OrderCreationParamsDTO enrich(PlaceOrderCommand cmd) {
-        OrderCreationParamsDTO params = new OrderCreationParamsDTO();
+    private {Agg}CreationParamsDTO enrich({Action}{Agg}Command cmd) {
+        {Agg}CreationParamsDTO params = new {Agg}CreationParamsDTO();
         params.setCustomerId(cmd.getCustomerId());
         params.setOperatorId(SecurityUtil.getString("uid"));  // 按名取 claim（common-security：字段名无规范，不预定义）
         params.setRegion(configService.getRegion());
@@ -114,10 +116,10 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 **代码示例**（示例应用未实现，展示模式）：
 
 ```java
-// application/order/dto/PaymentCallbackRecordDTO.java —— 防腐层中间格式
+// application/payment/dto/PaymentCallbackRecordDTO.java —— 防腐层中间格式
 @Data
 public class PaymentCallbackRecordDTO {
-    private String orderId;                  // 关联的本地订单 ID（外部报文携带或由 Handler 解析）
+    private UUID refId;                      // 关联聚合 ID（外部报文经 toRecord 一次解析定型，不在 Handler 里 String→UUID）
     private String externalTransactionId;    // 外部系统交易 ID
     private String externalStatus;           // 外部系统状态码（如 "SUCCESS" / "FAILED"）
     private String rawPayload;               // 原始消息体（审计用）
@@ -130,10 +132,10 @@ public class ReconcilePaymentHandler implements CommandHandler<ReconcilePaymentC
     @Override
     public Void handle(ReconcilePaymentCommand command) {
         PaymentCallbackRecordDTO record = toRecord(command);   // 外部报文 → 内部格式
-        Order order = orderRepository.findById(UUID.fromString(record.getOrderId()))
-                .orElseThrow(() -> new BusinessException("order:err.notFound"));
-        order.reconcilePayment(record.getExternalTransactionId());  // 领域方法用内部类型
-        orderRepository.update(order);                              // 已存在聚合走 update
+        Payment payment = paymentRepository.findById(record.getRefId())
+                .orElseThrow(() -> new BusinessException("payment:err.notFound"));
+        payment.reconcilePayment(record.getExternalTransactionId());  // 领域方法用内部类型
+        paymentRepository.update(payment);                            // 已存在聚合走 update
         return null;
     }
 }

@@ -108,5 +108,4 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 ## 文档同步
 
-- 更新 `docs/application/directory-structure/overview.md`（如为示例服务）
 - 服务根目录创建 README.md（说明服务职责 + 构建方式）

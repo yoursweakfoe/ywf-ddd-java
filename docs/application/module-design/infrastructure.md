@@ -30,16 +30,16 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 | Mapper | `XxxMapper extends DddMapper<XxxPO>`，标注 `@Mapper` | 七条通用语句契约 + 业务具名查询，全部手写 XML | `mybatis/mapper/` |
 | Mapper XML | `XxxMapper.xml`，namespace = Mapper 接口全限定名 | 每条真正执行的 SQL 的唯一事实源 | `resources/mapper/{agg}/` |
 | Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） | 聚合根 `converter/` |
-| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` | 聚合根 `repository/domain/`（写侧）；读实现在 `repository/application/` |
+| Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` | 聚合根 `repository/`（写读两侧 Impl **同包平铺**，读实现 `XxxQueryRepositoryImpl` 以类名后缀区分） |
 
-> **mybatis/ 边界**：仅收「撤换 ORM（如换 Hibernate）时需彻底删除」的纯技术文件。PO 与其手写 XML 语句共同构成 MyBatis 家族的映射层（接口方法 ↔ 语句 ID 一一对应），撤换后整体重建为 Entity + 注解映射；Mapper 本身即 MyBatis 独有概念（`@Mapper` + XML namespace），Hibernate 世界不存在同名对应物。Converter / RepositoryImpl 撤换后仅部分修改（改参数类型 / 重写实现体），故不进此目录。
+> **mybatis/ 边界**：仅收「撤换 ORM 时需彻底删除」的纯技术文件（PO / Mapper 及其 XML），Converter / RepositoryImpl 留聚合根下。完整论证（为何 PO+Mapper 整体属 MyBatis 家族、撤换后各自删还是改）→ canonical 见 [directory-structure/server/infrastructure.md](../directory-structure/server/infrastructure.md) 的 mybatis/ 边界注记，本文不复制。
 
 `MybatisPersistence` 基类方法语义与 `DddMapper<PO>` 七条通用语句的 XML 契约（insert / updateById 乐观锁条件 / selectById / deleteById 逻辑删除 / existsById 等）→ canonical 详表见 [common-ddd §2 仓储支撑](../../common/common-ddd.md#2-核心能力)，此处不复述。分层职责只此一句：
 
 - **写侧**：`MybatisPersistence` 承载聚合生命周期（load → 行为 → save），事务由 CommandHandler 声明
 - **读侧**：独立 `XxxQueryRepositoryImpl` 用 Mapper 从 PO 直接投影读 DTO，不经过 domain（→ [read-path.md](../cookbook/read-path.md)）
 
-XML 每条语句的表名必须写死 schema 前缀（如 `orders.orders`），因为多数据源按聚合分包后，
+XML 每条语句的表名必须写死 schema 前缀（形如 `{schema}.{table}` 两段式），因为多数据源按聚合分包后，
 同一数据源内不同聚合可能对应不同 schema，不能依赖连接默认 search_path。
 
 MyBatis 配置（`mybatis.*` 命名空间，mybatis-spring-boot-starter）：
@@ -53,7 +53,7 @@ mybatis:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 ```
 
-XML 集中在 `src/main/resources/mapper/{agg}/`，与 PO 同聚合目录镜像对应（`persistence/master/order/mybatis/` ↔ `resources/mapper/order/`）；namespace 与语句 ID 的绑定规则属持久化契约，见上方 §2 指针。
+XML 集中在 `src/main/resources/mapper/{agg}/`，与 PO 同聚合目录镜像对应（`persistence/master/{agg}/mybatis/` ↔ `resources/mapper/{agg}/`）；namespace 与语句 ID 的绑定规则属持久化契约，见上方 §2 指针。
 
 ### gateway/ — 外部系统网关实现
 
@@ -72,7 +72,9 @@ XML 集中在 `src/main/resources/mapper/{agg}/`，与 PO 同聚合目录镜像�
 命名规范：
 - Domain 接口以 `Portal` 结尾：`PaymentPortal`、`StoragePortal`
 - Infra 实现以 `Gateway` 结尾：`AlipayPaymentGateway`、`AliOssStorageGateway`
-- 实现类多于 3 个时，按外部能力分子包：`gateway/payment/`、`gateway/storage/`
+- 实现类一律按外部能力分子包（无条件口径，一个能力一个子包）：`infrastructure/gateway/{capability}/`，如 `gateway/payment/`、`gateway/storage/`——口径 canonical 见 [cookbook/gateway.md](../cookbook/gateway.md)「gateway 按外部能力分子包」要点行，本文不复制规则细节
+
+> 上文 Payment / Storage / Alipay / AliOss 均为虚构教例，sample 未实现（示例应用刻意不演示 Portal/Gateway，完整走查见 cookbook）。
 
 → 完整代码见 [cookbook/gateway.md](../cookbook/gateway.md)
 
@@ -85,14 +87,9 @@ Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 
 ## 协作关系
 
-```
-infrastructure → domain（实现 Repository / Portal 接口）
-infrastructure → 外部框架/SDK（MyBatis、Alipay SDK、OSS Client 等）
-```
+本层实现 domain 定义的 Repository / Portal 接口（依赖倒置），application 经 domain 接口间接使用本层实现、本层不被 domain / application 直接引用；同时本层是服务内持有技术框架 / SDK（MyBatis、OSS Client 等，虚构教例）的唯一合法位——SDK 类型不外泄出本层。
 
-- **domain** 定义接口（Repository / Portal），infra 提供实现
-- **application** 通过 domain 接口间接使用 infra 实现（依赖倒置）
-- infra 不被 domain / application 直接引用
+→ 依赖方向法条（含结构图）canonical 在 [.agents/rules/02-architecture.md](../../../.agents/rules/02-architecture.md)「依赖方向」「依赖倒置」两节，ArchUnit 执法，本文不复制图。
 
 ## 专题
 
@@ -122,7 +119,7 @@ infrastructure → 外部框架/SDK（MyBatis、Alipay SDK、OSS Client 等）
 结构约束：
 
 - 每个数据源一个顶级目录（`master/`、`second/`），**永远平级，不嵌套**
-- 每个数据源内按聚合分包，聚合内部结构完全一致（mybatis/po/ + mybatis/mapper/ + converter/ + repository/domain/ + repository/application/，XML 归 `resources/mapper/{agg}/`）
+- 每个数据源内按聚合分包，聚合内部结构完全一致（mybatis/{po,mapper}/ + converter/ + repository/（写读两侧 Impl 同包，类名后缀区分），XML 归 `resources/mapper/{agg}/`）
 - `@MapperScan` 按数据源分别扫描
 - 默认数据源（master）的 RepositoryImpl 可省略 `@DS`
 - Domain 层完全不感知数据源归属

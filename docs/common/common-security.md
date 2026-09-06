@@ -138,7 +138,7 @@ OrderCO getOrder(@PathVariable("orderId") UUID orderId);
 
 // Application / Adapter 层：SecurityUtil 按名字自取（domain 层禁止——R6 领域不感知认证上下文）
 String userId = SecurityUtil.getString("uid");   // 或 "sub" / "user_id" / 任意你们的名字
-Order order = new Order(command, userId);        // 审计字段、数据归属
+{Agg} agg = new {Agg}(command, userId);          // 教学占位例（{Agg} = 聚合根类名占位）：审计字段、数据归属
 ```
 
 ### 场景 2：方法级鉴权
@@ -147,8 +147,8 @@ Order order = new Order(command, userId);        // 审计字段、数据归属
 @PreAuthorize("hasRole('ADMIN')")
 public void approve(OrderCommand command) { ... }
 
-// 数据归属判断（域数据依赖，无法上浮网关）
-boolean isOwner = order.getCustomerId().equals(SecurityUtil.getString("uid"));
+// 数据归属判断（域数据依赖，无法上浮网关）——agg 为场景 1 声明的 {Agg} 占位聚合实例
+boolean isOwner = agg.getCustomerId().equals(SecurityUtil.getString("uid"));
 boolean isAdmin = SecurityUtil.getStringList("roles").contains("ADMIN");
 ```
 

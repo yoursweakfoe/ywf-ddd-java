@@ -11,7 +11,7 @@
 | Onion Architecture (Jeffrey Palermo) | 同心圆分层，Domain 在核心，依赖方向始终向内 |
 | Hexagonal / Ports & Adapters (Cockburn) | adapter 命名（in/out 方向）、Portal/Gateway 对偶、Domain 通过端口与外界交互 |
 | COLA (张建飞) | 单 Module + Package 分层、adapter 命名、按聚合分包 |
-| Screaming Architecture (Uncle Bob) | 包结构按聚合名尖叫业务语义（order/ product/），而非按技术类型（entity/ vo/ service/） |
+| Screaming Architecture (Uncle Bob) | 包结构按聚合名尖叫业务语义（每个聚合一个目录），而非按技术类型（entity/ vo/ service/） |
 | Package by Feature | 按聚合自包含（打开即全貌），而非按技术类型分包 |
 
 **未采纳：**

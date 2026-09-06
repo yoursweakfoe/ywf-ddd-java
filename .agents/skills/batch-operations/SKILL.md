@@ -14,13 +14,14 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 
 1. **contract**：创建 `contract/{agg}/dto/command/Batch{Action}{Agg}Command.java`
    - 实现 `Command` 标记接口
-   - 核心字段：`List<String> ids`（或 `List<{Xxx}Item> items`）
+   - 核心字段：`List<UUID> ids`（或 `List<{Xxx}Item> items`）
    - `@Schema` 注解
 2. **contract**：在 `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` 契约接口新增方法签名
 3. **application**：创建 `application/{agg}/handler/command/Batch{Action}{Agg}Handler.java`
    - 实现 `CommandHandler<Batch{Action}{Agg}Command, List<{Agg}DTO>>`
    - 全批原子策略时标注 `@Transactional(rollbackFor = Exception.class)`（R11）
-   - 固定模式：批量 load → 逐个领域行为 → updateDomainBatch → 批量 toDTO
+   - 固定模式：批量 load → 逐个领域行为 → 经 RepositoryImpl 基类批量通道落库（`updateDomainBatch`，`MybatisPersistence` 继承的基行为，非 domain Repository 接口方法）→ 批量 toDTO
+   - 消费契约（源 MybatisPersistence javadoc）：batch = 单事务逐条循环，非多行 SQL；调用方必须按 ≤500 条/批自行分片，同一条 Handler `@Transactional` 事务内完成（框架不设行数护栏）
 4. **application**：在 `application/{agg}/service/{Agg}AppService.java` 新增方法
    - `return {agg}Presenter.presentList(handler.handle(command));`
 5. **adapter**：在 `adapter/rest/controller/{Agg}ControllerImpl.java` 新增方法（纯透传）

@@ -11,7 +11,7 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 - **Handler 返回 DTO**：Handler 负责编排领域逻辑，通过 Assembler 转为 DTO 返回
 - **AppService 做呈现**：接收 Handler 的 DTO，通过 Presenter 转为 CO 返回给调用方
 - **写侧不绕过 Domain**：CommandHandler 的业务决策始终在领域模型内，Handler 只做编排
-- **读侧完全绕过 domain**：QueryHandler 不加载领域模型，依赖 application 层 `{Agg}QueryRepository` 读端口（`application/{agg}/repository/application/`），由 infra 读实现从 PO 直接投影读 DTO（canonical → [cookbook/read-path.md](../cookbook/read-path.md)）
+- **读侧完全绕过 domain**：QueryHandler 不加载领域模型，依赖 application 层 `{Agg}QueryRepository` 读端口（`application/{agg}/repository/`，接口直接平铺无二级子包），由 infra 读实现从 PO 直接投影读 DTO（论证 canonical → [cookbook/read-path.md](../cookbook/read-path.md)）
 - **按聚合自包含**：每个聚合子包内含 AppService + handler + assembler + presenter + dto，打开即全貌
 
 ## 包结构
@@ -96,20 +96,20 @@ AppService：DTO → Presenter.present() → CO（返回给调用方）
 
 ### 跨聚合编排与微服务拆分
 
-**单体阶段（当前）**：跨聚合 Handler 放在**用例发起方**的 `handler/` 下：
+**单体阶段（当前）**：跨聚合 Handler 放在**用例发起方**的 `handler/` 下（教例为通式，非 sample 源码）：
 
 ```
-application/order/handler/command/PlaceOrderHandler.java
-  → productRepository.findById(...)          // 跨 Product 聚合查询
-  → inventoryDomainService.deductStock(...)  // 跨聚合协调（领域服务）
-  → order.place(...)                         // 本聚合
-  → orderRepository.save(order)
+application/{agg}/handler/command/{Xxx}CommandHandler.java
+  → otherAggregateRepository.findById(...)   // 跨聚合查询（读对方聚合）
+  → someDomainService.deduct(...)            // 跨聚合协调（领域服务）
+  → aggregate.doBusiness(...)                // 本聚合行为
+  → aggregateRepository.save(aggregate)
 ```
 
 归属判断原则：**谁发起用例、谁承担一致性责任，编排逻辑就归谁。**
 
-**微服务拆分后**：Handler 零迁移——仍在 order-service 的 `application/order/handler/`，
-只是原来直接调 `ProductRepository` 变为通过 product-service 的 REST 契约接口（RestClient 直连）调 product-service。
+**微服务拆分后**：Handler 零迁移——仍在发起方服务的 `application/{agg}/handler/`，
+只是原来直接调对方聚合的 Repository，变为经对方服务的 REST 契约接口（RestClient 直连）远程调用。
 
 **无主长流程（Saga）**：引入独立的 Saga/Process Manager 服务，不在某个业务服务的 application 层内塞入跨服务编排。
 

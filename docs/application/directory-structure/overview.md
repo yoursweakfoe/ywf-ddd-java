@@ -39,17 +39,14 @@ server/
 │       ├── assembler/                 # Domain → DTO（手写显式映射）
 │       ├── presenter/                 # DTO → CO（手写显式映射）
 │       ├── dto/                       # 内部视图
-│       └── repository/                # 读端口（读侧查询接口，对偶 infra repository/application）
-│           └── application/           #   XxxQueryRepository（CQRS 读端口，绕过 domain）
+│       └── repository/                # XxxQueryRepository（CQRS 读端口，绕过 domain；实现为 infra persistence 下 repository/ 内的 QueryRepositoryImpl）
 │
 ├── domain/                          # 领域模型
 │   ├── {aggregate}/
-│   │   ├── model/                     # 聚合根 + 实体 + 值对象 + 枚举
-│   │   ├── repository/                # Repository 接口（对偶 infra repository/domain）
-│   │   │   └── domain/                #   XxxRepository（写侧，聚合生命周期）
+│   │   ├── model/                     # 聚合根 + 实体 + 值对象 + 枚举 + Factory（复杂创建逻辑在此驻位【按需】）
+│   │   ├── repository/                # XxxRepository（写端口，聚合生命周期；实现为 infra persistence 下 repository/ 内的 RepositoryImpl）
 │   │   ├── portal/                    # 外部资源访问接口【按需】
 │   │   ├── service/                   # 聚合内领域服务【按需】
-│   │   ├── factory/                   # 复杂创建逻辑【按需】
 │   │   └── policy/                    # 可插拔领域规则【按需】
 │   └── shared/                        # 跨聚合共享
 │       ├── service/                   # 跨聚合领域服务
@@ -65,9 +62,8 @@ server/
     │   │       │   └── mapper/        # Mapper 接口（extends DddMapper）
     │   │       │                      #   SQL 全部手写：resources/mapper/{aggregate}/XxxMapper.xml
     │   │       ├── converter/         # Domain ↔ PO 转换（框架 BasicConverter 桥）
-    │   │       └── repository/        # Repository 实现
-    │   │           ├── application/   # XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
-    │   │           └── domain/        # XxxRepositoryImpl（写侧，对偶 domain Repository）
+    │   │       └── repository/        # Repository 实现（写读两侧 Impl 同包，类名后缀区分）
+    │   │                              #   XxxRepositoryImpl（写侧，对偶 domain 写端口）+ XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
     │   └── {other}/                   # 其他数据源（结构同 master）【按需】
     ├── gateway/                       # 外部系统网关（实现 Domain Portal）
     │   └── {capability}/              # 按外部能力分包

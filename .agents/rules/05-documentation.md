@@ -9,7 +9,6 @@
 | 修改 sample-application 代码结构（新增/删除/重命名文件） | 对应 `docs/application/cookbook/` 文档 |
 | 新增 common 模块公开 API | `docs/common/common-{module}.md` |
 | 设计决策变更（采纳/弃用某模式） | `docs/references.md` |
-| 新增聚合 | `docs/application/directory-structure/overview.md` |
 | 层间协作关系变化 | 对应 `docs/application/module-design/{layer}.md` |
 
 ## 文档位置约定

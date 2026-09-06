@@ -9,9 +9,8 @@ infrastructure/
 │   │       │   ├── po/                #         持久化对象（纯 POJO 零 ORM 注解，与表 1:1）
 │   │       │   └── mapper/            #         Mapper 接口（extends DddMapper，@Mapper）
 │   │       ├── converter/             #       Domain ↔ PO 转换（BasicConverter，框架原生桥）
-│   │       └── repository/            #       Repository 实现
-│   │           ├── application/       #         XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
-│   │           └── domain/            #         XxxRepositoryImpl（写侧，对偶 domain Repository）
+│   │       └── repository/            #       Repository 实现（写读两侧 Impl 同包，类名后缀区分）
+│   │                                  #         XxxRepositoryImpl（写侧，对偶 domain Repository）+ XxxQueryRepositoryImpl（读侧，对偶 application 读端口）
 │   └── {other}/                       #   其他数据源（结构同 master）【按需】
 ├── gateway/                           # 外部系统网关（实现 Domain Portal 接口）
 │   └── {capability}/                  #   按外部能力分包（多于 3 个实现时）
@@ -32,8 +31,7 @@ src/main/resources/
 | `persistence/{datasource}/{aggregate}/mybatis/mapper/` | Mapper 接口（`extends DddMapper<PO>` 七条通用语句契约 + 具名业务查询） |
 | `resources/mapper/{aggregate}/` | 手写 XML——全部 SQL 的唯一事实源（通用七条 + 业务查询 + 分页双语句） |
 | `persistence/{datasource}/{aggregate}/converter/` | Domain ↔ PO 转换（BasicConverter 手写显式映射，框架原生桥） |
-| `persistence/{datasource}/{aggregate}/repository/application/` | 读侧实现（XxxQueryRepositoryImpl，对偶 application 读端口，PO → 读 DTO 投影） |
-| `persistence/{datasource}/{aggregate}/repository/domain/` | 写侧实现（继承 MybatisPersistence，对偶 domain Repository） |
+| `persistence/{datasource}/{aggregate}/repository/`（写读同包） | 写侧实现 `XxxRepositoryImpl`（继承 MybatisPersistence，对偶 domain Repository）+ 读侧实现 `XxxQueryRepositoryImpl`（对偶 application 读端口，PO → 读 DTO 投影），类名后缀区分 |
 | `gateway/{capability}/` | 外部系统网关（实现 Domain Portal 接口，含 ACL 翻译） |
 | `config/` | Spring @Configuration 全局配置（Bean 定义、TypeHandler 注册等） |
 

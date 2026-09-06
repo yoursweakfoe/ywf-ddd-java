@@ -65,7 +65,7 @@
 ```yaml
 spring:
   application:
-    name: order-service
+    name: service
   cloud:
     nacos:
       discovery:
@@ -73,7 +73,7 @@ spring:
       config:
         server-addr: ${NACOS_SERVER:127.0.0.1:8848}
   config:
-    import: nacos:order-service.yaml?group=DEFAULT_GROUP
+    import: nacos:service.yaml?group=DEFAULT_GROUP
 
 seata:
   enabled: true

@@ -22,6 +22,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 实现 `CommandHandler<{Action}{Agg}Command, {Agg}DTO>`
    - 固定模式：load → 行为 → save → assembler.toDTO()
    - 标注 `@Transactional(rollbackFor = Exception.class)`（R11 强制：事务边界在 CommandHandler.handle）
+   - UPDATE 影响 0 行由 `MybatisPersistence` 经存在性探测分类为 `OptimisticLockConflictException`（可重试）或 `IllegalStateException`（实体已消失，业务竞态走 409）；INSERT / DELETE 影响 0 行是第三通道 `SilentWriteLossException`（写丢失级不可能状态，500 + ERROR 告警、勿重试）。法条见 `.agents/rules/04-forbidden-patterns.md`「持久化与 SQL」，实现见 `MybatisPersistence.throwUpdateFailed` javadoc
 4. **application**：在 `application/{agg}/service/{Agg}AppService.java` 新增方法
    - `return {agg}Presenter.present({action}{Agg}Handler.handle(command));`
 5. **adapter**：在 `adapter/rest/controller/{Agg}ControllerImpl.java` 新增方法
@@ -69,7 +70,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 当用例需要一次性处理多条记录时：
 
-1. Command 含 `List<String> ids`（或 items），置于 `contract/{agg}/dto/command/`
+1. Command 含 `List<UUID> ids`（或 items），置于 `contract/{agg}/dto/command/`
 2. Handler 返回 `List<DTO>`，标注 `@Transactional`（默认全批原子策略；部分失败策略不加，见下）
 3. 模式：批量 load → 逐个领域行为 → `updateDomainBatch` → 批量 toDTO
 4. AppService 使用 `Presenter.presentList()`

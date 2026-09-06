@@ -37,12 +37,15 @@
 
 | 注解 | 声明位置 | 描述对象 |
 |------|---------|---------|
-| `@Tag` | Controller 契约接口类 | 能力分组（如「订单服务」） |
-| `@RequestMapping` | Controller 契约接口类 | 基路径（如 `/orders`） |
+| `@Tag` | Controller 契约接口类 | 能力分组（如「支付服务」，虚构教例） |
+| `@RequestMapping` | Controller 契约接口类 | 基路径（如 `/payments`，虚构教例） |
 | `@Operation` | Controller 契约接口方法 | 能力语义（summary / description） |
 | `@GetMapping` 等 | Controller 契约接口方法 | HTTP 映射（方法 + 路径，契约的一部分） |
 | `@Schema` | CO / CQE 字段 | 字段语义 |
-| `@Parameter` | Controller 契约接口方法参数 | 参数语义（跟随 `@PathVariable` / `@RequestParam`） |
+| `@Parameter` | Controller 契约接口方法参数 | 参数语义（现行仅配合 `@PathVariable`；表单/体绑定参数的语义由载体字段上的 `@Schema` 承载，不重复标注） |
+| `@ModelAttribute` | Controller 契约接口方法参数 | 查询参数绑定载体（record 表单，wire 形态保持 `?field=...`；`@Valid` 在绑定层把非法输入拦为 400 + fieldErrors） |
+
+> 现状注记（2026-09 源码核实）：契约模块 **不使用 `@RequestParam`**（全模块 0 绑定位）——查询参数一律经 `@ModelAttribute` 载体 record 绑定；真实例为 sample 契约的发货端点（Form 载体 + wire 保持查询参数形态），见 [OrderController.java](../../../sample-application/sample-service/sample-service-contract/src/main/java/com/yoursweakfoe/sampleapplication/sampleservice/contract/order/adapter/rest/controller/OrderController.java) 类与 Ship 方法 javadoc。
 
 **分工边界**：Controller 契约接口承载「能力语义 + HTTP 映射」（`@Operation` + `@GetMapping` + 路径一体，契约 = 完整 REST 定义），CO / CQE 承载「字段语义」（`@Schema`）；ControllerImpl 实现接口，仅补充「协议标记」（`@RestController`）并透传，不重复声明路径与语义。
 
@@ -108,11 +111,13 @@ adapter/rest/controller/{Aggregate}Controller.java ←──  adapter/rest/contr
 ```java
 // 东西向：消费方经 RestClient 调用提供方 REST 端点（一期静态地址直连），
 // 请求/响应类型复用 contract 中的 CQE/CO（强类型，编译期契约）
-ProductCO product = productRestClient.get()
-        .uri("/products/{id}", productId)
+PaymentCO payment = paymentRestClient.get()
+        .uri("/payments/{id}", paymentId)
         .retrieve()
-        .body(ProductCO.class);
+        .body(PaymentCO.class);
 ```
+
+> 示例中 `PaymentCO` / `paymentRestClient` 为虚构教例，sample 未实现（sample 真实例见 contract 模块 product 聚合的 CO 与消费方 RestClient）。
 
 ## 规则
 

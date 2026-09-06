@@ -70,16 +70,16 @@ public void cancelOrder(CancelOrderCommand command) {
 
 | 类型 | 命名 | 示例 |
 |------|------|------|
-| 写请求 | `XxxCommand` | `PlaceOrderCommand` |
-| 读请求 | `XxxQuery` / `XxxPageQuery` | `GetOrderQuery` |
-| 契约输出 | `XxxCO` | `OrderCO` |
-| 内部视图 | `XxxDTO` | `OrderDTO` |
-| 持久化对象 | `XxxPO` | `OrderPO` |
+| 写请求 | `XxxCommand` | `PayCommand` |
+| 读请求 | `XxxQuery` / `XxxPageQuery` | `GetPaymentQuery` |
+| 契约输出 | `XxxCO` | `PaymentCO` |
+| 内部视图 | `XxxDTO` | `PaymentDTO` |
+| 持久化对象 | `XxxPO` | `PaymentPO` |
 | Domain 外部接口 | `XxxPortal` | `PaymentPortal` |
-| Infra 外部实现 | `XxxGateway` | `AlipayPaymentGateway` |
-| 聚合根 | `Xxx extends AggregateRoot<ID>` | `Order` |
-| Repository 接口 | `XxxRepository` | `OrderRepository` |
-| Repository 实现 | `XxxRepositoryImpl` | `OrderRepositoryImpl` |
+| Infra 外部实现 | `XxxGateway` | `StripePaymentGateway` |
+| 聚合根 | `Xxx extends AggregateRoot<ID>` | `Payment` |
+| Repository 接口 | `XxxRepository` | `PaymentRepository` |
+| Repository 实现 | `XxxRepositoryImpl` | `PaymentRepositoryImpl` |
 
 ## Repository 泛型
 

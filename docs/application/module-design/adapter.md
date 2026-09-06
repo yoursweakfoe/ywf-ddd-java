@@ -9,7 +9,7 @@
 
 - rest 入口**纯透传**：协议参数 → Command/Query 包装 → 调用 AppService → 直接返回 CO
 - 入口调用 **AppService**（聚合入口），不直接调用 Handler
-- Controller 实现 `contract` 模块的接口（REST 契约单一事实源：路径、语义、签名均在接口声明），Controller 仅标记 `@RestController` 并透传
+- Controller 实现 `contract` 模块的接口（REST 契约单一事实源：路径、语义、签名均在接口声明），Controller 仅标记 `@RestController` 并透传；「为何映射上契约接口」的完整论证 → canonical 见 [contract.md「设计原则」「文档注解归属」](contract.md)，本文不复述
 - Scheduler 与 rest 同构——纯入口，透传 AppService；两类入口各自以空标记定型（`RestAdapter` / `ScheduledAdapter`），供 ArchUnit 规则识别与约束
 - 东西向端点的运行时访问保障（网关过滤 / 服务间认证 / 一包两部署）见 [contract.md §契约访问边界](contract.md#契约访问边界运行时保障)
 
