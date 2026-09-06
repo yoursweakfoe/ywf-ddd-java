@@ -1,7 +1,7 @@
 ﻿# 用法规范法卷：归属法（知识系统元法 · 严格件）
 
 > **身份**：本卷是知识系统的**宪法**——每类事实恰好一个 home，其余载体只准「一句规范 + 路径指针」。约束对象是文档与代码的维护行为本身，违反=按本卷裁决修容器。前身 `.agents/rules/05`，2026-10「法律入典」改革升格至此（法案 `2026-10-rules-codification`；元法亦是法，住 specs，走同一立法程序——体系里没有不该被程序修改的宪法）。
-> **机器对账**：本卷诸行判据由 `knowledge/scripts/check-docs.ps1` 六校验执行（[说明](../../../docs/reference/doc-guards.md)）。
+> **机器对账**：本卷诸行判据由 `knowledge/scripts/check-docs.ps1` 七校验执行（[说明](../../../docs/reference/doc-guards.md)）。
 
 ## 1. 诸区分野（一目录一法律）
 
@@ -28,12 +28,14 @@
 | 设计论证（为什么） | 低 | `docs/explanation/`（含 theory-map 理论账本） | 指针 | —（低易变，允许就近重述） |
 | 架构决策 | 冻结 | `decisions/`（全局编号） | `ADR-NNN` 限定名引用 | C6 diff-scope + Confirmation 必填 |
 | 需求/行为规格 | 随变更 | 框架：`knowledge/specs/`；示例业务：`sample-application/specs/`（同构镜像区） | skill 首步产出 delta | 归档折叠=同步义务唯一时点；C2/C3 扫两区 |
-| 任务流程（顺序+清单） | 低 | `.agents/skills/`（≤500 行） | 法卷指过来；**skill 内零法条零模板**（D6 推广） | C2/C3 |
+| 任务流程（顺序+清单） | 低 | `.agents/skills/`（≤500 行） | 法卷指过来；**skill 内零法条零模板**（D6 推广）；形状性内容必须锚定法卷节号——**实施内容基准律**，见下表注 | C2/C3 + ddd-review 锚点抽查 |
 | 防腐工具行为与用法 | 中 | `knowledge/scripts/` 代码本体（行为即法）+ `reference/doc-guards.md`（说明唯一入口） | 一行 + 指针 | 人肉跑主机 + ddd-review 末步 |
 | 术语 → 身份定位 | 中 | `docs/reference/glossary.md`（只准「一句定位 + 指针」，禁定义复述） | 指针 | — |
 | 元法（本卷：事实归属本身） | 低 | 本卷 | 一句守则 + 指针（伞 README / docs README 各留一行） | — |
 
 **易变性分层**：低易变教义就近重述是有益冗余；高易变事实重述是纯债——只禁后者。
+
+**实施内容基准律**（2026-09-07 用户裁定）：单一事实源不止于「禁止抄法」（D6 负面义务）——skill 与 docs 内一切**可机械化内容**（代码形状、包结构位、注解、签名、文件槽位）必须是指针，锚定 `specs/current/` 法卷或镜像区法卷的**某卷某节**；**锚不到法源 = 法卷覆盖缺口，走 `changes/` 立案补法，禁止就地自造形状**（正面义务，spec 为实施内容的顶层基准）。流程性内容（顺序、判据、工序、验收动作）不可机械化，住 skill 本树自带权限、不受此律——否则法卷被步骤污染、工作台被降格成链接目录，两头都失去宽严双份的本意。界线仍是那把尺子：这句话能机械化执行吗。检查落点 = `ddd-review` 文档交付约之锚点抽查；机器全自动化暂缓（锚点解析度不足，硬做闸=误伤机），攒案例后再议。
 
 ## 3. 教学中立条款（D4 教义）
 
@@ -62,6 +64,6 @@
 
 ## 6. 防复发
 
-- `knowledge/scripts/check-docs.ps1` 六校验（说明唯一入口 `docs/reference/doc-guards.md`）：PR 门 changed-files-only、夜间全量；`ddd-review` 末步必跑，非零即返工。
+- `knowledge/scripts/check-docs.ps1` 七校验（说明唯一入口 `docs/reference/doc-guards.md`）：PR 门 changed-files-only、夜间全量；`ddd-review` 末步必跑，非零即返工。
 - 豁免清单外置 `knowledge/scripts/check-docs.whitelist.txt`，新增豁免须 PR 评审写理由——清单只删不增。
 - 判例法：被 check-docs 抓过 / 审计定过性的写法，在归属表增行，不另发明新载体。

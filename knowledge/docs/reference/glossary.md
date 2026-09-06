@@ -1,4 +1,4 @@
-# 术语表
+﻿# 术语表
 
 本项目特有术语的唯一登记处。本表定位 = **术语 → canonical 指针**：每行只给一句话身份定位，定义与论证在指针目标处单源维护，本表不复述（避免压缩副本与原文漂移）。业务词汇（文末）是领域通用语言本身，保留业务名。
 
@@ -67,7 +67,7 @@
 | 虚构教例 / 教例家族 | 中立教学位：Payment / Reservation / Invoice 等虚构系，首现必标「虚构教例，sample 未实现」 | → `knowledge/specs/current/patterns/attribution-law.md` §3 |
 | `{agg}` / `{Agg}` | 聚合名占位符，C1 对真实聚合逐个实例化对源码核验 | → [doc-guards C1](doc-guards.md) |
 | 幽灵路径 | 文档写了源码不存在的目录层级——C1 治的头号病 | → [doc-guards](doc-guards.md) |
-| 六校验 | check-docs 机器闸（C1–C6），退出码=FAIL 数，非零即返工 | → [doc-guards](doc-guards.md) |
+| 七校验 | check-docs 机器闸（C1–C7），退出码=FAIL 数，非零即返工 | → [doc-guards](doc-guards.md) |
 | 登记法 | 新增/迁移文档仅登记 docs/README 一处，其余载体只放指针 | → [docs/README](../README.md) |
 | 理论账本 | 模式采纳/未采纳的论证台账（通往法律的地图，本身不是法律） | → [theory-map.md](../explanation/theory-map.md) |
 | ADR（判例） | 卷宗条目：全局唯一编号、append-only、推翻=新立案+supersede | → [decisions/README](../../decisions/README.md) |

@@ -7,7 +7,7 @@
 | 层 | 载体 | 角色 | 加载方式 |
 |----|------|------|----------|
 | 压缩宪法 | 根目录 `AGENTS.md` | 每次必读的核心约束（九条）+ 路由 | 全兼容**主动加载**（厂商中立标准） |
-| 可调用流程 | `.agents/skills/` | 任务 SOP（12 个 SKILL.md），只含步骤+指针 | opencode / Pi **原生扫描** |
+| 可调用流程 | `.agents/skills/` | 任务 SOP（12 个 SKILL.md），只含步骤+指针 | 8/9 主流工具**原生扫描**（下表） |
 
 **法律与描述的居所**（经 AGENTS 路由按需读，本树零复数副本）：
 
@@ -22,26 +22,31 @@
 
 核心问题是**在多 AI 编码工具之间保持中立，同时让每个工具都能「现成可读」**。跨工具通用的格式只有两种：`AGENTS.md`（纯 Markdown，事实标准）与 `SKILL.md`（Agent Skills 标准）。其余概念（path-gating、subagents、MCP、hooks）各家私有，不进本目录——留在各工具自己的配置域（`.claude/`、`.opencode/`、`.cursor/`）。
 
-skills 目录选择 `.agents/skills/` 的原因：opencode 与 Pi **原生扫描**此路径（零配置），Claude Code / Cursor / Qoder 经复制、软链或引用接入。这是唯一「中立位置 + 多工具原生支持」重合的目录。
+skills 目录选择 `.agents/skills/` 的原因：这是全生态最大公约数——**9 个主流工具里 8 个原生扫描此路径**（Codex 列其为主路径；Cursor、VS Code/Copilot、Gemini CLI、Amp、OpenCode、pi、oh-my-opencode 官方文档或源码实证），唯一例外是 Claude Code（只认 `.claude/skills/`，社区功能请求 #31005 长期未合）。注意**子目录分组只有 OpenCode/Cursor/pi 承诺递归**，故本仓 skills 保持平铺，分类学住根 `AGENTS.md` 路由表。
 
 结构借鉴 [dotagents](https://github.com/bgreenwell/dotagents)（草案倡议）命名，按需裁剪——personas 已并入 skills（评审技能）。
 
 ## skills 清单（12）
 
-创建：`new-aggregate` `new-usecase` `new-service` `new-portal`；增量：`batch-operations` `scheduled-task` `new-test` `modify-common-module`；审查：`ddd-review`（末步必跑 check-docs）`ops-review` `test-review`；立法：`new-bill`（起草/推进/折叠法案）。纪律：**skill 内零法条零模板**（步骤与指针而已；D6 推广，归属法 §2）。
+创建：`new-aggregate` `new-usecase` `new-service` `new-portal`；增量：`batch-operations` `scheduled-task` `new-test` `modify-common-module`；审查：`ddd-review`（末步必跑 check-docs）`ops-review` `test-review`；立法：`new-bill`（起草/推进/折叠法案）。纪律：**skill 内零法条零模板**（步骤与指针而已；D6 推广，归属法 §2）；且**一切形状性内容必须锚定法卷某卷某节——实施内容基准律**（归属法卷 §2 表注）：锚不到法源=法卷覆盖缺口，走 `changes/` 立案补法，禁止就地自造形状；工序、判据、验收动作属不可机械化内容，住本树自带权限，免检。
 
 ## 各工具接入方式
 
-| 工具 | 入口（AGENTS.md） | skills |
+| 工具 | 入口（AGENTS.md） | `.agents/skills/` |
 |------|-------------------|--------|
-| Claude Code | `CLAUDE.md` 内 `@AGENTS.md` | 复制/软链到 `.claude/skills/` |
-| opencode | 原生 | **原生扫描 `.agents/skills/`** |
-| Cursor | 原生 | 支持 Agent Skills，指向或复制 |
-| Qoder | 原生 | 复制到 `.qoder/skills/` |
-| Pi | 原生 | **原生扫描** |
+| OpenCode | 原生 | **原生扫描**（官方文档+源码，递归支持） |
+| Codex | 原生（根→cwd 逐级拼接，全链 32 KiB 上限） | **原生扫描，且列为主路径** |
+| Cursor | 原生（根+嵌套合并，近者压过） | **原生扫描**（官方文档；另兼容读 `.claude/`、`.codex/`） |
+| VS Code / Copilot | 原生（`chat.useAgentsMdFile`） | **原生扫描** |
+| Gemini CLI | 需配置（`context.fileName` 指到 AGENTS.md） | **原生扫描**（文档明言互操作路径） |
+| Amp | 原生（cwd+父目录上溯） | **原生扫描** |
+| Pi | 原生 | **原生扫描**（且支持分组目录） |
+| oh-my-opencode | 原生 | **原生扫描**（自带 loader 硬编码此路径） |
+| **Claude Code** | **不读 AGENTS.md**——官方姿势 `CLAUDE.md` 内写 `@AGENTS.md` import | ❌ **唯一不支持**（只认 `.claude/skills/`，#31005 未合）。**勿用软链偏方**（CC 会向共享目录写 `.system/` 内部文件，#20820 实锤）；确需触发时个人级复制 |
+| Qoder | 原生（CLI 向上找 + 惰性加载子目录；IDE rules 优先于 AGENTS.md） | skills 支持**未见官方实据**（未证实） |
 | 其他 | 对话开头贴 AGENTS.md | 按需 |
 
-> 工具专属配置文件永远不入库（.gitignore）。法条的读法由 AGENTS 路由决定，工具差异不侵入内容。
+> 出处：各工具官方文档与源码逐格核验（2026-09 调研）。工具专属配置文件永远不入库（.gitignore）。法条的读法由 AGENTS 路由决定，工具差异不侵入内容。
 
 ## 贡献者指南
 

@@ -85,6 +85,7 @@ description: DDD 架构合规审查。完成编码后必跑自查、人工要求
 ### 文档与契约
 
 - [ ] 新行为已走所属契约区 `changes/<slug>/` 三件套并归档折叠（框架 → `knowledge/specs/`、示例业务 → `sample-application/specs/`），相关 how-to / explanation 已随动、折叠之外无孤儿债（法条 归属法卷 §4——归档折叠是同步义务唯一发生时点）
+- [ ] 锚点抽查（实施内容基准律 → 归属法卷 §2 表注，本条不复述）：本次涉及的 skill/docs 中每处形状性表述（包位/注解/签名/文件槽位）逐一验证**已挂法卷节号且翻卷可解析**；锚不到 = 法卷覆盖缺口，走 `changes/` 立案补法、不得就地自造；纯工序句免检
 - [ ] 新增/变更公开 API：`knowledge/docs/reference/api/` 对应模块文档已同 PR 随更（法条 禁令卷 §9「新增 common 模块必附文档」行；异常→HTTP 映射表另有 C5 对账 = EV-5）
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs.ps1` 退出码 0（非零即 FAIL；校验清单以工具输出为准不在本复述，变红裁决纪律——文档错修文档、工具误伤修工具——见 `knowledge/docs/reference/doc-guards.md`；新增 C3 豁免须 PR 评审写理由进 `knowledge/scripts/check-docs.whitelist.txt`，只删不增）
 
