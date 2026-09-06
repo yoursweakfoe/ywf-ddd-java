@@ -1,4 +1,4 @@
-# common-contract
+﻿# common-contract
 
 CQRS 契约标记接口（Command / Query / PageableQuery / IntegrationEvent）—— 供 contract jar 与服务端共享的纯类型契约层。
 

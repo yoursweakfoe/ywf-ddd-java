@@ -1,4 +1,4 @@
-# common-observability
+﻿# common-observability
 
 运维可观测性 —— 结构化日志 + Actuator 健康检查/指标 + Prometheus 抓取端点。
 

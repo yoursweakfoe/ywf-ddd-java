@@ -1,4 +1,4 @@
-# Contract — 公开契约
+﻿# Contract — 公开契约
 
 ## 职责
 

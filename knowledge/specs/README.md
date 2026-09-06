@@ -1,4 +1,4 @@
-# knowledge/specs/ —— 框架行为契约区（法律）
+﻿# knowledge/specs/ —— 框架行为契约区（法律）
 
 本区只立**框架/脚手架层**（common 模块自身）的行为法；**业务包的行为法不入伞**——住在镜像区 [`../../sample-application/specs/`](../../sample-application/specs/README.md)。契约写的就是生意，业务名只在那棵树合法；知识区承载的是通识。
 

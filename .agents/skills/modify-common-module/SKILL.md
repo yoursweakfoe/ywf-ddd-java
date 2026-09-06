@@ -57,7 +57,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 ### 6. 关联文档更新
 
 - 如修改了 common-ddd 的核心类，检查 `knowledge/docs/how-to/` 中的代码示例是否需同步
-- 如修改了标记接口（Command/Query/CO），检查 `knowledge/docs/glossary.md`
+- 如修改了标记接口（Command/Query/CO），检查 `knowledge/docs/reference/glossary.md`
 
 ## 验证
 
@@ -72,4 +72,4 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 ## 文档同步
 
 - 必须更新：`knowledge/docs/reference/api/common-{module}.md`
-- 视情况更新：`knowledge/docs/how-to/`、`knowledge/docs/glossary.md`、`ywf-ddd-common/README.md`
+- 视情况更新：`knowledge/docs/how-to/`、`knowledge/docs/reference/glossary.md`、`ywf-ddd-common/README.md`

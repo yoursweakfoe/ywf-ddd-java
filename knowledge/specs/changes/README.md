@@ -1,4 +1,4 @@
-# changes/ —— 修订工作区（框架法案）
+﻿# changes/ —— 修订工作区（框架法案）
 
 > 本区受理**框架/脚手架行为**的法案；业务包的法案立到镜像区 `sample-application/specs/changes/`（模板共用本区 `_template/`）。
 

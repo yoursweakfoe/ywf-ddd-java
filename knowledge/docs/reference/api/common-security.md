@@ -1,4 +1,4 @@
-# common-security
+﻿# common-security
 
 零信任身份 —— JWT 资源服务器（服务自验 JWT、身份不传播、验签可插拔、字段不写死）。
 

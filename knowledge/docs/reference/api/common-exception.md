@@ -1,4 +1,4 @@
-# common-exception
+﻿# common-exception
 
 统一异常体系 —— 业务异常定义（BusinessException）+ REST 全局异常处理（RFC 9457，自动装配）。
 

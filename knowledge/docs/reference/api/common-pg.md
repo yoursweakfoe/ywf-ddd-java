@@ -1,4 +1,4 @@
-# common-pg
+﻿# common-pg
 
 PostgreSQL 类型映射 —— MyBatis TypeHandler 自动注册，支持 UUID / JSONB / 数组等 PG 特有类型。
 

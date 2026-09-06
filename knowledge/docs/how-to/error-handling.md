@@ -1,70 +1,12 @@
-# 异常全链路
+﻿# 异常处理 · 设计卡
 
-> **宽松件（宽严双份，2026-09-06 裁定）**：本篇=任务菜谱与教学走查。其用法规范条款已入法卷 → [../../specs/current/modules/exception.md](../../specs/current/modules/exception.md)；条款冲突以法卷为准（rules/05 §2），本篇代码为教学全套。
+> **本篇=设计卡（2026-09-06 统一用法归卷裁定）**：只回答"异常从哪抛、沿什么路径、前端怎么对接"。传播链、抛出与响应形状、映射通道、前端契约全部条款见法卷 → [../../specs/current/modules/exception.md](../../specs/current/modules/exception.md)；条款冲突以法卷为准（rules/05 §2）。本篇零形状复写。
 
-> 设计原理 → [module-design/domain.md](../explanation/domain.md)（异常策略章节）
+> 设计原理 → [../explanation/domain.md](../explanation/domain.md)（异常策略章节）。
 
-## 业务场景
+## 错误码登记簿（全仓 `{aggregate}:err.{scene}` key 唯一登记处）
 
-> 本文为**虚构教例**（`payment` / `inventory` 聚合，sample 未实现）；示例应用真实错误码前缀见文末真实例注记。
-
-本文展示一个业务异常从领域层产生到前端收到 HTTP 响应的**完整链路**。
-
-**业务规则：**
-
-1. 对处于非 PENDING 状态的支付单发起扣款 → 状态机校验失败
-2. 领域层显式抛出 `BusinessException`（携带 i18n 位点）
-3. 异常沿调用栈向上传播，由 `GlobalRestExceptionHandler`（`@RestControllerAdvice`）自动翻译为 HTTP 响应
-4. 前端收到 RFC 9457 格式的 JSON 错误体，用 `t(messageKey, params)` 渲染本地化文案
-
-## 异常传播链路
-
-```
-Payment.charge()
-  → if (status != PENDING) throw new BusinessException("payment:err.status.pending")
-
-ChargePaymentHandler.handle(command)
-  → payment.charge()  // 异常向上传播（Handler 不 catch）
-
-PaymentAppService.chargePayment(command)
-  → chargePaymentHandler.handle(command)  // 继续传播
-
-PaymentController.chargePayment(paymentId)
-  → paymentAppService.chargePayment(command)  // 继续传播
-
-Spring MVC 异常解析管线
-  → GlobalRestExceptionHandler.handleBusiness(exception)  // @RestControllerAdvice 自动拦截
-    → HTTP 422 + RFC 9457 JSON
-```
-
-## 1. Domain — 产生异常
-
-```java
-// domain/payment/model/Payment.java（节选）
-public void charge() {
-    if (status != PaymentStatus.PENDING) {
-        throw new BusinessException("payment:err.status.pending");
-    }
-    this.status = PaymentStatus.PAID;
-}
-```
-
-### 携带参数的异常
-
-```java
-// domain/inventory/model/Inventory.java（节选）
-public void deductStock(int quantity) {
-    if (stock < quantity) {
-        throw new BusinessException("inventory:err.insufficientStock",
-                Map.of("available", stock, "required", quantity));
-    }
-    this.stock -= quantity;
-}
-```
-
-## 2. 错误码命名规范
-
-格式：`"{aggregate}:err.{scene}"`
+**登记职责**：新增/废弃错误 key 一律先在本表登一行（法卷 EV-2 载明的宽松件登记簿职责——形状与命名规则在法卷 EV-2/EV-6 + §5.3，不在本表执法）。
 
 | 示例 | 含义 |
 |------|------|
@@ -76,124 +18,26 @@ public void deductStock(int quantity) {
 | `inventory:err.priceRequired` | 单价缺失 |
 | `inventory:err.priceNegative` | 单价不允许为负 |
 
-规则：
-- 全小写，驼峰用 `.` 分隔
-- 第一段为聚合名（与包名一致）
-- `err.` 固定前缀
-- 场景名简洁表达"期望什么"或"出了什么问题"
+> 真实例：示例应用的两个聚合实际使用前缀 order 与 product（形如 `<聚合名>:err.<场景>`），见 sample-application 的 domain model 源码（法卷 §5.3 真实例映射位）。
 
-> 真实例：示例应用的两个聚合实际使用前缀 order 与 product（形如 `<聚合名>:err.<场景>`），见 sample-application 的 domain model 源码（真实例映射位）。
+## 业务场景
 
-## 3. Infrastructure — 全局异常翻译
+> 上文登记簿现存 key 属**虚构教例**（`payment` / `inventory` 聚合，sample 未实现）；真实前缀见上注。
 
-```java
-// common-exception 模块（框架代码，业务服务无需编写）
-// GlobalRestExceptionHandler 由 common-exception 自带的 ExceptionAutoConfiguration
-// （META-INF/spring/…AutoConfiguration.imports）注册——引入 common-exception（sample 直接依赖）
-// 即在 Servlet Web 环境生效，与 common-cloud 无关
-```
+一次扣款业务规则（对非 PENDING 支付单扣款 → 状态机校验失败）从领域层到前端的完整链路：聚合行为方法显式抛 `BusinessException`（携带 i18n 位点）→ 异常沿调用栈向上传播、中途无人 catch（法卷 EV-7，链路形状 §5.1）→ 框架 advice 自动翻译为 RFC 9457 JSON → 前端 `t(messageKey, params)` 渲染本地化文案。
 
-### 异常类型 → HTTP 状态码映射
+## 三个设计决策点
 
-完整映射表（含 400 族 / 404 / 405 / 415 等框架客户端异常全部行）canonical 见 [knowledge/docs/reference/api/common-exception.md](../reference/api/common-exception.md) §2 与 `GlobalRestExceptionHandler` 类 javadoc「框架客户端异常显式映射表」，本文不复制。核心通道（与上文传播链一致）：
+1. **在哪抛**：业务规则归聚合行为方法，显式 if-throw（形状法卷 §5.2）；不定义具名领域异常、domain 层不设 exception 包（EV-1）。
+2. **状态码怎么给**：缺省 422；需要 404/409 等用显式状态构造（形状法卷场景 1）；400 校验族与 500 兜底由框架通道自动命中，业务不自选不冒充（EV-8）。
+3. **409 还是 500**：乐观锁冲突走 409、可重试，识别靠异常类型（见 [optimistic-lock-retry.md](optimistic-lock-retry.md)）；静默写丢失走 500 + ERROR 日志，是独立告警通道，前端**禁重试**（EV-4，形状 §5.5/§5.6）。
 
-- `BusinessException`（含状态机守卫失败等**领域规则违反**）→ 缺省 **422**（异常可显式携带其他状态码），`detail` = i18n messageKey
-- `IllegalStateException`（乐观锁冲突 `OptimisticLockConflictException` 为其子类，按 IS-A 命中本通道）→ **409**，`detail` 为稳定泛化文案
-- 参数校验 / 绑定 / 类型转换失败（`@Valid` 族：BindException / ConstraintViolationException / 类型不匹配等）→ **400**（附 `fieldErrors` 扩展成员）
-- `SilentWriteLossException`（INSERT/DELETE 影响 0 行的写丢失级不可能状态）→ **500 + ERROR 日志**，`detail` 固定 "Internal Server Error" 不泄漏内部信息；**独立告警通道，勿与 409 状态冲突混同**——重试无意义、必须吵醒运维（该 handler 刻意置于 ISE 之前以显式分界）
-- 其余未捕获异常 → **500** 兜底（泛化标题，不泄内部信息）
+## 边界与安全
 
-## 4. 前端收到的 HTTP 响应
+- 前端只消费 `detail`/`params`/`fieldErrors`，且仅 BusinessException 通道的 `detail` 可作 i18n key（EV-9，形状 §5.7）；`title`/`status` 不解析
+- `params` 禁敏感信息（密码、Token、内部 ID 映射表、SQL 语句）——会完整序列化进响应体（EV-3）
+- 异常→HTTP 全量映射表 canon 在 `GlobalRestExceptionHandler` javadoc，字典镜像 [../reference/api/common-exception.md](../reference/api/common-exception.md) §2（EV-5：改表同 PR 双更）；设计原理纵深 → [../explanation/domain.md](../explanation/domain.md)
 
-### 基本错误（仅 messageKey）
+## 落地状态
 
-```http
-HTTP/1.1 422 Unprocessable Entity
-Content-Type: application/problem+json
-
-{
-  "type": "about:blank",
-  "title": "Business Error",
-  "status": 422,
-  "detail": "payment:err.status.pending",
-  "instance": "/api/payments/550e8400-e29b-41d4-a716-446655440000/charge"
-}
-```
-
-### 携带参数的错误
-
-```http
-HTTP/1.1 422 Unprocessable Entity
-Content-Type: application/problem+json
-
-{
-  "type": "about:blank",
-  "title": "Business Error",
-  "status": 422,
-  "detail": "inventory:err.insufficientStock",
-  "instance": "/api/checkout",
-  "params": { "available": 3, "required": 10 }
-}
-```
-
-### 乐观锁冲突
-
-```http
-HTTP/1.1 409 Conflict
-Content-Type: application/problem+json
-
-{
-  "type": "about:blank",
-  "title": "Conflict",
-  "status": 409,
-  "detail": "Conflict",
-  "instance": "/api/payments/550e8400-e29b-41d4-a716-446655440000/charge"
-}
-```
-
-> 技术类异常的 `detail` 为稳定泛化文案（防内部实体 ID / SQL 片段外泄）；原始冲突消息只进服务端日志。识别乐观锁冲突请依赖**异常类型**（`OptimisticLockConflictException`），见 [optimistic-lock-retry.md](optimistic-lock-retry.md)。
-
-### 静默写丢失（SilentWriteLossException）
-
-```http
-HTTP/1.1 500 Internal Server Error
-Content-Type: application/problem+json
-
-{
-  "type": "about:blank",
-  "title": "Internal Server Error",
-  "status": 500,
-  "detail": "Internal Server Error",
-  "instance": "/api/payments/550e8400-e29b-41d4-a716-446655440000/charge"
-}
-```
-
-> INSERT/DELETE 影响 0 行的不可能状态：服务端打 **ERROR 级日志（带栈，运维告警抓取信号）**，响应只回固定泛化文案；前端按通用 5xx 处理，**不要重试**（区别于 409 的可重试语义）。
-
-## 5. 前端对接说明
-
-```javascript
-// 前端 i18n 渲染示例
-const { detail, params } = response.body;
-const message = t(detail, params);  // i18next: t("payment:err.status.pending")
-// → "当前状态不允许扣款"（由前端 i18n 资源文件定义）
-```
-
-- `detail`：仅 **BusinessException 通道**为 i18n 位点（messageKey），前端用 `t(key, params)` 渲染本地化文案；校验族 / 技术异常 / 500 通道的 `detail` 为固定泛化文案（不可作 i18n key 渲染）
-- `params`：占位符参数，仅 BusinessException 携带非空参数时出现，可选
-- `fieldErrors`：400 校验/绑定族独有扩展成员（字段名 → 校验消息）
-- 前端**不解析** title / status（仅用于日志和监控）
-
-## 安全注意
-
-> **禁止**在 `params` 中放入敏感信息（密码、Token、内部 ID 映射表、SQL 语句等）。
-> `params` 内容会被完整序列化到 HTTP 响应体，对客户端可见。
-
-## 完整文件清单（异常链路涉及）
-
-| 层 | 文件 | 职责 |
-|----|------|------|
-| domain | `model/Payment.java`（虚构教例） | 显式 if-throw 产生 BusinessException |
-| application | `handler/command/ChargePaymentHandler.java`（虚构教例） | 异常向上传播（不 catch） |
-| framework | `common-exception/GlobalRestExceptionHandler` | SPI 自动翻译为 HTTP 响应 |
-| contract | — | 无（异常不经过 contract） |
+一律以法卷条款与 §5 在册形状为准：框架翻译链与全部 EV 条款 ✅（取证在卷）；本篇登记簿 key 为虚构教例，真实例前缀 order / product（见上注）。

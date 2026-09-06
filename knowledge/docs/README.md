@@ -9,15 +9,9 @@
 | 架 | 用途 | 入口 |
 |---|---|---|
 | `tutorials/` | 从零跑通（教程） | [quickstart.md](tutorials/quickstart.md) |
-| `how-to/` | 带着任务来（手册；教学模板=业务无关教例，`{agg}`/虚构聚合，永不挂钩 sample 源码）；**严格条款在 `../specs/current/` 法卷——本架为宽松件** | 子索引与 12+1 篇清单见 [how-to/README.md](how-to/README.md)（testing.md 为 D6 迁入新篇） |
-| `reference/` | 查事实（字典） | [structure.md](reference/structure.md)（**生成物禁手改**，重跑脚本对齐）+ [api/](reference/api/) 框架模块文档 8 篇（common-contract/ddd/exception/cloud/pg/security/observability/test）+ [doc-guards.md](reference/doc-guards.md)（`knowledge/scripts/` 防腐工具链说明书） |
+| `how-to/` | 带着任务来（**设计卡**：该不该用/怎么选，浅层指引零形状代码；一切具体如何用法卷承载） | 子索引见 [how-to/README.md](how-to/README.md)（13 篇，逐篇挂 governing 法卷） |
+| `reference/` | 查事实（字典） | [glossary.md](reference/glossary.md) 术语唯一登记（术语→canonical 指针 + 命名映射 + 订单域通用语言）· [structure.md](reference/structure.md)（**生成物禁手改**，重跑脚本对齐）· [api/](reference/api/) 框架模块文档 8 篇（common-contract/ddd/exception/cloud/pg/security/observability/test）· [doc-guards.md](reference/doc-guards.md)（`knowledge/scripts/` 防腐工具链说明书） |
 | `explanation/` | 搞懂为什么（解读） | 层设计 5 篇（[contract](explanation/contract.md) / [adapter](explanation/adapter.md) / [application](explanation/application.md) / [domain](explanation/domain.md) / [infrastructure](explanation/infrastructure.md)）+ [theory-map.md](explanation/theory-map.md)（理论账本） |
-
-## 其他
-
-| 文件 | 用途 |
-|---|---|
-| [glossary.md](glossary.md) | 术语表：术语→canonical 指针 + 命名映射 + 订单域通用语言（业务词汇合法位） |
 
 ## 登记法
 

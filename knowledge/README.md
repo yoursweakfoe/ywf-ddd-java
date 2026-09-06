@@ -33,7 +33,7 @@
 
 | | 学习 | 工作 |
 |---|---|---|
-| **动手** | `tutorials/` 教程：零基础练习场，线性步骤带你完成第一次 | `how-to/` 手册：真实任务的菜谱，目标导向，允许多解（宽松指引；严格规范在法卷） |
+| **动手** | `tutorials/` 教程：零基础练习场，线性步骤带你完成第一次 | `how-to/` 设计卡：该不该用、怎么选（浅层指引；一切用法形状在 specs 法卷） |
 | **认知** | `explanation/` 解读：背景、权衡、设计原理——讲"为什么" | `reference/` 字典：描述性事实，结构严格，供查证（用法条款已入法卷） |
 
 一篇文档按读者处境进一个架，不拆写四份——这是摆架的全部意义。**但象限只管描述**：规定句（"必须/禁止/应当这样写"）在四格里没有执照，一律上移一层住 `specs/` 法卷（2026-09-06 宽严双份裁定）。判据：**这句话能机械化执行吗？能→法卷；不能（语气/步骤/语境）→ docs。**
@@ -43,10 +43,10 @@
 ```
 knowledge/
 ├── README.md       本页：组织宣言（导览五问三分类，自身不立法）
-├── docs/           地图 | README 唯一文档索引 · glossary 术语唯一登记
+├── docs/           地图 | README 唯一文档索引
 │   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
-│   ├── how-to/     任务手册（{agg} 中立教例模板，零业务镜像）
-│   ├── reference/  structure.md 生成树图 · api/ 框架模块 8 篇 · doc-guards.md 工具说明
+│   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
+│   ├── reference/  structure.md 生成树图 · api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
 │   └── explanation/ 分层设计 5 篇 + theory-map 理论账本
 ├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 全局唯一编号，append-only

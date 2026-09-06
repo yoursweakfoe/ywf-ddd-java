@@ -1,4 +1,4 @@
-# common-ddd
+﻿# common-ddd
 
 DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis 仓储支撑（手写 XML SQL）。
 

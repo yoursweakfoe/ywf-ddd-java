@@ -87,7 +87,7 @@ ywf-ddd-java/
 - **入口**：[`AGENTS.md`](AGENTS.md)（轻量路由器，厂商中立标准）
 - **规则**（`.agents/rules/`）：分层架构、编码规范、禁止清单
 - **技能**（`.agents/skills/`）：新建聚合、新增用例、架构审查
-- **术语**：[`knowledge/docs/glossary.md`](knowledge/docs/glossary.md)
+- **术语**：[`knowledge/docs/reference/glossary.md`](knowledge/docs/reference/glossary.md)
 
 任何 AI 编码工具（Cursor / Copilot / Claude Code / Qoder / Windsurf / Aider 等）均可接入。
 详见 [`.agents/README.md`](.agents/README.md) 中的工具接入指南。

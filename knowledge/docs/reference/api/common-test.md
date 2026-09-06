@@ -1,4 +1,4 @@
-# common-test
+﻿# common-test
 
 测试基础设施 —— ArchUnit DDD 架构守护规则 + Spring Boot Test 全套（test scope）。
 

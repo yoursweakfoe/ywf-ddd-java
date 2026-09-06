@@ -1,31 +1,33 @@
-# how-to — 端到端代码实战（子索引）
+﻿# how-to —— 设计卡子索引（宽松架）
 
-本目录提供**完整可编译的代码走查**（教学模板=业务无关教例，`{agg}` 占位/虚构聚合，永不挂钩 sample 源码——D4 教义），回答"具体怎么写"。
+> **本架=设计卡（宽松件）**：每篇只回答"该不该用、怎么选"——何时需要、决策点、边界代价。一切**具体如何用**（条款、规范代码形状、选择表、生效登记）统一住法卷 → [`../../specs/current/`](../../specs/current/)（宽严双份，2026-09-06 裁定）。形状全仓唯一样本在法卷，本架零形状代码。
+
 设计原则和规则约束请参阅 [explanation/](../explanation/)。
 
-## 导航
+## 导航（任务 → 设计卡 →  governing 法卷）
 
-| 文档 | 内容 | 适合场景 |
-|------|------|--------|
-| [write-path.md](write-path.md) | 写路径全链路：Command → Controller → AppService → Handler → Domain → Repository → PO | 新增写操作用例 |
-| [read-path.md](read-path.md) | 读路径全链路：Query → Controller → AppService → QueryHandler → Repository 投影 DTO | 新增查询用例 |
-| [cross-aggregate.md](cross-aggregate.md) | 跨聚合协调：Domain Service + Bean 注册 + 复杂 Handler + Contract 接口 | 多聚合协作场景 |
-| [policy-pattern.md](policy-pattern.md) | 领域策略模式：Before/After 对比 + 三种组合形态（互斥/叠加/路由） | 抽离可插拔业务规则 |
-| [gateway.md](gateway.md) | Gateway（Portal 实现）：Domain 接口 + Infra ACL 翻译 | 对接外部系统 |
-| [new-aggregate.md](new-aggregate.md) | 新聚合 Checklist：从 contract 到 infrastructure 的完整文件清单 + 模板 | 从零创建聚合 |
-| [error-handling.md](error-handling.md) | 异常全链路：显式 if-throw → BusinessException → HTTP 422 响应 + 前端对接 | 异常处理与错误码设计 |
-| [batch-operations.md](batch-operations.md) | 批量操作：批量 Command + 事务边界 + 部分失败策略 | 批量写操作 |
-| [scheduled-task.md](scheduled-task.md) | 定时任务：adapter 层 Scheduler 入口 + 分布式锁提示 | 定时/周期性任务 |
-| [distributed-transaction.md](distributed-transaction.md) | 分布式事务：Seata AT 模式 + @GlobalTransactional + 边界选择 | 跨服务数据一致性 |
-| [application-layer-objects.md](application-layer-objects.md) | 应用层内部数据对象：ViewDTO / Params / Record 三种 pattern + 适用场景 | 设计内部数据结构 |
-| [optimistic-lock-retry.md](optimistic-lock-retry.md) | 乐观锁冲突与重试：冲突识别 + ExponentialBackoff + Handler 模板 | 并发冲突处理 |
-| [testing.md](testing.md) | 测试编写四型：Handler 单测（Mockito）/ Domain 纯 JUnit / Converter 往返 / 集成（H2 test profile）+ Fixture 模式 | 给聚合、Handler、基础设施补测试 |
+| 设计卡 | 管什么决策 | 法卷 |
+|------|------|------|
+| [write-path.md](write-path.md) | 写用例该不该拆这一刀 | `../../specs/current/patterns/write-chain.md` |
+| [read-path.md](read-path.md) | 读路径选型（投影 vs 聚合） | `../../specs/current/patterns/read-chain.md` |
+| [cross-aggregate.md](cross-aggregate.md) | 多聚合协作怎么落 | `../../specs/current/patterns/cross-aggregate.md` |
+| [policy-pattern.md](policy-pattern.md) | 规则要不要抽策略 | `../../specs/current/patterns/domain-policy.md` |
+| [gateway.md](gateway.md) | 外部系统在哪层接 | `../../specs/current/patterns/external-gateway.md` |
+| [new-aggregate.md](new-aggregate.md) | 该不该立新聚合 | `../../specs/current/patterns/aggregate-blueprint.md` |
+| [error-handling.md](error-handling.md) | 错误语义怎么设计（+ i18n key 登记账本） | `../../specs/current/modules/exception.md` |
+| [batch-operations.md](batch-operations.md) | 批量三档位怎么选 | `../../specs/current/patterns/batch-write.md` |
+| [scheduled-task.md](scheduled-task.md) | 定时任务的幂等预算 | `../../specs/current/patterns/scheduler.md` |
+| [distributed-transaction.md](distributed-transaction.md) | 本地 vs 分布式边界 | `../../specs/current/patterns/distributed-tx.md` |
+| [application-layer-objects.md](application-layer-objects.md) | 中间对象准入门 | `../../specs/current/patterns/application-objects.md` |
+| [optimistic-lock-retry.md](optimistic-lock-retry.md) | 冲突要不要重试 | `../../specs/current/patterns/optimistic-lock.md` |
+| [testing.md](testing.md) | 测试投资怎么分型 | `../../specs/current/patterns/testing-conformance.md` |
 
-## 与 explanation 的关系
+## 与 explanation / specs 的三架分工
 
 ```
-explanation/  → 为什么这么设计？规则是什么？（概念级代码片段）
-how-to/       → 具体怎么写？完整文件长什么样？（可编译代码模板）
+specs/current/  → 怎么用才对？（严格件：条款 + 规范形状，机器遵循的唯一权威）
+how-to/         → 该不该用、怎么选？（设计卡：判据 + 代价 + 指针，人类向）
+explanation/    → 为什么这么设计？（解读：原理与权衡，无操作性）
 ```
 
-两者通过交叉链接互引。阅读建议：先读 explanation 理解设计意图，再对照 how-to 落地实现。
+阅读建议：先设计卡定方向 → 进法卷照形状施工 → 有疑问读解释区与判例卷宗。
