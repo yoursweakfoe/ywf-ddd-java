@@ -10,6 +10,9 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 - `knowledge/docs/how-to/scheduled-task.md`（完整模板 + 分布式锁提示）
 - `.agents/rules/03-coding-conventions.md`（Adapter 层纯透传约定）
 
+## 第 0 步：契约先行（spec-first）
+
+动手实现前，在 `knowledge/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 capabilities 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `knowledge/specs/capabilities/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
 ## 步骤
 
 1. **adapter**：创建 `adapter/task/scheduler/{Agg}{Action}Scheduler.java`（server 的 adapter 层不按聚合分包，rules/02「按聚合自包含」例外条款）

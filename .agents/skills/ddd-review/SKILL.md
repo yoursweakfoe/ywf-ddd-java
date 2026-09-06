@@ -76,10 +76,11 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 - [ ] 未引入当前不使用的组件、无死代码（rules 04「Infrastructure 层最小化原则」）
 - [ ] common 模块依赖符合身份登记判据（rules 04「Common 模块约束」构件身份二分法：定型装配审「宣言在位 + 命运依赖被本包使用或封装」，工具库审「最小化」）
 
-### 文档
+### 文档与契约
 
-- [ ] 相关 cookbook 文档已同步
-- [ ] 如新增公开 API，common 模块文档已更新
+- [ ] 相关 how-to / explanation 文档已同步（伞内法：同步义务由 `knowledge/specs/` 归档折叠承载，折叠之外不得留孤儿债——rules/05 §4）
+- [ ] 如新增公开 API，`knowledge/docs/reference/api/` 对应模块文档已更新
+- [ ] `powershell -File scripts/check-docs.ps1` 退出码 0（六校验：幽灵路径/计数/框架符号/教学中立/映射表对账/卷宗防篡改；非零即 FAIL，豁免须写理由进 whitelist）
 
 ## 审查范围指引
 
