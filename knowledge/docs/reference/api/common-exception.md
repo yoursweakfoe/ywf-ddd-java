@@ -121,41 +121,9 @@ common-exception → spring-boot-autoconfigure（AutoConfiguration）
 - **RFC 9457 响应格式**：标准化 HTTP 错误响应（`application/problem+json`），外部消费方可程序化处理
 - **自动装配**：引入依赖即生效，无需 `@Import` 或手动配置
 
-## 6. 设计决策
+## 6. 设计决策（已迁出）
 
-### ADR-0001 i18n 位点（字符串 key）而非数字错误码
-
-- 状态：accepted
-
-**背景**：错误码用字符串 key 还是数字。
-
-**选项**：
-- 数字错误码：紧凑，但多语言扩展需映射表
-- 字符串 key：天然支持多语言，前端直接翻译
-
-**决策**：选字符串 key。服务端不维护 messages.properties，前端负责渲染。
-
-**确认**：`BusinessException` 持有 `messageKey` 字符串。
-
-### ADR-0002 RFC 9457 响应格式
-
-- 状态：accepted
-
-**背景**：REST 错误响应采用何种格式。
-
-**决策**：采用 RFC 9457（`application/problem+json`），`type` 当前为 `about:blank`，待错误类型文档化后替换为绝对 URI；`params`/`fieldErrors` 为合规扩展字段。
-
-**确认**：`GlobalRestExceptionHandler` 响应载体为 Spring 内建 `ProblemDetail`（`ResponseEntity<ProblemDetail>`，RFC 9457 标准成员 `type`/`title`/`status`/`detail`/`instance`），`params`/`fieldErrors` 经 `ProblemDetail` 扩展属性位（`setProperty`）注入为合规扩展成员（RFC 9457 §3.2），Content-Type 显式声明 `application/problem+json`。技术类异常的 detail 为稳定泛化文案（原始消息只进服务端日志，防内部信息外泄）。
-
-### ADR-0003 IllegalStateException → 409
-
-- 状态：accepted
-
-**背景**：乐观锁版本冲突（UPDATE 影响行数 0 且实体仍在）如何映射 HTTP 状态。
-
-**决策**：`IllegalStateException` → 409 Conflict——409 通道即为乐观锁冲突预留（`OptimisticLockConflictException` 继承自它，「实体消失」的普通 ISE 同走此通道）；状态机非法转换属业务规则违反，聚合根抛 `BusinessException` 走缺省 422，不占用 409。
-
-**确认**：`GlobalRestExceptionHandler` 处理 `IllegalStateException` 返回 409；sample 聚合状态守卫（如 `Order.pay()`）抛 `BusinessException`（`order:err.*`）→ 422。
+> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
 
 ## 7. 职责边界与技术债
 

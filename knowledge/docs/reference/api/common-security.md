@@ -188,39 +188,9 @@ common-security → spring-boot-starter-security
 - **fail-closed**：坏 token → 401，绝不静默放行（对比旧框架的 `catch (Exception ignored)`）
 - **边界 permit-all + 方法级鉴权**：路由级在网关，服务用 `@PreAuthorize` 做细粒度鉴权
 
-## 6. 设计决策
+## 6. 设计决策（已迁出）
 
-### ADR-0001 Header 透传身份（网关验签 + 服务信任 Header）
-
-- 状态：已废弃，由 ADR-0005 取代（零信任：不信任网络、每跳验证）。
-
-### ADR-0003 边界 permit-all SecurityFilterChain
-
-- 状态：accepted
-
-**决策**：路由级鉴权在网关；服务层提供 permit-all + 无状态链，可被覆盖；细粒度鉴权用 `@PreAuthorize`。
-
-### ADR-0005 零信任：服务自验 JWT（资源服务器）
-
-- 状态：accepted
-
-**决策**：服务下沉为 OAuth2 资源服务器，自行验签 JWT；网关降为 PEP。
-
-### ADR-0006 身份不投影：原生 Jwt + 按名字自取
-
-- 状态：accepted
-
-**背景**：公司 JWT 字段命名无规范（`uid`/`uname`）、字段数量不定（可能只有 userId、可能带部门分部、可能无用户名）。若框架投影成固定 record（如 `CurrentUser(userId, username, roles)`），字段一多一少就失配。
-
-**决策**：不投影固定结构。principal 保持原生 `Jwt`（claims 全量映射表），`SecurityUtil` 提供 `getClaim` / `getString` / `getStringList` 按名字读取（缺失返回 null/空）。唯一的字段缝是「角色 → 权限」（`@PreAuthorize` 需要），角色 claim 名经 `ywf.security.roles-claim` 配置。
-
-### ADR-0007 验签可插拔：JwtDecoder 抽象 + 多方案分发
-
-- 状态：accepted
-
-**背景**：不同来源 JWT 使用不同签名算法（HS256 / RS256 …），密钥方案未统一。
-
-**决策**：`JwtDecoder` 接口即抽象；`DelegatingJwtDecoder` 按 JOSE 头 `alg` 分发到各方案 decoder。可选工具类，谁需要谁 `new`。
+> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
 
 ## 7. 职责边界与技术债
 

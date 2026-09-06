@@ -1,0 +1,32 @@
+﻿# check-docs.whitelist.txt — C3 豁免清单（每行一个正则；新增条目须 PR 评审并附理由，防白名单膨胀复现 F 病）
+# 类别一：JDK / Spring / Jakarta 标准类（框架源码中本就不存在，合法引用）
+^IllegalStateException$
+^IllegalArgumentException$
+^IOException$
+^ServletException$
+^BindException$
+^MethodArgumentNotValidException$
+^MethodArgumentTypeMismatchException$
+^HttpMessageNotReadableException$
+^HttpRequestMethodNotSupportedException$
+^HttpMediaTypeNotSupportedException$
+^MissingServletRequestParameterException$
+^NoResourceFoundException$
+^ConstraintViolationException$
+^ValidationException$
+^ProblemDetail$
+^BusinessException$
+^InterruptedException$
+^SQLException$
+^PSQLException$
+^JsonMapper$
+^MybatisAutoConfiguration$
+^StringTypeHandler$
+# 类别一·续：反例——文档「禁止具名领域异常」条目的反面示例（故意出现，合法）
+^InsufficientStockException$
+# 类别二：教学虚构家族（文档已标「虚构教例/未落地」；new-test 迁移完成后 View/Invoice 族应复查）
+^Invoice
+^View
+^Refund
+^Webhook
+^FileStorage

@@ -117,31 +117,9 @@ common-pg → mybatis-spring-boot-starter（TypeHandler 基类 + ConfigurationCu
 - **`@MappedTypes` 自动匹配**：每个 TypeHandler 声明映射的 Java 类型，MyBatis 按类型自动路由
 - **仅 PostgreSQL**：本项目统一使用 PG，不做多数据库方言适配
 
-## 6. 设计决策
+## 6. 设计决策（已迁出）
 
-### ADR-0001 自动注册而非手动配置
-
-- 状态：accepted
-
-**背景**：TypeHandler 注册方式。
-
-**选项**：
-- 手动 `type-handlers-package`：每个服务重复声明
-- 自动注册：`PgTypeHandlerAutoConfiguration` 批量注册
-
-**决策**：选自动注册。类型映射是通用的，无需每个服务重复声明。
-
-**确认**：`PgTypeHandlerAutoConfiguration` 经 AutoConfiguration.imports 注册。
-
-### ADR-0002 JSONB 需显式指定 typeHandler
-
-- 状态：accepted
-
-**背景**：JSONB 字段能否自动路由。
-
-**决策**：不能。`String.class` 已被默认 `StringTypeHandler` 占用，无法自动路由到 JsonbTypeHandler；显式声明避免歧义。
-
-**确认**：JsonbTypeHandler / JsonNodeTypeHandler 需在 XML 语句中显式指定 `typeHandler`（参数位 / 结果位）。
+> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
 
 ## 7. 职责边界与技术债
 

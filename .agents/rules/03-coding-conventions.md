@@ -109,7 +109,7 @@ public void cancelOrder(CancelOrderCommand command) {
 
 - 框架统一 `OffsetDateTime`；当前时间一律经注入的 `Clock` Bean 获取，禁止无参 `OffsetDateTime.now()`
 - 「同一瞬时」比较用 `isEqual()` / `timeLineOrder()`（`equals` 要求偏移亦相等）
-- → 类型对照、`AuditFieldFiller` 审计填充与选型论证见 `knowledge/docs/reference/api/common-ddd.md` §2 / §ADR-0006
+- → 类型对照、`AuditFieldFiller` 审计填充与选型论证见 `knowledge/docs/reference/api/common-ddd.md` §2 / 判例 [ADR-0006](../../knowledge/decisions/ADR-0006-ddd-offsetdatetime-and-clock.md)
 
 ## 分页查询
 

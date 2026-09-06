@@ -63,27 +63,9 @@ common-observability（独立，无内部模块依赖）
 - **stdout 唯一输出**：容器化部署统一走 stdout + 日志采集，不落盘文件
 - **Agent 零侵入追踪**：链路追踪通过 OTel Java Agent 部署时挂载，不引入 Maven 依赖
 
-## 6. 设计决策
+## 6. 设计决策（已迁出）
 
-### ADR-0001 stdout 输出，不落盘文件
-
-- 状态：accepted
-
-**背景**：日志输出到文件还是 stdout。
-
-**决策**：选 stdout。容器化部署统一走日志采集；文件落盘增加运维复杂度且不利于弹性扩缩。
-
-**确认**：结构化日志默认输出 console（Spring Boot 内置，无文件 Appender）。
-
-### ADR-0002 OTel Agent 而非 SDK
-
-- 状态：accepted
-
-**背景**：链路追踪用 Agent 挂载还是引入 SDK 依赖。
-
-**决策**：选 Agent 挂载。零代码侵入；未挂 Agent 时 classpath 无任何 OTel 类型、MDC 不含 `trace_id`/`span_id` 键（日志照常输出，无任何副作用）。
-
-**确认**：本包无任何 OTel Maven 依赖。
+> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
 
 ## 7. 职责边界与技术债
 

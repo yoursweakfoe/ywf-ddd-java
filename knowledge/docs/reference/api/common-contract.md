@@ -117,47 +117,9 @@ common-contract（独立，无内部模块依赖）
 - **record 友好**：标记接口可被 record 实现，不强制继承关系
 - **零运行时负担**：本模块不引入任何实现逻辑；依赖均为注解（jakarta.validation-api / swagger-annotations 为纯注解，spring-web 为 HTTP 映射注解来源）
 
-## 6. 设计决策
+## 6. 设计决策（已迁出）
 
-### ADR-0001 标记接口不含泛型
-
-- 状态：accepted
-
-**背景**：Query/Command 是否需要携带返回类型泛型。
-
-**选项**：
-- 带泛型 `Query<R>`：类型信息内聚，但 contract（对外）与 Handler（内部）产生类型耦合
-- 纯标记 `Query`：返回类型由 Service 方法签名定义
-
-**决策**：选纯标记。Query 定义在 contract（对外），Handler 在 application（内部），绑定泛型会导致内外类型耦合。
-
-**后果**：返回类型不可从标记接口推断，需看 Service/Handler 方法签名。
-
-**确认**：`Query.java` / `Command.java` 无泛型参数。
-
-### ADR-0002 轻契约（不含 REST/RPC 注解）
-
-- 状态：已废弃，由 ADR-0003（重契约）取代。
-
-### ADR-0003 契约承载 HTTP 映射 + 文档注解（重契约）
-
-- 状态：accepted
-
-**背景**：contract 模块的契约接口是否承载 HTTP 映射注解（`@GetMapping`/`@PostMapping`）与文档注解（`@Operation`/`@Schema`），即契约是否绑定 HTTP 协议。
-
-**选项**：
-- 重契约：接口承载 HTTP 映射 + 文档注解，契约 = 完整 REST 定义
-- 轻契约：接口纯类型，HTTP 映射留 Controller（原 ADR-0002）
-
-**决策**：选重契约。契约本就该承载协议的完整定义——每个协议都需要自己的契约表述（HTTP 用映射注解，gRPC 用 protobuf），「协议无关的轻契约」是伪命题。
-
-**Pro**：契约完整（类型+语义+路径一体）；路径归属天然解决（消费方从接口看到路径）；`@Operation` 有 `@GetMapping` 锚点；契约优先、集中一处。
-
-**Con**：contract 依赖 spring-web（引入 HTTP 注解依赖）；动摇「零框架依赖」约束。
-
-**后果**：契约 jar 依赖 spring-web。若未来引入第二协议（如 gRPC 内部调用），以该协议自身的契约表述（protobuf 定义，内部包化）做独立重契约，与 HTTP 契约并存、互不影响——换协议是新增协议契约，而非迁移现有契约。
-
-**确认**：`common-contract` 引入 `swagger-annotations` + `spring-web`；契约接口承载 `@Tag`/`@RequestMapping`/`@Operation`/`@GetMapping`。
+> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
 
 ## 7. 职责边界与技术债
 

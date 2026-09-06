@@ -125,27 +125,9 @@ common-test（独立，test scope 使用）
 - **统一版本**：JUnit 5 + Mockito + AssertJ + Spring Test 由本模块统一管理
 - **不绑定容器**：不引入 Testcontainers 等特定容器依赖
 
-## 6. 设计决策
+## 6. 设计决策（已迁出）
 
-### ADR-0001 ArchUnit 而非人工 Code Review
-
-- 状态：accepted
-
-**背景**：分层约束靠人工 review 还是自动化。
-
-**决策**：选 ArchUnit 自动化。规则编码为测试，CI 自动执行，不依赖人的纪律性。
-
-**确认**：`DddArchitectureRules` 提供静态常量规则集。
-
-### ADR-0002 规则集为静态常量
-
-- 状态：accepted
-
-**背景**：规则如何暴露给业务服务。
-
-**决策**：公开静态常量。业务服务直接引用 `DddArchitectureRules.XXX`，无需重复定义。
-
-**确认**：`DddArchitectureRules` 类公开 `ArchRule` 静态字段。
+> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
 
 ## 7. 职责边界与技术债
 

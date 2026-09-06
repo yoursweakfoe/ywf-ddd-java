@@ -1,0 +1,28 @@
+# scripts/lychee.toml
+# lychee link checker config (docs-restructure WP-5; run: lychee --config scripts/lychee.toml "knowledge/**/*.md" ".agents/**/*.md" "AGENTS.md" "README.md")
+max_concurrency = 4
+timeout = 20
+retry_wait = 3
+require_https = false
+include_fragments = false          # md anchor fragility too high for v1; internal links covered by check-docs audit
+skip_emailinputs = true
+cache = true
+max_redirects = 3
+
+exclude_path = [
+  "target",
+  "\\.omo",
+  "node_modules",
+]
+
+exclude_mail = true
+
+fallback_extensions = ["md"]
+
+# Sample-app local endpoints in docs (curl examples) must not be probed
+exclude = [
+  'https?://localhost',
+  'https?://127\.0\.0\.1',
+]
+
+accept = "200..=299, 403, 429"    # 403 = bot-blocked docs sites (Cloudflare), tolerated; re-check nightly with token

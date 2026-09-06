@@ -108,7 +108,7 @@ Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 
 ### 多数据源规则
 
-框架认可的多数据源方案为 **dynamic-datasource**（baomidou 独立模块，非 ORM 增强栈的组成部分）。2026-09 一手调研证实其与 ORM 增强框架零耦合：`DynamicRoutingDataSource` 直接继承 Spring `AbstractRoutingDataSource`——纯 MyBatis / JdbcTemplate / JPA 均可共用（独立性论证见 knowledge/docs/reference/api/common-ddd.md ADR-0007 决策 4）。框架测试套件在 `DynamicRoutingDataSource` 包裹下运行（双 H2 源路由），作为 `MybatisPersistence` 多数据源兼容性的真实库实证。
+框架认可的多数据源方案为 **dynamic-datasource**（baomidou 独立模块，非 ORM 增强栈的组成部分）。2026-09 一手调研证实其与 ORM 增强框架零耦合：`DynamicRoutingDataSource` 直接继承 Spring `AbstractRoutingDataSource`——纯 MyBatis / JdbcTemplate / JPA 均可共用（独立性论证见 knowledge/docs/reference/api/common-ddd.md 判例 [ADR-0007](../../decisions/ADR-0007-ddd-remove-mybatis-plus.md) 决策 4）。框架测试套件在 `DynamicRoutingDataSource` 包裹下运行（双 H2 源路由），作为 `MybatisPersistence` 多数据源兼容性的真实库实证。
 
 消费方接入方式（opt-in，示例应用不演示——多数据源非最小闭环）：
 

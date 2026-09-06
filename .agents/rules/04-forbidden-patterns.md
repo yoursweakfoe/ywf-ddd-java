@@ -43,7 +43,7 @@
 - 禁止业务逻辑
 - 禁止依赖 server 模块
 - 禁止依赖 Spring / MyBatis **运行时基础设施**（DI / Bean / AutoConfiguration / 持久化）
-- 允许（且应当）承载 HTTP 映射 + 文档 + 校验注解（重契约，见 knowledge/docs/reference/api/common-contract.md ADR-0003）：
+- 允许（且应当）承载 HTTP 映射 + 文档 + 校验注解（重契约，见 knowledge/docs/reference/api/common-contract.md 判例 [ADR-0010](../../knowledge/decisions/ADR-0010-contract-heavy-contract-http-mapping.md)）：
   - `@RequestMapping` / `@GetMapping` 等（spring-web）
   - `@Tag` / `@Operation` / `@Schema`（swagger-annotations）
   - `@NotNull` / `@Valid` 等（jakarta.validation-api）
@@ -53,7 +53,7 @@
 
 - 禁止 Mediator 模式（Handler 1:1 对应 CQE，无需中间路由）
 - 禁止在核心代码（src/ / sample-application/）中嵌入 AI 工具专属指令
-- 禁止 `LocalDateTime` / `ZonedDateTime` 作为持久化时间类型（统一 `OffsetDateTime`：前者写入依赖会话时区、读 `timestamptz` 抛异常；后者 pgjdbc 双向抛异常。论证见 common-ddd.md ADR-0006）
+- 禁止 `LocalDateTime` / `ZonedDateTime` 作为持久化时间类型（统一 `OffsetDateTime`：前者写入依赖会话时区、读 `timestamptz` 抛异常；后者 pgjdbc 双向抛异常。论证见 common-ddd.md 判例 [ADR-0006](../../knowledge/decisions/ADR-0006-ddd-offsetdatetime-and-clock.md)）
 
 > Specification：common-ddd 提供最小纯接口实现，属既定采纳项（见 knowledge/docs/explanation/theory-map.md「采纳」表），
 > 可用于领域规则的 and/or/not 组合校验；查询过滤用业务 Mapper 具名方法 + 手写 XML 动态条件（`<if>`），
