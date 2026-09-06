@@ -46,7 +46,7 @@ com.yoursweakfoe.common.contract
 
 | 成员 | 类型 | 说明 |
 |------|------|------|
-| `DEFAULT_PAGE_SIZE` | `int = 20` | 默认每页大小 |
+| `DEFAULT_PAGE_SIZE` | `int = 20` | 每页大小建议值（框架不代注入缺省，使用与否属消费方） |
 | `MAX_PAGE_SIZE` | `int = 1000` | 每页最大条数上限 |
 | `pageNum()` | 抽象方法 | 当前页码（原始值）—— record 组件 `int pageNum` 天然实现 |
 | `pageSize()` | 抽象方法 | 每页大小（原始值，批量导出逃生门）—— record 组件 `int pageSize` 天然实现 |

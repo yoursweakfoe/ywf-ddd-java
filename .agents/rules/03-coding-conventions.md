@@ -1,4 +1,6 @@
-# 03 — 编码规范
+# 03 — 编码规范
+
+> 触发条件：写/改 CQRS 契约、Handler、AppService、命名、分页、时间、线程模型相关代码时。
 
 ## CQRS 模式
 
@@ -113,7 +115,7 @@ public void cancelOrder(CancelOrderCommand command) {
 
 ## 分页查询
 
-- 分页 Query 实现 `PageableQuery`；页码从 **1** 开始，默认每页 20，上限 1000（`MAX_PAGE_SIZE`）
+- 分页 Query 实现 `PageableQuery`；页码从 **1** 开始；pageNum/pageSize 须显式传入（缺参绑 0 → `@Min(1)` 拒 → 400），上限 1000（`MAX_PAGE_SIZE`）；`DEFAULT_PAGE_SIZE=20` 仅为建议值，框架不代注入；`safe*()` 钳制属执行侧第二道防线
 - `@Valid` 标注于契约接口方法参数触发校验；分页约束 `@Min(1)` / `@Max(MAX_PAGE_SIZE)` 声明于契约 Query
 - 读端口（application 层 `XxxQueryRepository`）返回 `PageResult<读 DTO>`（PO → DTO 直接投影，实现内置防御性 clamp）；Handler 返回 `PageResult<DTO>`，AppService 返回 `PageResult<CO>`
 - → `LIMIT / OFFSET` 换算与实现细节见 `knowledge/docs/reference/api/common-contract.md` 与 `knowledge/docs/how-to/read-path.md`

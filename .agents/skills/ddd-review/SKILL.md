@@ -31,7 +31,7 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 ### 持久化
 
 - [ ] 写端口接口在 `domain/{agg}/repository/`、读端口在 `application/{agg}/repository/`；两侧实现合并同包 `infrastructure/persistence/{ds}/{agg}/repository/`（类名后缀 RepositoryImpl / QueryRepositoryImpl 区分）（违反 = R5a/R5b）
-- [ ] PO 零 ORM 注解 + XML 七语句契约（schema 前缀 / version 条件 / is_delete 过滤 / existsById 恒返回 boolean）——法条见 rules 04「持久化与 SQL」，详表见 `knowledge/docs/reference/api/common-ddd.md` §2，模板见 cookbook/new-aggregate.md ⑲
+- [ ] PO 零 ORM 注解 + XML 七语句契约（schema 前缀 / version 条件 / is_delete 过滤 / existsById 恒返回 boolean）——法条见 rules 04「持久化与 SQL」，详表见 `knowledge/docs/reference/api/common-ddd.md` §2，模板见 how-to/new-aggregate.md ⑲
 - [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器）
 - [ ] 无跨聚合共享 PO / Mapper（rules 04「Infrastructure 层禁止」）
 - [ ] application/{agg}/dto/ 下 DTO 实现 `ApplicationDTO` 标记（违反 = R10a/R10b）

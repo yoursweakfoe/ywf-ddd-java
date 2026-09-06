@@ -49,7 +49,7 @@
 | 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸且仍需转换为错误码 |
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
-| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（[ADR-0001](../../decisions/ADR-0001-ddd-base-class-no-id-version.md)）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，cookbook 提供复制粘贴示例 |
+| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（[ADR-0001](../../decisions/ADR-0001-ddd-base-class-no-id-version.md)）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，how-to 篇提供复制粘贴示例 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略（XML 逐列枚举），本框架场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
 

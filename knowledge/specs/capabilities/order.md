@@ -107,14 +107,13 @@
 ### 4.2 分页　`GET /api/orders/page?status=&customerId=&pageNum=&pageSize=` → 200 `PageResult<OrderSummaryCO>`
 
 - **OR-5** 查询条件经 **URL 查询参数**绑定 record `GetOrderPageQuery`（`@Valid`，无请求体——GET 语义可缓存可书签）。（源：`OrderController.java:129-139`；实证 `RestEndpointIntegrationTest.java:194-205`）
-- **OR-6（分页教义）** 页码**从 1 起**（`@Min(1)`）；页大小上限 **1000**（`@Max(PageableQuery.MAX_PAGE_SIZE)`）；「默认 1 / 默认 20」为文档意图——见本节末缺口注记。（源：`C/order/dto/query/GetOrderPageQuery.java:21-22`、`CM/common-contract/.../query/PageableQuery.java:43,46`）
+- **OR-6（分页教义）** 页码**从 1 开始**、页大小**上限 1000**（`@Max(PageableQuery.MAX_PAGE_SIZE)`）；**无缺省注入**——pageNum/pageSize 缺参绑 0，被 `@Min(1)` 拒 → **400**，须显式传入；`safePageNum()/safePageSize()`（钳 1..1000）是仓储执行侧**第二道防线**（护未走 @Valid 的直调），非默认值机制；`DEFAULT_PAGE_SIZE=20` 仅为建议值，注入与否属消费方策略。〔2026-09-06 折叠自 archive/2026-09-pagequery-default-claim〕（源：`C/order/dto/query/GetOrderPageQuery.java` javadoc/Schema、`CM/common-contract/.../query/PageableQuery.java` 常量注释、`Oq/OrderQueryRepositoryImpl.java:46-52`）
 - **OR-7（双通道钳制）** 读仓储实现一律消费 `safePageNum()/safePageSize()`（钳制 `1..1000`）：即使调用点未触发 Bean Validation，也不产生非法分页或超大分页拖库。（源：`PageableQuery.java:78-91`、`OrderQueryRepositoryImpl.java:46-52`；offset 用 long 乘法防大页码 int 溢出 :50-52）
 - **OR-8** `status` 过滤类型为契约枚举（非自由字符串）：非法字面量在 binding 层直接 400 typeMismatch——显式失败优于静默空页；实现侧按枚举常量名比对 SQL `status` 列。（源：`C/order/enums/OrderStatus.java:4-8` javadoc、`GetOrderPageQuery.java:8-10` 参数注、`OrderQueryRepositoryImpl.java:53-55`）<!-- 待 changes/ 补全：非法 status 字面量→400 目前只有 javadoc 声明，无集成测试实证 -->
 - **OR-9** 过滤条件可选（`status`/`customerId` 均 null=不过滤），结果按 `create_at DESC` 排序；取数与计数两条语句共享同一 WHERE 片段（防两口径漂移）。（源：`sample-service-server/src/main/resources/mapper/order/OrderMapper.xml` `pageCondition`/`selectPageByCondition`/`countByCondition`）
 - **OR-10** 出参信封 `PageResult{records, total, pageNum, pageSize}`（契约层 record，不可变 + 防御拷贝）；`records` 为 `OrderSummaryCO{id,status,totalAmount,customerId}`——**列表不含订单项明细**（与详情 CO 刻意分面）。（源：`CM/common-contract/.../query/PageResult.java:44-48` 及其 javadoc、`C/order/dto/co/OrderSummaryCO.java`、`OrderController.java:137` `@Operation` description、`OrderAppService.java:120-121` map→presentSummary）
 - **OR-11** 已逻辑删除行（`is_delete=true`）对所有读不可见。（源：`OrderMapper.xml` 全部 select/delete 条件含 `is_delete = false`）
 
-<!-- 待 changes/ 补全：分页缺省值缺口——GetOrderPageQuery javadoc/Schema 宣称「默认 1 / 默认 20」，但 record 组件为原始 int、代码无 @DefaultValue 机制（全仓 grep DEFAULT_PAGE_SIZE 于 sample 零消费），缺参按 0 绑定将触发 @Min(1) → 400；现无任何测试钉死缺参行为。缺参=400 还是补默认值，须裁决后二选一修法（改码或改本行文字走 changes/） -->
 
 ## 5. 不变量
 

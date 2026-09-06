@@ -62,7 +62,7 @@
     └── test-review/SKILL.md
 ```
 
-## 与 docs/ 的关系
+## 与 knowledge/docs/ 的关系
 
 | | `.agents/`（本目录） | `knowledge/docs/` |
 |--|--|--|

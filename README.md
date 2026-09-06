@@ -71,8 +71,9 @@ graph TB
 ywf-ddd-java/
 ├── ywf-ddd-common/        # 公共基础框架
 ├── sample-application/    # 示例业务服务
-├── docs/                  # 项目级文档（架构理论 + 应用架构设计）
+├── knowledge/             # 知识伞：docs 地图 / specs 法律 / decisions 判例卷宗
 ├── .agents/               # AI 辅助开发规范（dotagents 约定，工具中立）
+├── scripts/               # 文档防腐机器法（check-docs 六校验 + lychee 配置）
 └── AGENTS.md              # AI 代理入口文件（厂商中立标准）
 ```
 
@@ -94,4 +95,4 @@ ywf-ddd-java/
 
 ## 文档导航
 
-完整文档索引见 [knowledge/docs/README.md](knowledge/docs/README.md)——全仓文档唯一登记处（common 模块文档、应用架构设计、目录结构、cookbook、术语表、决策账本与 ADR 总索引均在其内）。
+完整文档索引见 [knowledge/docs/README.md](knowledge/docs/README.md)（描述区·全仓唯一文档登记处）；行为契约现行本在 [knowledge/specs/](knowledge/specs/README.md)，架构决策判例卷宗在 [knowledge/decisions/](knowledge/decisions/README.md)。

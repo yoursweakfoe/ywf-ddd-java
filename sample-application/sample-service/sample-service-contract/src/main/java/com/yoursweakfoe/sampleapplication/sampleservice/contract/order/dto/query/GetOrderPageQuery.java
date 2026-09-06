@@ -12,13 +12,13 @@ import jakarta.validation.constraints.Min;
  * @param status     订单状态过滤（可选，null 表示不过滤；值域=OrderStatus，非法字面量经
  *                   Spring binding 直接 400 typeMismatch——显式失败优于静默空页）
  * @param customerId 客户 ID 过滤（可选）
- * @param pageNum    页码（从 1 开始，默认 1）
- * @param pageSize   每页大小（默认 20，最大 1000）
+ * @param pageNum    页码（从 1 开始；无缺省注入——缺参绑 0 被 @Min(1) 拒为 400，须显式传入）
+ * @param pageSize   每页大小（须显式传入，上限 1000；缺参同 pageNum 拒为 400）
  */
 public record GetOrderPageQuery(
         @Schema(description = "订单状态过滤（可选，值域=OrderStatus；非法值 400）") OrderStatus status,
         @Schema(description = "客户 ID 过滤（可选）") String customerId,
-        @Min(1) @Schema(description = "页码（从 1 开始，默认 1）") int pageNum,
-        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) @Schema(description = "每页大小（默认 20，最大 1000）") int pageSize
+        @Min(1) @Schema(description = "页码（从 1 开始，须显式传入）") int pageNum,
+        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) @Schema(description = "每页大小（须显式传入，上限 1000）") int pageSize
 ) implements PageableQuery {
 }

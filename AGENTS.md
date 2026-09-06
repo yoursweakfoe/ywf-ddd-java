@@ -4,25 +4,28 @@
 
 DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 
-## Context routing
+## 四态知识地图（谁听谁的）
 
-- **每次交互前（必读）：** READ `.agents/rules/`（01-05，硬约束）
-- **项目术语不确定时：** READ `knowledge/docs/glossary.md`
-- **执行结构化任务时：** USE 对应技能（逐一显式路由，不做目录清扫）
-  - 新建聚合 → `.agents/skills/new-aggregate/SKILL.md`
-  - 新增用例 → `.agents/skills/new-usecase/SKILL.md`
-  - 新增批量写操作 → `.agents/skills/batch-operations/SKILL.md`
-  - 新增外部集成 → `.agents/skills/new-portal/SKILL.md`
-  - 新增定时任务 → `.agents/skills/scheduled-task/SKILL.md`
-  - 新建微服务 → `.agents/skills/new-service/SKILL.md`
-  - 编写测试 → `.agents/skills/new-test/SKILL.md`
-  - 修改 common 公共模块 → `.agents/skills/modify-common-module/SKILL.md`
-- **完成编码后自查：** USE `.agents/skills/ddd-review/SKILL.md`（架构合规）
-- **生产就绪 / 部署前审查：** USE `.agents/skills/ops-review/SKILL.md`
-- **测试充分性审查：** USE `.agents/skills/test-review/SKILL.md`
-- **需要设计原理时：** CONSULT `knowledge/docs/explanation/`（contract/adapter/application/domain/infrastructure.md 五篇）
-- **需要完整代码模板时：** CONSULT `knowledge/docs/how-to/README.md`（实战篇子索引，按篇进入）
-- **需要文档树导航时：** CONSULT `knowledge/docs/README.md`（唯一文档总索引）
+| 区 | 态 | 守则一句话 |
+|---|---|---|
+| `knowledge/docs/` | 地图·描述 | 代码变了它必须跟着变，烂了修文档 |
+| `knowledge/specs/` | 法律·契约 | 代码违反它=修代码；改法走 `changes/`，禁止迁就代码偷改 |
+| `knowledge/decisions/` | 判例卷宗 | 正文永不回改；推翻=新立 ADR + supersede 旧案 |
+| `.agents/` | 工作台·方法 | 约束干活方式；按需详读，非每次必读 |
+
+法律全文 = `.agents/rules/05`（事实归属法）；伞宣言 = `knowledge/README.md`。
+
+## Context routing（按需触发，非全量预读）
+
+- **动手改码前按层详读法条**：分层/依赖 → `rules/02`；命名/惯例 → `rules/03`；禁令全表 → `rules/04`；文档义务 → `rules/05`；项目背景 → `rules/01`
+- **新行为先立契约**：写码前在 `knowledge/specs/changes/<slug>/` 出三件套（proposal / spec-delta / tasks），完成后归档折叠 `capabilities/`——文档同步义务只在那一刻发生
+- **执行结构化任务 USE 对应技能**（11 个，全部显式点名）：
+  - 创建：新建聚合 `new-aggregate` ｜ 新增用例 `new-usecase` ｜ 新建微服务 `new-service` ｜ 新增外部集成 `new-portal`
+  - 增量：批量写操作 `batch-operations` ｜ 定时任务 `scheduled-task` ｜ 编写测试 `new-test` ｜ 修改 common 模块 `modify-common-module`
+  - 审查：架构合规自查 `ddd-review`（编码完成必跑）｜ 生产就绪 `ops-review` ｜ 测试充分性 `test-review`
+- **查知识（指针驱动，用到才取）**：结构速查→ `knowledge/docs/reference/structure.md`（生成物禁手改）；框架 API→ `reference/api/common-*.md`；为什么→ `explanation/`；当年决策→ `decisions/README.md`（先查旧判例再拍新板）；行为现状→ `knowledge/specs/capabilities/`；术语→ `knowledge/docs/glossary.md`；全索引→ `knowledge/docs/README.md`
+- **进入模块目录时就近读**：`ywf-ddd-common/AGENTS.md`、`sample-application/AGENTS.md`（nearest-wins）
+- **文档防腐**：交付前跑 `scripts/check-docs.ps1`（六校验；ddd-review 末步已内置）
 
 ## Core constraints (quick reference)
 

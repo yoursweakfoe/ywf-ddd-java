@@ -16,7 +16,7 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 
 → [directory-structure/server/infrastructure.md](../reference/structure.md)
 
-> 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md)（PO / Converter / RepositoryImpl）| [cookbook/new-aggregate.md](../how-to/new-aggregate.md)（完整模板）
+> 完整代码示例 → [how-to/write-path.md](../how-to/write-path.md)（PO / Converter / RepositoryImpl）| [how-to/new-aggregate.md](../how-to/new-aggregate.md)（完整模板）
 
 ## 核心组件
 
@@ -72,11 +72,11 @@ XML 集中在 `src/main/resources/mapper/{agg}/`，与 PO 同聚合目录镜像�
 命名规范：
 - Domain 接口以 `Portal` 结尾：`PaymentPortal`、`StoragePortal`
 - Infra 实现以 `Gateway` 结尾：`AlipayPaymentGateway`、`AliOssStorageGateway`
-- 实现类一律按外部能力分子包（无条件口径，一个能力一个子包）：`infrastructure/gateway/{capability}/`，如 `gateway/payment/`、`gateway/storage/`——口径 canonical 见 [cookbook/gateway.md](../how-to/gateway.md)「gateway 按外部能力分子包」要点行，本文不复制规则细节
+- 实现类一律按外部能力分子包（无条件口径，一个能力一个子包）：`infrastructure/gateway/{capability}/`，如 `gateway/payment/`、`gateway/storage/`——口径 canonical 见 [how-to/gateway.md](../how-to/gateway.md)「gateway 按外部能力分子包」要点行，本文不复制规则细节
 
-> 上文 Payment / Storage / Alipay / AliOss 均为虚构教例，sample 未实现（示例应用刻意不演示 Portal/Gateway，完整走查见 cookbook）。
+> 上文 Payment / Storage / Alipay / AliOss 均为虚构教例，sample 未实现（示例应用刻意不演示 Portal/Gateway，完整走查见 how-to 篇）。
 
-→ 完整代码见 [cookbook/gateway.md](../how-to/gateway.md)
+→ 完整代码见 [how-to/gateway.md](../how-to/gateway.md)
 
 ### config/ — 全局配置
 

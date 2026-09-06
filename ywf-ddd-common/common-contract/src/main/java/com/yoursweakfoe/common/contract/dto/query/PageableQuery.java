@@ -20,7 +20,8 @@ package com.yoursweakfoe.common.contract.dto.query;
  * <ul>
  *   <li>{@link #pageNum()} / {@link #pageSize()} —— <strong>原始值</strong>（record 组件直传），
  *       供批量导出等确需突破上限的场景直接消费（自担风险）</li>
- *   <li>{@link #safePageNum()} / {@link #safePageSize()} —— <strong>防御性钳制值</strong>，
+ *   <li>{@link #safePageNum()} / {@link #safePageSize()} —— <strong>防御性钳制值</strong>（default 实现钳到 {@code 1..MAX_PAGE_SIZE}），
+ *       属第二道防线（护未走 Bean Validation 的直调），<strong>非缺省注入机制</strong>——HTTP 面缺参绑 0，由 {@code @Min(1)} 在绑定层拒为 400；
  *       读侧仓储实现（{@code XxxQueryRepositoryImpl}）应统一消费本组方法：
  *       即使调用点未触发 Bean Validation，也不会产生非法分页或超大分页拖垮数据库</li>
  * </ul>
@@ -39,7 +40,7 @@ package com.yoursweakfoe.common.contract.dto.query;
  */
 public interface PageableQuery extends Query {
 
-    /** 默认每页大小 */
+    /** 建议每页大小——框架不代注入缺省，使用与否属消费方策略（本仓 sample 要求显式传参） */
     int DEFAULT_PAGE_SIZE = 20;
 
     /** 每页最大条数上限 */
@@ -71,7 +72,8 @@ public interface PageableQuery extends Query {
     /**
      * 防御性页码：下限钳制为 1。
      *
-     * <p>读侧仓储实现的推荐消费入口：{@code pageNum <= 0} 一律按第 1 页处理。
+     * <p>第二道防线（护未走 Bean Validation 的直调）——HTTP 面缺参绑 0 后由
+     * {@code @Min(1)} 在绑定层拒为 400，本方法不为 HTTP 调用兜默认值。
      *
      * @return 至少为 1 的页码
      */

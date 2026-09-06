@@ -56,15 +56,13 @@ public class GetReservationQuery implements Query, Serializable {
 // contract/reservation/dto/query/GetReservationPageQuery.java
 public record GetReservationPageQuery(
         @Schema(description = "状态过滤（可选，值域 = ReservationStatus 契约枚举；非法值 400）")
-        ReservationStatus status,      // 状态过滤（可选）
+        ReservationStatus status,
         @Schema(description = "客户 ID 过滤（可选）")
-        String customerId,             // 客户 ID 过滤（可选）
-        @Min(1)
-        @Schema(description = "页码（从 1 开始，默认 1）")
-        int pageNum,                   // 页码（从 1 开始）
-        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE)
-        @Schema(description = "每页大小（默认 20，最大 1000）")
-        int pageSize                   // 每页大小
+        String customerId,
+        @Min(1) @Schema(description = "页码（从 1 开始，须显式传入）")
+        int pageNum,
+        @Min(1) @Max(PageableQuery.MAX_PAGE_SIZE) @Schema(description = "每页大小（须显式传入，上限 1000）")
+        int pageSize
 ) implements PageableQuery {
 }
 ```

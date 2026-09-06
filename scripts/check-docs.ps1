@@ -74,7 +74,7 @@ $lineAllow = '@Order\b|Ordered\.|ORDER BY|真实例|实现状态|\bsample\b|samp
 $pathAllow = 'domain/order|application/order|contract/order|infrastructure/[^`]*order|adapter/task|master/order|domain/product|application/product|contract/product|infrastructure/[^`]*product|master/product'
 $classRefs = 'OrderFactory|ProductFactory|OrderRepository|OrderQueryRepository|ProductRepository|ProductQueryRepository|OrderController|ProductController|OrderCO|ProductCO|OrderDTO|ProductDTO|ProductViewDTO|OrderPO|ProductPO|OrderItem|OrderItemDTO|OrderStatus|ProductStatus|OrderAppService|ProductAppService|OrderMapper|ProductMapper|OrderMapper\.xml|OrderConverter|ProductConverter|OrderPresenter|OrderAssembler|ProductPresenter|ProductAssembler|PayOrder|PlaceOrder|CancelOrder|ShipOrder|ShipOrderForm|DeliverOrder|ConfirmOrder|CompleteOrder|CreateProduct|GetOrderPage|GetOrderQuery|GetProductQuery|AutoDeliver|RetryablePlace|OrderAutoDeliverScheduler|OrderQueryRepositoryImpl|ProductQueryRepositoryImpl|ProductFixtures|OrderFixtures|OrdersTable|ProductTable|GetOrderPageHandler|GetProductHandler|OrderControllerImpl|ProductControllerImpl|OrderAggregateTest|OrderAppServiceTest|PayOrderHandlerTest|ConfirmOrderHandler'
 $fileSkipC4 = @(
-    'skills/new-test/SKILL\.md',   # D6 pending: templates move to how-to/testing.md at WP-2
+    # (new-test SKILL 豁免已拆除——D6 迁移完成，模板只住 how-to/testing.md)
     'rules/01-project-overview\.md',
     'knowledge/docs/tutorials/',           # operations manual on the real sample (business words inherent, exempt per doctrine)
     'reference/structure\.md',           # generated map of the REAL tree - dir names order/product are facts, not pedagogy

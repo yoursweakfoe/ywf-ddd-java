@@ -1,4 +1,6 @@
-# 01 — 项目概览
+# 01 — 项目概览
+
+> 触发条件：接手任何本仓工作前（约 1 分钟）；项目定位/技术栈口径疑问时。
 
 ## 定位
 
@@ -20,8 +22,9 @@ ywf-ddd-java/
 │   ├── common-observability/ # 可观测性
 │   └── common-test/       # ArchUnit 守护 + 测试基础设施
 ├── sample-application/    # 示例业务服务（电商：Order + Product）
-├── docs/                  # 项目级文档（设计原理 + 代码模板）
+├── knowledge/               # 知识伞：docs 地图 / specs 法律 / decisions 判例卷宗
 ├── .agents/               # AI 代理规范（本目录，dotagents 约定）
+├── scripts/                 # 文档防腐机器法（check-docs 六校验 + lychee 配置）
 └── AGENTS.md              # AI 代理入口文件（厂商中立标准）
 ```
 
