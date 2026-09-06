@@ -7,11 +7,11 @@
 | 层 | 载体 | 角色 | 加载方式 |
 |----|------|------|----------|
 | 压缩宪法 | 根目录 `AGENTS.md` | 每次必读的核心约束（九条）+ 路由 | 全兼容**主动加载**（厂商中立标准） |
-| 可调用流程 | `.agents/skills/` | 任务 SOP（11 个 SKILL.md），只含步骤+指针 | opencode / Pi **原生扫描** |
+| 可调用流程 | `.agents/skills/` | 任务 SOP（12 个 SKILL.md），只含步骤+指针 | opencode / Pi **原生扫描** |
 
 **法律与描述的居所**（经 AGENTS 路由按需读，本树零复数副本）：
 
-- 法条正文（用法规范/禁令/公约/归属法）→ `knowledge/specs/current/`（modules 8 卷 + patterns 14 卷含本改革新增 3 卷）
+- 法条正文（用法规范/禁令/公约/归属法）→ `knowledge/specs/current/`（modules 8 卷 + patterns 15 卷，含法律入典改革新增 3 卷）
 - 业务行为法 → `sample-application/specs/`（镜像区）
 - 项目背景/结构地图 → 根 `README.md`、`knowledge/README.md`、`knowledge/docs/`
 - 判例 → `knowledge/decisions/`
@@ -26,9 +26,9 @@ skills 目录选择 `.agents/skills/` 的原因：opencode 与 Pi **原生扫描
 
 结构借鉴 [dotagents](https://github.com/bgreenwell/dotagents)（草案倡议）命名，按需裁剪——personas 已并入 skills（评审技能）。
 
-## skills 清单（11）
+## skills 清单（12）
 
-创建：`new-aggregate` `new-usecase` `new-service` `new-portal`；增量：`batch-operations` `scheduled-task` `new-test` `modify-common-module`；审查：`ddd-review`（末步必跑 check-docs）`ops-review` `test-review`。纪律：**skill 内零法条零模板**（步骤与指针而已；D6 推广，归属法 §2）。
+创建：`new-aggregate` `new-usecase` `new-service` `new-portal`；增量：`batch-operations` `scheduled-task` `new-test` `modify-common-module`；审查：`ddd-review`（末步必跑 check-docs）`ops-review` `test-review`；立法：`new-bill`（起草/推进/折叠法案）。纪律：**skill 内零法条零模板**（步骤与指针而已；D6 推广，归属法 §2）。
 
 ## 各工具接入方式
 

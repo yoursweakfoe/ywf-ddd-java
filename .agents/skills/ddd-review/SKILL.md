@@ -1,86 +1,92 @@
 ﻿---
 name: ddd-review
-description: DDD 架构合规审查。完成编码后自查、人工要求 review、或 PR 提交前使用。
+description: DDD 架构合规审查。完成编码后必跑自查、人工要求 review、或 PR 提交前使用；末步跑 check-docs 防腐闸。
 ---
 
 # DDD 架构合规审查
 
 ## 前置阅读
 
-- `knowledge/specs/current/patterns/prohibitions.md`（禁止清单法条）
-- `knowledge/specs/current/patterns/prohibitions.md`（依赖方向）
-- `knowledge/docs/reference/api/common-test.md` §2（ArchUnit 规则编号表 R1-R14 / C1——教义单一事实源，检查项只引编号不复述）
+> 本技能只载流程不载法：每个检查项 = 一个检查动作 + 法卷条款编号指针，条款原文一律到卷取用（归属法 §2「skill 内零法条零模板」）。
+
+| 读什么 | 文件 | 取什么 |
+|---|---|---|
+| 禁令卷 | `knowledge/specs/current/patterns/prohibitions.md` | §1~§4 四层禁止面、§5 契约、§6 持久化铁律、§7 时间与线程、§8 通用、§9 Common 登记表、§10 Git 工作法 |
+| 编码公约卷 | `knowledge/specs/current/patterns/coding-conventions.md` | CC-1~CC-9；§2.1 类型后缀表；§2.2 结构映射表 |
+| blueprint 卷（聚合构建宪） | `knowledge/specs/current/patterns/aggregate-blueprint.md` | §1 槽位表（㉠-㉒）、§2 BP 条款、§3 验收单、§5 服务骨架通式 |
+| ArchUnit 编号表 | `knowledge/docs/reference/api/common-test.md` §2 | R 系 / C1 规则编号表（规则 `as()` 前缀与 `DddArchitectureRules` 源码自对账；检查项只引编号不复述） |
+| 归属法卷 | `knowledge/specs/current/patterns/attribution-law.md` | §2 事实归属表、§4 强制同步规则（「文档与契约」维度用） |
 
 ## 审查清单
 
 ### 分层依赖
 
-- [ ] 依赖方向 adapter → application → domain ← infrastructure，无跨界反向边（违反 = R1/R2/R3；infra 访问 application 仅限读端口实现 / ApplicationDTO 锚点，R1b）
-- [ ] Domain 零框架**运行时**依赖（违反 = R3/R4）。唯一例外：`org.springframework.stereotype` 装配注解——DomainService 标注 `@Service` 为教义允许（R4 白名单，common-test 共享规则）
-- [ ] Domain 不依赖 common-security（违反 = R6）
-- [ ] Application 层不 import Mapper / PO 类（禁令卷「Application 层禁止」）
+- [ ] 依赖方向 adapter → application → domain ← infrastructure，无跨界反向边（法条 WC-1；违反 = R1/R2/R3；infra 访问 application 仅限读端口实现 / ApplicationDTO 锚点 = R1b）
+- [ ] Domain 零框架**运行时**依赖（违反 = R3/R4）。唯一豁免 `org.springframework.stereotype` 装配注解（法条 禁令卷 §1；R4 白名单 `DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE`；DomainService 标 `@Service` = CA-5 允许）
+- [ ] Domain 不依赖 common-security、不感知认证上下文（法条 CC-8；违反 = R6）
+- [ ] Handler 不使用 Mapper / PO（法条 禁令卷 §2——禁止面收在 Handler 粒度）
 
 ### 职责边界
 
-- [ ] Handler 不含业务规则（if-else 判断应在聚合根方法内，禁令卷）
-- [ ] Handler 返回 DTO 而非 CO；AppService 经 Presenter 返回 CO（禁令卷「禁止 Handler 返回 CO」）
-- [ ] CommandHandler.handle 标注 `@Transactional(rollbackFor = Exception.class)`；RepositoryImpl / MybatisPersistence **不**标注（违反 = R11，事务边界上收应用层 Handler）
-- [ ] QueryHandler 只注入 QueryRepository 读端口，不触碰写侧 Repository、不加载聚合根（违反 = R13）
-- [ ] Adapter 纯透传（无业务判断、无 Assembler/Presenter 调用，禁令卷「Adapter 层禁止」）
+- [ ] Handler 不写业务规则、无 if-else 业务分支（决策在聚合根内——法条 禁令卷 §2、WC-3）
+- [ ] Handler 返回 DTO 而非 CO；AppService 经 Presenter 返回 CO（法条 禁令卷 §2、WC-4；Assembler/Presenter 强制分离 = WC-5/BP-9）
+- [ ] `CommandHandler.handle` 标注 `@Transactional(rollbackFor = Exception.class)`；RepositoryImpl / MybatisPersistence 侧**不**标注（违反 = R11；法条 BP-10、WC-10——事务边界上收 Handler）
+- [ ] QueryHandler 只注入 QueryRepository 读端口，不触碰写侧 Repository、不加载聚合根、无 `@Transactional`（违反 = R13；法条 RC-2/RC-9、BP-11）
+- [ ] Adapter 纯透传：无业务判断、不越过 AppService 直调 Handler、不碰 Repository/Domain、不调 Assembler/Presenter（法条 禁令卷 §3、WC-4）
 
 ### 持久化
 
-- [ ] 写端口接口在 `domain/{agg}/repository/`、读端口在 `application/{agg}/repository/`；两侧实现合并同包 `infrastructure/persistence/{ds}/{agg}/repository/`（类名后缀 RepositoryImpl / QueryRepositoryImpl 区分）（违反 = R5a/R5b）
-- [ ] PO 零 ORM 注解 + XML 七语句契约（schema 前缀 / version 条件 / is_delete 过滤 / existsById 恒返回 boolean）——法条见 禁令卷「持久化与 SQL」，详表见 `knowledge/docs/reference/api/common-ddd.md` §2，模板见 how-to/new-aggregate.md ⑲
-- [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器）
-- [ ] 无跨聚合共享 PO / Mapper（禁令卷「Infrastructure 层禁止」）
-- [ ] application/{agg}/dto/ 下 DTO 实现 `ApplicationDTO` 标记（违反 = R10a/R10b）
+- [ ] 写端口接口在 `domain/{agg}/repository/`、读端口在 `application/{agg}/repository/`；两侧实现合并同包 `infrastructure/persistence/{ds}/{agg}/repository/`（RepositoryImpl / QueryRepositoryImpl 后缀区分）（违反 = R5a/R5b；槽位法条 blueprint 卷 §1 ⑭⑳⑱㉑、BP-X3）
+- [ ] PO 零 ORM 注解 + XML 七语句契约——逐条对照 BP-X1/BP-X2（禁止面 禁令卷 §6；详表镜像 `knowledge/docs/reference/api/common-ddd.md` §2；XML 槽位 = blueprint 卷 §1 ⑲）
+- [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器——法条 CC-4/BP-X2；聚合构造两扇门 = BP-8）
+- [ ] 无跨聚合共享 PO / Mapper（法条 禁令卷 §4；聚合自包含 → blueprint 卷 §5）
+- [ ] `application/{agg}/dto/` 下 DTO 实现 `ApplicationDTO` 标记（违反 = R10a/R10b；法条 blueprint 卷 §3 验收单）
 
 ### 跨聚合协调
 
-- [ ] 跨聚合联动 = DomainService / Handler 同事务直调（补偿与业务原子提交）
+- [ ] 跨聚合联动 = DomainService / Handler 同事务直调、补偿与业务原子提交，禁异步化「尽力而为」（法条 CA-3；载体位置 `domain/shared/service/` = CA-1/CA-2；批量加载防 N+1 = CA-7；禁止面 禁令卷 §1「跨聚合直接修改对方内部状态」）
 
 ### 命名与包结构
 
-- [ ] 新增文件位于正确的聚合子包内（必含子段：`handler/command|query/`、`repository/`、`adapter/rest/controller/`）
-- [ ] 命名符合 编码公约卷「命名规范」表（Command/Query/CO/DTO/PO/Portal/Gateway）
+- [ ] 新增文件位于正确的聚合子包内（必含子段：`handler/command|query/`、`repository/`、`adapter/rest/controller/`——槽位法条 blueprint 卷 §1，Handler 定位 = CC-1）
+- [ ] 命名符合 CC-2 后缀制（法条：编码公约卷 §2.1 类型后缀表——Command/Query/CO/DTO/PO/Portal/Gateway，禁自创第六种载体）
 
 ### 异常
 
-- [ ] 无具名领域异常类，统一 BusinessException + `{aggregate}:err.{scene}` 错误码 + 显式 if-throw（编码公约卷「异常策略」、禁令卷「Domain 层禁止」）
+- [ ] 无具名领域异常类、domain 层不设 `exception/` 包；统一 `BusinessException` + `{aggregate}:err.{scene}` 位点 + 聚合行为方法内显式 if-throw（法条 EV-1/EV-2/EV-6、WC-6；禁止面 禁令卷 §1；全仓 key 登记账本 `knowledge/docs/how-to/error-handling.md`）
 
 ### 时间与注入
 
-- [ ] 时间字段使用 `OffsetDateTime`，经注入 `Clock` 取当前时间（禁止 `LocalDateTime`/`ZonedDateTime` 持久化，禁令卷「通用禁止」）
-- [ ] 依赖注入使用构造器（禁止 `@Autowired` 字段注入）
-- [ ] Domain 层无 public setter（违反 = R12）
+- [ ] 持久化与领域时间一律 `OffsetDateTime`，当前时间经注入 `Clock` 取、禁无参 `now()`（法条 CC-5；禁止面 禁令卷 §7——`LocalDateTime`/`ZonedDateTime` 系持久化禁入）
+- [ ] Bean 依赖用构造器注入（各法卷规范形状统一样本姿势；单测类禁 `@Autowired` 字段注入 = TC-4）
+- [ ] Domain 层无 public setter、状态变迁只经行为方法（违反 = R12；法条 禁令卷 §1）
 
 ### 适配器
 
-- [ ] web 入口为 `adapter/rest/controller/{Agg}ControllerImpl`：`@RestController` 实现契约接口 + `RestAdapter` 标记（违反 = R8a/R8b），纯透传
+- [ ] web 入口为 `adapter/rest/controller/{Agg}ControllerImpl`：`@RestController` 实现契约接口 + `RestAdapter` 标记（违反 = R8a/R8b），纯透传零逻辑；HTTP 映射与文档注解全住契约接口（法条 BP-4、WC-9）
 
 ### 虚拟线程兼容性
 
-- [ ] 无 `synchronized` 块/方法（pinning 风险，禁令卷「虚拟线程兼容」，互斥用 `ReentrantLock`）
-- [ ] 身份上下文 ThreadLocal 由框架托管（`SecurityContextHolderFilter` 统一管理），业务代码**不做**手工 finally 清理（编码公约卷「虚拟线程」）
-- [ ] 无 Thread.sleep 用于业务等待（应使用 ScheduledExecutor / 延迟队列）
+- [ ] 生产代码无 `synchronized` 块/方法（pinning——法条 禁令卷 §7；互斥用 `ReentrantLock`）
+- [ ] 身份上下文由 Spring Security 链托管（`SecurityContextHolder` 读取，业务侧经 `SecurityUtil` 且只许 Application/Adapter 层用 = CC-8），业务代码**不做**手工 finally 清理（法条 禁令卷 §7）
+- [ ] 乐观锁冲突重试 = Handler 包装器 + 指数退避、每次重试重新 load，禁零退避热重试（法条 OL-3/OL-5；`Thread.sleep` 作退避等待系虚拟线程下明示合法——旧「业务等待禁 sleep」一刀切已废）
 
 ### 代码组织
 
-- [ ] 长类使用 `// region` / `// endregion` 折叠标记按职责分组
-- [ ] 领域层 version 字段为只读透传（不参与业务决策，仅供持久化层乐观锁）
-- [ ] 状态转换守卫使用模式匹配 switch（穷尽性检查）
+- [ ] 长类使用 `// region` / `// endregion` 折叠标记按职责分组（现行源码实践、未入法典 → 至多 WARN）
+- [ ] `version` 由框架 SQL 维护，业务层禁手工读写版本号、不参与业务决策（法条 OL-4；CO 不暴露 = BP-9）
+- [ ] 状态转换守卫用 JDK 21 穷尽性模式匹配 switch，新增枚举值编译器强制处理（框架不强制、留业务侧用——论证账本 `knowledge/docs/explanation/theory-map.md`「模式匹配 switch」行；规则收口 = BP-12）
 
 ### 基础设施最小化
 
-- [ ] 未引入当前不使用的组件、无死代码（禁令卷「Infrastructure 层最小化原则」）
-- [ ] common 模块依赖符合身份登记判据（禁令卷「Common 模块约束」构件身份二分法：定型装配审「宣言在位 + 命运依赖被本包使用或封装」，工具库审「最小化」）
+- [ ] 未引入当前不使用的组件、无死代码（注释块/TODO-restore/空实现）、无 `System.out` 替代 SLF4J（法条 禁令卷 §4「最小充分原则」）
+- [ ] common 模块依赖符合身份登记判据（法条 禁令卷 §9：先查登记表——定型装配审「自我宣言在位 + 命运依赖被本包使用或封装 + 消费方经公开 API」，工具库审「最小化」；exclusions 卫生集中制：排除只写两个策略 pom，子 pom 声明处零 exclusions）
 
 ### 文档与契约
 
-- [ ] 相关 how-to / explanation 文档已同步（同步义务由所属契约区的归档折叠承载：框架 `knowledge/specs/`、业务 `sample-application/specs/`，折叠之外不得留孤儿债——归属法卷 §4）
-- [ ] 如新增公开 API，`knowledge/docs/reference/api/` 对应模块文档已更新
-- [ ] `powershell -File knowledge/scripts/check-docs.ps1` 退出码 0（六校验：幽灵路径/计数/框架符号/教学中立/映射表对账/卷宗防篡改；非零即 FAIL，豁免须写理由进 whitelist）
+- [ ] 新行为已走所属契约区 `changes/<slug>/` 三件套并归档折叠（框架 → `knowledge/specs/`、示例业务 → `sample-application/specs/`），相关 how-to / explanation 已随动、折叠之外无孤儿债（法条 归属法卷 §4——归档折叠是同步义务唯一发生时点）
+- [ ] 新增/变更公开 API：`knowledge/docs/reference/api/` 对应模块文档已同 PR 随更（法条 禁令卷 §9「新增 common 模块必附文档」行；异常→HTTP 映射表另有 C5 对账 = EV-5）
+- [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs.ps1` 退出码 0（非零即 FAIL；校验清单以工具输出为准不在本复述，变红裁决纪律——文档错修文档、工具误伤修工具——见 `knowledge/docs/reference/doc-guards.md`；新增 C3 豁免须 PR 评审写理由进 `knowledge/scripts/check-docs.whitelist.txt`，只删不增）
 
 ## 审查范围指引
 
@@ -99,5 +105,5 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 ```
 PASS: N items
 WARN: (list with fix suggestions)
-FAIL: (list with citation：ArchUnit 编号见 knowledge/docs/reference/api/common-test.md §2，法条见 knowledge/specs/current/patterns/prohibitions.md)
+FAIL: (list with citation：ArchUnit 编号见 knowledge/docs/reference/api/common-test.md §2 规则清单表，法条锚点 = knowledge/specs/current/ 对应法卷条款编号（禁令卷 §n / CC-n / BP-n / WC-n / RC-n / OL-n / CA-n / EV-n / TC-n）)
 ```

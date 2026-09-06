@@ -50,9 +50,9 @@ knowledge/
 │   └── explanation/ 分层设计 5 篇 + theory-map 理论账本
 ├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 全局唯一编号，append-only
-└── scripts/        执法 | check-docs.ps1 六校验 + 豁免白名单 + lychee 配置
+└── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置
 ```
 
 ## 4 · 机器执法
 
-靠自觉的守则一定腐烂。`scripts/check-docs.ps1` 六校验——幽灵路径、计数漂移、符号鬼魂、教学词违规、映射表漏更、判例回改，全部当场变红；交付前必跑（`ddd-review` 末步已内置），白名单只删不增。
+靠自觉的守则一定腐烂。`scripts/check-docs.ps1` 七校验——幽灵路径、计数漂移、符号鬼魂、教学词违规、映射表漏更、判例回改、技能闸，全部当场变红；交付前必跑（`ddd-review` 末步已内置），白名单只删不增。

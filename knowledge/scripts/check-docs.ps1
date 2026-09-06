@@ -5,6 +5,7 @@
 .DESCRIPTION
   C1 pattern-instantiation  C2 file-count consistency  C3 framework symbols
   C4 business-word neutrality in pedagogy code  C5 exception mapping table parity  C6 decisions append-only
+  C7 skill-workspace conformance (.agents residents whitelist + SKILL.md spec gates: name==dir, desc<=1024, body<=500)
   Exit code = number of failing checks. -SelfTest asserts detection of injected violations.
 .NOTES
   Sole explanation entry: knowledge/docs/reference/doc-guards.md
@@ -206,10 +207,46 @@ foreach ($dd in $decDirs) {
     }
 }
 
+# ---------- C7 skill-workspace conformance (agents-workspace L2) ----------
+$namePat = '^[a-z0-9]+(-[a-z0-9]+)*$'
+$agentsRoot = Join-Path $root '.agents'
+if (Test-Path $agentsRoot) {
+    $allowedTop = @('README.md', 'skills', 'memory', 'logs')
+    foreach ($e in (Get-ChildItem $agentsRoot -Force)) {
+        if ($allowedTop -notcontains $e.Name) { Add-Fail 'C7' ".agents unauthorized resident: $($e.Name) (whitelist: README.md + skills/ + gitignored memory|logs)" }
+    }
+    $skillRoot = Join-Path $agentsRoot 'skills'
+    if (Test-Path $skillRoot) {
+        foreach ($sf in (Get-ChildItem $skillRoot -File -Force)) {
+            Add-Fail 'C7' ".agents/skills stray file: $($sf.Name) (only skill dirs allowed)"
+        }
+        foreach ($d in (Get-ChildItem $skillRoot -Directory -Force)) {
+            $sk = Join-Path $d.FullName 'SKILL.md'
+            if (-not (Test-Path $sk)) { Add-Fail 'C7' "skill dir '$($d.Name)' missing SKILL.md"; continue }
+            $lines = [System.IO.File]::ReadAllLines($sk, [Text.Encoding]::UTF8)
+            if ($lines.Count -gt 0 -and $lines[0].Length -gt 0 -and [int][char]$lines[0][0] -eq 0xFEFF) { $lines[0] = $lines[0].Substring(1) }
+            if ($lines.Count -lt 2 -or $lines[0] -notmatch '^---\s*$') { Add-Fail 'C7' "$($d.Name)/SKILL.md: missing YAML frontmatter"; continue }
+            $end = -1
+            for ($i = 1; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^---\s*$') { $end = $i; break } }
+            if ($end -lt 0) { Add-Fail 'C7' "$($d.Name)/SKILL.md: frontmatter not closed"; continue }
+            $name = ''; $desc = ''
+            for ($i = 1; $i -lt $end; $i++) {
+                if ($lines[$i] -match '^name\s*:\s*(.+)$') { $name = $Matches[1].Trim().Trim('"').Trim("'") }
+                if ($lines[$i] -match '^description\s*:\s*(.+)$') { $desc = $Matches[1].Trim().Trim('"').Trim("'") }
+            }
+            if ($name -cnotmatch $namePat -or $name.Length -gt 64) { Add-Fail 'C7' "$($d.Name)/SKILL.md: name '$name' violates spec (^[a-z0-9-]+$ no lead/trail/consecutive hyphen, <=64)" }
+            if ($name -ne $d.Name) { Add-Fail 'C7' "$($d.Name)/SKILL.md: name '$name' != directory name" }
+            if (-not $desc) { Add-Fail 'C7' "$($d.Name)/SKILL.md: description empty" }
+            elseif ($desc.Length -gt 1024) { Add-Fail 'C7' "$($d.Name)/SKILL.md: description length $($desc.Length) > 1024" }
+            if (($lines.Count - $end - 1) -gt 500) { Add-Fail 'C7' "$($d.Name)/SKILL.md: body > 500 lines (spec cap)" }
+        }
+    }
+}
+
 # ---------- report ----------
 "================ check-docs report ================"
 $total = 0
-foreach ($k in @('C1', 'C2', 'C3', 'C4', 'C5', 'C6')) {
+foreach ($k in @('C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7')) {
     $arr = if ($fails.ContainsKey($k)) { @($fails[$k]) } else { @() }
     $verdict = if ($arr.Count) { "FAIL($($arr.Count))" } else { 'PASS' }
     '{0} {1}' -f $k, $verdict
@@ -228,10 +265,12 @@ if ($SelfTest) {
     foreach ($sp in $srcPaths) { if ($sp.Contains($tail)) { $r1 = $false; break } }
     $r2 = Test-BizCode 'Order order = create(); // injected'
     $r3 = -not $classSet.Contains('DDDArchitectureRules')
+    $r4 = ('valid-name1' -cmatch $namePat) -and -not ('Bad_Name' -cmatch $namePat)
     "ST1 ghost-path detected:     $(if ($r1) { 'PASS' } else { 'FAIL' })"
     "ST2 business-word detected:   $(if ($r2) { 'PASS' } else { 'FAIL' })"
     "ST3 ghost-class detected:     $(if ($r3) { 'PASS' } else { 'FAIL' })"
-    if (-not ($r1 -and $r2 -and $r3)) { $total++ }
+    "ST4 skill-name pattern enforced: $(if ($r4) { 'PASS' } else { 'FAIL' })"
+    if (-not ($r1 -and $r2 -and $r3 -and $r4)) { $total++ }
 }
 
 "================ result: $total failing checks ================"

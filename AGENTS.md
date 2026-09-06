@@ -19,13 +19,14 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 
 - **动手改码前按层详读法条**：分层/依赖 → `禁令卷`；命名/惯例 → `编码公约卷`；禁令全表 → `禁令卷`；文档义务 → `归属法卷`；项目背景 → `根 README`
 - **新行为先立契约**：写码前在行为所属区的 `changes/<slug>/` 出三件套（框架 → `knowledge/specs/`，示例业务 → `sample-application/specs/`；模板统一在 `knowledge/specs/changes/_template/`），完成后归档折叠回所属区 `current/`——文档同步义务只在那一刻发生
-- **执行结构化任务 USE 对应技能**（11 个，全部显式点名）：
+- **执行结构化任务 USE 对应技能**（12 个，全部显式点名）：
   - 创建：新建聚合 `new-aggregate` ｜ 新增用例 `new-usecase` ｜ 新建微服务 `new-service` ｜ 新增外部集成 `new-portal`
   - 增量：批量写操作 `batch-operations` ｜ 定时任务 `scheduled-task` ｜ 编写测试 `new-test` ｜ 修改 common 模块 `modify-common-module`
   - 审查：架构合规自查 `ddd-review`（编码完成必跑）｜ 生产就绪 `ops-review` ｜ 测试充分性 `test-review`
+  - 立法：起草/推进/折叠法案 `new-bill`（一切规范变更先立约，见下条）
 - **查知识（指针驱动，用到才取）**：结构速查→ 源码树直查（glob/IDE）；服务骨架组成法 → `knowledge/specs/current/patterns/aggregate-blueprint.md` §5；框架 API→ `reference/api/common-*.md`；为什么→ `explanation/`；当年决策→ `decisions/README.md`（先查旧判例再拍新板）；框架行为与用法规范→ `knowledge/specs/`（current/ 法卷=严格件唯一权威，docs 同题节仅宽松指引，冲突法卷赢）、业务行为现状→ `sample-application/specs/current/`；术语→ `knowledge/docs/reference/glossary.md`；全索引→ `knowledge/docs/README.md`
 - **进入模块目录时就近读**：`ywf-ddd-common/AGENTS.md`、`sample-application/AGENTS.md`（nearest-wins）
-- **文档防腐**：交付前跑 `knowledge/scripts/check-docs.ps1`（六校验；ddd-review 末步已内置）；工具说明见 `knowledge/docs/reference/doc-guards.md`
+- **文档防腐**：交付前跑 `knowledge/scripts/check-docs.ps1`（七校验；ddd-review 末步已内置）；工具说明见 `knowledge/docs/reference/doc-guards.md`
 
 ## Core constraints (quick reference)
 

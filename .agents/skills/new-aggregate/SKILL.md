@@ -7,64 +7,63 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 ## 前置阅读
 
-1. `knowledge/docs/how-to/new-aggregate.md`（①-㉒ 全部代码模板——本技能只承载顺序与清单，逐文件模板以该文档编号为准）
-2. `knowledge/specs/current/patterns/prohibitions.md`（分层 + 包结构）
-3. `knowledge/specs/current/patterns/coding-conventions.md`（命名 + 泛型）
+1. `knowledge/specs/current/patterns/aggregate-blueprint.md`（聚合构建宪：§1 槽位清单 ①-㉒、§2 BP 条款、§3 验收单、§4 逐件规范形状、§5 服务骨架——本技能只承载顺序与清单，下文「法卷」即指本卷，形状以法卷为唯一权威）
+2. `knowledge/docs/how-to/new-aggregate.md`（设计卡：拆分信号与决策点，尚未定案是否新建时先读）
+3. `knowledge/specs/current/patterns/prohibitions.md`（分层禁令 + §6 持久化与 SQL 铁律）
+4. `knowledge/specs/current/patterns/coding-conventions.md`（命名 + 泛型）
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（proposal → spec-delta → tasks，模板 = `knowledge/specs/changes/_template/`）。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 ## 步骤
 
-按阶段顺序创建（与 how-to 篇「创建顺序建议」一致；条目编号 = how-to/new-aggregate.md 文件清单 ①-㉒）：
+按阶段顺序创建（顺序 = 法卷 BP-3：contract → domain → infrastructure → application → adapter，接口先行、依赖倒序；槽位编号 ①-㉒ = 法卷 §1，逐件形状走查 = 法卷 §4）：
 
 ### Phase 1: contract 模块（①-④ + ㉒）
 
-1. ① `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` — REST 契约接口（HTTP 映射 + `@Valid` / `@Operation` 注解声明于此，重契约）
-2. ② `contract/{agg}/dto/co/{Agg}CO.java` — 契约输出（状态字段用契约枚举 ㉒ 类型，非 String）
-3. ③ `contract/{agg}/dto/command/Create{Agg}Command.java` — 写请求
-4. ④ `contract/{agg}/dto/query/Get{Agg}Query.java` — 读请求
-5. ㉒ `contract/{agg}/enums/{Agg}Status.java` — 契约枚举（CO 值域镜像 domain ⑬ 状态机；两枚举并存不可合并，奇偶由 ContractEnumParityTest 守卫锁死，见 how-to 篇 ㉒ 小节）
+1. ① `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` — REST 契约接口（HTTP 映射与文档注解声明于此，BP-4）→ 法卷 §4.①
+2. ② `contract/{agg}/dto/co/{Agg}CO.java` — 契约输出（状态字段用契约枚举 ㉒ 类型而非 String，BP-7）→ 法卷 §4.②
+3. ③ `contract/{agg}/dto/command/Create{Agg}Command.java` — 写请求 → 法卷 §4.③
+4. ④ `contract/{agg}/dto/query/Get{Agg}Query.java` — 读请求 → 法卷 §4.④
+5. ㉒ `contract/{agg}/enums/{Agg}Status.java` — 契约枚举（与 ⑬ 值域镜像、两枚举并存禁合并，奇偶锁 = ContractEnumParityTest，BP-2）→ 法卷 §4.㉒
 
 ### Phase 2: domain 层（⑫-⑭）
 
-6. ⑫ `domain/{agg}/model/{Agg}.java` — 聚合根（`extends AggregateRoot<UUID>`，纯状态机 + validate，见 how-to 篇 ⑫）
-7. ⑬ `domain/{agg}/model/{Agg}Status.java` — 状态枚举
-8. ⑭ `domain/{agg}/repository/{Agg}Repository.java` — 写侧仓储接口（仅聚合生命周期；读方法走读端口，R13）
+6. ⑫ `domain/{agg}/model/{Agg}.java` — 聚合根（纯状态机，业务规则收口 `validate()`，BP-8/BP-12）→ 法卷 §4.⑫
+7. ⑬ `domain/{agg}/model/{Agg}Status.java` — 状态枚举 → 法卷 §4.⑬
+8. ⑭ `domain/{agg}/repository/{Agg}Repository.java` — 写侧仓储接口（`extends Repository<{Agg}, UUID>`；读方法走读端口 ⑳，R13）→ 法卷 §4.⑭
 
 ### Phase 3: infrastructure 层（⑮-⑲）
 
-9. ⑮ `infrastructure/persistence/master/{agg}/mybatis/po/{Agg}PO.java` — 纯 `@Data` POJO，零 ORM 注解（表名 / 版本条件 / 逻辑删除全在 SQL 文本，见 how-to 篇 ⑮）
-10. ⑰ `infrastructure/persistence/master/{agg}/mybatis/mapper/{Agg}Mapper.java` — `@Mapper extends DddMapper<{Agg}PO>`（见 how-to 篇 ⑰）
-11. ⑯ `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — `BasicConverter` 桥，`toDomain()` 走 `reconstitute()`（见 how-to 篇 ⑯）
-12. ⑲ `src/main/resources/mapper/{agg}/{Agg}Mapper.xml` — 手写 DddMapper 七条语句（法条见 禁令卷「持久化与 SQL」，逐条模板见 how-to 篇 ⑲）
-13. ⑱ `infrastructure/persistence/master/{agg}/repository/{Agg}RepositoryImpl.java` — 继承 `MybatisPersistence`，构造器注入 Mapper + Converter + `Clock` + `AuditProperties` + `ObjectProvider<CurrentUserProvider>`；不标 `@Transactional`（R11，见 how-to 篇 ⑱）
+9. ⑮ `infrastructure/persistence/master/{agg}/mybatis/po/{Agg}PO.java` — PO（纯 `@Data` 零 ORM 注解，SQL 语义全在 XML 文本，BP-X2）→ 法卷 §4.⑮
+10. ⑰ `infrastructure/persistence/master/{agg}/mybatis/mapper/{Agg}Mapper.java` — Mapper（`@Mapper` + `extends DddMapper<{Agg}PO>`，BP-X2）→ 法卷 §4.⑰
+11. ⑯ `infrastructure/persistence/master/{agg}/converter/{Agg}Converter.java` — Converter（`BasicConverter` 桥，`toDomain()` 走 `reconstitute()`，BP-X2）→ 法卷 §4.⑯
+12. ⑲ `src/main/resources/mapper/{agg}/{Agg}Mapper.xml` — 手写 SQL（DddMapper 七条语句契约，BP-X1）→ 法卷 §4.⑲
+13. ⑱ `infrastructure/persistence/master/{agg}/repository/{Agg}RepositoryImpl.java` — RepositoryImpl（继承 `MybatisPersistence`，BP-X2；不标 `@Transactional`，事务边界在 Handler，BP-10/R11）→ 法卷 §4.⑱
 
 ### Phase 4: application 层（⑥-⑪）
 
-14. ⑦ `application/{agg}/dto/{Agg}DTO.java` — 内部视图（实现 `ApplicationDTO` 标记，R10a/R10b）
-15. ⑧ `application/{agg}/assembler/{Agg}Assembler.java` — Domain → DTO
-16. ⑨ `application/{agg}/presenter/{Agg}Presenter.java` — DTO → CO（`String → {Agg}Status` 契约枚举在此 `valueOf` 收口，见 how-to 篇 ⑨）
-17. ⑩ `application/{agg}/handler/command/Create{Agg}Handler.java` — 实现 `CommandHandler`；load → 行为 → save → toDTO；标注 `@Transactional(rollbackFor = Exception.class)`（R11 强制）
-18. ⑪ `application/{agg}/handler/query/Get{Agg}Handler.java` — 实现 `QueryHandler`，只注入读端口 QueryRepository（R13 禁止触碰写侧仓储）
-19. ⑥ `application/{agg}/service/{Agg}AppService.java` — 聚合入口（实现 `ApplicationService` 标记，返回 CO）
+14. ⑦ `application/{agg}/dto/{Agg}DTO.java` — 内部视图（实现 `ApplicationDTO` 标记，R10a/R10b）→ 法卷 §4.⑦
+15. ⑧ `application/{agg}/assembler/{Agg}Assembler.java` — Assembler（Domain → DTO 单向契约，BP-9）→ 法卷 §4.⑧
+16. ⑨ `application/{agg}/presenter/{Agg}Presenter.java` — Presenter（DTO → CO，`valueOf` 在此收口契约枚举并过滤内部字段，BP-7/BP-9）→ 法卷 §4.⑨
+17. ⑩ `application/{agg}/handler/command/Create{Agg}Handler.java` — CommandHandler（写侧四拍链 load → 聚合行为 → save → toDTO，必标 `@Transactional`，BP-10/R11）→ 法卷 §4.⑩
+18. ⑪ `application/{agg}/handler/query/Get{Agg}Handler.java` — QueryHandler（只注入读端口 ⑳，禁触写侧仓储，R13）→ 法卷 §4.⑪
+19. ⑥ `application/{agg}/service/{Agg}AppService.java` — 聚合入口（实现 `ApplicationService` 标记，返回 CO）→ 法卷 §4.⑥
 
 ### Phase 5: adapter 层（⑤）
 
-20. ⑤ `adapter/rest/controller/{Agg}ControllerImpl.java` — `@RestController` 实现契约接口 + `RestAdapter` 标记（R8a/R8b），纯透传（见 how-to 篇 ⑤）
+20. ⑤ `adapter/rest/controller/{Agg}ControllerImpl.java` — ControllerImpl（`@RestController` 实现契约接口 + `RestAdapter` 标记，纯透传零逻辑，BP-4，R8a/R8b）→ 法卷 §4.⑤
 
-> **读端口配对**（⑪ 依赖，即 how-to 篇 完整模板 22 文件中的 ⑳㉑，不计入 20 最小闭环）：`application/{agg}/repository/{Agg}QueryRepository.java`（`extends QueryRepository` 标记）+ `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java`（与 ⑱ 写侧 Impl 同包，PO → 读 DTO 直接投影，不 reconstitute 聚合根）。流程模板 → `knowledge/docs/how-to/read-path.md`。
+> **读端口配对**（⑳㉑，⑪ 依赖，= 法卷 §1 清单 22 文件中不计入 20 最小闭环的 2 件，BP-1 允许随首个读用例补齐）：`application/{agg}/repository/{Agg}QueryRepository.java`（`extends QueryRepository` 标记，BP-X3）+ `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java`（与 ⑱ 写侧 Impl 同包，PO → 读 DTO 直接投影，BP-11）。形状 → 法卷 §4.⑳㉑；读链路条款 → `knowledge/specs/current/patterns/read-chain.md` 法卷（选型设计卡 → `knowledge/docs/how-to/read-path.md`）。
 
 ## 验证
 
 - [ ] `mvn compile -pl sample-application/sample-service/sample-service-server` 编译通过
-- [ ] ArchUnit 通过：`mvn test -pl sample-application/sample-service/sample-service-server -Dtest="*ArchitectureTest"`（DddArchitectureTest + ApplicationArchitectureTest；规则编号表见 `knowledge/docs/reference/api/common-test.md` §2）
-- [ ] Handler 返回 DTO，AppService 返回 CO（经 Presenter）
-- [ ] Domain 零框架运行时依赖（唯一例外 `org.springframework.stereotype`，R4 白名单）
-- [ ] 持久化契约满足（法条 禁令卷「持久化与 SQL」：PO 零 ORM 注解；XML 七语句含 schema 前缀 / version 条件 / `AND is_delete = false` / insert 不枚举 is_delete / existsById 恒返回一行 boolean）
-- [ ] 契约枚举（㉒）与 domain 状态机枚举（⑬）奇偶锁生效：新枚举对已登记进 `ContractEnumParityTest` 的 `PAIRS` 清单
-- [ ] 事务边界在 Handler（RepositoryImpl 不标注，R11）
+- [ ] ArchUnit 通过：`mvn test -pl sample-application/sample-service/sample-service-server -Dtest="*ArchitectureTest"`（DddArchitectureTest + ApplicationArchitectureTest；规则编号表 → `knowledge/docs/reference/api/common-test.md` §2「ArchUnit 规则清单」）
+- [ ] 契约枚举奇偶：新枚举对登记进 `ContractEnumParityTest` 的 `PAIRS` 清单（BP-2，法卷 §3 验收单未单列此条，故在此补位）
+- [ ] 法卷 §3 验收单逐条勾验（Handler→DTO / AppService→CO、domain 框架中立 R4、事务边界 BP-10/R11、读侧 R13、持久化契约 BP-X1~X3 皆有其位，本清单不复述法条）
 
 ## 文档同步
 
-- 如引入了新模式，更新对应 how-to 篇 文档（含本清单的 canonical 模板 new-aggregate.md）
+- 引入新模式 / 新形状 → 先走 `knowledge/specs/changes/` 修法程序（聚合形状正身 = aggregate-blueprint 法卷）；how-to 设计卡与 api 描述镜像随归档折叠同步（归属法 §4）
+- 本技能只保步骤与指针，不新增法条正文或模板（D6 纪律，归属法 §2）

@@ -6,11 +6,11 @@
 
 | 文件 | 是什么 | 何时动它 |
 |---|---|---|
-| [../../scripts/check-docs.ps1](../../scripts/check-docs.ps1) | 六校验主机，唯一可执行 | 每次文档交付前跑；`ddd-review` 末步内置；夜间全量 |
+| [../../scripts/check-docs.ps1](../../scripts/check-docs.ps1) | 七校验主机，唯一可执行 | 每次文档交付前跑；`ddd-review` 末步内置；夜间全量 |
 | [../../scripts/check-docs.whitelist.txt](../../scripts/check-docs.whitelist.txt) | C3 豁免清单（外置数据，非代码） | C3 误伤时查；新增须 PR 评审并写理由 |
 | [../../scripts/lychee.toml](../../scripts/lychee.toml) | 外联检查器 lychee 的配置文件（本体不在仓内） | 装了 lychee 二进制随时跑 |
 
-## check-docs.ps1 —— 六校验主机
+## check-docs.ps1 —— 七校验主机
 
 ### 运行
 
@@ -18,7 +18,7 @@
 # 全量跑；退出码 = FAIL 检查项数（0 = 全绿），可直接做 CI 门
 powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs.ps1
 
-# 附加探测器自检：注入三类已知违规，验证检测器没睡（三项应全 PASS）
+# 附加探测器自检：ST1-3 注入三类已知违规、ST4 验技能名正则，验证检测器没睡（四项应全 PASS）
 powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs.ps1 -SelfTest
 ```
 
@@ -30,11 +30,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 |---|---|---|
 | 教学区 | `knowledge/docs/` + `.agents/` + 根 `AGENTS.md` + `knowledge/specs/current/` | C1 / C4 |
 | 全区 | 伞内全部 + `.agents/` + 根 README + AGENTS.md | C2 / C3 |
-| 定点 | 框架源码 ↔ 异常文档；`git diff HEAD`（只读） | C5 / C6 |
+| 定点 | 框架源码 ↔ 异常文档；`git diff HEAD`（只读）；`.agents/skills/` 实地 | C5 / C6 / C7 |
 
 `changes/`、`archive/`、`decisions/` 参与符号与计数校验但**豁免教学中立扫描**（案卷记录当时语，辖域条款见 `归属法卷` §3）；`specs/current/` 法卷自 2026-09-06 宽严双份裁定起**入列 C1/C4**——严格件必须保持 `{agg}`/虚构家族的中立形状，由机器担保而非自觉。
 
-### 六项检查各治什么病
+### 七项检查各治什么病
 
 | 检查 | 治的病 | 机制 | 变红样例 |
 |---|---|---|---|
@@ -44,6 +44,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 | **C4 教学中立** | 文档沦为业务镜像 | 教学代码围栏与反引号内禁真实例聚合词；标注「真实例/如/sample」的行与登记文件豁免 | 通用教例里混进了具体业务类名 |
 | **C5 映射表对账** | 异常文档漏更 | `GlobalRestExceptionHandler` 每个 `@ExceptionHandler` 处理的类必须出现在 `reference/api/common-exception.md` | 处理器加了新通道，文档表没加行 |
 | **C6 卷宗防篡改** | 判例回改 | `knowledge/decisions/` 在 `git diff HEAD` 中出现删除行（README 除外）即红——正文 append-only，推翻=新立案 | 有人直接改了旧 ADR 正文 |
+| **C7 技能闸** | skill 逸出 spec 纪律 | `.agents/` 一级住民白名单（`README.md` + `skills/` + gitignored `memory/`/`logs/`）；每个技能目录必有 `SKILL.md`，其 frontmatter `name`==目录名（kebab，≤64）、`description` 非空 ≤1024、正文 ≤500 行（Agent Skills 规范上限；案卷 `2026-11-agents-workspace` L2） | skills/ 混进散文件或白名单外目录；`name:` 与目录漂移 |
 
 ### 变红之后的裁决纪律
 
