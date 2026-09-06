@@ -7,8 +7,8 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 ## 前置阅读
 
-- 写操作：`docs/application/cookbook/write-path.md`
-- 读操作：`docs/application/cookbook/read-path.md`（读端口流程）
+- 写操作：`knowledge/docs/how-to/write-path.md`
+- 读操作：`knowledge/docs/how-to/read-path.md`（读端口流程）
 - `.agents/rules/03-coding-conventions.md`（写侧/读侧固定模式）
 
 ## 步骤（写操作）
@@ -64,7 +64,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 实现 `DomainService` 标记接口，标注 `@Service` 由组件扫描自动注册（领域层允许 stereotype 注解，见 R4 规则）
    - 协调多个 Repository，修改多个聚合
 2. Handler 调用 Domain Service（而非直接操作多个 Repository）
-- 详见 `docs/application/cookbook/cross-aggregate.md`
+- 详见 `knowledge/docs/how-to/cross-aggregate.md`
 
 ## 变体：批量 Handler
 
@@ -74,9 +74,9 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 2. Handler 返回 `List<DTO>`，标注 `@Transactional`（默认全批原子策略；部分失败策略不加，见下）
 3. 模式：批量 load → 逐个领域行为 → `updateDomainBatch` → 批量 toDTO
 4. AppService 使用 `Presenter.presentList()`
-- 详见 `docs/application/cookbook/batch-operations.md`，或使用 `batch-operations` skill
+- 详见 `knowledge/docs/how-to/batch-operations.md`，或使用 `batch-operations` skill
 
 ## 文档同步
 
-- 如新增了读端口方法，更新 `docs/application/cookbook/read-path.md`
-- 如新增了领域行为，更新 `docs/application/cookbook/write-path.md`
+- 如新增了读端口方法，更新 `knowledge/docs/how-to/read-path.md`
+- 如新增了领域行为，更新 `knowledge/docs/how-to/write-path.md`

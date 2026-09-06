@@ -7,7 +7,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 ## Context routing
 
 - **每次交互前（必读）：** READ `.agents/rules/`（01-05，硬约束）
-- **项目术语不确定时：** READ `docs/glossary.md`
+- **项目术语不确定时：** READ `knowledge/docs/glossary.md`
 - **执行结构化任务时：** USE 对应技能（逐一显式路由，不做目录清扫）
   - 新建聚合 → `.agents/skills/new-aggregate/SKILL.md`
   - 新增用例 → `.agents/skills/new-usecase/SKILL.md`
@@ -20,9 +20,9 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 - **完成编码后自查：** USE `.agents/skills/ddd-review/SKILL.md`（架构合规）
 - **生产就绪 / 部署前审查：** USE `.agents/skills/ops-review/SKILL.md`
 - **测试充分性审查：** USE `.agents/skills/test-review/SKILL.md`
-- **需要设计原理时：** CONSULT `docs/application/module-design/`（contract/adapter/application/domain/infrastructure.md 五篇）
-- **需要完整代码模板时：** CONSULT `docs/application/cookbook/README.md`（实战篇子索引，按篇进入）
-- **需要文档树导航时：** CONSULT `docs/README.md`（唯一文档总索引）
+- **需要设计原理时：** CONSULT `knowledge/docs/explanation/`（contract/adapter/application/domain/infrastructure.md 五篇）
+- **需要完整代码模板时：** CONSULT `knowledge/docs/how-to/README.md`（实战篇子索引，按篇进入）
+- **需要文档树导航时：** CONSULT `knowledge/docs/README.md`（唯一文档总索引）
 
 ## Core constraints (quick reference)
 

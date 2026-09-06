@@ -49,4 +49,4 @@ adapter/rest/controller/  → {Agg}ControllerImpl（实现 contract 契约接口
 contract/{agg}/           → adapter/rest/controller/（Controller 契约接口）+ dto/{command,query,co}/ + enums/
 ```
 
-→ 详见 `docs/application/module-design/{layer}.md`
+→ 详见 `knowledge/docs/explanation/{layer}.md`

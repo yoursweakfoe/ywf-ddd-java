@@ -17,7 +17,7 @@ CommandHandler.handle(command):
 ```
 
 - Handler 标注 `@Transactional(rollbackFor = Exception.class)`
-- 同事务跨聚合写入是**已定档决策**（强一致 fail-fast，理由与边界见 `docs/references.md`）：Handler 允许在同一事务内协调多个聚合的持久化，不拆事件补偿
+- 同事务跨聚合写入是**已定档决策**（强一致 fail-fast，理由与边界见 `knowledge/docs/explanation/theory-map.md`）：Handler 允许在同一事务内协调多个聚合的持久化，不拆事件补偿
 - Handler 返回 **DTO**（不是 CO）
 
 ## 读侧固定模式
@@ -85,52 +85,52 @@ public void cancelOrder(CancelOrderCommand command) {
 
 - 写端口接口 `Repository<Domain, ID>`（`domain/{agg}/repository/`）；实现继承 `MybatisPersistence<Mapper, PO, Domain, ID>`（`infrastructure/persistence/{ds}/{agg}/repository/`，与读端口 Impl 同包）
 - Mapper `XxxMapper extends DddMapper<XxxPO>`（标注 `@Mapper`）；PO 纯 `@Data` POJO 零 ORM 注解；Converter 实现 `BasicConverter<Domain, PO>`，`toDomain()` 使用 `reconstitute()`
-- → 构造器注入清单、`toPersistenceId` 覆写、七语句契约见 `docs/common/common-ddd.md` §2 与 `docs/application/cookbook/new-aggregate.md`
+- → 构造器注入清单、`toPersistenceId` 覆写、七语句契约见 `knowledge/docs/reference/api/common-ddd.md` §2 与 `knowledge/docs/how-to/new-aggregate.md`
 
 ## Domain Service（跨聚合协调）
 
 - 位置 `domain/shared/service/`，实现 `DomainService` 标记接口并标注 `@Service`（R4 stereotype 白名单例外）
 - 协调多个聚合的操作（不归属任何单一聚合），可调用 Repository、可修改实体状态
-- → 边界论证与示例（`InventoryDomainService`）见 `docs/application/module-design/domain.md`
+- → 边界论证与示例（`InventoryDomainService`）见 `knowledge/docs/explanation/domain.md`
 
 ## Policy（领域策略）
 
 - 位置 `domain/{agg}/policy/`，实现 `Policy<C>`（`isApplicable(C context)`）
 - 纯计算/决策：**无状态、无副作用、不修改任何对象**；由 Domain Service 收集结果后操作实体
-- → 三种组合形态（互斥型/叠加型/精准路由型）见 `docs/application/cookbook/policy-pattern.md`
+- → 三种组合形态（互斥型/叠加型/精准路由型）见 `knowledge/docs/how-to/policy-pattern.md`
 
 ## Portal / Gateway（外部资源访问）
 
 - Domain 接口 `domain/{agg}/portal/{Xxx}Portal.java`（继承 `Portal` 标记接口）；infra 实现 `infrastructure/gateway/{Xxx}Gateway.java`
 - Gateway 职责：技术调用 + ACL 模型翻译 + 容错（超时/降级/重试）；禁止将外部 SDK 类型泄漏到 Domain
-- → 完整流程与模板见 `docs/application/cookbook/gateway.md`
+- → 完整流程与模板见 `knowledge/docs/how-to/gateway.md`
 
 ## 时间类型约定
 
 - 框架统一 `OffsetDateTime`；当前时间一律经注入的 `Clock` Bean 获取，禁止无参 `OffsetDateTime.now()`
 - 「同一瞬时」比较用 `isEqual()` / `timeLineOrder()`（`equals` 要求偏移亦相等）
-- → 类型对照、`AuditFieldFiller` 审计填充与选型论证见 `docs/common/common-ddd.md` §2 / §ADR-0006
+- → 类型对照、`AuditFieldFiller` 审计填充与选型论证见 `knowledge/docs/reference/api/common-ddd.md` §2 / §ADR-0006
 
 ## 分页查询
 
 - 分页 Query 实现 `PageableQuery`；页码从 **1** 开始，默认每页 20，上限 1000（`MAX_PAGE_SIZE`）
 - `@Valid` 标注于契约接口方法参数触发校验；分页约束 `@Min(1)` / `@Max(MAX_PAGE_SIZE)` 声明于契约 Query
 - 读端口（application 层 `XxxQueryRepository`）返回 `PageResult<读 DTO>`（PO → DTO 直接投影，实现内置防御性 clamp）；Handler 返回 `PageResult<DTO>`，AppService 返回 `PageResult<CO>`
-- → `LIMIT / OFFSET` 换算与实现细节见 `docs/common/common-contract.md` 与 `docs/application/cookbook/read-path.md`
+- → `LIMIT / OFFSET` 换算与实现细节见 `knowledge/docs/reference/api/common-contract.md` 与 `knowledge/docs/how-to/read-path.md`
 
 ## Adapter（REST）
 
 - web 入口 `@RestController`（实现 contract Controller 契约接口）；REST 路径/文档/校验注解声明于契约接口（重契约，单一事实源），ControllerImpl 继承承载
 - 东西向一期为 RestClient 直连（静态地址），复用同一契约接口；Feign 经 common-cloud opt-in（JWT 由 RequestInterceptor 自动透传，下游自验签）
 - web 入口纯透传 AppService，禁止业务判断、禁止修改 Command/Query 内容
-- → 细则见 `docs/application/module-design/adapter.md`
+- → 细则见 `knowledge/docs/explanation/adapter.md`
 
 ## SecurityUtil 使用层归属
 
 - `SecurityUtil.getJwt()` / `getClaim()` 等仅允许在 **Application 层（Handler）** 和 **Adapter 层** 调用；身份字段不预定义，按名字自取（公司 JWT 字段命名 / 数量无规范）
 - Controller 层优先使用 `@AuthenticationPrincipal Jwt` 注入已验签的 JWT；**Domain 层禁止**调用 SecurityUtil（领域模型不感知认证上下文）
 - 角色/权限判断优先使用 `@PreAuthorize("hasRole('xxx')")` 方法级注解（角色 claim 名经 `ywf.security.roles-claim` 配置）
-- → API 清单与配置细则见 `docs/common/common-security.md`
+- → API 清单与配置细则见 `knowledge/docs/reference/api/common-security.md`
 
 ## 虚拟线程
 
@@ -151,4 +151,4 @@ public void cancelOrder(CancelOrderCommand command) {
 > 1. `equals()/hashCode()` 基于所有字段 —— 聚合根相等性必须基于 ID
 > 2. setter 破坏领域不变量（绕过状态机 / 业务校验）
 
-→ 详见 `docs/application/cookbook/`
+→ 详见 `knowledge/docs/how-to/`

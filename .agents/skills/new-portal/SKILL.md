@@ -7,13 +7,13 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 
 ## 前置阅读
 
-1. `docs/application/cookbook/gateway.md`（完整代码走查）
+1. `knowledge/docs/how-to/gateway.md`（完整代码走查）
 2. `.agents/rules/03-coding-conventions.md`（Portal / Gateway 节）
 3. `.agents/rules/04-forbidden-patterns.md`（Infrastructure 层禁止 + ACL 翻译）
 
 ## 概念
 
-> Portal（Domain 层接口）与 Gateway（Infrastructure 层实现，技术调用 + ACL 翻译 + 容错）的角色对照与调用链路图 → 见 `docs/application/cookbook/gateway.md`「调用链路」节（canonical，含 PaymentPortal / AlipayPaymentGateway 完整走查）。
+> Portal（Domain 层接口）与 Gateway（Infrastructure 层实现，技术调用 + ACL 翻译 + 容错）的角色对照与调用链路图 → 见 `knowledge/docs/how-to/gateway.md`「调用链路」节（canonical，含 PaymentPortal / AlipayPaymentGateway 完整走查）。
 
 ## 步骤
 
@@ -37,7 +37,7 @@ public interface PaymentPortal extends Portal {
 
 ### 3. Infrastructure 层：实现 Gateway
 
-- 位置：`infrastructure/gateway/{capability}/{Xxx}Gateway.java`（按外部能力建子包，如 `gateway/payment/`——分包表 → `docs/application/cookbook/gateway.md`）
+- 位置：`infrastructure/gateway/{capability}/{Xxx}Gateway.java`（按外部能力建子包，如 `gateway/payment/`——分包表 → `knowledge/docs/how-to/gateway.md`）
 - 标注 `@Component`
 - 职责三件套：
   1. **技术调用**：注入外部 SDK Client，发起调用
@@ -76,5 +76,5 @@ public class AlipayPaymentGateway implements PaymentPortal {
 
 ## 文档同步
 
-- 更新 `docs/application/cookbook/gateway.md`（如引入了新的容错模式）
+- 更新 `knowledge/docs/how-to/gateway.md`（如引入了新的容错模式）
 - 如新增了通用 Gateway 基础设施（如统一 HTTP Client），更新对应 common 模块文档

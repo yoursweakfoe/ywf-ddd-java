@@ -88,7 +88,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 ### Phase 4: 配置文件
 
-9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis / Actuator）——数据源用普通单 `spring.datasource`（多数据源需求经 dynamic-datasource opt-in）；MyBatis 用 `mybatis.*` 命名空间，**yaml 块 canonical 见 `docs/application/module-design/infrastructure.md`**（`type-aliases-package` 指向 `infrastructure.persistence.master`、`mapper-locations: classpath*:/mapper/**/*.xml`、`map-underscore-to-camel-case: true`、`log-impl: Slf4jImpl` 四键，照抄不重写）
+9. `application.yml`（主配置：REST 端口 / 数据源 / MyBatis / Actuator）——数据源用普通单 `spring.datasource`（多数据源需求经 dynamic-datasource opt-in）；MyBatis 用 `mybatis.*` 命名空间，**yaml 块 canonical 见 `knowledge/docs/explanation/infrastructure.md`**（`type-aliases-package` 指向 `infrastructure.persistence.master`、`mapper-locations: classpath*:/mapper/**/*.xml`、`map-underscore-to-camel-case: true`、`log-impl: Slf4jImpl` 四键，照抄不重写）
 10. `application-dev.yml`（开发环境：与 prod 的差异项，如 Nacos 配置中心预留）
 11. `application-prod.yml`（生产环境：springdoc 禁用 + 管理端口收紧）
 

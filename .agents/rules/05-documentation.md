@@ -6,22 +6,22 @@
 
 | 触发条件 | 必须更新的文档 |
 |---------|--------------|
-| 修改 sample-application 代码结构（新增/删除/重命名文件） | 对应 `docs/application/cookbook/` 文档 |
-| 新增 common 模块公开 API | `docs/common/common-{module}.md` |
-| 设计决策变更（采纳/弃用某模式） | `docs/references.md` |
-| 层间协作关系变化 | 对应 `docs/application/module-design/{layer}.md` |
+| 修改 sample-application 代码结构（新增/删除/重命名文件） | 对应 `knowledge/docs/how-to/` 文档 |
+| 新增 common 模块公开 API | `knowledge/docs/reference/api/common-{module}.md` |
+| 设计决策变更（采纳/弃用某模式） | `knowledge/docs/explanation/theory-map.md` |
+| 层间协作关系变化 | 对应 `knowledge/docs/explanation/{layer}.md` |
 
 ## 文档位置约定
 
 | 内容类型 | 位置 |
 |---------|------|
-| 业务应用设计文档 | `docs/application/` |
-| common 模块使用文档 | `docs/common/` |
-| 架构理论参考 | `docs/references.md` |
-| 项目术语表 | `docs/glossary.md` |
+| 业务应用知识（描述区） | `knowledge/docs/`（explanation/ 论证、how-to/ 实战、reference/ 事实） |
+| common 模块使用文档 | `knowledge/docs/reference/api/` |
+| 架构理论参考 | `knowledge/docs/explanation/theory-map.md` |
+| 项目术语表 | `knowledge/docs/glossary.md` |
 | Agent 规则（本目录） | `.agents/` |
 
-**索引唯一化**：`docs/README.md` 是全仓唯一文档总索引。新增/迁移/重命名文档**仅登记 `docs/README.md` 一处**；根 `README.md`、`AGENTS.md` 等入口只放指针，不再各自维护文档树/清单。
+**索引唯一化**：`knowledge/docs/README.md` 是全仓唯一文档总索引。新增/迁移/重命名文档**仅登记 `knowledge/docs/README.md` 一处**；根 `README.md`、`AGENTS.md` 等入口只放指针，不再各自维护文档树/清单。
 
 ## cookbook 文档规范
 
@@ -31,7 +31,7 @@
 
 ## common 模块文档规范
 
-- 每个 common 模块必须有 `docs/common/common-{module}.md`
+- 每个 common 模块必须有 `knowledge/docs/reference/api/common-{module}.md`
 - 内容结构：模块定位 → 核心类表 → 使用方式（含场景代码）→ 配置项
 - 新增公开类/方法时必须同步更新
 
@@ -39,5 +39,5 @@
 
 - 错误码格式：`"{aggregate}:err.{场景}"`（如 `"order:err.insufficientStock"`）
 - messageKey 是**前端 i18n 渲染位点**，服务端不维护 `messages.properties`，由前端通过 `t(key, params)` 渲染本地化文案
-- 新增错误码时必须同步更新 `docs/application/cookbook/error-handling.md` 中的错误码清单
+- 新增错误码时必须同步更新 `knowledge/docs/how-to/error-handling.md` 中的错误码清单
 - 禁止使用硬编码可读文案作为 messageKey（如 `"库存不足"`）

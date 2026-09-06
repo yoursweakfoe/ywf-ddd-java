@@ -7,7 +7,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 
 ## 前置阅读
 
-- `docs/application/cookbook/batch-operations.md`（批量 Handler + 事务边界 + 三种失败策略）
+- `knowledge/docs/how-to/batch-operations.md`（批量 Handler + 事务边界 + 三种失败策略）
 - `.agents/rules/03-coding-conventions.md`（写侧固定模式）
 
 ## 步骤
@@ -28,7 +28,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 
 ## 失败策略选择
 
-三种策略（全部回滚 / 跳过失败项 / 每条独立）的实现方式与适用场景表 → 见 `docs/application/cookbook/batch-operations.md` §3（canonical，含部分失败模式代码）。核心约束：只有全批原子策略标注 `@Transactional`；部分失败/逐条独立策略**不加**（catch 后事务语义混乱）。
+三种策略（全部回滚 / 跳过失败项 / 每条独立）的实现方式与适用场景表 → 见 `knowledge/docs/how-to/batch-operations.md` §3（canonical，含部分失败模式代码）。核心约束：只有全批原子策略标注 `@Transactional`；部分失败/逐条独立策略**不加**（catch 后事务语义混乱）。
 
 ## 验证
 

@@ -41,10 +41,10 @@ Java 21 / Spring Boot 4.1 / Spring MVC REST / MyBatis（手写 XML SQL）/ Postg
 
 | 需要了解 | 去哪里看 |
 |---------|----------|
-| 每层怎么设计（规则） | `docs/application/module-design/` |
-| 具体怎么写（代码） | `docs/application/cookbook/` |
-| 包怎么组织 | `docs/application/directory-structure/` |
-| 为什么这么选 | `docs/references.md` |
-| common 模块怎么用 | `docs/common/*.md` |
+| 每层怎么设计（规则） | `knowledge/docs/explanation/` |
+| 具体怎么写（代码） | `knowledge/docs/how-to/` |
+| 包怎么组织 | `knowledge/docs/reference/structure.md` |
+| 为什么这么选 | `knowledge/docs/explanation/theory-map.md` |
+| common 模块怎么用 | `knowledge/docs/reference/api/*.md` |
 | 示例场景选型理由 | `sample-application/README.md` |
 | AI 代理规范详情 | `.agents/README.md` |

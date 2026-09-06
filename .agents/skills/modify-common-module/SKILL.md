@@ -7,7 +7,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 ## 前置阅读
 
-1. `docs/common/common-{module}.md`（目标模块文档）
+1. `knowledge/docs/reference/api/common-{module}.md`（目标模块文档）
 2. `ywf-ddd-common/README.md`（模块依赖拓扑）
 3. `.agents/rules/04-forbidden-patterns.md`「Common 模块约束」节（构件身份二分法——依赖审查判据的单一事实源）
 
@@ -34,7 +34,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 ### 3. 更新模块文档
 
-- 更新 `docs/common/common-{module}.md`：
+- 更新 `knowledge/docs/reference/api/common-{module}.md`：
   - 核心功能表（新增/修改的类）
   - 使用方式（场景代码）
   - 设计决策表（如有新决策）
@@ -52,24 +52,24 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 - 修改方法签名：**不兼容**，需在文档中标注 breaking change
 - 删除方法：**不兼容**，确认无消费方引用后方可删除
 - 修改默认行为：评估是否影响现有业务逻辑
-- 增删 pom 依赖：按身份登记评估——定型装配的命运清单变更直接影响全部使用方（宣言与 `docs/common/{module}.md` 同步 + 消费方影响面单列）；工具库的依赖变更走最小化质证
+- 增删 pom 依赖：按身份登记评估——定型装配的命运清单变更直接影响全部使用方（宣言与 `knowledge/docs/reference/api/{module}.md` 同步 + 消费方影响面单列）；工具库的依赖变更走最小化质证
 
 ### 6. 关联文档更新
 
-- 如修改了 common-ddd 的核心类，检查 `docs/application/cookbook/` 中的代码示例是否需同步
-- 如修改了标记接口（Command/Query/CO），检查 `docs/glossary.md`
+- 如修改了 common-ddd 的核心类，检查 `knowledge/docs/how-to/` 中的代码示例是否需同步
+- 如修改了标记接口（Command/Query/CO），检查 `knowledge/docs/glossary.md`
 
 ## 验证
 
 - [ ] `mvn compile -pl ywf-ddd-common/{module}` 编译通过
 - [ ] `mvn test -pl ywf-ddd-common/{module}` 现有测试 + 新测试通过
 - [ ] `mvn compile -pl sample-application/sample-service/sample-service-server` 消费方编译通过
-- [ ] `docs/common/common-{module}.md` 已同步更新
+- [ ] `knowledge/docs/reference/api/common-{module}.md` 已同步更新
 - [ ] 依赖符合模块身份登记（rules 04「Common 模块约束」）：定型装配过「自我宣言在位 + 命运依赖被本包代码使用或封装、消费方经公开 API 触达」；工具库过「无新增超出编译需要的依赖」
 - [ ] 子 pom 声明处零 `<exclusions>`——排除只写在策略文件 depMgmt（rules 04「exclusions 卫生集中制」；局部清单整体覆盖 managed）
 - [ ] 无业务逻辑泄漏（common 模块纯技术骨架）
 
 ## 文档同步
 
-- 必须更新：`docs/common/common-{module}.md`
-- 视情况更新：`docs/application/cookbook/`、`docs/glossary.md`、`ywf-ddd-common/README.md`
+- 必须更新：`knowledge/docs/reference/api/common-{module}.md`
+- 视情况更新：`knowledge/docs/how-to/`、`knowledge/docs/glossary.md`、`ywf-ddd-common/README.md`

@@ -40,11 +40,11 @@
 | ArchUnit 测试 | common-test 架构守护 |
 | 并发下单压测 | 手写 XML 乐观锁（`SET version = version + 1 WHERE ... AND version = #{version}`）防超卖 |
 | OrderFactory（订单工厂） | Factory 标记接口、创建即合法（校验一步到位）、新建/重建双路径收口 |
-| （刻意不演示）Portal/Gateway、Policy | 框架能力已备齐，完整示例见 `docs/application/cookbook/gateway.md`、`docs/application/cookbook/policy-pattern.md`；示例应用有意保持最小闭环，避免样例膨胀 |
+| （刻意不演示）Portal/Gateway、Policy | 框架能力已备齐，完整示例见 `knowledge/docs/how-to/gateway.md`、`knowledge/docs/how-to/policy-pattern.md`；示例应用有意保持最小闭环，避免样例膨胀 |
 
 > **关于未演示的能力**：Portal/Gateway（外部集成 ACL）、Policy（领域策略）、Specification 属于框架的**按需扩展点**——本示例的场景刻意不覆盖它们，教学路径走 cookbook 对应章节；业务项目按需引入即可，不必为「用上而用上」。
 
-> 真实业务项目引入本框架时，应删除整个 `sample-application/` 目录，以 `docs/application/cookbook/` 为模板从零搭建。
+> 真实业务项目引入本框架时，应删除整个 `sample-application/` 目录，以 `knowledge/docs/how-to/` 为模板从零搭建。
 
 ## 构建与运行
 

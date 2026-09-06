@@ -7,7 +7,7 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 ## 前置阅读
 
-1. `docs/application/cookbook/new-aggregate.md`（①-㉒ 全部代码模板——本技能只承载顺序与清单，逐文件模板以该文档编号为准）
+1. `knowledge/docs/how-to/new-aggregate.md`（①-㉒ 全部代码模板——本技能只承载顺序与清单，逐文件模板以该文档编号为准）
 2. `.agents/rules/02-architecture.md`（分层 + 包结构）
 3. `.agents/rules/03-coding-conventions.md`（命名 + 泛型）
 
@@ -50,12 +50,12 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 20. ⑤ `adapter/rest/controller/{Agg}ControllerImpl.java` — `@RestController` 实现契约接口 + `RestAdapter` 标记（R8a/R8b），纯透传（见 cookbook ⑤）
 
-> **读端口配对**（⑪ 依赖，即 cookbook 完整模板 22 文件中的 ⑳㉑，不计入 20 最小闭环）：`application/{agg}/repository/{Agg}QueryRepository.java`（`extends QueryRepository` 标记）+ `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java`（与 ⑱ 写侧 Impl 同包，PO → 读 DTO 直接投影，不 reconstitute 聚合根）。流程模板 → `docs/application/cookbook/read-path.md`。
+> **读端口配对**（⑪ 依赖，即 cookbook 完整模板 22 文件中的 ⑳㉑，不计入 20 最小闭环）：`application/{agg}/repository/{Agg}QueryRepository.java`（`extends QueryRepository` 标记）+ `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java`（与 ⑱ 写侧 Impl 同包，PO → 读 DTO 直接投影，不 reconstitute 聚合根）。流程模板 → `knowledge/docs/how-to/read-path.md`。
 
 ## 验证
 
 - [ ] `mvn compile -pl sample-application/sample-service/sample-service-server` 编译通过
-- [ ] ArchUnit 通过：`mvn test -pl sample-application/sample-service/sample-service-server -Dtest="*ArchitectureTest"`（DddArchitectureTest + ApplicationArchitectureTest；规则编号表见 `docs/common/common-test.md` §2）
+- [ ] ArchUnit 通过：`mvn test -pl sample-application/sample-service/sample-service-server -Dtest="*ArchitectureTest"`（DddArchitectureTest + ApplicationArchitectureTest；规则编号表见 `knowledge/docs/reference/api/common-test.md` §2）
 - [ ] Handler 返回 DTO，AppService 返回 CO（经 Presenter）
 - [ ] Domain 零框架运行时依赖（唯一例外 `org.springframework.stereotype`，R4 白名单）
 - [ ] 持久化契约满足（法条 rules 04「持久化与 SQL」：PO 零 ORM 注解；XML 七语句含 schema 前缀 / version 条件 / `AND is_delete = false` / insert 不枚举 is_delete / existsById 恒返回一行 boolean）

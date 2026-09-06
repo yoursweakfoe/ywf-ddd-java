@@ -9,7 +9,7 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 
 - `.agents/rules/04-forbidden-patterns.md`（禁止清单法条）
 - `.agents/rules/02-architecture.md`（依赖方向）
-- `docs/common/common-test.md` §2（ArchUnit 规则编号表 R1-R14 / C1——教义单一事实源，检查项只引编号不复述）
+- `knowledge/docs/reference/api/common-test.md` §2（ArchUnit 规则编号表 R1-R14 / C1——教义单一事实源，检查项只引编号不复述）
 
 ## 审查清单
 
@@ -31,7 +31,7 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 ### 持久化
 
 - [ ] 写端口接口在 `domain/{agg}/repository/`、读端口在 `application/{agg}/repository/`；两侧实现合并同包 `infrastructure/persistence/{ds}/{agg}/repository/`（类名后缀 RepositoryImpl / QueryRepositoryImpl 区分）（违反 = R5a/R5b）
-- [ ] PO 零 ORM 注解 + XML 七语句契约（schema 前缀 / version 条件 / is_delete 过滤 / existsById 恒返回 boolean）——法条见 rules 04「持久化与 SQL」，详表见 `docs/common/common-ddd.md` §2，模板见 cookbook/new-aggregate.md ⑲
+- [ ] PO 零 ORM 注解 + XML 七语句契约（schema 前缀 / version 条件 / is_delete 过滤 / existsById 恒返回 boolean）——法条见 rules 04「持久化与 SQL」，详表见 `knowledge/docs/reference/api/common-ddd.md` §2，模板见 cookbook/new-aggregate.md ⑲
 - [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器）
 - [ ] 无跨聚合共享 PO / Mapper（rules 04「Infrastructure 层禁止」）
 - [ ] application/{agg}/dto/ 下 DTO 实现 `ApplicationDTO` 标记（违反 = R10a/R10b）
@@ -98,5 +98,5 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 ```
 PASS: N items
 WARN: (list with fix suggestions)
-FAIL: (list with citation：ArchUnit 编号见 docs/common/common-test.md §2，法条见 .agents/rules/04-forbidden-patterns.md)
+FAIL: (list with citation：ArchUnit 编号见 knowledge/docs/reference/api/common-test.md §2，法条见 .agents/rules/04-forbidden-patterns.md)
 ```

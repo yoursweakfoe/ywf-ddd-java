@@ -7,7 +7,7 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 
 ## 前置阅读
 
-- `docs/application/cookbook/scheduled-task.md`（完整模板 + 分布式锁提示）
+- `knowledge/docs/how-to/scheduled-task.md`（完整模板 + 分布式锁提示）
 - `.agents/rules/03-coding-conventions.md`（Adapter 层纯透传约定）
 
 ## 步骤
@@ -30,7 +30,7 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 
 ## 分布式环境注意
 
-> 选型 canonical → `docs/application/cookbook/scheduled-task.md` §6「调度模式选型与多实例」：自建 `@Scheduled`（单实例直接用；多实例需业务自行引入分布式锁如 ShedLock，框架不内置）vs 平台化调度（XXL-Job / ElasticJob，调度中心统一触发天然无重复）。触发注解按模式可换（`@Scheduled` / `@XxlJob`），`ScheduledAdapter` 标记与 R14a/R14b 对两者一视同仁。
+> 选型 canonical → `knowledge/docs/how-to/scheduled-task.md` §6「调度模式选型与多实例」：自建 `@Scheduled`（单实例直接用；多实例需业务自行引入分布式锁如 ShedLock，框架不内置）vs 平台化调度（XXL-Job / ElasticJob，调度中心统一触发天然无重复）。触发注解按模式可换（`@Scheduled` / `@XxlJob`），`ScheduledAdapter` 标记与 R14a/R14b 对两者一视同仁。
 
 ## 验证
 
