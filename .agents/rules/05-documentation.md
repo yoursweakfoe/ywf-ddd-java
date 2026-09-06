@@ -22,7 +22,7 @@
 |---|---|---|---|---|
 | 包路径/类名/方法签名 | 高 | 源代码本身 | 一句规范 + `→ 见 path`；**md 禁手抄结构树** | check-docs C1/C3 |
 | 异常→HTTP 映射、错误码格式 | 高 | `GlobalRestExceptionHandler` javadoc（代码）+ `reference/api/common-exception.md` §2 表（docs 唯一法源） | 一行 + 指针 | C5 对账（表行↔处理器覆盖） |
-| 结构速查（树图） | 高 | `reference/structure.md`（**生成物，禁手改**） | 指针 | 重跑生成脚本即对齐 |
+| 服务骨架组成（通式） | 高 | `specs/current/patterns/aggregate-blueprint.md` §5（真实包树不设二手地图，看源码） | 指针 | C1 |
 | 用法规范/规范代码形状（严格件） | 中 | `specs/current/modules/*.md`（8 卷）+ `specs/current/patterns/*.md`（11 卷）——条款+取证源+**全套规范形状（全仓唯一样本）**，机器遵循 | docs 同题=**设计卡**：选型判据/决策点/边界代价+条款指针，**零形状代码**、禁条款编号与精确参数表；冲突以法卷为准（2026-09-06 宽严双份裁定 + 统一用法归卷，三期法案已成册） | C1/C3/C4 扫法卷 |
 | 规范行（必须/禁止） | 中 | rules/（本目录） | 一句复述 + 指针；AGENTS.md 九条例外 | 每行挂 R##/测试名 |
 | 设计论证（为什么） | 低 | `explanation/` | 指针 | —（低易变，允许就近重述） |

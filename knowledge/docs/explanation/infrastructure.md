@@ -14,7 +14,7 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 
 ## 包结构
 
-→ [directory-structure/server/infrastructure.md](../reference/structure.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
 
 > 完整代码示例 → [how-to/write-path.md](../how-to/write-path.md)（PO / Converter / RepositoryImpl）| [how-to/new-aggregate.md](../how-to/new-aggregate.md)（完整模板）
 
@@ -32,7 +32,7 @@ Domain 层定义"做什么"，Infrastructure 层决定"怎么做"。
 | Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现（富领域模型需 reconstitute） | 聚合根 `converter/` |
 | Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component` | 聚合根 `repository/`（写读两侧 Impl **同包平铺**，读实现 `XxxQueryRepositoryImpl` 以类名后缀区分） |
 
-> **mybatis/ 边界**：仅收「撤换 ORM 时需彻底删除」的纯技术文件（PO / Mapper 及其 XML），Converter / RepositoryImpl 留聚合根下。完整论证（为何 PO+Mapper 整体属 MyBatis 家族、撤换后各自删还是改）→ canonical 见 [directory-structure/server/infrastructure.md](../reference/structure.md) 的 mybatis/ 边界注记，本文不复制。
+> **mybatis/ 边界**：仅收「撤换 ORM 时需彻底删除」的纯技术文件（PO / Mapper 及其 XML），Converter / RepositoryImpl 留聚合根下。完整论证（为何 PO+Mapper 整体属 MyBatis 家族、撤换后各自删还是改）→ canonical 见 [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md) 的 mybatis/ 边界注记，本文不复制。
 
 `MybatisPersistence` 基类方法语义与 `DddMapper<PO>` 七条通用语句的 XML 契约（insert / updateById 乐观锁条件 / selectById / deleteById 逻辑删除 / existsById 等）→ canonical 详表见 [common-ddd §2 仓储支撑](../reference/api/common-ddd.md#2-核心能力)，此处不复述。分层职责只此一句：
 

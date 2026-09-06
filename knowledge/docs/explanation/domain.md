@@ -13,7 +13,7 @@
 
 ## 包结构
 
-→ [directory-structure/server/domain.md](../reference/structure.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/new-aggregate.md](../how-to/new-aggregate.md)（新聚合模板）
 
@@ -21,7 +21,7 @@
 
 ### 聚合内部组件
 
-聚合内部子包清单与逐包准入规则（model / repository / portal / service / factory / policy）→ canonical 见 [directory-structure/server/domain.md「目录职责」](../reference/structure.md)，本文不复制表格。本文只强调两条贯穿全部组件的设计纪律：领域构件**零框架运行时依赖**（纯 Java + common-ddd 构建块）、接口与实现分离（Repository / Portal 定义在本层、实现在 Infrastructure 层）。
+聚合内部子包清单与逐包准入规则（model / repository / portal / service / factory / policy）→ canonical 见 [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)，本文不复制表格。本文只强调两条贯穿全部组件的设计纪律：领域构件**零框架运行时依赖**（纯 Java + common-ddd 构建块）、接口与实现分离（Repository / Portal 定义在本层、实现在 Infrastructure 层）。
 
 > **充血模型的渐进式实践**：理想状态是所有业务逻辑内聚于聚合根方法（完全充血）。
 > 但实践中允许**渐进式充血**——初期可将部分逻辑放在领域服务中，

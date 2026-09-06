@@ -1,7 +1,7 @@
 ﻿# 新建聚合 · 设计卡
 
 > **本篇=设计卡（2026-09-06 统一用法归卷裁定）**：只回答"该不该拆新聚合、怎么定案"。全套规范形状与逐件教学走查已整体归卷 → [aggregate-blueprint.md](../../specs/current/patterns/aggregate-blueprint.md)：§1 槽位清单、§2 条款（BP-1~BP-12 / BP-X1~X3）、§3 验收单、§4 逐件走查；冲突以法卷为准（rules/05 §2），本篇零形状代码。
-> 包结构参考 → [structure.md](../reference/structure.md)；写/读全链路走查 → [write-path.md](write-path.md) / [read-path.md](read-path.md)
+> 包结构参考 → [aggregate-blueprint 法卷 §5](../../specs/current/patterns/aggregate-blueprint.md)；写/读全链路走查 → [write-path.md](write-path.md) / [read-path.md](read-path.md)
 
 ## 什么时候需要新聚合
 

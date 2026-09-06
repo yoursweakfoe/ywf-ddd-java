@@ -81,7 +81,6 @@ $fileSkipC4 = @(
     # (new-test SKILL 豁免已拆除——D6 迁移完成，模板只住 how-to/testing.md)
     'rules/01-project-overview\.md',
     'knowledge/docs/tutorials/',           # operations manual on the real sample (business words inherent, exempt per doctrine)
-    'reference/structure\.md',           # generated map of the REAL tree - dir names order/product are facts, not pedagogy
     'glossary\.md',                 # 业务词汇+命名映射节 = 通用语言/真实例之家（§2.1 辖域裁定）
     'docs/README\.md$|/README\.md$'
 )

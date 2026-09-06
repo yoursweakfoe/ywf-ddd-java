@@ -306,7 +306,7 @@ public class GetPaymentHandler implements QueryHandler<GetPaymentQuery, PaymentD
 ```
 
 > 读侧不经 ⑭ `PaymentRepository`（domain 写侧契约）、不经 ⑧ Assembler——由读端口直接投影 DTO，
-> 教义与分页/多视图完整形态见 [read-path.md](../../../docs/how-to/read-path.md)（读侧 canonical）。
+> 教义与分页/多视图完整形态见 [read-chain 法卷](read-chain.md)（读侧 canonical）。
 > 本最小模板直接复用 ⑦ `PaymentDTO` 作读投影（Presenter 过滤 version 等内部字段）；
 > 需要读写独立演进时按 read-path.md 拆出 `PaymentViewDTO` + `PaymentViewPresenter`。
 
@@ -592,7 +592,20 @@ public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
 
 要点：
 - 读端口接口位于 `application/payment/repository/`、`extends QueryRepository`——这是 R13（QueryHandler 禁触 domain 仓储）下的唯一合法读路径，R1b 白名单同时放行 infra 对该端口的实现依赖
-- 完整读侧形态（分页双语句 + `safe*()` 钳制 + ViewDTO / ViewPresenter 多视图）以 [read-path.md](../../../docs/how-to/read-path.md) 为 canonical，本节只登记新聚合清单所需的最小文件集
+- 完整读侧形态（分页双语句 + `safe*()` 钳制 + ViewDTO / ViewPresenter 多视图）以 [read-chain 法卷](read-chain.md) 为 canonical，本节只登记新聚合清单所需的最小文件集
+
+## §5 服务骨架通式（建筑宪的 service 级扩展，自 structure.md 注销迁来）
+
+```text
+contract/{agg}/        adapter/rest/controller + dto/{command,query,co} + enums
+server adapter/        rest/controller + task/scheduler   —— 不按聚合分包
+server application/    service + handler/{command,query} + assembler + presenter + dto + repository（读端口）
+server domain/         model + repository（写端口）+ portal + service + policy【按需】
+server infrastructure/ persistence/{ds}/{agg}/(mybatis/{po,mapper} + converter + repository：写读 Impl 同包) + gateway/{capability} + config
+resources/             mapper/**/*.xml（手写 SQL 语句面）
+```
+
+真实包树**不设二手地图**——包路径/文件数的 canonical 是源码本身（rules/05 §2 第一行），要图直接 glob 源码树；本通式只裁「一个服务该有哪些目录、各目录住什么」，逐槽形状由 §1 清单 + §2/§4 条款约束。
 
 ## 生效登记
 

@@ -46,7 +46,7 @@ knowledge/
 ├── docs/           地图 | README 唯一文档索引
 │   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
-│   ├── reference/  structure.md 生成树图 · api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
+│   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
 │   └── explanation/ 分层设计 5 篇 + theory-map 理论账本
 ├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 全局唯一编号，append-only

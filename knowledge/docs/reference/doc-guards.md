@@ -56,7 +56,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 1. **JDK / Spring / Jakarta 标准类**（如 `^BindException$`）——它们不在仓库源码里，C3 的"源码可查"判据会误伤；
 2. **虚构教例家族前缀**（如 `^Invoice`）——文档已标"虚构教例未实现"，故意出现的合法类名。**教例家族一旦真实落地，对应行必须删除——清单只删不增**。
 
-注意：**C4 的豁免不住这里**，在 ps1 内 `$fileSkipC4` 硬编码（tutorials 真实例手册、structure 生成树、glossary 通用语言位等——每条对应 rules/05 的辖域裁定，属法源而非偏好，故不外置）。
+注意：**C4 的豁免不住这里**，在 ps1 内 `$fileSkipC4` 硬编码（tutorials 真实例手册、glossary 通用语言位等——每条对应 rules/05 的辖域裁定，属法源而非偏好，故不外置）。
 
 ## lychee.toml —— 外联检查器配置
 

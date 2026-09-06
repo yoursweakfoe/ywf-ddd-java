@@ -16,7 +16,7 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 
 ## 包结构
 
-→ [directory-structure/server/application.md](../reference/structure.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md)（写路径）| [cookbook/read-path.md](../how-to/read-path.md)（读路径）
 

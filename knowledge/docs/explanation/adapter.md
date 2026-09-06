@@ -15,7 +15,7 @@
 
 ## 包结构
 
-→ [directory-structure/server/adapter.md](../reference/structure.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md)（Controller 在写路径中的位置）
 
