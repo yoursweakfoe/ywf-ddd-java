@@ -78,7 +78,7 @@ description: DDD 架构合规审查。完成编码后自查、人工要求 revie
 
 ### 文档与契约
 
-- [ ] 相关 how-to / explanation 文档已同步（伞内法：同步义务由 `knowledge/specs/` 归档折叠承载，折叠之外不得留孤儿债——rules/05 §4）
+- [ ] 相关 how-to / explanation 文档已同步（同步义务由所属契约区的归档折叠承载：框架 `knowledge/specs/`、业务 `sample-application/specs/`，折叠之外不得留孤儿债——rules/05 §4）
 - [ ] 如新增公开 API，`knowledge/docs/reference/api/` 对应模块文档已更新
 - [ ] `powershell -File knowledge/scripts/check-docs.ps1` 退出码 0（六校验：幽灵路径/计数/框架符号/教学中立/映射表对账/卷宗防篡改；非零即 FAIL，豁免须写理由进 whitelist）
 

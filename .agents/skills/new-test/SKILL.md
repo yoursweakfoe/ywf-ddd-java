@@ -9,7 +9,7 @@ description: 为已有聚合、Handler、Domain 模型或基础设施组件编�
 
 1. `knowledge/docs/how-to/testing.md`（**四类测试模板的唯一载体**——本文零模板，只给顺序与检查项，D6 裁决）
 2. `knowledge/docs/reference/api/common-test.md`（ArchUnit 规则集 + 测试基础设施）
-3. `knowledge/specs/capabilities/<agg>.md`（被测行为的现行契约——断言从 Scenario 来，不即兴）
+3. `sample-application/specs/current/<agg>.md`（被测行为的现行契约——断言从 Scenario 来，不即兴）
 
 ## 步骤
 
@@ -22,7 +22,7 @@ description: 为已有聚合、Handler、Domain 模型或基础设施组件编�
 
 - [ ] `mvn test -pl {module}` 全绿（H2 test profile，零外部基础设施）
 - [ ] 单元测试零容器（`@Mock`+`@InjectMocks`）；容器测试仅 `@ActiveProfiles("test")`
-- [ ] 新行为/新通道：对应 `knowledge/specs/changes/<slug>/` delta 已立，测试断言与 Scenario 一一对应
+- [ ] 新行为/新通道：对应 `sample-application/specs/changes/<slug>/` delta 已立，测试断言与 Scenario 一一对应
 
 ## 文档同步
 

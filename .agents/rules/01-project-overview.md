@@ -21,7 +21,7 @@ ywf-ddd-java/
 │   ├── common-cloud/      # 微服务治理
 │   ├── common-observability/ # 可观测性
 │   └── common-test/       # ArchUnit 守护 + 测试基础设施
-├── sample-application/    # 示例业务服务（电商：Order + Product）
+├── sample-application/    # 示例业务服务（真实例：两个示范聚合）
 ├── knowledge/               # 知识伞：docs 地图 / specs 法律 / decisions 判例卷宗 / scripts 执法工具链
 ├── .agents/               # AI 代理规范（本目录，dotagents 约定）
 └── AGENTS.md              # AI 代理入口文件（厂商中立标准）

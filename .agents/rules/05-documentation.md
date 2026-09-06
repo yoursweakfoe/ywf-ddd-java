@@ -3,12 +3,13 @@
 > 本文件是「知识伞」的宪法：每类事实恰好一个 home，其余载体只允许「一句规范 + 路径指针」。
 
 
-## 1. 四态分野（一目录一法律）
+## 1. 诸区分野（一目录一法律）
 
 | 位置 | 态 | 真相源 | 冲突裁决 | 写入时钟 |
 |---|---|---|---|---|
 | `knowledge/docs/` | 描述（地图） | 代码 | 与代码不符 = 文档是 bug | 代码之后，被动跟随 |
-| `knowledge/specs/` | 契约（法律） | 意图/约定 | 与代码不符 = 二者之一必修；改法必须走 `changes/`，禁止迁就代码偷改 | 代码之前，发起者主动 |
+| `knowledge/specs/` | 框架契约（法律） | 意图/约定 | 与代码不符 = 二者之一必修；改法必须走 `changes/`，禁止迁就代码偷改 | 代码之前，发起者主动 |
+| `sample-application/specs/` | 契约镜像（业务法） | 意图/约定（生意） | 同框架法；业务名只在本树合法（契约描述生意，教学描述通识） | 代码之前，发起者主动 |
 | `knowledge/decisions/` | 判例卷宗 | 过去的决策事件 | 正文永不回改；推翻 = 新立 ADR + 旧篇仅 Status 行变 superseded | 决策定稿当刻 |
 | `.agents/` | 方法 | 不适用（约束 worker） | 不腐烂、不被违反，只被执行 | 观察犯错后追加 |
 | `knowledge/scripts/` | 执法（工具链） | 不适用（不描述事实，守护事实） | 文档红=修文档或修工具，按"磁盘实证"裁决；说明唯一入口 = docs 架 `reference/doc-guards.md` | 随探测器演化 |
@@ -26,7 +27,7 @@
 | 规范行（必须/禁止） | 中 | rules/（本目录） | 一句复述 + 指针；AGENTS.md 九条例外 | 每行挂 R##/测试名 |
 | 设计论证（为什么） | 低 | `explanation/` | 指针 | —（低易变，允许就近重述） |
 | 架构决策 | 冻结 | `decisions/`（全局编号） | `ADR-NNN` 限定名引用 | C6 diff-scope + Confirmation 节必填 |
-| 需求/行为规格 | 随变更 | `specs/capabilities/`（真相）+ `changes/`（工作区） | skill 首步产出 delta | 归档折叠 = 同步义务唯一时点 |
+| 需求/行为规格 | 随变更 | 框架：`knowledge/specs/`（current/ + changes/）；示例业务：`sample-application/specs/`（同构镜像区） | skill 首步产出 delta | 归档折叠 = 同步义务唯一时点；C2/C3 扫两区 |
 | 任务流程（顺序+清单） | 低 | `skills/`（≤500 行） | rules 指过来 | C2/C3 |
 | 防腐工具行为与用法 | 中 | `knowledge/scripts/` 代码本体（行为即法）+ `reference/doc-guards.md`（说明唯一入口） | 一行 + 指针 | 人肉跑主机 + ddd-review 末步 |
 
@@ -36,7 +37,7 @@
 
 - 教学文档是通用抽取不是业务镜像：代码围栏与反引号路径/类名内禁 `order/Order/product/Product`；通配 `{agg}`/`{Agg}` 或虚构教例家族（现行两族：Payment=新建聚合教例、Reservation=读写链路教例），虚构首现标「虚构教例，sample 未实现」。`tutorials/` 为真实例操作手册，业务词豁免。
 - **真实例指针位**（代码块外 + 标注）是全仓业务名合法位之一。
-- 辖域：C4 仅扫 `knowledge/docs` + `.agents`；**`knowledge/specs`、`knowledge/decisions`、`tutorials/` 豁免**（契约与判例天然记业务）。
+- 辖域：C4 仅扫 `knowledge/docs` + `.agents`；**`knowledge/specs`、`knowledge/decisions`、`tutorials/` 豁免**（specs 区内含历史案卷带业务引、判例记录当时语、tutorials 是真实例手册）。业务契约已分居 `sample-application/specs/`——本树在 C4 扫描面外，业务合法性由辖域保证；框架契约文书依法用框架词汇。
 - ~~「代码示例必须与 sample 实际实现保持一致」~~ → 新文：「模板与框架 API 自洽即可」；整段编译验证明文不做（残余风险接受，判据：D4 裁决）。
 
 ## 4. 强制同步规则（伞化修订）
@@ -46,7 +47,8 @@
 | 改 `GlobalRestExceptionHandler` 映射 | 同 PR 改 `reference/api/common-exception.md` §2 表（C5 会红） |
 | 改 `MybatisPersistence` 通道行为 | 同 PR 改其 javadoc + `reference/api/common-ddd.md` §2 |
 | 重构本树包结构（sample/common） | 当天按 check-docs C1/C3 报告修全部指名文档行 |
-| 新增/变更聚合行为 | 先立 `knowledge/specs/changes/<slug>/` 三件套；归档折叠 `capabilities/` |
+| 新增/变更**框架行为** | 先立 `knowledge/specs/changes/<slug>/` 三件套；归档折叠本区 `current/`（首案开册） |
+| 新增/变更**示例业务聚合行为** | 先立 `sample-application/specs/changes/<slug>/` 三件套；归档折叠本区 `current/<agg>.md` |
 | 新设计决策 | `decisions/` 新立 ADR（MADR 骨架，Confirmation 必填）；`explanation/theory-map.md` 账本登记 |
 | 新增文档 | 仅登记 `knowledge/docs/README.md` 一处（唯一索引；`knowledge/README.md` 只写三态法律） |
 

@@ -94,4 +94,4 @@ ywf-ddd-java/
 
 ## 文档导航
 
-完整文档索引见 [knowledge/docs/README.md](knowledge/docs/README.md)（描述区·全仓唯一文档登记处）；行为契约现行本在 [knowledge/specs/](knowledge/specs/README.md)，架构决策判例卷宗在 [knowledge/decisions/](knowledge/decisions/README.md)。
+完整文档索引见 [knowledge/docs/README.md](knowledge/docs/README.md)（描述区·全仓唯一文档登记处）；框架行为契约在 [knowledge/specs/](knowledge/specs/README.md)，示例业务行为契约在 [sample-application/specs/](sample-application/specs/README.md)，架构决策判例卷宗在 [knowledge/decisions/](knowledge/decisions/README.md)。

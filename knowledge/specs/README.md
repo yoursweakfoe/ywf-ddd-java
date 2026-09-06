@@ -1,14 +1,20 @@
-# knowledge/specs/ —— 行为契约区（法律）
+# knowledge/specs/ —— 框架行为契约区（法律）
 
-守则（详法见 `.agents/rules/05` 归属法 + 四态分野条款）：
+本区只立**框架/脚手架层**（common 模块自身）的行为法；**业务包的行为法不入伞**——住在镜像区 [`../../sample-application/specs/`](../../sample-application/specs/README.md)。契约写的就是生意，业务名只在那棵树合法；知识区承载的是通识。
 
-1. **代码违反本文 = 改代码**，或走 `changes/` 流程正式修法；**禁止为迁就代码偷改本文**（那是把法律当地图画）。
-2. 改法唯一通道：`changes/<YYYY-MM-slug>/` 立三件套（proposal → spec-delta → tasks）→ 实现 → **归档折叠**进 `capabilities/`，那一刻是文档同步义务唯一发生时点。
-3. 业务名在本区合法（`capabilities/order.md` 就该写 Order）——这是与教学区（docs/）的根本不同：契约描述生意，教学描述通识。
-4. 每条 SHALL 括注取证源（实现文件:行 或 测试类名）；无证据的意图不写入，用 `<!-- 待 changes/ 补全 -->` 留缺口。
-5. 行为断言与 `knowledge/decisions/` 判例互指不复述；机械背书（ArchUnit R##/测试类）写进句尾，与 check-docs 对账。
+守则（详法见 `.agents/rules/05` 归属法 + 诸区分野条款；业务镜像区同文援引同一套规则，此处不复述）：
 
-目录：
-- `capabilities/{agg}.md`  现行本（按聚合分册）
-- `changes/<slug>/`        修订工作区（proposal.md / spec-delta.md / tasks.md）
-- `archive/`               已折叠卷宗（date-slug 命名，只进不改）
+1. **代码违反本法 = 改代码**，或走 `changes/` 流程正式修法；**禁止为迁就代码偷改本法**（那是把法律当地图画）。
+2. 修法唯一通道：`changes/<YYYY-MM-slug>/` 立三件套（proposal → spec-delta → tasks）→ 实现 → **归档折叠**进 `current/`，那一刻是文档同步义务唯一发生时点。
+3. 每条 SHALL 括注取证源（实现文件:行 或 测试类名）；无证据的意图不写入，用 `<!-- 待 changes/ 补全 -->` 留缺口。
+4. 行为断言与 `knowledge/decisions/` 判例互指不复述；机械背书（ArchUnit R##/测试类）写进句尾，与 check-docs 对账。
+
+## 目录（一名一个身份，望文生义）
+
+| 目录 | 身份 | 改法 |
+|---|---|---|
+| `current/` | **现行本**：当下生效的框架行为真相 | 首案立案时开册；只能经 changes/ 归档折叠写入 |
+| `changes/<slug>/` | **审议中**：还没生效的修订案 | 定稿前随便改；`_template/` 三件套模板**本区与业务镜像区共用**（流程是业务无关通识，故住知识区） |
+| `archive/` | **已归档**：折叠完成的案卷（date-slug 命名） | 只进不改——过程留痕本身就是记录 |
+
+> 2026-09-06 辖域两改：① `capabilities/` 更名 `current/`（弃行话，一名一身份）；② 本区从「全仓行为法」收缩为**框架法**——业务现行册两册迁至 `sample-application/specs/current/`，业务法案此后立到镜像区 `changes/`。`archive/` 内历史案卷沿用当时区名与辖域，不回改。

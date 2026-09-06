@@ -63,7 +63,7 @@ public void cancelOrder(CancelOrderCommand command) {
 ## 异常策略
 
 - 统一使用 `BusinessException(messageKey, params)`
-- 错误码格式：`"{aggregate}:err.{场景}"`（如 `"order:err.invalidTransition"`）
+- 错误码格式：`"{aggregate}:err.{场景}"`（如 `"payment:err.invalidTransition"`）
 - Domain 层通过显式 `if + throw new BusinessException(key)` 抛出
 - **禁止**定义具名领域异常（如 `InsufficientStockException`）
 - Domain 层**不设** `exception/` 包

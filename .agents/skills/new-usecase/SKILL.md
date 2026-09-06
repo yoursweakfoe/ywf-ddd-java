@@ -13,7 +13,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `knowledge/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 capabilities 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `knowledge/specs/capabilities/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
 ## 步骤（写操作）
 
 1. **contract**：创建 `contract/{agg}/dto/command/{Action}{Agg}Command.java`
@@ -61,7 +61,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 ## 变体：跨聚合 Handler
 
-当用例涉及多个聚合协调时（如下单 = Order + Product 库存扣减）：
+当用例涉及多个聚合协调时（如下单同时涉及订单聚合与库存聚合）：
 
 1. 创建 Domain Service（`domain/shared/service/{Xxx}DomainService.java`）
    - 实现 `DomainService` 标记接口，标注 `@Service` 由组件扫描自动注册（领域层允许 stereotype 注解，见 R4 规则）

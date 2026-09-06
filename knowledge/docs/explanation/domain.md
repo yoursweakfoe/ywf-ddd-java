@@ -127,7 +127,7 @@ domain/
 
 ### 为什么不按类型分包（entity/ + vo/ + service/）？
 
-1. **聚合是不可分割的业务整体**：Order、OrderItem、Money 属于同一个一致性边界，拆到不同包破坏内聚性
+1. **聚合是不可分割的业务整体**：一笔交易与其行项、金额值对象属于同一个一致性边界，拆到不同包破坏内聚性
 2. **一个聚合通常只有 3～10 个类**，再拆子包是过度设计
 3. **类型区分已通过继承关系表达**：`extends AggregateRoot` / `extends Entity` / `implements ValueObject`，无需目录重复表达
 4. 这是 DDD 社区（Evans、Vernon、COLA、淘系）的共识

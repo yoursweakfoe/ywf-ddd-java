@@ -168,7 +168,7 @@ class {Agg}FlowIntegrationTest {
 - [ ] 正常路径 + ≥2 异常路径
 - [ ] 单元测试零 Spring 容器（Mockito）；容器测试只走 test profile/H2
 - [ ] AssertJ 断言；单元类无 `@Autowired` 字段注入
-- [ ] 涉及新行为/新通道的，同步在 `knowledge/specs/changes/<slug>/` 立 delta（spec-first：断言 = delta 的 Scenario）
+- [ ] 涉及新行为/新通道的，同步在行为所属区立 delta（框架 `knowledge/specs/changes/<slug>/`、业务 `sample-application/specs/changes/<slug>/`；spec-first：断言 = delta 的 Scenario）
 
 ## 真实例参照（同构形状，代码块外指针位）
 

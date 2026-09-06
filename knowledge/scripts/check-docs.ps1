@@ -46,7 +46,7 @@ function Get-MdPaths([string[]]$entries) {
 $hasUmbrella = Test-Path (Join-Path $root 'knowledge/docs')
 $teachEntries = if ($hasUmbrella) { @('knowledge/docs', '.agents', 'AGENTS.md') } else { @('docs', '.agents', 'AGENTS.md') }
 $teachMd = Get-MdPaths $teachEntries
-$allMd   = Get-MdPaths (@('knowledge', 'docs', '.agents', 'AGENTS.md', 'README.md'))
+$allMd   = Get-MdPaths (@('knowledge', 'docs', '.agents', 'sample-application/specs', 'AGENTS.md', 'README.md'))
 $exDocRel = if ($hasUmbrella) { 'knowledge/docs/reference/api/common-exception.md' } else { 'docs/common/common-exception.md' }
 $decDirs = @('knowledge/decisions', 'docs/adr') | Where-Object { Test-Path (Join-Path $root $_) }
 

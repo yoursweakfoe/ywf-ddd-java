@@ -13,7 +13,7 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `knowledge/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 capabilities 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `knowledge/specs/capabilities/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（rules/05 §4）。
 ## 步骤
 
 按阶段顺序创建（与 how-to 篇「创建顺序建议」一致；条目编号 = how-to/new-aggregate.md 文件清单 ①-㉒）：

@@ -100,4 +100,4 @@ curl -sX PUT localhost:8080/api/orders/$(新单id)/cancel -H 'content-type: appl
 ## 下一步
 
 - 读懂每层为什么这样设计 → `knowledge/docs/explanation/`
-- 动手加自己的用例 → 先立 `knowledge/specs/changes/`，再用 `.agents/skills/new-usecase`
+- 动手加自己的用例 → 先立 `sample-application/specs/changes/`，再用 `.agents/skills/new-usecase`

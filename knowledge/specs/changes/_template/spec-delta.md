@@ -1,4 +1,4 @@
-# 对 capabilities/<agg>.md 的增删改
+# 对 current/<agg>.md 的增删改
 > 只描述变化量，不描述全世界（delta 教义）。每条带 SHALL + 场景。
 
 ## ADDED Requirements
@@ -11,7 +11,7 @@
 - AND <错误码位/校验层，如适用>
 
 ## MODIFIED Requirements
-### Requirement: <旧名>   <!-- 折叠时整节替换 capabilities/ 同名节 -->
+### Requirement: <旧名>   <!-- 折叠时整节替换 current/ 同名节 -->
 <改后全文>
 
 ## REMOVED Requirements

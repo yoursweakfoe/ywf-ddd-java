@@ -10,7 +10,7 @@
 
 **业务需求：**
 
-1. 下单操作涉及两个聚合（Order + Product），可能部署在不同服务
+1. 下单操作涉及两个聚合（订单聚合 + 库存聚合），可能部署在不同服务
 2. 扣库存失败时订单必须回滚（数据一致性）
 3. 同一服务内优先使用本地事务（`@Transactional`），仅跨服务时才启用分布式事务
 
@@ -45,15 +45,15 @@ seata:
 
 | 场景 | 选择 | 理由 |
 |------|------|------|
-| 同一服务内多聚合（如 sample 的 Order + Product） | `@Transactional`（本地） | 同一数据源，本地 ACID 即可 |
-| 跨服务调用（Order 服务调 Payment 服务） | `@GlobalTransactional`（Seata） | 跨数据源，需分布式协调 |
+| 同一服务内多聚合（如 sample 两聚合同库形态，真实例落位见 §2） | `@Transactional`（本地） | 同一数据源，本地 ACID 即可 |
+| 跨服务调用（订单服务调支付服务） | `@GlobalTransactional`（Seata） | 跨数据源，需分布式协调 |
 | 最终一致性可接受（通知、日志） | 异步消息 + 重试 | 无需强一致，避免分布式事务开销 |
 
 > **原则：能用本地事务就不用分布式事务。** Seata AT 有全局锁开销，仅跨服务数据一致性场景使用。
 
 ## 1. 跨服务场景 — @GlobalTransactional
 
-> **落地状态 ⛔ 未落地**：示例应用为单服务（Order 与 Product 同数据源），本节及下文 XID 透传、
+> **落地状态 ⛔ 未落地**：示例应用为单服务（两聚合同数据源，真实例），本节及下文 XID 透传、
 > `DeductStockCommand` 均为跨服务**示意模板**——sample 中不存在 `RestClient` 注入与
 > `@GlobalTransactional` 用法；服务内真实形态见 §2（与 [cross-aggregate.md](cross-aggregate.md) 同链路）。
 
@@ -157,7 +157,7 @@ public InvoiceDTO handle(CreateInvoiceCommand command) {
 }
 ```
 
-> 真实例（示例应用即为此形态，Order + Product 同服务同数据源）：对照 `sample-application/.../application/order/handler/command/PlaceOrderHandler.java`（真实例映射位，`@Transactional` 本地事务、无 Seata）。
+> 真实例（示例应用即为此形态：两聚合同服务同数据源）：对照 `sample-application/.../application/order/handler/command/PlaceOrderHandler.java`（真实例映射位，`@Transactional` 本地事务、无 Seata）。
 
 ## 3. Seata AT 模式工作原理
 
