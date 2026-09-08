@@ -22,7 +22,7 @@ public class Payment extends AggregateRoot<UUID> {
     private UUID orderId;
     private PaymentStatus status;
     private BigDecimal amount;
-    private Integer version;
+    private Long version;
 
     /** 业务构造器（创建新支付） */
     public Payment(UUID id, UUID orderId, BigDecimal amount) {
@@ -34,7 +34,7 @@ public class Payment extends AggregateRoot<UUID> {
 
     /** 重建构造器（Converter 使用） */
     public static Payment reconstitute(UUID id, UUID orderId, PaymentStatus status,
-                                       BigDecimal amount, Integer version) {
+                                       BigDecimal amount, Long version) {
         Payment payment = new Payment(id, orderId, amount);
         payment.status = status;
         payment.version = version;
@@ -70,13 +70,13 @@ PO 是**零 ORM 注解**的纯 `@Data` POJO——表名、主键、版本条件�
 ```java
 @Data
 public class PaymentPO {
-    private String id;                 // 业务铸造（UUIDv7 文本），INSERT 显式传参
+    private UUID id;                 // 业务铸造（UUIDv7 文本），INSERT 显式传参
     private UUID orderId;              // FK 列取原生 uuid 类型，common-pg UUIDTypeHandler 自动直映射（零转换代码）
     private String status;
     private BigDecimal amount;
-    private Integer version;           // 版本条件由 UPDATE 语句文本携带
-    private OffsetDateTime createAt;   // AuditFieldFiller 填充
-    private OffsetDateTime updateAt;
+    private Long version;           // 版本条件由 UPDATE 语句文本携带
+    private OffsetDateTime createdAt;   // AuditFieldFiller 填充
+    private OffsetDateTime updatedAt;
 }
 ```
 

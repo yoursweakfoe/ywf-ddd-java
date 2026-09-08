@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>写/读 Presenter 解耦：写侧由本类呈现 {@link OrderDTO}（含 version），读侧由
  * {@link OrderViewPresenter} 呈现 {@code OrderViewDTO}（不含 version）。决定外部消费方看到什么：
- * 审计字段（createAt/updateAt）、乐观锁版本（version）不映射即不暴露。
+ * 审计字段（createdAt/updatedAt）、乐观锁版本（version）不映射即不暴露。
  */
 @Component
 public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
@@ -20,7 +20,7 @@ public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
     @Override
     public OrderCO present(OrderDTO dto) {
         OrderCO co = new OrderCO();
-        co.setId(dto.getId());
+        co.setId(dto.getId().toString());
         // 内部 DTO 恒为 String（Assembler 映 domain.name()）；String→契约枚举在呈现层收口，
         // 奇偶守卫锁死值域、脏值当场 fail-fast，映射不外溢
         co.setStatus(OrderStatus.valueOf(dto.getStatus()));
@@ -29,7 +29,7 @@ public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
         co.setCustomerId(dto.getCustomerId());
         co.setTrackingNumber(dto.getTrackingNumber());
         co.setCancelReason(dto.getCancelReason());
-        // createAt / updateAt / version 为内部字段，不暴露给消费方
+        // createdAt / updatedAt / version 为内部字段，不暴露给消费方
         return co;
     }
 

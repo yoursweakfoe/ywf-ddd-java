@@ -59,7 +59,7 @@ class PlaceOrderHandlerTest {
     @Test
     void handle_shouldCreatePendingOrderWithRealUnitPrice() {
         // 商品单价 25.50，订单项小计应来自商品真实价格而非硬编码
-        Product product = Product.reconstitute(PRODUCT_ID, "Widget", new BigDecimal("25.50"), 100, null, null, 0);
+        Product product = Product.reconstitute(PRODUCT_ID, "Widget", new BigDecimal("25.50"), 100, null, null, 0L);
         when(productRepository.findAllById(List.of(PRODUCT_ID))).thenReturn(List.of(product));
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
@@ -86,8 +86,8 @@ class PlaceOrderHandlerTest {
     void handle_shouldNotSaveWhenAnyStockInsufficient() {
         // 第二个商品库存不足（DomainService 在事务内抛出）—— 整单原子失败，订单不得落库
         when(productRepository.findAllById(any())).thenReturn(List.of(
-                Product.reconstitute(PRODUCT_ID, "Widget", new BigDecimal("25.50"), 100, null, null, 0),
-                Product.reconstitute(PRODUCT_ID_2, "Gadget", new BigDecimal("10.00"), 1, null, null, 0)));
+                Product.reconstitute(PRODUCT_ID, "Widget", new BigDecimal("25.50"), 100, null, null, 0L),
+                Product.reconstitute(PRODUCT_ID_2, "Gadget", new BigDecimal("10.00"), 1, null, null, 0L)));
         // deductStock 返回 void —— 打桩必须用 doThrow().when() 形式
         doThrow(new BusinessException("product:err.insufficientStock"))
                 .when(inventoryDomainService).deductStock(any());

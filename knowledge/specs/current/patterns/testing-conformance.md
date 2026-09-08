@@ -7,11 +7,12 @@
 
 | # | SHALL | 取证 | 背书 |
 |---|---|---|---|
-| TC-1 | 测试四分型强制：Handler 单测（Mockito，零 Spring 容器）/ Domain 纯 JUnit / Converter 往返（PO↔domain 等价）/ 集成（test profile + H2）；容器测试只准走 test profile | `modules/test.md`（common-test 场景 2/3）；原篇四型节入法 | mvn 全绿 |
+| TC-1 | 测试四分型强制：Handler 单测（Mockito，零 Spring 容器）/ Domain 纯 JUnit / Converter 往返（PO↔domain 等价）/ 集成（test profile + 真 PG 测试库，TC-9）；容器测试只准走 test profile | `modules/test.md`（common-test 场景 2/3）；原篇四型节入法 | mvn 全绿 |
 | TC-2 | 聚合合法实例**只能**经 Factory 或 `reconstitute()` 构造；测试不得裸构造绕过不变式（绕过=教坏后来者，合法路径的守门人正是这两处） | 原篇入法：「测试禁止绕过……不得手动 new」；`modules/ddd.md` 场景 1；AO-4 互指 | 聚合根测试 |
 | TC-3 | 涉及新行为/新通道的测试，断言与 `changes/<slug>/` delta 的 Scenario 一一对应（spec-first：先法案后断言） | 归属法卷 §2「skill 首步产出 delta」；本区 README 守则 2 | bill 对账 |
 | TC-4 | 单测类禁止 `@Autowired` 字段注入；断言统一 AssertJ | 原篇检查单入法 | 评审项 |
-| TC-5 | 「clone 即全绿」演示契约：全仓测试离线运行、零外部基础设施依赖 | 示例树宪法（`sample-application/AGENTS.md`）在册承诺 | CI 复跑 |
+| TC-5 | 演示契约（2026-09 改卷）：全仓测试零网络出口；运行前置 = ywf-infra postgres 环节 + db-migration 对 `ddd_sample_application_test` 建形（一条命令，`db-migration/README.md`） | 示例树宪法（`sample-application/AGENTS.md`）在册承诺随本案同步改写 | CI 复跑 |
+| TC-9 | 真库测试基座与隔离双轨：test profile 直连 PG 测试库，库形状权威 = db-migration（测试不建表）；容器测试默认 `@Transactional` 回滚，真 HTTP 链教例（独立事务提交、回滚不可覆盖）SHALL 类级 `@Sql TRUNCATE … RESTART IDENTITY` 清场 | `integration/RestEndpointIntegrationTest` / `OptimisticLockConcurrencyTest` 类级 @Sql | mvn 全绿（真 PG） |
 | TC-6 | 单元类覆盖下限：正常路径 + ≥2 异常路径；Handler 单测断言「委托链」（load→行为→save→toDTO），**不**重复断言领域规则——规则归 B 型测试 | 原篇 A 节要点 + 验收清单入法；形状 §2.1 | 评审项 |
 | TC-7 | 测试文件位置镜像产码路径：A `application/{agg}/handler/command/`（读侧镜像 `handler/query/`）、B `domain/{agg}/model/`、C `infrastructure/persistence/{ds}/{agg}/converter/`；集成测试统一住 `integration/` | 原篇 A–D 各节「位置」行入法；形状 §2.1–§2.4 | 评审项 |
 | TC-8 | 测试命名：类 `{ClassName}Test`、方法 `{method}_should{Expected}`、Fixture `{Agg}Fixtures` / `Test{Agg}s` | 原篇命名规范表入法；形状 §2.6 | 评审项 |
@@ -135,13 +136,13 @@ class {Agg}ConverterTest {                                 // TC-1：C 型=往�
 }
 ```
 
-### 2.4 D 型 · 集成测试（@SpringBootTest + test profile，H2 内存库）
+### 2.4 D 型 · 集成测试（@SpringBootTest + test profile，真 PG 测试库）
 
-位置：`integration/{Feature}IntegrationTest.java`。test profile 用 H2（`MODE=PostgreSQL` + `INIT=RUNSCRIPT FROM 'classpath:schema.sql'`），**零外部基础设施**——这条是「clone 即 `mvn test` 全绿」的根基（入口见 [../../docs/tutorials/quickstart.md](../../../docs/tutorials/quickstart.md) 路线 A）。
+位置：`integration/{Feature}IntegrationTest.java`。test profile 直连真 PG 测试库（运行前置见 TC-5；库形状权威 = db-migration，测试代码不建表、不管 DDL）。真 PG 真方言真 SQL，无兼容模式转译层（入口见 [../../docs/tutorials/quickstart.md](../../../docs/tutorials/quickstart.md) 路线 A）。
 
 ```java
 @SpringBootTest
-@ActiveProfiles("test")                            // TC-1/TC-5：容器测试只走 test profile（H2，零外部基础设施）
+@ActiveProfiles("test")                            // TC-1/TC-9：容器测试只走 test profile（真 PG 测试库；真 HTTP 链教例类级 @Sql 清场见 TC-9）
 class {Agg}FlowIntegrationTest {
 
     @Autowired
@@ -149,7 +150,7 @@ class {Agg}FlowIntegrationTest {
 
     @Test
     void fullHappyPath_shouldSucceed() {
-        // Given → When → Then（完整业务流穿透真库语义：H2 PG 兼容模式下真 SQL 真执行）
+        // Given → When → Then（完整业务流穿透真库语义：PG 真方言真 SQL 真执行）
     }
 
     @Test
@@ -176,7 +177,7 @@ class {Agg}FlowIntegrationTest {
 
 - [ ] `mvn test -pl {module}` 通过
 - [ ] 正常路径 + ≥2 异常路径
-- [ ] 单元测试零 Spring 容器（Mockito）；容器测试只走 test profile/H2
+- [ ] 单元测试零 Spring 容器（Mockito）；容器测试只走 test profile/真 PG 测试库（TC-9）
 - [ ] AssertJ 断言；单元类无 `@Autowired` 字段注入
 - [ ] 涉及新行为/新通道的，同步在行为所属区立 delta（框架 `knowledge/specs/changes/<slug>/`、业务 `sample-application/specs/changes/<slug>/`；spec-first：断言 = delta 的 Scenario）
 
@@ -190,3 +191,4 @@ sample 实证可对照（真实例，全部类名经源码探针实证）：`Pay
 |---|---|---|
 | TC-1~5 既有条款 | ✅ | 119 测试基线在册对账 |
 | TC-6~8 归卷新增条款（覆盖下限 / 位置 / 命名，源=how-to/testing.md 入法） | ✅ | §2 形状在册，同一 119 测试基线对账 |
+| TC-1/TC-5/§2.4 改卷 + TC-9 开卷（`2026-09-pg-native-shape-and-real-testdb` 折叠） | ✅ | 119 测试基线（真 PG）对账 |

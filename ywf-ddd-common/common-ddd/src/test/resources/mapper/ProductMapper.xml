@@ -6,13 +6,13 @@
 <mapper namespace="com.yoursweakfoe.common.ddd.fixtures.mapper.ProductMapper">
 
     <sql id="columns">
-        id, name, stock, version, create_at, update_at, deleted
+        id, name, stock, version, created_at, updated_at, deleted
     </sql>
 
     <!-- id 为数据库自增主键 → 不枚举，useGeneratedKeys 回写 PO.id；deleted 不枚举 → DB 默认 FALSE -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO products.products (name, stock, version, create_at, update_at)
-        VALUES (#{name}, #{stock}, #{version}, #{createAt}, #{updateAt})
+        INSERT INTO products.products (name, stock, version, created_at, updated_at)
+        VALUES (#{name}, #{stock}, #{version}, #{createdAt}, #{updatedAt})
     </insert>
 
     <!-- 乐观锁契约：SET version = version + 1 ... WHERE id AND version AND deleted = false；
@@ -22,7 +22,7 @@
         SET name      = #{name},
             stock     = #{stock},
             version   = version + 1,
-            update_at = #{updateAt}
+            updated_at = #{updatedAt}
         WHERE id = #{id}
           AND version = #{version}
           AND deleted = false
@@ -56,7 +56,7 @@
     <update id="deleteById">
         UPDATE products.products
         SET deleted   = true,
-            update_at = #{now}
+            updated_at = #{now}
         WHERE id = #{id}
           AND deleted = false
     </update>
@@ -64,7 +64,7 @@
     <update id="deleteByIds">
         UPDATE products.products
         SET deleted   = true,
-            update_at = #{now}
+            updated_at = #{now}
         WHERE deleted = false
           AND id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>

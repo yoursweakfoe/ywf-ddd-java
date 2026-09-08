@@ -34,9 +34,9 @@ public class ProductDTO implements ApplicationDTO, Serializable {
     /** 库存数量 */
     private int stock;
     /** 创建时间 */
-    private OffsetDateTime createAt;
+    private OffsetDateTime createdAt;
     /** 更新时间 */
-    private OffsetDateTime updateAt;
+    private OffsetDateTime updatedAt;
     /** 乐观锁版本（写侧关注点，读侧不承载） */
-    private Integer version;
+    private Long version;
 }

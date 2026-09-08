@@ -18,8 +18,8 @@ public final class ProductFixtures {
         po.setName("Test Product");
         po.setStock(100);
         po.setVersion(0);
-        po.setCreateAt(OffsetDateTime.now());
-        po.setUpdateAt(OffsetDateTime.now());
+        po.setCreatedAt(OffsetDateTime.now());
+        po.setUpdatedAt(OffsetDateTime.now());
         return po;
     }
 }

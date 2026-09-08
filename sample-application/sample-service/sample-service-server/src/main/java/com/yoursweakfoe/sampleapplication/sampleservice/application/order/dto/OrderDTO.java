@@ -28,7 +28,7 @@ public class OrderDTO implements ApplicationDTO, Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 订单 ID */
-    private String id;
+    private UUID id;
     /** 订单状态 */
     private String status;
     /** 订单项列表 */
@@ -42,11 +42,11 @@ public class OrderDTO implements ApplicationDTO, Serializable {
     /** 取消原因 */
     private String cancelReason;
     /** 创建时间 */
-    private OffsetDateTime createAt;
+    private OffsetDateTime createdAt;
     /** 更新时间 */
-    private OffsetDateTime updateAt;
+    private OffsetDateTime updatedAt;
     /** 乐观锁版本（写侧关注点，读侧不承载） */
-    private Integer version;
+    private Long version;
 
     /** 订单项写侧视图。 */
     @Data

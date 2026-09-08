@@ -16,7 +16,7 @@ import java.util.UUID;
  * <ul>
  *   <li><strong>毫秒粒度时间有序</strong>——48 位毫秒前缀随铸造时刻不减（前提系统时钟不回拨），
  *       可作 InnoDB/PG 聚簇主键（B-tree 追加写，避免随机主键的页分裂）。注意业务排序
- *       永远依赖显式时间字段（如 {@code ORDER BY create_at}）——ID 只提供毫秒粒度的
+ *       永远依赖显式时间字段（如 {@code ORDER BY created_at}）——ID 只提供毫秒粒度的
  *       聚簇局部性，<strong>不承担亚毫秒铸造序</strong>（见行为注记）；</li>
  *   <li><strong>逐值统计独立</strong>——每枚 ID 的 74 位熵域独立重摇，相邻两枚之间不存在
  *       可推断的数值关系（与 counter 型 v7 实现的关键差异，见「为什么是 Random 变体」）；</li>

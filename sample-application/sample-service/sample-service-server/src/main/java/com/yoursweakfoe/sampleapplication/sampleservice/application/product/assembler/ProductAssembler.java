@@ -24,8 +24,8 @@ public class ProductAssembler implements BasicAssembler<Product, ProductDTO> {
         dto.setName(product.getName());
         dto.setPrice(product.getPrice());
         dto.setStock(product.getStock());
-        dto.setCreateAt(product.getCreateAt());
-        dto.setUpdateAt(product.getUpdateAt());
+        dto.setCreatedAt(product.getCreatedAt());
+        dto.setUpdatedAt(product.getUpdatedAt());
         dto.setVersion(product.getVersion());
         return dto;
     }

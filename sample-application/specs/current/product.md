@@ -3,7 +3,7 @@
 > **本区=法律**：代码违反它 = 改代码，或走 `../changes/` 流程修法；**禁止为迁就代码偷改本文**。
 > 每条断言括注取证依据（文件:行 或 测试名）。源码未覆盖的意图空白用 `<!-- 待 changes/ 补全 -->` 标注，不脑补。
 
-**路径缩写**同 `order.md` 前言（`C/` `S/` `T/` `CM/`；行号以 2026-09-06 工作区为准）。
+**路径缩写**同 `order.md` 前言（`C/` `S/` `T/` `CM/`；行号以 2026-09-08 工作区为准）。
 
 ## 1. 状态机
 
@@ -20,9 +20,9 @@
 
 （端点：`C/product/adapter/rest/controller/ProductController.java:24-35`，`@Operation`「新增商品并初始化库存」；`/api` 前缀：`application.yml:13`）
 
-- **PW-1.1（400 层）** `name` 必填 ≤100（对齐 `products.products.name VARCHAR(100)`）；`price` 必填、**严格 >0**（`@DecimalMin(0, inclusive=false)`）、精度 `@Digits(integer=8, fraction=2)`（对齐 `DECIMAL(10,2)`）；`stock ≥ 0`。越界 → 400 `fieldErrors`。（源：`C/product/dto/command/CreateProductCommand.java:29-42`；`sample-service-server/src/test/resources/schema.sql:31-42` 列宽佐证）
+- **PW-1.1（400 层）** `name` 必填 ≤100（对齐 `product.product.name VARCHAR(100)`）；`price` 必填、**严格 >0**（`@DecimalMin(0, inclusive=false)`）、精度 `@Digits(integer=8, fraction=2)`（对齐 `DECIMAL(10,2)`）；`stock ≥ 0`。越界 → 400 `fieldErrors`。（源：`C/product/dto/command/CreateProductCommand.java:29-42`；`db-migration/.../0001-init-schema.sql` product.product 列宽佐证）
 - **PW-1.2（创建即合法）** 新建只经 `ProductFactory.create`：铸造 UUIDv7 身份 + 立即 `validate()`（`product:err.nameRequired / priceRequired / priceNegative / stockNegative`），业务构造器包私有；id 在持久化之前即存在，**自增反查路径已消亡**（无 findByName）。（源：`S/domain/product/model/ProductFactory.java:29-33`、`Product.java:16-19,39-40` javadoc、`S/application/product/handler/command/CreateProductHandler.java:36-39` 注释；实证 `T/application/product/handler/command/CreateProductHandlerTest.java:41-73`——含 `id.version()==7` 断言）
-- **PW-1.3（结果）** 成功 → 200 `ProductCO{id, name, price, stock}`，`create_at/update_at/version` 不外泄（Presenter 不映射）。（源：`C/product/dto/co/ProductCO.java` 字段面、`S/application/product/presenter/ProductPresenter.java:19-26`；实证 `RestEndpointIntegrationTest.java:63-79` `createProduct_returns200`——注意命令未传 id，响应含服务端铸造 id）
+- **PW-1.3（结果）** 成功 → 200 `ProductCO{id, name, price, stock}`，`created_at/updated_at/version` 不外泄（Presenter 不映射）。（源：`C/product/dto/co/ProductCO.java` 字段面、`S/application/product/presenter/ProductPresenter.java:19-26`；实证 `RestEndpointIntegrationTest.java:63-79` `createProduct_returns200`——注意命令未传 id，响应含服务端铸造 id）
 - **PW-1.4（命令严于领域，如实记载）** 命令层要求 `price > 0`，领域不变量只要求 `price >= 0`（`priceNegative` 仅在 `< 0` 时触发）——价格恰为 0 的商品**无法经 REST 面创建**，但领域与存储层容许其存在。（源：`CreateProductCommand.java:36` vs `Product.java:106-108`）<!-- 待 changes/ 补全：两层价格下界以谁为准（免费商品是否合法）尚无裁决 -->
 
 ### 3.2 扣减 / 回补库存（PW-2）——**内部用例，无直接 REST 面**
@@ -31,7 +31,7 @@
 
 - **PW-2.1（扣减守卫）** `quantity ≤ 0` → `product:err.quantityMustBePositive`（422）；`stock < quantity` → `product:err.insufficientStock`（422，携 `params {productId, required, available}` 供前端渲染）；通过则 `stock -= quantity`。（源：`Product.java:73-83`；实证 `T/integration/RestEndpointIntegrationTest.java:131-147`、`T/domain/shared/service/InventoryDomainServiceTest.java:55-62`）
 - **PW-2.2（回补守卫）** `quantity ≤ 0` → 同键拒绝；通过则 `stock += quantity`，**无上界校验**。（源：`Product.java:89-93`；实证 `InventoryDomainServiceTest.java:65-72`）<!-- 待 changes/ 补全：restoreStock 无库存上界/溢出防线，是否需要容量语义未裁决 -->
-- **PW-2.3（持久化路径）** 每次扣/补经 `productRepository.update` 走乐观锁全列 UPDATE（`SET version = version + 1 WHERE ... AND version = #{version} AND is_delete = false`），影响 0 行按三分通道处理（见 PI-3）。（源：`sample-service-server/src/main/resources/mapper/product/ProductMapper.xml` updateById、`S/infrastructure/persistence/master/product/repository/ProductRepositoryImpl.java:71-75`）
+- **PW-2.3（持久化路径）** 每次扣/补经 `productRepository.update` 走乐观锁全列 UPDATE（`SET version = version + 1 WHERE ... AND version = #{version} AND is_deleted = false`），影响 0 行按三分通道处理（见 PI-3）。（源：`sample-service-server/src/main/resources/mapper/product/ProductMapper.xml` updateById、`S/infrastructure/persistence/master/product/repository/ProductRepositoryImpl.java:71-75`）
 - **PW-2.4（批量协调契约）** 多商品扣/补：单次 IN 加载、同商品数量合并为一次聚合调用+一次 UPDATE、UPDATE 顺序按 productId 全局升序（锁序契约）。详述见 order.md OI-7（同一事实唯一登记位：`S/domain/shared/service/InventoryDomainService.java:26-38,76-93`；实证 `InventoryDomainServiceTest.java:90-102`）。
 
 ### 3.3 无其他写面
@@ -46,10 +46,12 @@ Product 契约面无修改（价格/名称不可变）、无删除、无上下�
 - **PR-2** 不存在 → 422 `product:err.notFound`。（源：`GetProductHandler.java:24`；实证 `RestEndpointIntegrationTest.java:95-108`——断言 `detail == "product:err.notFound"`、`title == "Business Error"`、`type == "about:blank"`）
 - **PR-3** 非法 UUID 形状 → 400 绑定层拒绝（OG-2 同型）。（源：`ProductController.java:42-46` `@PathVariable UUID` + `GlobalRestExceptionHandler.handleTypeMismatch`）
 - **PR-4** `ProductCO.id` 为 **UUID 类型**（Jackson 序列化为字符串）——与 `OrderCO.id`（String 字段）不同型，系两聚合历史差异的现行事实，如实入约。（源：`C/product/dto/co/ProductCO.java:25` vs `C/order/dto/co/OrderCO.java:27`）
-- **PR-5** 投影面恰为 `{id, name, price, stock}`；`create_at/update_at/version` 不外泄；已逻辑删除行（`is_delete=true`）不可见。（源：`ProductViewPresenter.java:18-25`、`ProductMapper.xml` selectById `WHERE id AND is_delete = false`）
+- **PR-5** 投影面恰为 `{id, name, price, stock}`；`created_at/updated_at/version` 不外泄；已逻辑删除行（`is_deleted=true`）不可见。（源：`ProductViewPresenter.java:18-25`、`ProductMapper.xml` selectById `WHERE id AND is_deleted = false`）
 - **PR-6** **无分页/列表端点**——分页教义（1 起/上限 1000）现行仅 Order 面适用（order.md §4.2）。（源：`C/product/adapter/rest/controller/ProductController.java` 全部 2 端点）
 
 ## 5. 不变量
+
+- **PS-S（形状权威引用）** 同 order.md OS-S：形状权威 = 框架卷 BP-S1~S3 + db-migration 变更集，本册仅引用全名。
 
 - **PI-1（库存非负）** `stock >= 0` 恒成立：领域层 `deductStock` 守卫 + 聚合 `validate()`（`product:err.stockNegative`）在每次 save/update 复核双重执法。（源：`Product.java:77-81,110-112`、`MybatisPersistence.java:212,274` `validateIfAggregate`）
 - **PI-2（防超卖守恒）** 并发下单下同一商品：剩余库存 ≥0、成功数+剩余=初始（严格守恒）——乐观锁版本条件而非行锁承担并发正确性。（实证 `T/integration/OptimisticLockConcurrencyTest.java:118-125`；SQL 依据 `ProductMapper.xml` updateById 版本条件）

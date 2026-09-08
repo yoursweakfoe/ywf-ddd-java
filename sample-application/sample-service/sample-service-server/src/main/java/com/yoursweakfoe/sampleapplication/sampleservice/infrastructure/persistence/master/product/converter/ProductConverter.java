@@ -19,21 +19,21 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
 
     @Override
     public Product toDomain(ProductPO po) {
-        return Product.reconstitute(UUID.fromString(po.getId()), po.getName(), po.getPrice(), po.getStock(),
-                po.getCreateAt(), po.getUpdateAt(), po.getVersion());
+        return Product.reconstitute(po.getId(), po.getName(), po.getPrice(), po.getStock(),
+                po.getCreatedAt(), po.getUpdatedAt(), po.getVersion());
     }
 
     @Override
     public ProductPO toPO(Product domain) {
         ProductPO po = new ProductPO();
-        po.setId(domain.getId().toString());
+        po.setId(domain.getId());
         po.setName(domain.getName());
         po.setPrice(domain.getPrice());
         po.setStock(domain.getStock());
         po.setVersion(domain.getVersion());
-        po.setCreateAt(domain.getCreateAt());
-        po.setUpdateAt(domain.getUpdateAt());
-        // isDelete 由 SQL 文本承担（INSERT 靠 DB 默认 FALSE、逻辑删除语句置位），不映射
+        po.setCreatedAt(domain.getCreatedAt());
+        po.setUpdatedAt(domain.getUpdatedAt());
+        // isDeleted 由 SQL 文本承担（INSERT 靠 DB 默认 FALSE、逻辑删除语句置位），不映射
         return po;
     }
 }

@@ -88,7 +88,7 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 | `insert` | 枚举全部业务列（业务铸造 ID 显式传参、`version` 写字面量 0、**不枚举**逻辑删除列——靠 DB 默认值） |
 | `updateById` | **全量 UPDATE** + `SET version = version + 1` + `WHERE id = #{id} AND version = #{version} AND is_delete = false`——版本条件由 SQL 文本携带，无运行时拦截器；无版本列的聚合省略该条件即可 |
 | `selectById` / `selectByIds` | 查询列 + `AND is_delete = false` 显式过滤（批量为 `foreach` IN） |
-| `deleteById` / `deleteByIds` | 逻辑删除聚合 = `UPDATE SET is_delete = true, update_at = #{now}`（操作人列以 `<if test="updatedBy != null">` 守卫）；物理删除聚合 = `DELETE`。审计参数由基类传入，是否消费由聚合 XML 决定 |
+| `deleteById` / `deleteByIds` | 逻辑删除聚合 = `UPDATE SET is_delete = true, updated_at = #{now}`（操作人列以 `<if test="updatedBy != null">` 守卫）；物理删除聚合 = `DELETE`。审计参数由基类传入，是否消费由聚合 XML 决定 |
 | `existsById` | `SELECT EXISTS(SELECT 1 ... AND is_delete = false)`——恒返回一行 boolean，不加载完整行（冲突分类依赖它） |
 
 逻辑删除列名、版本列有无、物理还是逻辑删除——都是**聚合级选择**，逐篇 XML 自行表达，不存在全局隐式约定。
@@ -97,8 +97,8 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 
 基于 MyBatis 核心反射 `MetaObject`（按字段名读写，PO 无需任何 ORM 注解），由 `MybatisPersistence` 在 `mapper.insert` / `mapper.updateById` 前**显式调用**——触发链透明，无拦截器魔法：
 
-- `fillInsert`：createAt / updateAt（已有值不覆盖）+ createdBy / updatedBy（四道宽松守卫：字段名已配置、容器存在 `CurrentUserProvider` Bean、provider 返回非 null、PO 声明该字段）
-- `fillUpdate`：无条件刷新 updateAt +（守卫满足时）updatedBy
+- `fillInsert`：createdAt / updatedAt（已有值不覆盖）+ createdBy / updatedBy（四道宽松守卫：字段名已配置、容器存在 `CurrentUserProvider` Bean、provider 返回非 null、PO 声明该字段）
+- `fillUpdate`：无条件刷新 updatedAt +（守卫满足时）updatedBy
 - 时间源 = 注入 `Clock`（`ClockAutoConfiguration` 缺省 UTC，业务 Bean 退位，见 [ADR-0006](../../../decisions/ADR-0006-ddd-offsetdatetime-and-clock.md)）；字段名经 `AuditProperties`（`ywf.ddd.audit.*`）可配
 - 逻辑删除的审计刷新不走本组件——由基类把 `now` / `updatedBy` 作为 delete 语句的 SQL 参数传入
 

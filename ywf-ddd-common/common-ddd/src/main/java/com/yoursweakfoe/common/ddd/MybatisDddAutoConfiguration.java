@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Import;
  *
  * <ul>
  *   <li>{@link AuditProperties} —— 审计字段名配置（{@code ywf.ddd.audit.*}）</li>
- *   <li>{@link AuditFieldFiller} —— createAt / updateAt / createdBy / updatedBy 填充器
+ *   <li>{@link AuditFieldFiller} —— createdAt / updatedAt / createdBy / updatedBy 填充器
  *       （由 {@code MybatisPersistence} 在写库前显式调用）</li>
  * </ul>
  *

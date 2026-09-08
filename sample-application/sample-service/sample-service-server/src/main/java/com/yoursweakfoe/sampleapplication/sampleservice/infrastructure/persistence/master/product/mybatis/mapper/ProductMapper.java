@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 全部实现在手写 XML（{@code resources/mapper/product/ProductMapper.xml}）中逐条可见。
  *
  * <p>乐观锁防超卖：UPDATE 语句自带
- * {@code SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false}
+ * {@code SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_deleted = false}
  * 版本条件（无运行时拦截器）。
  */
 @Mapper

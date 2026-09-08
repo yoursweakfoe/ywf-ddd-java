@@ -27,7 +27,7 @@ public class ShipOrderCommand implements Command, Serializable {
     @Schema(description = "订单 ID")
     private UUID orderId;
 
-    /** 物流单号（上界对齐 orders.orders.tracking_number VARCHAR(100)） */
+    /** 物流单号（上界对齐 sales_order.sales_order.tracking_number VARCHAR(100)） */
     @NotBlank
     @Size(max = 100)
     @Schema(description = "物流单号（≤100 字符）")

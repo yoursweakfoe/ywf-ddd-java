@@ -26,7 +26,7 @@ public class PlaceOrderCommand implements Command, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 客户 ID（上界对齐 orders.orders.customer_id VARCHAR(50)） */
+    /** 客户 ID（上界对齐 sales_order.sales_order.customer_id VARCHAR(50)） */
     @NotBlank
     @Size(max = 50)
     @Schema(description = "客户 ID（≤50 字符）")

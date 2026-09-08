@@ -46,17 +46,7 @@ public class ProductRepositoryImpl
         return converter;
     }
 
-    /**
-     * 领域 UUID → PO String 桥接（audit B-01/F-11 收口配套）。
-     *
-     * <p>Product 领域身份为 {@code UUID}，PO 列为 {@code VARCHAR(36)}。
-     * 覆写此方法完成 UUID → String 的显式转换，使基类的按 ID 查询、
-     * 存在性探测与批量删除均能正确传递参数。
-     */
-    @Override
-    protected Serializable toPersistenceId(UUID id) {
-        return id.toString();
-    }
+    // toPersistenceId：不覆写——PO.id 即 UUID（BP-S1），基类恒等透传为正确形状
 
     @Override
     public Optional<Product> findById(UUID id) {

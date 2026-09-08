@@ -6,23 +6,23 @@
 <mapper namespace="com.yoursweakfoe.common.ddd.fixtures.mapper.OrderMapper">
 
     <sql id="columns">
-        id, status, items, total_amount, customer_id, create_at, update_at, deleted
+        id, status, items, total_amount, customer_id, created_at, updated_at, deleted
     </sql>
 
     <!-- 不枚举 deleted 列 → DB 默认 FALSE；tracking_number / cancel_reason / version 不入列 → DB 默认 -->
     <insert id="insert">
-        INSERT INTO orders.orders (id, status, items, total_amount, customer_id, create_at, update_at)
-        VALUES (#{id}, #{status}, #{items}, #{totalAmount}, #{customerId}, #{createAt}, #{updateAt})
+        INSERT INTO orders.orders (id, status, items, total_amount, customer_id, created_at, updated_at)
+        VALUES (#{id}, #{status}, #{items}, #{totalAmount}, #{customerId}, #{createdAt}, #{updatedAt})
     </insert>
 
-    <!-- 全列 UPDATE（PO 由 Converter 完整装配）+ 逻辑删除过滤；审计列 update_at 由 AuditFieldFiller 刷新 -->
+    <!-- 全列 UPDATE（PO 由 Converter 完整装配）+ 逻辑删除过滤；审计列 updated_at 由 AuditFieldFiller 刷新 -->
     <update id="updateById">
         UPDATE orders.orders
         SET status      = #{status},
             items       = #{items},
             total_amount = #{totalAmount},
             customer_id = #{customerId},
-            update_at   = #{updateAt}
+            updated_at   = #{updatedAt}
         WHERE id = #{id}
           AND deleted = false
     </update>
@@ -46,7 +46,7 @@
     <update id="deleteById">
         UPDATE orders.orders
         SET deleted   = true,
-            update_at = #{now}
+            updated_at = #{now}
         WHERE id = #{id}
           AND deleted = false
     </update>
@@ -54,7 +54,7 @@
     <update id="deleteByIds">
         UPDATE orders.orders
         SET deleted   = true,
-            update_at = #{now}
+            updated_at = #{now}
         WHERE deleted = false
           AND id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>

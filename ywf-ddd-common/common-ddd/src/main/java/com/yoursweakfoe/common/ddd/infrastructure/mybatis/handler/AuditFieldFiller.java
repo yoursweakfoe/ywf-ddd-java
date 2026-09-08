@@ -15,7 +15,7 @@ import org.springframework.beans.factory.ObjectProvider;
  * 填充由 {@code MybatisPersistence} 在 {@code mapper.insert} / {@code mapper.updateById}
  * 前<strong>显式调用</strong>——触发链透明，无拦截器魔法，可在数据链路上直接 grep。
  *
- * <p>时间字段（createAt / updateAt）为 {@code OffsetDateTime}；操作人字段（createdBy / updatedBy）
+ * <p>时间字段（createdAt / updatedAt）为 {@code OffsetDateTime}；操作人字段（createdBy / updatedBy）
  * 高度宽松可选——只有配置了字段名 + 容器中存在 {@link CurrentUserProvider} Bean 时才填充。
  *
  * <p><strong>时间源注入</strong>：时间取自构造器注入的 {@link Clock}
@@ -53,11 +53,11 @@ public class AuditFieldFiller {
     }
 
     /**
-     * 更新时无条件刷新 updateAt + 可选修改人。
+     * 更新时无条件刷新 updatedAt + 可选修改人。
      *
-     * <p>updateAt <strong>无条件覆盖</strong>（区别于 {@link #fillInsert} 的「有值不覆盖」）：
-     * updateAt 应始终刷新为最新。逻辑删除不设独立 deletedAt/deletedBy——表审计只表达
-     * 「最后状态」，删除发生在 updateAt 上复用（经 delete 语句的 {@code now} 参数刷新）。
+     * <p>updatedAt <strong>无条件覆盖</strong>（区别于 {@link #fillInsert} 的「有值不覆盖」）：
+     * updatedAt 应始终刷新为最新。逻辑删除不设独立 deletedAt/deletedBy——表审计只表达
+     * 「最后状态」，删除发生在 updatedAt 上复用（经 delete 语句的 {@code now} 参数刷新）。
      */
     public void fillUpdate(Object po) {
         MetaObject metaObject = SystemMetaObject.forObject(po);

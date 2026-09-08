@@ -54,8 +54,8 @@ description: 测试工程师视角审查代码变更（覆盖率、边界情况�
 
 ### 5. 测试基础设施
 
-- D 型的 H2（`MODE=PostgreSQL` + schema.sql 初始化，§2.4）参数正确？JSONB / ARRAY / UUID 复杂列在 H2 下可靠——有 H2 特有兜底掩盖 PG 语义即为坑（类型形态见 `knowledge/specs/current/modules/pg.md` 场景 1~3）？
-- PO 字段新增/变更是否同步 schema.sql（C 型往返与 D 型真 SQL 执行都依赖两者同构）？
+- D 型的真 PG 测试库（形状权威 = db-migration 建形，§2.4/TC-9）前置与连接正确？JSONB / ARRAY / UUID 复杂列在真库上按原生类型直验——任何兼容模式兜底期待即为坑（类型形态见 `knowledge/specs/current/modules/pg.md` 场景 1~3）？
+- PO 字段新增/变更是否同步 db-migration 变更集（C 型往返与 D 型真 SQL 执行都依赖 PO/XML/变更集三者同构，TC-9）？
 - 测试数据是否自包含：状态清理、不依赖执行顺序——「clone 即 `mvn test` 全绿」契约的根基（TC-5）？
 
 ## 输出格式

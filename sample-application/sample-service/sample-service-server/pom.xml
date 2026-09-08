@@ -47,11 +47,13 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- H2 内存数据库（测试专用） -->
+        <!-- PG 生态（opt-in）：common-pg 自动注册 UUID/JSONB 等 TypeHandler（ADR-0027 判例），
+             pgjdbc 驱动经其 compile 依赖传递入 runtime classpath。
+             2026-09 镜像案：test profile 直连真 PG 测试库，H2 依赖随 tc-9 裁决退役 -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-pg</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- 安全上下文（测试 SecurityUtil / AuthConstants） -->

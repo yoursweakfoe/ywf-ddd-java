@@ -33,7 +33,7 @@ public class ProductViewDTO implements ApplicationDTO, Serializable {
     /** 库存数量 */
     private int stock;
     /** 创建时间 */
-    private OffsetDateTime createAt;
+    private OffsetDateTime createdAt;
     /** 更新时间 */
-    private OffsetDateTime updateAt;
+    private OffsetDateTime updatedAt;
 }

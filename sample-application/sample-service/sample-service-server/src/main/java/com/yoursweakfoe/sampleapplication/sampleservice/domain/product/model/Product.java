@@ -30,11 +30,11 @@ public class Product extends AggregateRoot<UUID> {
     @Getter
     private int stock;
     @Getter
-    private OffsetDateTime createAt;
+    private OffsetDateTime createdAt;
     @Getter
-    private OffsetDateTime updateAt;
+    private OffsetDateTime updatedAt;
     @Getter
-    private Integer version;
+    private Long version;
 
     /** 业务构造器（创建新商品）—— 包私有：创建路径收口于 {@link ProductFactory} */
     Product(UUID id, String name, BigDecimal price, int stock) {
@@ -46,11 +46,11 @@ public class Product extends AggregateRoot<UUID> {
 
     /** 重建构造器（持久化层 Converter 使用，跳过校验） */
     public static Product reconstitute(UUID id, String name, BigDecimal price, int stock,
-                                       OffsetDateTime createAt, OffsetDateTime updateAt,
-                                       Integer version) {
+                                       OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                                       Long version) {
         Product product = new Product(id, name, price, stock);
-        product.createAt = createAt;
-        product.updateAt = updateAt;
+        product.createdAt = createdAt;
+        product.updatedAt = updatedAt;
         product.version = version;
         return product;
     }

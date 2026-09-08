@@ -44,7 +44,7 @@ public class ProductPO {
 </resultMap>
 
 <!-- INSERT / UPDATE 参数位 -->
-INSERT INTO products.products (id, extra_info, metadata)
+INSERT INTO <schema>.<table> (id, extra_info, metadata)
 VALUES (#{id}, #{extraInfo, typeHandler=com.yoursweakfoe.common.pg.handler.JsonbTypeHandler},
         #{metadata, typeHandler=com.yoursweakfoe.common.pg.handler.JsonNodeTypeHandler})
 ```

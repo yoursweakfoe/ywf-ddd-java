@@ -19,7 +19,7 @@ public class ProductConverter implements BasicConverter<Product, ProductPO> {
         po.setName(domain.getName());
         po.setStock(domain.getStock());
         po.setVersion(domain.getVersion());
-        // createAt / updateAt 由 AuditFieldFiller 填充，不映射
+        // createdAt / updatedAt 由 AuditFieldFiller 填充，不映射
         return po;
     }
 }

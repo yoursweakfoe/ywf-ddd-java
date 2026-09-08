@@ -17,7 +17,7 @@ mvn clean install
 ```
 
 - 14 个模块 reactor 顺序构建；common 6 模块测试 + sample 119 用例全跑
-- **不需要 PG/Nacos**：test profile 用 H2 内存库（`MODE=PostgreSQL`，`INIT=RUNSCRIPT FROM 'classpath:schema.sql'` 自动建表）
+- **测试基座 = 真 PG 测试库**：前置为 ywf-infra `postgres` 环节在跑 + 对 `ddd_sample_application_test` 建形（见路线 A 步 0；TC-5/TC-9，库形状权威 = db-migration，测试不建表）
 - 内含 ArchUnit 双端规则集与 `ContractEnumParityTest`、`OptimisticLockConcurrencyTest` 等行为实证——绿了即证明：你拿到的是文档承诺的那套框架
 
 预期尾行：`BUILD SUCCESS`，sample 模块 `Tests run: 119, Failures: 0, Errors: 0, Skipped: 0`。
@@ -27,11 +27,11 @@ mvn clean install
 ### 1. 建库 + 灌 schema
 
 ```bash
-createdb app_master                      # 或 psql -U postgres -c 'CREATE DATABASE app_master'
-psql -d app_master -f sample-application/sample-service/sample-service-server/src/main/resources/schema.sql
-```
+# 0. 测试/运行前一次性建形（幂等，库形状权威 = db-migration）：
+#   建两库（postgres 环节在跑时）：docker exec postgres psql -U ywf -d postgres -c 'CREATE DATABASE ddd_sample_application OWNER ywf'（_test 库同法）
+#   跑 Job（换 DB_MIGRATION_URL 即切库，命令见 db-migration/README.md）
 
-（schema 自动初始化只配在 H2 test profile；PG 侧手动灌一次是刻意设计——DDL 是评审对象，不静默执行。）
+DDL 权威唯一 = `db-migration` 变更集（BP-S1）：测试与运行共两库（`ddd_sample_application` / `ddd_sample_application_test`），同份变更集双库实证字节级同形；不再存在手工 schema 文件。
 
 ### 2. 启动（dev profile）
 
@@ -41,7 +41,7 @@ mvn -q package -DskipTests
 SPRING_PROFILES_ACTIVE=dev java -jar target/sample-service-server-0.0.1-SNAPSHOT.jar
 ```
 
-- 缺省连 `jdbc:postgresql://localhost:5432/app_master`（user/pass `postgres/postgres`）——全部可被 `DB_MASTER_URL` / `DB_MASTER_USER` / `DB_MASTER_PASSWORD` 覆盖；自配 URL 必须带 pgjdbc 超时三参数 `connectTimeout=10&socketTimeout=60&tcpKeepAlive=true`（教义见 datasource 配置注释）
+- 缺省连 `jdbc:postgresql://localhost:5432/ddd_sample_application`（user/pass `ywf/ywf-local-123`）——全部可被 `DB_MASTER_URL` / `DB_MASTER_USER` / `DB_MASTER_PASSWORD` 覆盖；自配 URL 必须带 pgjdbc 超时三参数 `connectTimeout=10&socketTimeout=60&tcpKeepAlive=true`（教义见 datasource 配置注释）
 - **不加 profile 会 fail-fast 启动失败**——这是 B1 轮的刻意设计（无默认 profile；`${DB_MASTER_URL}` 占位符无兜底），不是 bug
 - 容器路线：`docker compose up --build` 起 app 容器（8080）；PG/Nacos 服务在 `docker-compose.yml` 内是注释态，取消注释即得全套
 

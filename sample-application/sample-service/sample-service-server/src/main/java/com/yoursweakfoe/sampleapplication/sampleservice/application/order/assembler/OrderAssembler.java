@@ -20,7 +20,7 @@ public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
     @Override
     public OrderDTO toDTO(Order order) {
         OrderDTO dto = new OrderDTO();
-        dto.setId(order.getId().toString());
+        dto.setId(order.getId());
         dto.setStatus(order.getStatus().name());
         dto.setItems(order.getItems().stream()
                 .map(item -> new OrderDTO.OrderItemDTO(
@@ -30,8 +30,8 @@ public class OrderAssembler implements BasicAssembler<Order, OrderDTO> {
         dto.setCustomerId(order.getCustomerId());
         dto.setTrackingNumber(order.getTrackingNumber());
         dto.setCancelReason(order.getCancelReason());
-        dto.setCreateAt(order.getCreateAt());
-        dto.setUpdateAt(order.getUpdateAt());
+        dto.setCreatedAt(order.getCreatedAt());
+        dto.setUpdatedAt(order.getUpdatedAt());
         dto.setVersion(order.getVersion());
         return dto;
     }

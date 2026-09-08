@@ -51,16 +51,19 @@ sample-service-server/src/main/resources/
 | BP-3 | 创建顺序：contract（①-④+㉒）→ domain（⑫-⑭）→ infrastructure（⑮-⑲+㉑）→ application（⑥-⑪+⑳）→ adapter（⑤） | 原篇顺序节入法（接口先行、依赖倒序） |
 | BP-4 | HTTP 映射与文档注解（`@Tag`/`@Operation`/`@RequestMapping`/`@Valid`）声明在契约接口上；ControllerImpl 仅加 `@RestController` + RestAdapter 标记（R8a/R8b）纯透传零逻辑；东西向复用同一契约接口（HTTP 直连） | 本卷 §4.①, §4.⑤ |
 | BP-5 | CO / Command / Query 三件套一律 `@Data` + `@NoArgsConstructor` + `@AllArgsConstructor`，implements Serializable 并各携标记接口 | 本卷 §4.②-④ |
-| BP-6 | 契约层聚合 ID 引用一律 UUID（B12 教义）；UUID 字符串化只允许出现在 PO.id 列与内部 DTO.id 字段，禁止降级为 String 后手工解析 | 本卷 §4.③, §4.⑦, §4.⑮ |
+| BP-6 | 契约层聚合 ID 引用一律 UUID（B12 教义）；String 形态只存在于 JSON wire 序列化出口（CO 字段、Presenter 映 wire 位 toString()），PO / DTO / 领域层禁止以 String 承载 id 或手工 fromString/toString 跨层桥接（PO 层 String 通道随 BP-S1 关闭） | 本卷 §4.③, §4.⑦, §4.⑮；sample OrderPresenter wire 位实证 |
 | BP-7 | 状态 wire 三段式：CO 字段 = 契约枚举 ㉒、内部 DTO 字段 = String（Assembler 走 `domain.name()` 出口）、`String → 契约枚举` 在 Presenter 以 `valueOf` 收口且未知字面量当场 fail-fast（奇偶锁见 BP-2，禁止合并两个枚举） | 本卷 §4.㉒, §4.⑨ |
 | BP-8 | 聚合构造入口恒两扇门：业务构造器（新建，内部置初始态）+ 静态 `reconstitute()`（重建）；不开放其他构造路径 | 本卷 §4.⑫ |
 | BP-9 | DTO 是只读出口视图（可含审计/版本内部字段，CO 不暴露）；Assembler 单向契约（仅 Domain→DTO，批量 default 委托），DTO→CO 收口在 Presenter 并过滤内部字段，禁止 DTO→Domain 反向 | 本卷 §4.⑦, §4.⑧, §4.⑨ |
 | BP-10 | 写侧四拍链（new/load → 聚合行为 → save → toDTO）在 CommandHandler 完成并标 `@Transactional(rollbackFor = Exception.class)`；RepositoryImpl 不标事务（事务边界在 Handler）；跨聚合协调 = 同事务直调 | 本卷 §4.⑩, §4.⑱ |
 | BP-11 | 读侧绕过聚合：QueryHandler 只经读端口 ⑳（禁触 ⑭ 写端口、不经 ⑧ Assembler、不 reconstitute，R13），读实现 PO→DTO 直接投影、不填写侧关注字段（version）；读写需独立演进时拆 ViewDTO/ViewPresenter（canonical = read-path 篇） | 本卷 §4.⑪, §4.⑳, §4.㉑ |
 | BP-12 | 业务规则收口在聚合根 `validate()`；异常统一 `BusinessException` + i18n 位点 `{aggregate}:err.{scene}`（含读侧 miss 抛位） | 本卷 §4.⑪, §4.⑫ |
-| BP-X1 | XML 七条语句契约：表名含 schema 前缀；select/update/delete（逻辑删除聚合）显式 `AND is_delete = false`；`insert` 不枚举 `is_delete`；`existsById` 恒返一行 boolean；`updateById` 携 `SET version = version + 1 ... AND version = #{version}`；文件位 `resources/mapper/{agg}/` 且 namespace = Mapper 全限定名 | `modules/ddd.md` 场景 2；OL-4 互指 |
+| BP-X1 | XML 七条语句契约：表名含 schema 前缀（单数领域词，BP-S2）；select/update/delete（逻辑删除聚合）显式 `AND is_deleted = false`；`insert` 不枚举 `is_deleted`；`existsById` 恒返一行 boolean；`updateById` 携 `SET version = version + 1 ... AND version = #{version}`；文件位 `resources/mapper/{agg}/` 且 namespace = Mapper 全限定名 | `modules/ddd.md` 场景 2；OL-4 互指 |
 | BP-X2 | PO 纯 `@Data` 零 ORM 注解；Mapper `extends DddMapper`；RepositoryImpl 继承 `MybatisPersistence`；Converter.toDomain 一律经 `reconstitute()` 重建 | AGENTS 九条 9；`modules/ddd.md`；TC-2 互指 |
 | BP-X3 | 读端口 ⑳ 必须 `extends QueryRepository` 且位于 `application/{agg}/repository/`（R13） | read-chain RC-1 互指 |
+| BP-S1 | 库表形状唯一权威 = `db-migration` 变更集（PG 原生形状法）：`id UUID DEFAULT uuidv7()`（PG18 内建，工厂铸造传值覆盖）、`created_at/updated_at TIMESTAMPTZ DEFAULT now() NOT NULL`、`created_by/updated_by UUID`、`is_deleted BOOLEAN NOT NULL DEFAULT FALSE`、`version BIGINT NOT NULL DEFAULT 0`；DB 默认只兜手工插入，正常写路径审计归应用层（AuditFieldFiller + Clock） | `db-migration/.../0001-init-schema.sql` 双库 SHA256 同形实证；sample PO 换形后 119 测试对账 |
+| BP-S2 | schema 命名法：聚合边界 = schema 边界，领域词单数（`product.product`）；SQL 保留字冲突 SHALL 升级行业 UB 术语（order→sales_order），禁止引号/前缀逃逸；schema 名与 Java 聚合包名单数惯例逐字同构，微服务拆分整 schema 平移 | 用户 2026-09 裁决（ADR-0033）；本卷 §4 教学块与 sample 包树实证 |
+| BP-S3 | 外部工具账表住各自独立 schema（Liquibase 账表→`liquibase`，执行器引导件幂等自建；Seata TC 优先分库、`undo_log` 随业务连接落 public），与业务 schema 互不混列 | `db-migration` `LiquibaseSchemaBootstrapConfig`；双库账表按 schema 清点实证 |
 
 ## §3 验收单（交付闸，逐条可机械化）
 
@@ -114,7 +117,7 @@ public interface PaymentController {
 public class PaymentCO implements CO, Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
+    private UUID id;
     private PaymentStatus status;   // 契约枚举（㉒，见下节），非 String——值域镜像 domain PaymentStatus
     private BigDecimal amount;
 }
@@ -206,12 +209,12 @@ public class PaymentAppService implements ApplicationService {
 public class PaymentDTO implements ApplicationDTO, Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
+    private UUID id;
     private UUID orderId;
     private String status;
     private BigDecimal amount;
-    private OffsetDateTime createAt;  // 内部字段
-    private Integer version;         // 内部字段
+    private OffsetDateTime createdAt;  // 内部字段
+    private Long version;         // 内部字段
 }
 ```
 
@@ -228,7 +231,7 @@ public class PaymentAssembler implements BasicAssembler<Payment, PaymentDTO> {
         dto.setOrderId(payment.getOrderId());
         dto.setStatus(payment.getStatus().name());
         dto.setAmount(payment.getAmount());
-        dto.setCreateAt(payment.getCreateAt());
+        dto.setCreatedAt(payment.getCreatedAt());
         dto.setVersion(payment.getVersion());
         return dto;
     }
@@ -253,7 +256,7 @@ public class PaymentPresenter implements BasicPresenter<PaymentDTO, PaymentCO> {
         // 值域奇偶由守卫测试锁死、脏值当场 fail-fast，映射不外溢
         co.setStatus(PaymentStatus.valueOf(dto.getStatus()));
         co.setAmount(dto.getAmount());
-        // createAt / version 不暴露
+        // createdAt / version 不暴露
         return co;
     }
 }
@@ -319,8 +322,8 @@ public class Payment extends AggregateRoot<UUID> {
     private UUID orderId;
     private PaymentStatus status;
     private BigDecimal amount;
-    private OffsetDateTime createAt;
-    private Integer version;
+    private OffsetDateTime createdAt;
+    private Long version;
 
     /** 业务构造器 */
     public Payment(UUID id, UUID orderId, BigDecimal amount) {
@@ -332,10 +335,10 @@ public class Payment extends AggregateRoot<UUID> {
 
     /** 重建构造器（Converter 使用） */
     public static Payment reconstitute(UUID id, UUID orderId, PaymentStatus status,
-                                       BigDecimal amount, OffsetDateTime createAt, Integer version) {
+                                       BigDecimal amount, OffsetDateTime createdAt, Long version) {
         Payment p = new Payment(id, orderId, amount);
         p.status = status;
-        p.createAt = createAt;
+        p.createdAt = createdAt;
         p.version = version;
         return p;
     }
@@ -379,16 +382,16 @@ PO 是纯 `@Data` POJO——**零 ORM 注解**，表名、主键策略、版本�
 ```java
 @Data
 public class PaymentPO {
-    private String id;                 // 业务铸造（UUID 文本），INSERT 显式传参
+    private UUID id;                 // 业务铸造（uuid 原生列直传），INSERT 显式传参
     private UUID orderId;              // FK 列取原生 uuid 类型，common-pg UUIDTypeHandler 自动直映射（零转换代码）
     private String status;
     private BigDecimal amount;
-    private Integer version;           // 乐观锁：条件由 UPDATE 语句文本携带
-    private OffsetDateTime createAt;   // AuditFieldFiller 填充
-    private OffsetDateTime updateAt;
-    private String createdBy;          // 可选：容器存在 CurrentUserProvider 才填
-    private String updatedBy;
-    private Boolean isDelete;          // 逻辑删除标记（INSERT 不枚举，靠 DB 默认 FALSE）
+    private Long version;           // 乐观锁：条件由 UPDATE 语句文本携带
+    private OffsetDateTime createdAt;   // AuditFieldFiller 填充
+    private OffsetDateTime updatedAt;
+    private UUID createdBy;          // 可选：容器存在 CurrentUserProvider 才填
+    private UUID updatedBy;
+    private Boolean isDeleted;          // 逻辑删除标记（INSERT 不枚举，靠 DB 默认 FALSE）
 }
 ```
 
@@ -401,15 +404,15 @@ public class PaymentConverter implements BasicConverter<Payment, PaymentPO> {
     @Override
     public Payment toDomain(PaymentPO po) {
         return Payment.reconstitute(
-                UUID.fromString(po.getId()), po.getOrderId(),
+                po.getId(), po.getOrderId(),
                 PaymentStatus.valueOf(po.getStatus()),
-                po.getAmount(), po.getCreateAt(), po.getVersion());
+                po.getAmount(), po.getCreatedAt(), po.getVersion());
     }
 
     @Override
     public PaymentPO toPO(Payment domain) {
         PaymentPO po = new PaymentPO();
-        po.setId(domain.getId().toString());
+        po.setId(domain.getId());
         po.setOrderId(domain.getOrderId());
         po.setStatus(domain.getStatus().name());
         po.setAmount(domain.getAmount());
@@ -462,7 +465,7 @@ public class PaymentRepositoryImpl
 
 ### 4.⑲ Infrastructure — 手写 XML（DddMapper 七条语句）
 
-手写 XML（`src/main/resources/mapper/payment/PaymentMapper.xml`）——七条语句逐条可见；各语句的列级语义（INSERT 不枚举 `is_delete`、UPDATE 携带版本条件、删除消费基类 `now` / `updatedBy` 审计参数等）以 [knowledge/docs/reference/api/common-ddd.md](../../../docs/reference/api/common-ddd.md) §2 的 DddMapper 七语句契约表为准，本节只给完整模板：
+手写 XML（`src/main/resources/mapper/payment/PaymentMapper.xml`）——七条语句逐条可见；各语句的列级语义（INSERT 不枚举 `is_deleted`、UPDATE 携带版本条件、删除消费基类 `now` / `updatedBy` 审计参数等）以 [knowledge/docs/reference/api/common-ddd.md](../../../docs/reference/api/common-ddd.md) §2 的 DddMapper 七语句契约表为准，本节只给完整模板：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -470,68 +473,68 @@ public class PaymentRepositoryImpl
 <mapper namespace="...infrastructure.persistence.master.payment.mybatis.mapper.PaymentMapper">
 
     <sql id="columns">
-        id, order_id, status, amount, version, create_at, update_at, created_by, updated_by, is_delete
+        id, order_id, status, amount, version, created_at, updated_at, created_by, updated_by, is_deleted
     </sql>
 
-    <!-- 枚举全部业务列；version 写字面量 0（新建聚合初始版本）；is_delete 不枚举 → DB 默认 FALSE -->
+    <!-- 枚举全部业务列；version 写字面量 0（新建聚合初始版本）；is_deleted 不枚举 → DB 默认 FALSE -->
     <insert id="insert">
-        INSERT INTO payments.payments (id, order_id, status, amount, version,
-                                       create_at, update_at, created_by, updated_by)
+        INSERT INTO payment.payment (id, order_id, status, amount, version,
+                                       created_at, updated_at, created_by, updated_by)
         VALUES (#{id}, #{orderId}, #{status}, #{amount}, 0,
-                #{createAt}, #{updateAt}, #{createdBy}, #{updatedBy})
+                #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy})
     </insert>
 
-    <!-- 全量 UPDATE + 乐观锁版本条件 + 逻辑删除过滤；update_at 由 AuditFieldFiller 刷新 -->
+    <!-- 全量 UPDATE + 乐观锁版本条件 + 逻辑删除过滤；updated_at 由 AuditFieldFiller 刷新 -->
     <update id="updateById">
-        UPDATE payments.payments
+        UPDATE payment.payment
         SET order_id   = #{orderId},
             status     = #{status},
             amount     = #{amount},
             version    = version + 1,
-            update_at  = #{updateAt}
+            updated_at  = #{updatedAt}
         <if test="updatedBy != null">
             , updated_by = #{updatedBy}
         </if>
         WHERE id = #{id}
           AND version = #{version}
-          AND is_delete = false
+          AND is_deleted = false
     </update>
 
     <select id="selectById" resultType="...infrastructure.persistence.master.payment.mybatis.po.PaymentPO">
         SELECT <include refid="columns"/>
-        FROM payments.payments
+        FROM payment.payment
         WHERE id = #{id}
-          AND is_delete = false
+          AND is_deleted = false
     </select>
 
     <select id="selectByIds" resultType="...infrastructure.persistence.master.payment.mybatis.po.PaymentPO">
         SELECT <include refid="columns"/>
-        FROM payments.payments
-        WHERE is_delete = false
+        FROM payment.payment
+        WHERE is_deleted = false
           AND id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
 
     <!-- 逻辑删除 = UPDATE 置位 + 审计刷新（now / updatedBy 由基类经 Clock / CurrentUserProvider 传入） -->
     <update id="deleteById">
-        UPDATE payments.payments
-        SET is_delete = true,
-            update_at = #{now}
+        UPDATE payment.payment
+        SET is_deleted = true,
+            updated_at = #{now}
         <if test="updatedBy != null">
             , updated_by = #{updatedBy}
         </if>
         WHERE id = #{id}
-          AND is_delete = false
+          AND is_deleted = false
     </update>
 
     <update id="deleteByIds">
-        UPDATE payments.payments
-        SET is_delete = true,
-            update_at = #{now}
+        UPDATE payment.payment
+        SET is_deleted = true,
+            updated_at = #{now}
         <if test="updatedBy != null">
             , updated_by = #{updatedBy}
         </if>
-        WHERE is_delete = false
+        WHERE is_deleted = false
           AND id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </update>
@@ -539,13 +542,13 @@ public class PaymentRepositoryImpl
     <!-- 轻量存在性探测：恒返回一行 boolean（UPDATE 行数 0 时的冲突分类依赖它） -->
     <select id="existsById" resultType="boolean">
         SELECT EXISTS (
-            SELECT 1 FROM payments.payments WHERE id = #{id} AND is_delete = false
+            SELECT 1 FROM payment.payment WHERE id = #{id} AND is_deleted = false
         )
     </select>
 </mapper>
 ```
 
-> 不需要逻辑删除的聚合：`deleteById` 写物理 `DELETE FROM ... WHERE id = #{id}`、各 select 省略 `is_delete` 条件即可——语义选择落在 XML 文本，聚合之间互不影响。
+> 不需要逻辑删除的聚合：`deleteById` 写物理 `DELETE FROM ... WHERE id = #{id}`、各 select 省略 `is_deleted` 条件即可——语义选择落在 XML 文本，聚合之间互不影响。
 
 ### 4.⑳ 读端口 — PaymentQueryRepository（application 层，与 ⑪ 配对）
 
@@ -573,7 +576,7 @@ public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
 
     @Override
     public Optional<PaymentDTO> findById(UUID id) {
-        PaymentPO po = paymentMapper.selectById(id.toString());
+        PaymentPO po = paymentMapper.selectById(id);
         return po == null ? Optional.empty() : Optional.of(toDTO(po));
     }
 
@@ -584,7 +587,7 @@ public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
         dto.setOrderId(po.getOrderId());
         dto.setStatus(po.getStatus());
         dto.setAmount(po.getAmount());
-        dto.setCreateAt(po.getCreateAt());
+        dto.setCreatedAt(po.getCreatedAt());
         return dto;   // version 不填充：读投影不承载写侧关注点
     }
 }

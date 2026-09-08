@@ -38,7 +38,7 @@ public final class TestOrders {
     public static Order rebuilt(UUID id, OrderStatus status) {
         return Order.reconstitute(id, status, List.of(ITEM),
                 ITEM.subtotal(), DEFAULT_CUSTOMER,
-                null, null, null, null, 0);
+                null, null, null, null, 0L);
     }
 
     /** 经工厂创建的全新已下单订单（创建即合法：校验 + place() 状态机推进）。 */

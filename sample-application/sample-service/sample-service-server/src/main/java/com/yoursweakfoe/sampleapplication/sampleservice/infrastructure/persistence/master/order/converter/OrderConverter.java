@@ -29,22 +29,22 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
     @Override
     public Order toDomain(OrderPO po) {
         return Order.reconstitute(
-                UUID.fromString(po.getId()),
+                po.getId(),
                 OrderStatus.valueOf(po.getStatus()),
                 deserializeItems(po.getItems()),
                 po.getTotalAmount(),
                 po.getCustomerId(),
                 po.getTrackingNumber(),
                 po.getCancelReason(),
-                po.getCreateAt(),
-                po.getUpdateAt(),
+                po.getCreatedAt(),
+                po.getUpdatedAt(),
                 po.getVersion());
     }
 
     @Override
     public OrderPO toPO(Order domain) {
         OrderPO po = new OrderPO();
-        po.setId(domain.getId().toString());
+        po.setId(domain.getId());
         po.setStatus(domain.getStatus().name());
         po.setItems(serializeItems(domain.getItems()));
         po.setTotalAmount(domain.getTotalAmount());
@@ -52,9 +52,9 @@ public class OrderConverter implements BasicConverter<Order, OrderPO> {
         po.setTrackingNumber(domain.getTrackingNumber());
         po.setCancelReason(domain.getCancelReason());
         po.setVersion(domain.getVersion());
-        po.setCreateAt(domain.getCreateAt());
-        po.setUpdateAt(domain.getUpdateAt());
-        // isDelete 由 SQL 文本承担（INSERT 靠 DB 默认 FALSE、逻辑删除语句置位），不映射
+        po.setCreatedAt(domain.getCreatedAt());
+        po.setUpdatedAt(domain.getUpdatedAt());
+        // isDeleted 由 SQL 文本承担（INSERT 靠 DB 默认 FALSE、逻辑删除语句置位），不映射
         return po;
     }
 

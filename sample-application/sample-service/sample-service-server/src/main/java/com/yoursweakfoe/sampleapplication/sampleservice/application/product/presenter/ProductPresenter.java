@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>写/读 Presenter 解耦：写侧由本类呈现 {@link ProductDTO}（含 version），读侧由
  * {@link ProductViewPresenter} 呈现 {@code ProductViewDTO}（不含 version）。
- * 审计字段（createAt/updateAt）、乐观锁版本（version）不映射即不暴露。
+ * 审计字段（createdAt/updatedAt）、乐观锁版本（version）不映射即不暴露。
  */
 @Component
 public class ProductPresenter implements BasicPresenter<ProductDTO, ProductCO> {
@@ -22,7 +22,7 @@ public class ProductPresenter implements BasicPresenter<ProductDTO, ProductCO> {
         co.setName(dto.getName());
         co.setPrice(dto.getPrice());
         co.setStock(dto.getStock());
-        // createAt / updateAt / version 为内部字段，不暴露给消费方
+        // createdAt / updatedAt / version 为内部字段，不暴露给消费方
         return co;
     }
 }

@@ -1,4 +1,4 @@
-# sample-application
+﻿# sample-application
 
 基于 ywf-ddd-common 框架的示例业务服务，演示 DDD 战术模式的完整落地方式。
 
@@ -52,7 +52,7 @@
 # 前置：安装框架到本地仓库
 cd ywf-ddd-common && mvn clean install
 
-# 运行测试（H2 内存库，无需外部依赖）
+# 运行测试（真 PG 测试库 ddd_sample_application_test；前置 = postgres 环节在跑 + db-migration 建形，见根 README 与 db-migration/README.md）
 cd sample-application
 mvn clean test
 
@@ -60,7 +60,7 @@ mvn clean test
 docker compose up -d
 ```
 
-> **测试编写指引**（分层测试策略、ArchUnit 执行、fixtures 与 H2 约定）统一见 [`.agents/skills/new-test/SKILL.md`](../.agents/skills/new-test/SKILL.md)。
+> **测试编写指引**（分层测试策略、ArchUnit 执行、fixtures 与真 PG 测试库约定）统一见 [`.agents/skills/new-test/SKILL.md`](../.agents/skills/new-test/SKILL.md)。
 
 ## 目录结构
 

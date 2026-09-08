@@ -8,6 +8,6 @@
 - [ ] 4. 折叠继续：`aggregate-blueprint.md`（§2 表 BP-6/BP-X1 行替换 + ADDED BP-S1~S3 入位 + 卷末生效登记）+ 机械替换表应用于 §1 槽位树、§4.⑮⑯⑲㉑ 代码块 → BP-S1~S3/BP-6/BP-X1
 - [ ] 5. 折叠续：`prohibitions.md` §6 整节替换；`optimistic-lock.md`、`write-chain.md`、`read-chain.md`、`modules/pg.md` 按机械替换表应用 → BP-X1/BP-S1
 - [ ] 6. 地图区连带（归属法 §4 同步义务，本刻履行）：`docs/tutorials/quickstart.md` 路线 A 改述（clone 即全绿 → 前置 = postgres 环节 + db-migration 一条命令）；`sample-application/AGENTS.md` 验证闸行改写（H2 test profile → 真 PG 测试库 + 前置）；`sample-application/README.md`「构建与运行」段同步（现文仍称测试 H2 零依赖——配置批后已失配，因呼应在册 TC-5 故随本案折叠统一清账，不提前改）；`docs/how-to/testing.md` 宽松件同题措辞随之 → TC-5
-- [ ] 7. 框架侧代码核对：`AuditProperties` 默认值未动（⚖Q① 保持推荐案时零框架代码变更）；common 模块自身测试树零 diff（proposal 边界「不做」兑现）→ BP-S1 桥接场景
+- [ ] 7. 框架代码批（✅Q① 裁决改判后的新范围）：`AuditProperties` 缺省 `createAt`/`updateAt` → `createdAt`/`updatedAt`（操作人缺省不变）+ 本类与 `AuditFieldFiller`/`MybatisPersistence` javadoc 同步 + common 测试树随缺省换名（fixture PO/XML/schema.sql 列名属必然连带）+ `reference/api/common-ddd.md`、`modules/ddd.md` 缺省行同 PR（ywf-common 铁律）+ **ADR-0033/0034 立卷**入 `knowledge/decisions/` 并登记卷宗索引 → BP-S1/TC-9
 - [ ] 8. 闸门：根 `mvn -B install` 全绿（框架 + sample，真 PG 双库）+ `check-docs.ps1` 七闸全绿 + `ddd-review` 通过 → delta 全部 SHALL
 - [ ] 9. 归档折叠：本目录整袋 `git mv` 至 `knowledge/specs/changes/../archive/2026-09-pg-native-shape-and-real-testdb/`——**文档同步义务唯一时点**，与镜像案同 PR 合流

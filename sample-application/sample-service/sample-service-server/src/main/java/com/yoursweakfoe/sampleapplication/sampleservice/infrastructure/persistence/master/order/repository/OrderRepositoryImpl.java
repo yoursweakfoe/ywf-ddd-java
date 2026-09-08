@@ -47,11 +47,7 @@ public class OrderRepositoryImpl
         return converter;
     }
 
-    /** 领域 ID（UUID）→ PO 主键（String） */
-    @Override
-    protected Serializable toPersistenceId(UUID id) {
-        return id.toString();
-    }
+    // toPersistenceId：不覆写——PO.id 即 UUID（BP-S1），基类恒等透传为正确形状
 
     @Override
     public Optional<Order> findById(UUID id) {

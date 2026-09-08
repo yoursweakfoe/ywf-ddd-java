@@ -37,12 +37,12 @@ import org.springframework.beans.factory.ObjectProvider;
  * <ul>
  *   <li>save/update 前自动调用 {@code AggregateRoot.validate()}
  *   <li>save/update 前自动经 {@link AuditFieldFiller} 显式填充审计字段
- *       （createAt / updateAt / createdBy / updatedBy，触发链透明可见）
+ *       （createdAt / updatedAt / createdBy / updatedBy，触发链透明可见）
  *   <li>写失败按语义三分通道抛异常（绝不静默失败）：乐观锁版本冲突 →
  *       {@link OptimisticLockConflictException}（可重试）；更新目标已并发消失 →
  *       {@link IllegalStateException}（业务竞态，409 可辩护）；INSERT/DELETE 影响 0 行 →
  *       {@link SilentWriteLossException}（写丢失级不可能状态，500+ERROR 告警通道，勿重试）
- *   <li>每次 update 均执行全量 UPDATE（保证 update_at 等审计字段始终刷新）
+ *   <li>每次 update 均执行全量 UPDATE（保证 updated_at 等审计字段始终刷新）
  *   <li>逻辑删除的审计刷新：{@code deleteById} / {@code deleteByIds} 的 SQL 参数携带
  *       {@code now}（经注入 Clock）与 {@code updatedBy}（经 {@link CurrentUserProvider} 宽松解析），
  *       由 XML 的 SET 子句写回审计列
@@ -200,7 +200,7 @@ public abstract class MybatisPersistence<
      * 保存领域实体（INSERT）。
      *
      * <p>契约：持久化前自动调用 validate()，并经 {@link AuditFieldFiller#fillInsert(Object)}
-     * 填充 createAt / updateAt /（可选）createdBy / updatedBy。
+     * 填充 createdAt / updatedAt /（可选）createdBy / updatedBy。
      *
      * <p><b>事务说明</b>：本方法不声明 {@code @Transactional}，
      * 事务边界由应用层（Handler）控制。
@@ -251,7 +251,7 @@ public abstract class MybatisPersistence<
      * <p>契约：
      * <ul>
      *   <li>持久化前自动调用 validate()，并经 {@link AuditFieldFiller#fillUpdate(Object)}
-     *       无条件刷新 updateAt +（可选）updatedBy
+     *       无条件刷新 updatedAt +（可选）updatedBy
      *   <li><b>乐观锁版本冲突</b>（实体仍存在、版本不匹配——XML 的 {@code AND version = #{version}}
      *       未命中）→ 抛 {@link OptimisticLockConflictException}
      *       ——调用方（如重试包装器）应按此类型识别可重试冲突，勿依赖消息文本
@@ -261,7 +261,7 @@ public abstract class MybatisPersistence<
      *       {@link SilentWriteLossException}——「加载后被并发删除」属业务竞态
      *       （并发用户各自合法，409 冲突可辩护）；SilentWriteLoss 保留给
      *       INSERT/DELETE 影响 0 行的写丢失级不可能状态
-     *   <li>每次调用均执行全量 UPDATE（保证 update_at 等审计字段始终刷新）
+     *   <li>每次调用均执行全量 UPDATE（保证 updated_at 等审计字段始终刷新）
      * </ul>
      *
      * <p><b>事务说明</b>：本方法不声明 {@code @Transactional}，
@@ -327,7 +327,7 @@ public abstract class MybatisPersistence<
     /**
      * 根据 ID 删除领域实体。
      *
-     * <p>逻辑删除聚合：SQL 为 {@code UPDATE ... SET deleted = true, update_at = #{now}}；
+     * <p>逻辑删除聚合：SQL 为 {@code UPDATE ... SET deleted = true, updated_at = #{now}}；
      * 物理删除聚合：SQL 为 {@code DELETE}。审计参数由本类统一生成并传入，SQL 是否消费由聚合决定。
      *
      * @throws SilentWriteLossException 删除影响行数为 0（按存在的 ID 删除却未命中——写丢失级

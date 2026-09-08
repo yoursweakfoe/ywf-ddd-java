@@ -31,7 +31,7 @@ public class CancelOrderCommand implements Command, Serializable {
     @Schema(hidden = true)
     private UUID orderId;
 
-    /** 取消原因（上界对齐 orders.orders.cancel_reason VARCHAR(500)） */
+    /** 取消原因（上界对齐 sales_order.sales_order.cancel_reason VARCHAR(500)） */
     @NotBlank
     @Size(max = 500)
     @Schema(description = "取消原因（≤500 字符）")

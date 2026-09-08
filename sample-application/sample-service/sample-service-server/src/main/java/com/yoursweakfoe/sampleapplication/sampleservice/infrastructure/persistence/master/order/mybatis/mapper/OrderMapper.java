@@ -16,7 +16,7 @@ public interface OrderMapper extends DddMapper<OrderPO> {
     /**
      * 分页取数（读侧）。
      *
-     * <p>动态条件（{@code <if>} 可选过滤）+ {@code ORDER BY create_at DESC}
+     * <p>动态条件（{@code <if>} 可选过滤）+ {@code ORDER BY created_at DESC}
      * + PG 原生 {@code LIMIT / OFFSET}；逻辑删除过滤由 SQL 文本承担。
      */
     List<OrderPO> selectPageByCondition(@Param("status") String status,

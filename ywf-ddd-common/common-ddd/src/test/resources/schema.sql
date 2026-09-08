@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS orders.orders (
     tracking_number VARCHAR(100),
     cancel_reason VARCHAR(500),
     version INT NOT NULL DEFAULT 0,
-    create_at TIMESTAMP,
-    update_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
     deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS products.products (
     name VARCHAR(100) NOT NULL,
     stock INT NOT NULL,
     version INT NOT NULL DEFAULT 0,
-    create_at TIMESTAMP,
-    update_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
     deleted BOOLEAN NOT NULL DEFAULT FALSE
 );

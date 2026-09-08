@@ -25,7 +25,7 @@ public class CreateProductCommand implements Command, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 商品名称（上界对齐 products.products.name VARCHAR(100)） */
+    /** 商品名称（上界对齐 product.product.name VARCHAR(100)） */
     @NotBlank
     @Size(max = 100)
     @Schema(description = "商品名称（≤100 字符）")

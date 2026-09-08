@@ -25,7 +25,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 
     @Override
     public Optional<ProductViewDTO> findById(UUID id) {
-        ProductPO po = productMapper.selectById(id.toString());
+        ProductPO po = productMapper.selectById(id);
         if (po == null) {
             return Optional.empty();
         }
@@ -35,12 +35,12 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
     /** PO → 读 DTO 直接投影（不经过 domain）。 */
     private ProductViewDTO toViewDTO(ProductPO po) {
         ProductViewDTO dto = new ProductViewDTO();
-        dto.setId(UUID.fromString(po.getId()));
+        dto.setId(po.getId());
         dto.setName(po.getName());
         dto.setPrice(po.getPrice());
         dto.setStock(po.getStock() == null ? 0 : po.getStock());
-        dto.setCreateAt(po.getCreateAt());
-        dto.setUpdateAt(po.getUpdateAt());
+        dto.setCreatedAt(po.getCreatedAt());
+        dto.setUpdatedAt(po.getUpdatedAt());
         return dto;
     }
 }

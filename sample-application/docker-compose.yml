@@ -1,4 +1,4 @@
-name: ywf-application
+﻿name: ywf-application
 
 services:
   # ==========================================================================
@@ -7,12 +7,12 @@ services:
   # 待需要完全容器化开发时取消以下注释即可实现 `docker compose up` 开箱即用。
   # ==========================================================================
   # postgres:
-  #   image: postgres:16-alpine
+  #   image: postgres:18
   #   container_name: postgres
   #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: app_master
+  #     POSTGRES_USER: ywf
+  #     POSTGRES_PASSWORD: ywf-local-123
+  #     POSTGRES_DB: ddd_sample_application（注：正式基线下库由 db-migration 通道建形，本注释块仅离线自含场景）
   #   ports:
   #     - "5432:5432"
   #   volumes:

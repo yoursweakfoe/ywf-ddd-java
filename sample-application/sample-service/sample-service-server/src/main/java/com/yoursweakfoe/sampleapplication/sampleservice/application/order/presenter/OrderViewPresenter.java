@@ -21,7 +21,7 @@ public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO>
     @Override
     public OrderCO present(OrderViewDTO view) {
         OrderCO co = new OrderCO();
-        co.setId(view.getId());
+        co.setId(view.getId().toString());
         // 读侧投影 DTO 恒 String（PO 直投，不经 domain）；契约枚举化后在此收口，
         // 存储脏值 valueOf 当场 fail-fast（值域奇偶由 ContractEnumParityTest 锁死）
         co.setStatus(OrderStatus.valueOf(view.getStatus()));
@@ -30,14 +30,14 @@ public class OrderViewPresenter implements BasicPresenter<OrderViewDTO, OrderCO>
         co.setCustomerId(view.getCustomerId());
         co.setTrackingNumber(view.getTrackingNumber());
         co.setCancelReason(view.getCancelReason());
-        // createAt / updateAt 为内部字段，不暴露给消费方
+        // createdAt / updatedAt 为内部字段，不暴露给消费方
         return co;
     }
 
     /** 呈现为概览 CO（列表页，精简字段）。 */
     public OrderSummaryCO presentSummary(OrderViewDTO view) {
         OrderSummaryCO co = new OrderSummaryCO();
-        co.setId(view.getId());
+        co.setId(view.getId().toString());
         co.setStatus(OrderStatus.valueOf(view.getStatus()));
         co.setTotalAmount(view.getTotalAmount());
         co.setCustomerId(view.getCustomerId());

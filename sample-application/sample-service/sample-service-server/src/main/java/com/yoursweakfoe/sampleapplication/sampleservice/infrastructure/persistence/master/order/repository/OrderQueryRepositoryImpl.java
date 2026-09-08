@@ -35,7 +35,7 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 
     @Override
     public Optional<OrderViewDTO> findById(UUID id) {
-        OrderPO po = orderMapper.selectById(id.toString());
+        OrderPO po = orderMapper.selectById(id);
         if (po == null) {
             return Optional.empty();
         }
@@ -73,8 +73,8 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
         dto.setCustomerId(po.getCustomerId());
         dto.setTrackingNumber(po.getTrackingNumber());
         dto.setCancelReason(po.getCancelReason());
-        dto.setCreateAt(po.getCreateAt());
-        dto.setUpdateAt(po.getUpdateAt());
+        dto.setCreatedAt(po.getCreatedAt());
+        dto.setUpdatedAt(po.getUpdatedAt());
         return dto;
     }
 

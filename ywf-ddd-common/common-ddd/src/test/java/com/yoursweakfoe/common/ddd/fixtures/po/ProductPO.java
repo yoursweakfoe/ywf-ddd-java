@@ -11,7 +11,7 @@ public class ProductPO {
     private String name;
     private Integer stock;
     private Integer version;
-    private OffsetDateTime createAt;
-    private OffsetDateTime updateAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     private Boolean deleted;
 }

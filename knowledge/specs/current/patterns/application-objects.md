@@ -30,8 +30,8 @@ public class {Agg}DTO implements ApplicationDTO, Serializable {
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
     private List<{Agg}ItemDTO> items;
-    private OffsetDateTime createAt, updateAt;  // 内部审计字段
-    private Integer version;                     // AO-5：写侧关注点，不暴露给外部
+    private OffsetDateTime createdAt, updatedAt;  // 内部审计字段
+    private Long version;                     // AO-5：写侧关注点，不暴露给外部
 }
 
 // 读侧 DTO —— Query 的 PO 直接投影（不含 version，绕过 domain）
@@ -41,7 +41,7 @@ public class {Agg}ViewDTO implements ApplicationDTO, Serializable {   // AO-2：
     private String id, status, customerId, trackingNumber, cancelReason;
     private BigDecimal totalAmount;
     private List<{Agg}ItemViewDTO> items;
-    private OffsetDateTime createAt, updateAt;                        // AO-5：读侧一律无 version
+    private OffsetDateTime createdAt, updatedAt;                        // AO-5：读侧一律无 version
 }
 
 // 读侧 Presenter 按场景裁剪

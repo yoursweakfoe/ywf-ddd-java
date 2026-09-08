@@ -38,8 +38,8 @@ public final class OrderFixtures {
         po.setItems("[{\"productId\":\"PROD-001\",\"quantity\":2,\"unitPrice\":29.99}]");
         po.setTotalAmount(new BigDecimal("59.98"));
         po.setCustomerId("CUST-001");
-        po.setCreateAt(OffsetDateTime.now());
-        po.setUpdateAt(OffsetDateTime.now());
+        po.setCreatedAt(OffsetDateTime.now());
+        po.setUpdatedAt(OffsetDateTime.now());
         return po;
     }
 

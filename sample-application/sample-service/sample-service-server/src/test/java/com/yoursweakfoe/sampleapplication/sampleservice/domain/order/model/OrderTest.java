@@ -21,7 +21,7 @@ class OrderTest {
         // 惰性重建出「未下单的 PENDING」——聚合自身行为方法的测试入口
         // （新建路径已收口至 OrderFactory：创建即 place()，不存在未下单的中间态）
         return Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING, List.of(ITEM),
-                ITEM.subtotal(), "customer-1", null, null, null, null, 0);
+                ITEM.subtotal(), "customer-1", null, null, null, null, 0L);
     }
 
     // region 状态机合法路径
@@ -182,7 +182,7 @@ class OrderTest {
     @Test
     void validate_shouldThrowWhenItemsEmpty() {
         Order order = Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING,
-                List.of(), BigDecimal.ZERO, "customer-1", null, null, null, null, 0);
+                List.of(), BigDecimal.ZERO, "customer-1", null, null, null, null, 0L);
 
         assertThatThrownBy(order::validate)
                 .isInstanceOf(BusinessException.class);
@@ -191,7 +191,7 @@ class OrderTest {
     @Test
     void validate_shouldThrowWhenCustomerIdNull() {
         Order order = Order.reconstitute(UUID.randomUUID(), OrderStatus.PENDING,
-                List.of(ITEM), ITEM.subtotal(), null, null, null, null, null, 0);
+                List.of(ITEM), ITEM.subtotal(), null, null, null, null, null, 0L);
 
         assertThatThrownBy(order::validate)
                 .isInstanceOf(BusinessException.class);
@@ -245,14 +245,14 @@ class OrderTest {
         Order order = Order.reconstitute(
                 id, OrderStatus.SHIPPED, List.of(ITEM),
                 new BigDecimal("100.00"), "customer-1",
-                "TRACK-999", null, now, now, 3);
+                "TRACK-999", null, now, now, 3L);
 
         assertThat(order.getId()).isEqualTo(id);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.SHIPPED);
         assertThat(order.getTotalAmount()).isEqualByComparingTo(new BigDecimal("100.00"));
         assertThat(order.getCustomerId()).isEqualTo("customer-1");
         assertThat(order.getTrackingNumber()).isEqualTo("TRACK-999");
-        assertThat(order.getVersion()).isEqualTo(3);
+        assertThat(order.getVersion()).isEqualTo(3L);
     }
 
     // endregion

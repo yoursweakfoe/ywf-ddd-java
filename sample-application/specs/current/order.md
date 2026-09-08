@@ -3,7 +3,7 @@
 > **本区=法律**：代码违反它 = 改代码，或走 `../changes/` 流程修法；**禁止为迁就代码偷改本文**。
 > 每条断言括注取证依据（文件:行 或 测试名）。源码未覆盖的意图空白用 `<!-- 待 changes/ 补全 -->` 标注，不脑补。
 
-**路径缩写**（均相对仓库根；行号以 2026-09-06 工作区为准）：
+**路径缩写**（均相对仓库根；行号以 2026-09-08 工作区为准）：
 - `C/` = `sample-application/sample-service/sample-service-contract/src/main/java/com/yoursweakfoe/sampleapplication/sampleservice/contract/`
 - `S/` = `sample-application/sample-service/sample-service-server/src/main/java/com/yoursweakfoe/sampleapplication/sampleservice/`
 - `T/` = `sample-application/sample-service/sample-service-server/src/test/java/com/yoursweakfoe/sampleapplication/sampleservice/`
@@ -48,7 +48,7 @@
 
 （端点：`C/order/adapter/rest/controller/OrderController.java:41-43`；`@Operation` 语义「创建新订单，初始状态为 PENDING」:41；`/api` 前缀=服务器 context-path：`sample-service-server/src/main/resources/application.yml:13`）
 
-- **OW-1.1（400 层）** `customerId` 必填且 ≤50 字符（对齐 `orders.orders.customer_id VARCHAR(50)`）；`items` 非空；每项 `productId` 必填、`quantity ≥ 1`。越界 → 400 `fieldErrors`，不落库不触库存。（源：`C/order/dto/command/PlaceOrderCommand.java:30,31,36,50,55`；实证 `RestEndpointIntegrationTest.java:369-386` `placeOversizedCustomerId_returns400_noPayloadEcho`（51 字符 → 400））
+- **OW-1.1（400 层）** `customerId` 必填且 ≤50 字符（对齐 `sales_order.sales_order.customer_id VARCHAR(50)`）；`items` 非空；每项 `productId` 必填、`quantity ≥ 1`。越界 → 400 `fieldErrors`，不落库不触库存。（源：`C/order/dto/command/PlaceOrderCommand.java:30,31,36,50,55`；实证 `RestEndpointIntegrationTest.java:369-386` `placeOversizedCustomerId_returns400_noPayloadEcho`（51 字符 → 400））
 - **OW-1.2（语义）** 订单项单价**取自商品当时真实 `price`**，客户端无传价通道。（源：`S/application/order/handler/command/PlaceOrderHandler.java:61-66`；实证 `T/application/order/handler/command/PlaceOrderHandlerTest.java:60-75` `handle_shouldCreatePendingOrderWithRealUnitPrice`——断言落库订单 unitPrice=25.50 而非命令侧值）
 - **OW-1.3（422 层）** 商品不存在 → `product:err.notFound`；库存不足 → `product:err.insufficientStock`（携 `params: {productId, required, available}`）。（源：`PlaceOrderHandler.java:98`、`S/domain/product/model/Product.java:78-80`；实证 `RestEndpointIntegrationTest.java:149-163`、`:131-147`）
 - **OW-1.4（原子性）** 多商品单中任一失败（不存在/不足）→ **整单不持久化**（同一 `@Transactional` 内先扣库存后建单，任何异常整体回滚）。（源：`PlaceOrderHandler.java:58,69-73`；实证 `PlaceOrderHandlerTest.java:86-107` `handle_shouldNotSaveWhenAnyStockInsufficient`——`verify(orderRepository, never()).save(any())`）
@@ -71,7 +71,7 @@
 ### 3.4 发货（OW-4）　`PUT /api/orders/{orderId}/ship?trackingNumber=...` → 200 `OrderCO`
 
 - **OW-4.1（线上形状，如实入约）** 物流单号经 **URL 查询参数**绑定到 `ShipOrderForm`（`@Valid @ModelAttribute`），wire 形态 `?trackingNumber=...`（自 `@RequestParam` 时代保持不变）；完整 `ShipOrderCommand`（含 orderId）由 Adapter 组装——`ShipOrderForm` **不是 CQE**，只是运输层绑定载体。（源：`OrderController.java:70-82`、`C/order/dto/command/ShipOrderForm.java:10-19`、`OrderControllerImpl.java:53-56`；实证 `RestEndpointIntegrationTest.java:312-317` 以查询参数发货成功）
-- **OW-4.2（400 层）** `trackingNumber` 必填（`@NotBlank`）且 ≤100（对齐 `orders.orders.tracking_number VARCHAR(100)`）；超长 → 400，**与订单存在性无关**，不再穿透 DB 变 500。（源：`ShipOrderForm.java:14,18-19`；实证 `RestEndpointIntegrationTest.java:334-349` `shipOversizedTrackingNumber_returns400_noPayloadEcho`——对随机不存在 UUID 发货仍先 400）
+- **OW-4.2（400 层）** `trackingNumber` 必填（`@NotBlank`）且 ≤100（对齐 `sales_order.sales_order.tracking_number VARCHAR(100)`）；超长 → 400，**与订单存在性无关**，不再穿透 DB 变 500。（源：`ShipOrderForm.java:14,18-19`；实证 `RestEndpointIntegrationTest.java:334-349` `shipOversizedTrackingNumber_returns400_noPayloadEcho`——对随机不存在 UUID 发货仍先 400）
 - **OW-4.3（422 层）** 状态非 CONFIRMED → `order:err.status.confirmed`；不存在 → `order:err.notFound`。（源：`Order.java:129`、`ShipOrderHandler.java:33-34`；实证 `T/application/order/handler/command/ShipOrderHandlerTest.java:51-57`）
 - **OW-4.4（结果）** 成功 → SHIPPED，`trackingNumber` 入 CO。（实证 `RestEndpointIntegrationTest.java:312-317`、`OrderTest.java:55-63`）
 
@@ -100,7 +100,7 @@
 ### 4.1 详情　`GET /api/orders/{orderId}` → 200 `OrderCO`
 
 - **OR-1** 读路径**绕过聚合根**：查询端口 PO→读 DTO 直接投影，不 reconstitute、不在读侧算派生值。（源：`S/application/order/handler/query/GetOrderHandler.java:23-27`、`S/infrastructure/persistence/master/order/repository/OrderQueryRepositoryImpl.java:67-76`）
-- **OR-2** `OrderCO` 投影面恰为 `{id(String), status(契约枚举), items[{productId,quantity,unitPrice}], totalAmount, customerId, trackingNumber, cancelReason}`；**审计时间（createAt/updateAt）与乐观锁 version 不外泄**（Presenter 不映射即不暴露）。（源：`C/order/dto/co/OrderCO.java` 字段面、`S/application/order/presenter/OrderViewPresenter.java:19-38` 注释与实现）
+- **OR-2** `OrderCO` 投影面恰为 `{id(String), status(契约枚举), items[{productId,quantity,unitPrice}], totalAmount, customerId, trackingNumber, cancelReason}`；**审计时间（createdAt/updatedAt）与乐观锁 version 不外泄**（Presenter 不映射即不暴露）。（源：`C/order/dto/co/OrderCO.java` 字段面、`S/application/order/presenter/OrderViewPresenter.java:19-38` 注释与实现）
 - **OR-3** 不存在 → 422 `order:err.notFound`（合法 UUID 形状但不存在）。非法 UUID 形状 → 400（OG-2）。（实证 `RestEndpointIntegrationTest.java:181-192`——全零 UUID → 422）
 - **OR-4** 订单项从 `items` TEXT 列 JSON 反序列化直投读 DTO（不经领域值对象）。（源：`OrderQueryRepositoryImpl.java:82-91`、`S/infrastructure/persistence/master/order/converter/OrderConverter.java`「订单项列表以 JSON 格式存储于 TEXT 列」）
 
@@ -110,23 +110,25 @@
 - **OR-6（分页教义）** 页码**从 1 开始**、页大小**上限 1000**（`@Max(PageableQuery.MAX_PAGE_SIZE)`）；**无缺省注入**——pageNum/pageSize 缺参绑 0，被 `@Min(1)` 拒 → **400**，须显式传入；`safePageNum()/safePageSize()`（钳 1..1000）是仓储执行侧**第二道防线**（护未走 @Valid 的直调），非默认值机制；`DEFAULT_PAGE_SIZE=20` 仅为建议值，注入与否属消费方策略。〔2026-09-06 折叠自 archive/2026-09-pagequery-default-claim〕（源：`C/order/dto/query/GetOrderPageQuery.java` javadoc/Schema、`CM/common-contract/.../query/PageableQuery.java` 常量注释、`Oq/OrderQueryRepositoryImpl.java:46-52`）
 - **OR-7（双通道钳制）** 读仓储实现一律消费 `safePageNum()/safePageSize()`（钳制 `1..1000`）：即使调用点未触发 Bean Validation，也不产生非法分页或超大分页拖库。（源：`PageableQuery.java:78-91`、`OrderQueryRepositoryImpl.java:46-52`；offset 用 long 乘法防大页码 int 溢出 :50-52）
 - **OR-8** `status` 过滤类型为契约枚举（非自由字符串）：非法字面量在 binding 层直接 400 typeMismatch——显式失败优于静默空页；实现侧按枚举常量名比对 SQL `status` 列。（源：`C/order/enums/OrderStatus.java:4-8` javadoc、`GetOrderPageQuery.java:8-10` 参数注、`OrderQueryRepositoryImpl.java:53-55`）<!-- 待 changes/ 补全：非法 status 字面量→400 目前只有 javadoc 声明，无集成测试实证 -->
-- **OR-9** 过滤条件可选（`status`/`customerId` 均 null=不过滤），结果按 `create_at DESC` 排序；取数与计数两条语句共享同一 WHERE 片段（防两口径漂移）。（源：`sample-service-server/src/main/resources/mapper/order/OrderMapper.xml` `pageCondition`/`selectPageByCondition`/`countByCondition`）
+- **OR-9** 过滤条件可选（`status`/`customerId` 均 null=不过滤），结果按 `created_at DESC` 排序；取数与计数两条语句共享同一 WHERE 片段（防两口径漂移）。（源：`sample-service-server/src/main/resources/mapper/order/OrderMapper.xml` `pageCondition`/`selectPageByCondition`/`countByCondition`）
 - **OR-10** 出参信封 `PageResult{records, total, pageNum, pageSize}`（契约层 record，不可变 + 防御拷贝）；`records` 为 `OrderSummaryCO{id,status,totalAmount,customerId}`——**列表不含订单项明细**（与详情 CO 刻意分面）。（源：`CM/common-contract/.../query/PageResult.java:44-48` 及其 javadoc、`C/order/dto/co/OrderSummaryCO.java`、`OrderController.java:137` `@Operation` description、`OrderAppService.java:120-121` map→presentSummary）
-- **OR-11** 已逻辑删除行（`is_delete=true`）对所有读不可见。（源：`OrderMapper.xml` 全部 select/delete 条件含 `is_delete = false`）
+- **OR-11** 已逻辑删除行（`is_deleted=true`）对所有读不可见。（源：`OrderMapper.xml` 全部 select/delete 条件含 `is_deleted = false`）
 
 
 ## 5. 不变量
 
 - **OI-1（乐观锁三分通道）** 影响行数 0 的分类处理：①UPDATE 0 行且实体仍在 → `OptimisticLockConflictException`（**409**，唯一可重试类别；仅下单自动重试，见 OW-1.6）；②UPDATE 0 行且实体已消失 → 普通 `IllegalStateException`（**409**，不重试）；③INSERT/DELETE 0 行 → `SilentWriteLossException`（**500+ERROR 告警通道**，重试无意义）。论证与判例：见 `knowledge/decisions/` ADR-0002（全量 UPDATE 决策）、ADR-0013（ISE→409 通道）；SilentWriteLoss→500 独立通道暂无专文 ADR <!-- 待 changes/ 补全：WP-3 若收编 B4 判例则回填编号 -->。（源：`CM/common-ddd/.../persistence/MybatisPersistence.java:211-220,273-303,339` 及 `throwUpdateFailed:289-303`、`CM/common-exception/.../type/OptimisticLockConflictException.java` + `SilentWriteLossException.java` javadoc、`GlobalRestExceptionHandler` 映射表）
 - **OI-2（防超卖守恒律）** 并发对同一商品下单：剩余库存 ≥0；成功订单数 ≤ 初始库存；**成功数 + 剩余库存 = 初始库存**（严格守恒）；每请求必被归类（200/409/422/500/传输失败五桶求和=请求数）。（实证 `T/integration/OptimisticLockConcurrencyTest.java:118-125`——20 线程×1 件 vs 库存 10，@Tag("stress")）
-- **OI-3（版本条件 SQL 文本）** 乐观锁由手写 XML 的 `SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false` 文本自身承担（无运行时拦截器）；每次 UPDATE 全列覆写。（源：`resources/mapper/order/OrderMapper.xml` updateById；全量 UPDATE 理由见 decisions/ ADR-0002，不复述）
-- **OI-4（创建即合法 + 双扇门）** 聚合构造恒两扇门：新建=`OrderFactory.create`（铸 UUIDv7 + 立即 place() 校验），重建=`Order.reconstitute`（惰性）；业务构造器包私有，「谁能 new 订单」由包结构编译期锁死。（源：`Order.java:38-48` javadoc、`OrderFactory.java:12-31`；UUIDv7 策略：`OrderFactory.java:19-22` javadoc + `sample-service-server/src/test/resources/schema.sql:2-4` 注记）
+- **OI-3（版本条件 SQL 文本）** 乐观锁由手写 XML 的 `SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_deleted = false` 文本自身承担（无运行时拦截器）；每次 UPDATE 全列覆写。（源：`resources/mapper/order/OrderMapper.xml` updateById；全量 UPDATE 理由见 decisions/ ADR-0002，不复述）
+- **OI-4（创建即合法 + 双扇门）** 聚合构造恒两扇门：新建=`OrderFactory.create`（铸 UUIDv7 + 立即 place() 校验），重建=`Order.reconstitute`（惰性）；业务构造器包私有，「谁能 new 订单」由包结构编译期锁死。（源：`Order.java:38-48` javadoc、`OrderFactory.java:12-31`；UUIDv7 策略：`OrderFactory.java:19-22` javadoc + `db-migration/.../0001-init-schema.sql` id 列定义）
 - **OI-5（不变量每次写复核）** `save/update` 持久化前框架自动再调 `validate()`：items 非空、customerId 非空、totalAmount>0 在任何一次落库时都成立（不是仅创建时）。（源：`MybatisPersistence.java:212,274` `validateIfAggregate`、`Order.java:170-180`）
 - **OI-6（派生值物化）** `totalAmount = Σ(quantity × unitPrice)` 于创建时计算并物化（写侧算、读侧只投影存储值）；订单项值对象自身守 `order:err.productIdRequired / quantityMustBePositive / unitPriceRequired`。（源：`Order.java:47,209-213`、`S/domain/order/model/OrderItem.java:17-32`；实证 `OrderTest.java:209-216` 25.50 合计）
 - **OI-7（跨聚合协调三纪律）** 库存批量操作遵守：①商品**单次 IN 查询**加载（禁 N+1）；②同商品多订单项数量**合并为一次聚合调用+一次 UPDATE**（防对同一聚合连续两次乐观锁踩空）；③全部 Product 更新按 **productId 全局升序**（TreeMap）统一锁序，消除交叉持锁死锁。（源：`S/domain/shared/service/InventoryDomainService.java:26-38,76-93`；实证 `T/domain/shared/service/InventoryDomainServiceTest.java:90-103` 合并仅 update 一次；`S/domain/product/repository/ProductRepository.java:15-20` findAllById 契约）
 - **OI-8（枚举奇偶锁）** domain `OrderStatus` 与 contract `OrderStatus` 必须恒为同一值域（任一侧增删/改名 → 构建期红）；wire 值=常量名；消费方遇未知字面量硬失败（反序列化异常），须先升级 contract jar 再消费新值。（源：`T/contract/ContractEnumParityTest.java:26-50`、`C/order/enums/OrderStatus.java:4-15`；呈现层 `valueOf` 收口脏值当场 fail-fast：`S/application/order/presenter/OrderPresenter.java:26`）
 - **OI-9（错误码登记）** 本聚合全部错误为 `BusinessException` + i18n 位点 `order:err.{scene}`，无具名领域异常（键族登记见 §6；位点约定论证见 decisions/ ADR-0011，不复述）。
-- **OI-10（时间/操作人）** 时间字段统一 `OffsetDateTime`；create_at/update_at 由应用层 `AuditFieldFiller` 填充（非 DB 触发器），时钟经注入 `Clock`。（源：`Order.java:32-34`、`schema.sql:5` 注记、`MybatisPersistence.java:214,276` fillInsert/fillUpdate；理由见 decisions/ ADR-0006，不复述）
+- **OI-10（时间/操作人）** 时间字段统一 `OffsetDateTime`；created_at/updated_at 由应用层 `AuditFieldFiller` 填充（非 DB 触发器），时钟经注入 `Clock`。（源：`Order.java:32-34`、`db-migration/.../0001-init-schema.sql` 审计列定义、`MybatisPersistence.java:214,276` fillInsert/fillUpdate；理由见 decisions/ ADR-0006，不复述）
+
+- **OS-S（形状权威引用）** 本册不复述表形状/命名条款——权威链：框架卷 BP-S1~S3 → `db-migration/.../changes/*.sql`（唯一 DDL 事实，双库实证同形）；本册仅在上限对齐括注中引用全名，形状再演进走 changes/ 通道。
 
 ## 6. 错误码位总表（本聚合登记键）
 

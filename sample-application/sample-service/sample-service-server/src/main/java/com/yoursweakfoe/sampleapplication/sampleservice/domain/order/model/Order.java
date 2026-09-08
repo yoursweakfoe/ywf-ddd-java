@@ -29,11 +29,11 @@ public class Order extends AggregateRoot<UUID> {
     @Getter
     private String cancelReason;
     @Getter
-    private OffsetDateTime createAt;
+    private OffsetDateTime createdAt;
     @Getter
-    private OffsetDateTime updateAt;
+    private OffsetDateTime updatedAt;
     @Getter
-    private Integer version;
+    private Long version;
 
     /**
      * 包私有业务构造器 —— 新建路径已收口至同包的 {@code OrderFactory}（创建即合法：
@@ -53,7 +53,7 @@ public class Order extends AggregateRoot<UUID> {
      */
     private Order(UUID id, OrderStatus status, List<OrderItem> items, BigDecimal totalAmount,
                   String customerId, String trackingNumber, String cancelReason,
-                  OffsetDateTime createAt, OffsetDateTime updateAt, Integer version) {
+                  OffsetDateTime createdAt, OffsetDateTime updatedAt, Long version) {
         this.id = id;
         this.status = status;
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
@@ -61,8 +61,8 @@ public class Order extends AggregateRoot<UUID> {
         this.customerId = customerId;
         this.trackingNumber = trackingNumber;
         this.cancelReason = cancelReason;
-        this.createAt = createAt;
-        this.updateAt = updateAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.version = version;
     }
 
@@ -73,10 +73,10 @@ public class Order extends AggregateRoot<UUID> {
     public static Order reconstitute(UUID id, OrderStatus status, List<OrderItem> items,
                                      BigDecimal totalAmount, String customerId,
                                      String trackingNumber, String cancelReason,
-                                     OffsetDateTime createAt, OffsetDateTime updateAt,
-                                     Integer version) {
+                                     OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                                     Long version) {
         return new Order(id, status, items, totalAmount, customerId,
-                trackingNumber, cancelReason, createAt, updateAt, version);
+                trackingNumber, cancelReason, createdAt, updatedAt, version);
     }
 
     @Override

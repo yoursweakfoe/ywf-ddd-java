@@ -13,7 +13,7 @@ public class OrderPO {
     private String items;
     private BigDecimal totalAmount;
     private String customerId;
-    private OffsetDateTime createAt;
-    private OffsetDateTime updateAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     private Boolean deleted;
 }

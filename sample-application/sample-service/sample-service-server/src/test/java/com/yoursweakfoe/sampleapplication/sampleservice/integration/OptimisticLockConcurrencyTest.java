@@ -21,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestClient;
 
 /**
@@ -37,6 +38,10 @@ import org.springframework.web.client.RestClient;
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestSecurityConfiguration.class)
+// TC-9 清场轨（真 HTTP 独立事务提交，回滚轨不适用）：每次运行前清库拿确定基线；
+// 本类是 @Order 链式剧情（static id 跨方法传递），故类级一次性清场而非逐方法。
+@Sql(statements = "TRUNCATE TABLE sales_order.sales_order, product.product RESTART IDENTITY",
+     executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 @Tag("stress")
 class OptimisticLockConcurrencyTest {
 

@@ -215,7 +215,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
     @Override
     public Optional<ReservationViewDTO> findById(UUID id) {
-        ReservationPO po = reservationMapper.selectById(id.toString());
+        ReservationPO po = reservationMapper.selectById(id);
         if (po == null) return Optional.empty();
         return Optional.of(toViewDTO(po));
     }
@@ -249,8 +249,8 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         dto.setCustomerId(po.getCustomerId());
         dto.setConfirmationCode(po.getConfirmationCode());
         dto.setCancelReason(po.getCancelReason());
-        dto.setCreateAt(po.getCreateAt());
-        dto.setUpdateAt(po.getUpdateAt());                            // RC-6：读 DTO 无 version 字段
+        dto.setCreatedAt(po.getCreatedAt());
+        dto.setUpdatedAt(po.getUpdatedAt());                            // RC-6：读 DTO 无 version 字段
         return dto;
     }
 }
@@ -274,22 +274,22 @@ long countByCondition(@Param("status") String status,
 ```xml
 <!-- resources/mapper/reservation/ReservationMapper.xml —— WHERE 片段共享，杜绝两条语句条件漂移 -->
 <sql id="pageCondition">                                              <!-- RC-7：共享片段=条件漂移免疫 -->
-    WHERE is_delete = false
+    WHERE is_deleted = false
     <if test="status != null">AND status = #{status}</if>
     <if test="customerId != null">AND customer_id = #{customerId}</if>
 </sql>
 
 <select id="selectPageByCondition" resultType="...mybatis.po.ReservationPO">
     SELECT <include refid="columns"/>
-    FROM reservations.reservations
+    FROM reservation.reservation
     <include refid="pageCondition"/>
-    ORDER BY create_at DESC
+    ORDER BY created_at DESC
     LIMIT #{limit} OFFSET #{offset}
 </select>
 
 <select id="countByCondition" resultType="long">
     SELECT COUNT(*)
-    FROM reservations.reservations
+    FROM reservation.reservation
     <include refid="pageCondition"/>
 </select>
 ```

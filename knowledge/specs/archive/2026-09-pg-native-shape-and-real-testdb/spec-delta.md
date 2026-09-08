@@ -1,6 +1,6 @@
 ﻿# 对 current/patterns/*（testing-conformance、aggregate-blueprint、prohibitions、optimistic-lock、write-chain、read-chain）与 current/modules/pg 的增删改
 
-> 只描述变化量（delta 教义）。⚖ **问句绑定声明**：标注 ⚖Q①/②/③ 处按 proposal 推荐答案起草；问句裁决若不同，以裁决改写本 delta 后再施工——折叠前审议稿随便改。
+> 只描述变化量（delta 教义）。**✅ 2026-09-08 五问句全部裁决**：Q① 改框架默认值（原推荐桥接案作废，本 delta 按裁决改写并立 ADR-0033）；Q② 双轨隔离照案；Q③ testcontainers 不做；Q④ 批准施工；Q⑤ 类名保留 Order（`sales_order` 仅库层）。
 > 行号取证以 2026-09-08 工作区为准；标「实施后回填」的在折叠时点以真实行号替换。
 
 ## ADDED Requirements
@@ -11,10 +11,10 @@
 - GIVEN 消费方需为新聚合落 PG 库
 - WHEN 在 `db/changelog/<库>/changes/` 追加 4 位序号新变更集
 - THEN 表形状逐列符合 BP-S1 基线；H2/测试侧形状不得反向绑架产库形状
-#### Scenario: 审计列与框架填充器的桥接（⚖Q①）
-- GIVEN 框架 `AuditProperties` 默认字段名保持 `createAt`/`updateAt`（不动默认值）
-- WHEN 消费方 PO 采用 BP-S1 属性名 `createdAt`/`updatedAt`
-- THEN 消费方 SHALL 经 `ywf.ddd.audit.create-field/update-field` 配置桥接；框架不为此改默认值
+#### Scenario: 审计列名与框架默认（✅Q① 裁决：改默认随形）
+- GIVEN 框架 `AuditProperties` 时间字段缺省原为 `createAt`/`updateAt`，BP-S1 定形 `createdAt`/`updatedAt`
+- WHEN 本案实施（公共 API 破坏性变更 → ADR-0033 + 同 PR 改 javadoc 与 `reference/api/common-ddd.md`）
+- THEN 缺省即 `createdAt`/`updatedAt`；消费方零桥接配置；操作人缺省 `createdBy`/`updatedBy` 不变
 
 ### Requirement: BP-S2（schema 命名法：领域词单数 + 保留字术语升级）
 schema SHALL 按聚合/领域切分且**领域词取单数**（`product.product`、`sales_order.sales_order`——领域是概念，概念无复数；复数系行集视角的 DB 遗习）。领域词恰为 SQL 保留字（如 order）时 SHALL 升级到更精确的行业通用语言术语（`sales_order`），**禁止**引号（`"order"` 全语句交税）与前缀（`o_order` 词汇被语法绑架）逃逸。schema 名 SHALL 与 Java 聚合包名（单数惯例）逐字同构，微服务拆分时整 schema 平移。（源：0001 变更集 + 用户 2026-09 三连裁决记录）
@@ -30,7 +30,7 @@ schema SHALL 按聚合/领域切分且**领域词取单数**（`product.product`
 - WHEN 启用 db store
 - THEN 优先分库（TC 独立服务→独立库→自家 public，与本仓"隔离即分库"教义一致）；同库则 `store.db.url` 加 `currentSchema=`；`undo_log` 因序列名类加载期由裸表名派生，随业务连接落 public——各归其位即不违反本条（undo 系客户端运行时表，非 TC 账表）
 
-### Requirement: TC-9（真库测试基座与数据隔离）（⚖Q②）
+### Requirement: TC-9（真库测试基座与数据隔离）（✅Q② 照案批准）
 test profile SHALL 直连 PostgreSQL 测试库（当前实例 `ddd_sample_application_test`，`DB_TEST_URL/USER/PASSWORD` 可覆写）；测试库形状权威同属 `db-migration`（TC-5 前置件），测试代码不建表、不管 DDL。数据隔离 SHALL 双轨：默认 D 型用例走 `@Transactional` 回滚；**非事务**教例（如并发压测 `OptimisticLockConcurrencyTest`）SHALL 以 `@Sql` `TRUNCATE ... RESTART IDENTITY` 于测试前清场。
 #### Scenario: 本地跑 D 型集成测试
 - GIVEN ywf-infra postgres 在跑且测试库已经 db-migration 建形

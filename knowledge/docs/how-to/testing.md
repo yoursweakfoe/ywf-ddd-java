@@ -15,7 +15,7 @@
 | A Handler 单测（Mockito 零容器） | 委托链 + 异常路径，不复断领域规则 | §2.1 / TC-1·4·6 |
 | B Domain 纯 JUnit | 状态机迁移与 validate 不变量 | §2.2 / TC-2 |
 | C Converter 往返 | PO↔domain 等价 + 脏数据快速失败 | §2.3 / TC-1 |
-| D 集成（test profile + H2） | 全链路真 SQL 语义 + 400/422 分界 | §2.4 / TC-1·5 |
+| D 集成（test profile + 真 PG 测试库） | 全链路真 SQL 语义 + 400/422 分界 | §2.4 / TC-1、5、9 |
 
 ## 设计判断
 
@@ -25,7 +25,7 @@
 
 ## 边界与代价
 
-- 容器测试只走 test profile/H2，「clone 即 `mvn test` 全绿」是根基契约（TC-5；入口见 [../tutorials/quickstart.md](../tutorials/quickstart.md) 路线 A）
+- 容器测试只走 test profile/真 PG 测试库（前置 = postgres 环节 + db-migration 建形，TC-5）；隔离双轨见 TC-9，入口见 [../tutorials/quickstart.md](../tutorials/quickstart.md)
 - 涉及新行为/新通道：先立 delta 再写断言（TC-3）
 - 提交前对单：法卷 §2.7 验收终板五项清单；类名/方法名/Fixture 命名规范见法卷 §2.6
 

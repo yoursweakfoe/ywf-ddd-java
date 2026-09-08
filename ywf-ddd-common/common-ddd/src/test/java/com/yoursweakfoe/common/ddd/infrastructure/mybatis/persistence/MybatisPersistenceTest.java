@@ -325,7 +325,7 @@ class MybatisPersistenceTest {
         Mockito.when(zeroRowMapper.insert(Mockito.any())).thenReturn(0);
         OrderRepository zeroRepo = new OrderRepository(zeroRowMapper, new OrderConverter(),
                 Clock.systemUTC(),
-                new AuditProperties("createAt", "updateAt", "createdBy", "updatedBy"),
+                new AuditProperties("createdAt", "updatedAt", "createdBy", "updatedBy"),
                 Mockito.mock(ObjectProvider.class));
 
         Order order = OrderFixtures.createOrder();
@@ -435,33 +435,33 @@ class MybatisPersistenceTest {
     // ==================== 审计字段自动填充（真实链路验证） ====================
 
     /**
-     * 真实 MyBatis 链路下，INSERT 后 createAt / updateAt 应被 AuditFieldFiller 填充。
+     * 真实 MyBatis 链路下，INSERT 后 createdAt / updatedAt 应被 AuditFieldFiller 填充。
      *
      * <p>触发链为基类显式调用（saveDomain → fillInsert → mapper.insert），
      * PO 无需任何填充注解。
      */
     @Test
-    void insert_autoFillsCreateAtAndUpdateAt() {
+    void insert_autoFillsCreatedAtAndUpdatedAt() {
         Order order = OrderFixtures.createOrder();
         orderRepository.save(order);
 
         OrderPO po = orderMapper.selectById(order.getId().toString());
-        assertThat(po.getCreateAt()).isNotNull();
-        assertThat(po.getUpdateAt()).isNotNull();
+        assertThat(po.getCreatedAt()).isNotNull();
+        assertThat(po.getUpdatedAt()).isNotNull();
     }
 
-    /** 真实链路下，UPDATE 后 updateAt 被无条件刷新（区别于有值不覆盖的 insert 填充）。 */
+    /** 真实链路下，UPDATE 后 updatedAt 被无条件刷新（区别于有值不覆盖的 insert 填充）。 */
     @Test
-    void update_refreshesUpdateAt() {
+    void update_refreshesUpdatedAt() {
         Order order = OrderFixtures.createOrder();
         orderRepository.save(order);
-        OffsetDateTime before = orderMapper.selectById(order.getId().toString()).getUpdateAt();
+        OffsetDateTime before = orderMapper.selectById(order.getId().toString()).getUpdatedAt();
 
-        // 让 updateAt 有一个可区分的旧值；直接改状态触发 update
+        // 让 updatedAt 有一个可区分的旧值；直接改状态触发 update
         order.setStatus(OrderStatus.CONFIRMED);
         orderRepository.update(order);
 
-        OffsetDateTime after = orderMapper.selectById(order.getId().toString()).getUpdateAt();
+        OffsetDateTime after = orderMapper.selectById(order.getId().toString()).getUpdatedAt();
         assertThat(after).isNotNull();
         assertThat(after).isAfterOrEqualTo(before);
     }
@@ -469,7 +469,7 @@ class MybatisPersistenceTest {
     /**
      * 逻辑删除（XML {@code SET deleted = true}）后，聚合不可见（逻辑删除过滤生效）。
      *
-     * <p>updateAt 的刷新由 delete 语句的 {@code now} 审计参数承担（基类经注入 Clock 生成）。
+     * <p>updatedAt 的刷新由 delete 语句的 {@code now} 审计参数承担（基类经注入 Clock 生成）。
      */
     @Test
     void logicDelete_marksRowInvisible() {
@@ -483,20 +483,20 @@ class MybatisPersistenceTest {
     }
 
     /**
-     * 真实验证：逻辑删除是否刷新 update_at —— 直接 JDBC 查物理行（绕过 XML 的逻辑删除过滤）。
+     * 真实验证：逻辑删除是否刷新 updated_at —— 直接 JDBC 查物理行（绕过 XML 的逻辑删除过滤）。
      *
-     * <p>「用物理事实说话」：逻辑删除是 UPDATE SET deleted=true，本应复用 update 时刻刷新 update_at。
-     * 若基类传入的 {@code now} 参数正确进入 SET 子句，物理行的 update_at 应变为删除时刻；否则保留旧值。
+     * <p>「用物理事实说话」：逻辑删除是 UPDATE SET deleted=true，本应复用 update 时刻刷新 updated_at。
+     * 若基类传入的 {@code now} 参数正确进入 SET 子句，物理行的 updated_at 应变为删除时刻；否则保留旧值。
      */
     @Test
-    void logicDelete_refreshesUpdateAt_physicalRow() {
+    void logicDelete_refreshesUpdatedAt_physicalRow() {
         Order order = OrderFixtures.createOrder();
         orderRepository.save(order);
         String id = order.getId().toString();
 
-        // 物理行删除前的 update_at
+        // 物理行删除前的 updated_at
         OffsetDateTime before = jdbcTemplate.queryForObject(
-                "SELECT update_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
+                "SELECT updated_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
         assertThat(before).isNotNull();
 
         // Windows 系统时钟粒度约 0.5–1ms：save 与 delete 背靠背执行时两次时间可能落在
@@ -512,11 +512,11 @@ class MybatisPersistenceTest {
         Boolean deleted = jdbcTemplate.queryForObject(
                 "SELECT deleted FROM orders.orders WHERE id = ?", Boolean.class, id);
         OffsetDateTime after = jdbcTemplate.queryForObject(
-                "SELECT update_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
+                "SELECT updated_at FROM orders.orders WHERE id = ?", OffsetDateTime.class, id);
 
         assertThat(deleted).isTrue();               // 逻辑删除标记已置位
-        assertThat(after).isNotNull();              // updateAt 仍非空
-        assertThat(after).isAfter(before);          // 严格大于：证明 update_at 确实被刷新（而非保留旧值）
+        assertThat(after).isNotNull();              // updatedAt 仍非空
+        assertThat(after).isAfter(before);          // 严格大于：证明 updated_at 确实被刷新（而非保留旧值）
     }
 
     // ==================== 多数据源路由 ====================

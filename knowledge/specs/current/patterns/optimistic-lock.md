@@ -27,7 +27,7 @@ UPDATE 影响行数 0 时，`MybatisPersistence.updateDomain()` 在失败路径�
 payment.charge() → repository.update(payment)
   → MybatisPersistence.updateDomain()
     → mapper.updateById(po)  // 手写 XML 语句，版本条件即 SQL 文本自身
-      → UPDATE ... SET version=version+1 WHERE id=? AND version=? AND is_delete=false
+      → UPDATE ... SET version=version+1 WHERE id=? AND version=? AND is_deleted=false
       → 影响行数 = 0（version 不匹配 或 实体已消失）
     → 失败路径存在性探测分类：
         实体仍存在 → throw OptimisticLockConflictException   // 可安全重试

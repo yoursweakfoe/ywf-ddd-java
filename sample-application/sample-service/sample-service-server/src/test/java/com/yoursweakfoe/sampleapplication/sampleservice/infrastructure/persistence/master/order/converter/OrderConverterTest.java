@@ -22,17 +22,17 @@ class OrderConverterTest {
 
     private OrderPO buildOrderPO() {
         OrderPO po = new OrderPO();
-        po.setId(UUID.randomUUID().toString());
+        po.setId(UUID.randomUUID());
         po.setStatus("PENDING");
         po.setItems("[{\"productId\":\"550e8400-e29b-41d4-a716-446655440000\",\"quantity\":2,\"unitPrice\":10.00}]");
         po.setTotalAmount(new BigDecimal("20.00"));
         po.setCustomerId("customer-1");
         po.setTrackingNumber(null);
         po.setCancelReason(null);
-        po.setVersion(0);
-        po.setCreateAt(OffsetDateTime.now());
-        po.setUpdateAt(OffsetDateTime.now());
-        po.setIsDelete(false);
+        po.setVersion(0L);
+        po.setCreatedAt(OffsetDateTime.now());
+        po.setUpdatedAt(OffsetDateTime.now());
+        po.setIsDeleted(false);
         return po;
     }
 
@@ -42,12 +42,12 @@ class OrderConverterTest {
 
         Order order = converter.toDomain(po);
 
-        assertThat(order.getId()).isEqualTo(UUID.fromString(po.getId()));
+        assertThat(order.getId()).isEqualTo(po.getId());
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
         assertThat(order.getItems()).hasSize(1);
         assertThat(order.getTotalAmount()).isEqualByComparingTo(new BigDecimal("20.00"));
         assertThat(order.getCustomerId()).isEqualTo("customer-1");
-        assertThat(order.getVersion()).isEqualTo(0);
+        assertThat(order.getVersion()).isEqualTo(0L);
     }
 
     @Test
@@ -56,7 +56,7 @@ class OrderConverterTest {
 
         OrderPO po = converter.toPO(order);
 
-        assertThat(po.getId()).isEqualTo(order.getId().toString());
+        assertThat(po.getId()).isEqualTo(order.getId());
         assertThat(po.getStatus()).isEqualTo("PENDING");
         assertThat(po.getTotalAmount()).isEqualByComparingTo(new BigDecimal("20.00"));
         assertThat(po.getCustomerId()).isEqualTo("customer-1");

@@ -38,42 +38,42 @@ class AuditFieldFillerTest {
         when(userProvider.currentUser()).thenReturn(null);
         ObjectProvider<CurrentUserProvider> objectProvider = mock(ObjectProvider.class);
         when(objectProvider.getIfAvailable()).thenReturn(userProvider);
-        // 默认字段名（createAt/updateAt/createdBy/updatedBy），NORMAL 情况；固定时钟使时间断言精确
+        // 默认字段名（createdAt/updatedAt/createdBy/updatedBy），NORMAL 情况；固定时钟使时间断言精确
         filler = new AuditFieldFiller(
-                new AuditProperties("createAt", "updateAt", "createdBy", "updatedBy"),
+                new AuditProperties("createdAt", "updatedAt", "createdBy", "updatedBy"),
                 objectProvider,
                 FIXED_CLOCK);
     }
 
     @Test
-    void fillInsert_setsCreateAtAndUpdateAt() {
+    void fillInsert_setsCreatedAtAndUpdatedAt() {
         TestPo po = new TestPo();
 
         filler.fillInsert(po);
 
         // 固定时钟 → 断言确定化（精确等于注入时钟的瞬间，而非仅非空）
-        assertThat(po.getCreateAt()).isEqualTo(FIXED_NOW);
-        assertThat(po.getUpdateAt()).isEqualTo(FIXED_NOW);
-        assertThat(po.getCreateAt()).isEqualTo(po.getUpdateAt());
+        assertThat(po.getCreatedAt()).isEqualTo(FIXED_NOW);
+        assertThat(po.getUpdatedAt()).isEqualTo(FIXED_NOW);
+        assertThat(po.getCreatedAt()).isEqualTo(po.getUpdatedAt());
     }
 
     @Test
-    void fillUpdate_setsUpdateAt_unconditionally() {
+    void fillUpdate_setsUpdatedAt_unconditionally() {
         TestPo po = new TestPo();
         OffsetDateTime existing = OffsetDateTime.parse("2020-01-01T00:00:00Z");
-        po.setUpdateAt(existing); // 已有旧值
+        po.setUpdatedAt(existing); // 已有旧值
 
         filler.fillUpdate(po);
 
-        // fillUpdate 无条件刷新 updateAt（区别于 fillInsert 的有值不覆盖）；
+        // fillUpdate 无条件刷新 updatedAt（区别于 fillInsert 的有值不覆盖）；
         // 固定时钟下刷新值精确可断言
-        assertThat(po.getUpdateAt()).isNotEqualTo(existing);
-        assertThat(po.getUpdateAt()).isEqualTo(FIXED_NOW);
+        assertThat(po.getUpdatedAt()).isNotEqualTo(existing);
+        assertThat(po.getUpdatedAt()).isEqualTo(FIXED_NOW);
     }
 
     @Test
-    void fillUpdate_noUpdateAtField_silentIgnore() {
-        NoUpdateAtPo po = new NoUpdateAtPo();
+    void fillUpdate_noUpdatedAtField_silentIgnore() {
+        NoUpdatedAtPo po = new NoUpdatedAtPo();
 
         // Should not throw
         assertThatCode(() -> filler.fillUpdate(po)).doesNotThrowAnyException();
@@ -84,14 +84,14 @@ class AuditFieldFillerTest {
     void fillInsert_existingValue_notOverwritten() {
         TestPo po = new TestPo();
         OffsetDateTime existing = OffsetDateTime.parse("2020-01-01T00:00:00Z");
-        po.setCreateAt(existing);
-        po.setUpdateAt(existing);
+        po.setCreatedAt(existing);
+        po.setUpdatedAt(existing);
 
         filler.fillInsert(po);
 
         // 宽松填充不覆盖非空值（业务显式指定时间时尊重之）
-        assertThat(po.getCreateAt()).isEqualTo(existing);
-        assertThat(po.getUpdateAt()).isEqualTo(existing);
+        assertThat(po.getCreatedAt()).isEqualTo(existing);
+        assertThat(po.getUpdatedAt()).isEqualTo(existing);
     }
 
     @Test
@@ -161,27 +161,27 @@ class AuditFieldFillerTest {
         ObjectProvider<CurrentUserProvider> objectProvider = mock(ObjectProvider.class);
         when(objectProvider.getIfAvailable()).thenReturn(provider);
         return new AuditFieldFiller(
-                new AuditProperties("createAt", "updateAt", createdBy, updatedBy),
+                new AuditProperties("createdAt", "updatedAt", createdBy, updatedBy),
                 objectProvider,
                 FIXED_CLOCK);
     }
 
     @Data
     static class TestPo {
-        private OffsetDateTime createAt;
-        private OffsetDateTime updateAt;
+        private OffsetDateTime createdAt;
+        private OffsetDateTime updatedAt;
         private String name;
     }
 
     @Data
-    static class NoUpdateAtPo {
+    static class NoUpdatedAtPo {
         private String name;
     }
 
     @Data
     static class OperatorPo {
-        private OffsetDateTime createAt;
-        private OffsetDateTime updateAt;
+        private OffsetDateTime createdAt;
+        private OffsetDateTime updatedAt;
         private String createdBy;
         private String updatedBy;
     }

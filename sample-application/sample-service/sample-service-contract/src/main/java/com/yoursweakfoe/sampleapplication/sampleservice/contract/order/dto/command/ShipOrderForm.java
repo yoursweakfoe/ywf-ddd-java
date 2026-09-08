@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
  * <p>运输形态为查询参数（{@code PUT /orders/{orderId}/ship?trackingNumber=...}，wire 格式自
  * {@code @RequestParam} 时代保持不变）；完整命令 {@link ShipOrderCommand} 由 Adapter 组装
  * （路径段 orderId 注入，与 {@link CancelOrderCommand} 的 orderId 注入同一模式）。
- * 长度上界对齐 schema：orders.orders.tracking_number VARCHAR(100)——绑定层校验（@Valid +
+ * 长度上界对齐 schema：sales_order.sales_order.tracking_number VARCHAR(100)——绑定层校验（@Valid +
  * Bean Validation）把超长输入拦成 400，不再穿透到 DB 变 500 噪音。
  */
 public record ShipOrderForm(

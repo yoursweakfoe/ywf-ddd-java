@@ -13,7 +13,7 @@
 | WC-4 | Handler 返回 DTO；AppService 返回 CO；Adapter 实现契约接口纯透传（零逻辑） | AGENTS 九条 2；`modules/ddd.md` | R10b（DTO 标记）|
 | WC-5 | Assembler（domain→DTO）与 Presenter（DTO→CO）强制分离，禁止一类通吃 | AGENTS 九条 6；`BasicAssembler`/`BasicPresenter` 框架基类 | C3 |
 | WC-6 | 异常场景在聚合行为方法内显式 `if + throw BusinessException(messageKey)`，禁止吞错返回 null/布尔 | `modules/exception.md` EV-1 | — |
-| WC-7 | 契约边界输入纪律：Command 聚合 ID 全程 `UUID`（禁降级 String，与批量卷 BW-2 同源裁决）；路径参数由 Adapter 注入、`@Schema(hidden = true)` 对请求体隐藏；文本字段 `@Size(max = 列宽)`、金额 `@Digits(integer = 8, fraction = 2)` 对齐 schema 精度——越界在绑定层拦成 400 + fieldErrors，400 先于 422 | 真实例：sample orders 表 customer_id VARCHAR(50)、tracking_number VARCHAR(100)、cancel_reason VARCHAR(500)，products 表 name VARCHAR(100)、price DECIMAL(10,2)（见 schema.sql），对应命令 PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型（原篇真实例锚点入法） | 评审项 |
+| WC-7 | 契约边界输入纪律：Command 聚合 ID 全程 `UUID`（禁降级 String，与批量卷 BW-2 同源裁决）；路径参数由 Adapter 注入、`@Schema(hidden = true)` 对请求体隐藏；文本字段 `@Size(max = 列宽)`、金额 `@Digits(integer = 8, fraction = 2)` 对齐 schema 精度——越界在绑定层拦成 400 + fieldErrors，400 先于 422 | 真实例：sample orders 表 customer_id VARCHAR(50)、tracking_number VARCHAR(100)、cancel_reason VARCHAR(500)，products 表 name VARCHAR(100)、price DECIMAL(10,2)（见 db-migration 0001 变更集），对应命令 PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型（原篇真实例锚点入法） | 评审项 |
 | WC-8 | 契约输出纪律：CO 为外部安全视图，version/审计等内部字段不暴露；status 值域=契约枚举（住 `contract/{agg}/enums/`），与 domain 状态机奇偶镜像由守卫测试锁死；String → 枚举在呈现层 valueOf 收口、脏值当场 fail-fast，映射不外溢；消费方从契约 jar 直接拿合法值域，OpenAPI 自动枚举 | 真实例：sample `ContractEnumParityTest` 奇偶守卫测试（原篇锚点）；CO 内部字段不暴露 <!-- 待 ../../changes/ 补全 --> | 守卫测试 |
 | WC-9 | 入口分工：REST 映射与 OpenAPI 文档注解（@Tag/@Operation/@*Mapping）全部住契约接口；实现类仅标记协议 + 透传（`@RestController` + `RestAdapter`），零逻辑 | ArchUnit R8a/R8b（RestAdapter 标记双向锁，原篇载明）+ 本卷 §2.3 形状 | ArchUnit |
 | WC-10 | 仓储义务：持久化必走基类通道（saveDomain/updateDomain 系）——save/update 前自动 `validate()` 且经 `AuditFieldFiller` 显式填充审计字段；仓储层不声明事务（边界在 Handler，WC-2 互指）；跨聚合协调 = 同事务直调（跨聚合卷） | `MybatisPersistence` javadoc「内置行为契约」「事务边界（上收至应用层）」节 | C5 同区 |
@@ -56,7 +56,7 @@ public class ConfirmReservationCommand implements Command, Serializable {
 public class ReservationCO implements CO, Serializable {     // WC-8：外部安全视图
     @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
+    private UUID id;
     private ReservationStatus status;                        // WC-8：值域 = 契约枚举
     private BigDecimal totalAmount;
     private String customerId;
@@ -68,7 +68,7 @@ public class ReservationCO implements CO, Serializable {     // WC-8：外部安
 
 `ReservationStatus` 位于 `contract/reservation/enums/`：契约层枚举镜像 domain 状态机值域，二者奇偶由奇偶守卫测试锁死（真实例：sample 的 ContractEnumParityTest）。消费方从契约 jar 直接拿到合法值域，OpenAPI 自动枚举。
 
-**命令字段校验（输入上界对齐 schema 列宽）**：命令的文本/数值字段一律携带输入上界——文本 `@Size(max = 列宽)`、金额 `@Digits(integer = 8, fraction = 2)`（对齐 DECIMAL(10,2)）——超长、超界输入在绑定层被 `@Valid` 拦成 **400 + fieldErrors**，不再穿透到 DB 变成 500 噪音；400（参数校验）先于 422（业务规则违反）发生。真实例锚点：sample 的 orders 表 customer_id VARCHAR(50)、tracking_number VARCHAR(100)、cancel_reason VARCHAR(500)，products 表 name VARCHAR(100)、price DECIMAL(10,2)（见 schema.sql），对应命令 PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型。
+**命令字段校验（输入上界对齐 schema 列宽）**：命令的文本/数值字段一律携带输入上界——文本 `@Size(max = 列宽)`、金额 `@Digits(integer = 8, fraction = 2)`（对齐 DECIMAL(10,2)）——超长、超界输入在绑定层被 `@Valid` 拦成 **400 + fieldErrors**，不再穿透到 DB 变成 500 噪音；400（参数校验）先于 422（业务规则违反）发生。真实例锚点：sample 的 orders 表 customer_id VARCHAR(50)、tracking_number VARCHAR(100)、cancel_reason VARCHAR(500)，products 表 name VARCHAR(100)、price DECIMAL(10,2)（见 db-migration 0001 变更集），对应命令 PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型。
 
 ```java
 // 示例（同一虚构家族）：取消命令——ID 引用统一 UUID；
@@ -175,7 +175,7 @@ public class ReservationAssembler implements BasicAssembler<Reservation, Reserva
         dto.setCustomerId(reservation.getCustomerId());
         dto.setConfirmationCode(reservation.getConfirmationCode());
         dto.setCancelReason(reservation.getCancelReason());
-        dto.setCreateAt(reservation.getCreateAt());
+        dto.setCreatedAt(reservation.getCreatedAt());
         dto.setVersion(reservation.getVersion());                     // DTO 含 version（CO 不暴露，WC-8）
         return dto;
     }
@@ -204,7 +204,7 @@ public class ReservationPresenter implements BasicPresenter<ReservationDTO, Rese
         co.setCustomerId(dto.getCustomerId());
         co.setConfirmationCode(dto.getConfirmationCode());
         co.setCancelReason(dto.getCancelReason());
-        // createAt / updateAt / version 不暴露
+        // createdAt / updatedAt / version 不暴露
         return co;                                                     // WC-4：呈现产物 = 契约输出
     }
 }
@@ -222,7 +222,7 @@ public class Reservation extends AggregateRoot<UUID> {                 // WC-1�
     private String customerId;
     private String confirmationCode;
     private String cancelReason;
-    private Integer version;
+    private Long version;
     // ...
 
     public void confirm() {
@@ -270,16 +270,16 @@ PO 是纯 `@Data` POJO——零 ORM 注解（WC-11）；表名、乐观锁版本
 ```java
 @Data
 public class ReservationPO {                                     // WC-11：纯 POJO，零 ORM 注解
-    private String id;                 // 业务铸造（UUID 文本），INSERT 显式传参
+    private UUID id;                 // 业务铸造（uuid 原生列直传），INSERT 显式传参
     private String status;
     private String items;              // JSON 序列化
     private BigDecimal totalAmount;
     private String customerId;
     private String confirmationCode;
     private String cancelReason;
-    private Integer version;           // 条件由 updateById 语句文本携带（WC-11）
-    private OffsetDateTime createAt;   // AuditFieldFiller 填充（WC-10）
-    private OffsetDateTime updateAt;
+    private Long version;           // 条件由 updateById 语句文本携带（WC-11）
+    private OffsetDateTime createdAt;   // AuditFieldFiller 填充（WC-10）
+    private OffsetDateTime updatedAt;
 }
 
 @Mapper
@@ -293,16 +293,16 @@ public class ReservationConverter implements BasicConverter<Reservation, Reserva
     @Override
     public Reservation toDomain(ReservationPO po) {
         return Reservation.reconstitute(
-                UUID.fromString(po.getId()), ReservationStatus.valueOf(po.getStatus()),
+                po.getId(), ReservationStatus.valueOf(po.getStatus()),
                 deserializeItems(po.getItems()), po.getTotalAmount(),
                 po.getCustomerId(), po.getConfirmationCode(), po.getCancelReason(),
-                po.getCreateAt(), po.getUpdateAt(), po.getVersion());
+                po.getCreatedAt(), po.getUpdatedAt(), po.getVersion());
     }
 
     @Override
     public ReservationPO toPO(Reservation domain) {
         ReservationPO po = new ReservationPO();
-        po.setId(domain.getId().toString());
+        po.setId(domain.getId());
         po.setStatus(domain.getStatus().name());
         po.setItems(serializeItems(domain.getItems()));
         po.setTotalAmount(domain.getTotalAmount());
@@ -346,7 +346,7 @@ public class ReservationRepositoryImpl
 
 ### 2.11 并发写：影响行数 0 的语义三分处置（WC-12）
 
-并发确认的行为等价性由 XML 的 `updateById` 语句保证：`SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_delete = false`——无任何运行时拦截器参与（WC-11）。影响行数 0 时基类 `MybatisPersistence` 经存在性探测按**语义三分通道**处置（绝不静默失败）：
+并发确认的行为等价性由 XML 的 `updateById` 语句保证：`SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_deleted = false`——无任何运行时拦截器参与（WC-11）。影响行数 0 时基类 `MybatisPersistence` 经存在性探测按**语义三分通道**处置（绝不静默失败）：
 
 - **版本条件未命中（实体仍存在）** → `OptimisticLockConflictException`：409，可重试，属正常并发流；
 - **更新目标已并发消失** → 普通 `IllegalStateException`：409，业务竞态，重试无意义、不应被重试器吞掉；
@@ -384,7 +384,7 @@ public class ReservationRepositoryImpl
 |---|---|---|
 | WC-1~6 既有条款 | ✅ | sample 示例聚合现行遵循（ArchUnit 双端守护） |
 | WC-2/WC-3 真实例同构 | ✅ | 真实例锚点：原篇形状与 sample-application 的写路径实现同构（对照 OrderAppService.java:38、PayOrderHandler.java 的 load → 行为 → save → toDTO、Order.java:107-110 的 requireStatus 守卫），仅作对照、不逐字镜像 |
-| WC-7 输入上界改型 | ✅ | 真实例：schema.sql 列宽对账 + PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型（原篇锚点入法） |
+| WC-7 输入上界改型 | ✅ | 真实例：db-migration 0001 变更集列宽对账 + PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型（原篇锚点入法） |
 | WC-8 契约枚举奇偶 | ✅ | 真实例：sample `ContractEnumParityTest` 守卫在册；CO 内部字段不暴露 <!-- 待 ../../changes/ 补全 --> |
 | WC-9~12 归卷新增条款（入口分工 / 仓储义务 / 文本形态 / 语义三分，源=原篇 write-path.md 入法） | ✅ | 本卷 §2 形状在册；框架侧 canon 在 `MybatisPersistence` / `GlobalRestExceptionHandler` javadoc |
 | 教例家族 Reservation 全链走查模板 | ⛔ 虚构教例，sample 未落地 | §2 即落地模板 + §2.12 文件清单；设计判断见 docs 设计卡 |

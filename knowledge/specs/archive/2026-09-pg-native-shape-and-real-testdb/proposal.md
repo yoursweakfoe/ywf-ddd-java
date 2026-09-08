@@ -16,18 +16,18 @@
 - **aggregate-blueprint 卷 §5 骨架组成法**：聚合根表模板形状换为上述 PG 原生形状；`{agg}` 双名示例换为单数领域词示例（`sales_order.sales_order`，命名法入条款）。
 - **编码公约域（涉 naming 各卷）**：新立「schema/表/列命名法」条款——领域词单数；SQL 保留字冲突时升级行业通用术语（order→sales_order），禁引号/前缀逃逸；外部工具账表住各自独立 schema（liquibase 案例），与业务聚合 schema 不混列。
 - **横切卷教学引用同步**：write-chain / read-chain / optimistic-lock / prohibitions / modules/pg 各卷内 `create_at`/`is_delete`/`orders.orders` 形状引用逐处换形（纯形状跟随，无行为语义变化）。
-- **框架消费指引**：审计列名与框架默认（`createAt`/`updateAt`）分歧时经 `ywf.ddd.audit.*` 配置桥接——该桥接路径写入模块法卷 pg/ddd 相关条款的消费示例。
+- **框架默认值随新形（Q① 裁决改判）**：`AuditProperties` 时间字段缺省 `createAt`/`updateAt` → `createdAt`/`updatedAt`（随 BP-S1 形状；破坏性变更依 ywf-common 铁律立 ADR-0033 + 同 PR 改 javadoc 与 `reference/api/common-ddd.md`）；消费方无需桥接配置。
+- **横切卷教学引用同步**：write-chain / read-chain / optimistic-lock / prohibitions / application-objects / modules/pg 各卷内 `create_at`/`is_delete`/`orders.orders` 形状引用逐处换形（纯形状跟随，无行为语义变化）。
 
 ## 不做（范围边界）
 
-- **不改框架代码默认值**：`AuditProperties` 缺省保持 `createAt`/`updateAt`（改默认 = 破坏所有消费方的独立裁决，本案只立配置桥接的正当性；是否换默认 → 问句①）。
-- **不动 common 模块自身测试树**：框架模块单测/双源路由测试继续 H2 自洽（框架的测试对象是自己，不是 PG 方言生态；「真库测试」裁决辖域 = sample 集成测试基座）。
+- **不动 common 模块自身功能语义**：`AuditProperties` 仅默认值随形（Q① 批准破环性改）；common 测试树随默认值同步换名（createAt→createdAt 等，属默认值变更的必然连带，非基座改动）；「真库测试」裁决辖域 = sample 集成测试基座，框架模块测试继续 H2 自洽。
 - **不动 `archive/` 与 `decisions/` 既有卷宗**：旧案卷记录当时法，不回改（卷宗法）。
 - **不含 sample 业务契约换形**：order/product 现行册的表名/字段/上限引用修订另案（镜像区 `2026-09-order-product-pg-shape`），两案独立批准。
 - **H2 不出框架生态**：仅从 sample 测试基座退役；sample pom 的 h2 依赖与 `src/test/resources/schema.sql` 删除属实施细节，进 tasks。
 
 ## 待裁决问句（批准前请一并拍板）
 
-1. **`AuditProperties` 默认值**：保持 `createAt`/`updateAt`（消费方配置桥接），还是随新形改默认为 `createdAt`/`updatedAt`（破坏性，全下游波及）？起草人倾向：保持默认 + 桥接（默认值动一发牵全局，本案仅 sample 一个消费方时不值得预支）。
-2. **真库测试的数据隔离策略**：a) `@Transactional` 测试级回滚（现有习惯延续）；b) `@Sql TRUNCATE ... RESTART IDENTITY` 测试前清场（防已提交残留）；c) 组合（推荐：D 型基类挂 a，非事务并发教例 OptimisticLockConcurrencyTest 类挂 b）。delta 阶段展开为条款。
-3. **「clone 即全绿」逃生门**：无 PG 的贡献者要不要补一个可选 testcontainers profile？（推荐：本案不做，留 README 前置说明；testcontainers 引入 = 新依赖新裁决，独立案。）
+1. **`AuditProperties` 默认值**：~~保持 vs 改默认~~ → **✅ 2026-09-08 用户裁决：改默认随新形**（`createdAt`/`updatedAt`；操作人名 `createdBy`/`updatedBy` 不变）。框架默认值直接对齐 BP-S1，消费方零桥接。破坏性变更依 ywf-common 铁律立 ADR-0033 并同 PR 改 javadoc + api 文档。
+2. **真库测试的数据隔离策略**：~~a/b/c~~ → **✅ 用户裁决：组合案（c）**——D 型容器测试走 `@Transactional` 回滚；非事务并发教例（`OptimisticLockConcurrencyTest`）测试前 `@Sql TRUNCATE ... RESTART IDENTITY` 清场。
+3. **testcontainers 逃生门**：~~要不要~~ → **✅ 用户裁决：不做**（README 前置说明足矣；独立案再说）。

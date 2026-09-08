@@ -47,9 +47,9 @@
 - 禁止 MyBatis-Plus 进框架依赖树（持久化 = `DddMapper` 七语句 + 手写 XML；ADR-0007 判例）。dynamic-datasource 为经一手调研证实零耦合的多数据源 opt-in 方案，`@DS` 合法
 - 禁止 PO 携带任何 ORM 注解（纯 `@Data` POJO；表名/主键/版本条件/逻辑删除全在 XML SQL 文本 → BP-X2）
 - 禁止 Wrapper 式动态条件——查询一律具名 Mapper 方法 + 具名 XML 语句（`<sql>` 片段复用防漂移）
-- 建表 DDL 默认含 `version INT NOT NULL DEFAULT 0` + `is_delete BOOLEAN NOT NULL DEFAULT FALSE`，PO 声明对应字段；显式豁免的聚合 XML 省略对应条件（逐聚合自决，无共享开关 → BP-12）
-- `updateById`（有版本列）**必须**携 `SET version = version + 1 ... AND version = #{version} AND is_delete = false`，无运行时拦截器；0 行后果三分通道 → [optimistic-lock OL-1](optimistic-lock.md)（行为由 sample `OptimisticLockConcurrencyTest` 实证）
-- 逻辑删除聚合的每条 select/update/delete **必须**显式 `AND is_delete = false`——漏一处即泄漏；豁免聚合写物理 `DELETE`
+- 建表 DDL 默认含 `version BIGINT NOT NULL DEFAULT 0` + `is_deleted BOOLEAN NOT NULL DEFAULT FALSE`，PO 声明对应字段；显式豁免的聚合 XML 省略对应条件（逐聚合自决，无共享开关 → BP-12）
+- `updateById`（有版本列）**必须**携 `SET version = version + 1 ... AND version = #{version} AND is_deleted = false`，无运行时拦截器；0 行后果三分通道 → [optimistic-lock OL-1](optimistic-lock.md)（行为由 sample `OptimisticLockConcurrencyTest` 实证）
+- 逻辑删除聚合的每条 select/update/delete **必须**显式 `AND is_deleted = false`——漏一处即泄漏；豁免聚合写物理 `DELETE`
 
 ## §7 时间与线程
 
