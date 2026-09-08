@@ -1,0 +1,12 @@
+# Maven 构建输出
+target/
+
+# Liquibase CLI 启动副产品（Boot 集成形态不产出；防有人手工跑 CLI 预检时污染工作区）
+databasechangelog.csv
+
+# IDE
+.idea/
+*.iml
+
+# 忽略current schema（自动生成）
+/src/main/resources/db/current/

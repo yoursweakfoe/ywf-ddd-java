@@ -1,0 +1,21 @@
+# ============================================================================
+# 生产环境配置（profile: prod）
+#
+# 激活方式：SPRING_PROFILES_ACTIVE=prod（Dockerfile 默认 / K8s 环境变量注入；
+#          主配置刻意不声明本项——内置默认值会让部署漏配被静默套上画像，
+#          判例见 sample-service-server 主配置 §profiles 注释）
+#
+# ⚠️ 必需环境变量（主配置占位符无默认值，缺失任一即启动失败——fail-fast）：
+#   DB_MIGRATION_URL / DB_MIGRATION_USER / DB_MIGRATION_PASSWORD
+#
+# 与 dev 的差异（本画像只收紧、不供给默认值）：
+#   - 不提供任何连接默认值（localhost 兜底属 dev 专属）；
+#   - 快照输出目录去默认：主配置默认值是源码仓库相对路径，容器文件系统里写它
+#     = 事实现状随 Pod 蒸发。生产必须显式注入 DB_MIGRATION_SNAPSHOT_DIR
+#     指向可写持久卷，让 db/current 的「入库对账」价值在部署形态下依然成立。
+# ============================================================================
+
+ywf:
+  migration:
+    snapshot:
+      output-dir: ${DB_MIGRATION_SNAPSHOT_DIR}

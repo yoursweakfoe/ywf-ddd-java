@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      db-migration 独立 Maven 项目（刻意不进根聚合 reactor）：
+      - 一次性 Spring Boot Job 执行器，与框架/sample 构建零耦合，未来整体迁出为独立仓库；
+      - parent 用 spring-boot-starter-parent 4.1.0 = ywf-ddd-common 同基线，
+        BOM 纳管 liquibase 5.0.3（Boot 已测试组合，不覆写）。
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>db-migration</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>db-migration</name>
+    <description>ywf-ddd-java 基础设施数据库迁移执行器（Liquibase 一次性 Job + schema 事实快照）</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <!-- 与 ywf-ddd-common 根 pom postgresql.version 同源 pin：迁移 Job 与消费应用的
+             JDBC 驱动版本一致，杜绝「迁移侧解析行为与应用侧不同」的隐性分歧 -->
+        <postgresql.version>42.7.13</postgresql.version>
+    </properties>
+
+    <dependencies>
+        <!-- Boot 4 专属 starter：带入 liquibase-core（BOM 版本）+ JDBC + Liquibase 自动配置
+             （启动即 update 应用 db/changelog/ 下未执行的变更集） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- fat jar：docker run、CI Step、K8s Job 形态复用 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
