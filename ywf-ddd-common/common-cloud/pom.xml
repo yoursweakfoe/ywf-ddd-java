@@ -64,12 +64,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ========== 测试 ========== -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>

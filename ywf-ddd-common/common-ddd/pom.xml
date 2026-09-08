@@ -42,33 +42,6 @@
             <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- 多数据源（@DS 注解切换，底层 HikariCP）：
-             MybatisPersistence 多数据源路由兼容验证；消费方多数据源推荐项（独立模块，非 MP 一部分） -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- ========== 测试 ========== -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- common-pg：MybatisPersistenceTest 的 removeDomain* 用例需要 UUIDTypeHandler 注册
-             （common-pg 不依赖 common-ddd，无循环依赖；test scope 不传递给消费方） -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-pg</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- H2 内存数据库（MybatisPersistenceTest 用） -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>

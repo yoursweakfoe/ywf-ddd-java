@@ -19,7 +19,7 @@ description: 为已有聚合、Handler、Domain 模型或基础设施组件编�
 
 ## 步骤
 
-1. **定性**（TC-1）：按被测层对号取型——application Handler → A 型，domain 聚合根 → B 型，infrastructure Converter → C 型，聚合全链路行为 → D 型；四型不互斥。做完一个聚合的新行为，A/B/C 各先就位一份，D 型按契约覆盖需要补。形状 → 法卷 §2.1~§2.4
+1. **定性**（TC-1）：按被测层对号取型——application Handler → A 型，domain 聚合根 → B 型，infrastructure Converter → C 型，聚合全链路行为 → D 型；四型不互斥。做完一个聚合的新行为，A/B/C 各先就位一份，D 型按契约覆盖需要补。common 包侧写测试 → 一律进试验场 `common-packages-integration-test` 并保持原包（TC-10），不落各 library 模块。形状 → 法卷 §2.1~§2.4
 2. **立约**（TC-3）：涉新行为/新通道，先确认行为所属区已立 `changes/<slug>/` delta（框架 → `knowledge/specs/changes/`、示例业务 → `sample-application/specs/changes/`），断言与 delta 的 Scenario 一一对应——先有法案后有断言。补测既有行为则跳过本步，断言直接取自现行契约
 3. **造数**（TC-2）：聚合合法实例只经 Factory（「创建即合法」新建路径）或 `reconstitute()`（「惰性重建」任意状态路径）两条通道，禁裸构造器与反射绕过；共享造数住 `support/` 或 `fixtures/` 包 → 法卷 §2.5
 4. **A 型 · Handler 级**（法卷 §2.1；`knowledge/specs/current/modules/test.md` 场景 3）：零容器 Mockito 单测；测什么——仅委托链 load → 聚合行为 → save → toDTO 与异常路径（覆盖下限归 TC-6），领域规则归 B 型管、不重复断言；位置镜像产码：写侧 `application/{agg}/handler/command/`、读侧 `handler/query/`（TC-7）

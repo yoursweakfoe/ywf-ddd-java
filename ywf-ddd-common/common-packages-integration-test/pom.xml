@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe</groupId>
+        <artifactId>ywf-ddd-common</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>common-packages-integration-test</artifactId>
+    <description>common 诸包集成测试试验场（禁令卷 §9「试验场」身份）——全部 common 模块测试集中于此，
+         真 PostgreSQL 基座由 PgTestSupport 自建自清；src/main 永空置，不发布</description>
+
+    <properties>
+        <!-- 试验场不发布：产物零消费方 -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
+    <dependencies>
+        <!-- ========== 被测全家桶（试验场判据：依赖面 = 全 common，无最小化质证义务） ========== -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-contract</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-ddd</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-exception</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-pg</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-cloud</artifactId>
+        </dependency>
+        <!-- common-observability 故意不引：零测试引用，且其 actuator 自动装配会把
+             DataSourceHealthContributor 塞进一切 @EnableAutoConfiguration 上下文
+             （security 卷首炸实证，法案 2026-09-common-it-consolidation 施工实录） -->
+        <!-- 测试栈聚合器（managed test scope：junit/mockito/assertj/spring-test/mockmvc/archunit 全量入位） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-test</artifactId>
+        </dependency>
+
+        <!-- ========== 真实基础设施（TC-9 框架轨：H2 全仓退役，PG 是唯一测试库） ========== -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <!-- 双源路由教例的载体（common-ddd 卸下该 test 依赖后由试验场接岗） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
+        </dependency>
+
+        <!-- common-cloud 的 optional 依赖不传递，其集成测试所需者在此显式补齐 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -122,8 +122,9 @@ ddd
 common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记接口）
            → common-exception（BusinessException / OptimisticLockConflictException / SilentWriteLossException）
            → mybatis-spring-boot-starter 4.1.0（Boot 4.1.0 / mybatis 3.5.19 / mybatis-spring 4.1.0）
-           → dynamic-datasource-spring-boot4-starter（test scope，多数据源路由兼容性验证；独立模块，非 ORM 增强的一部分）
-           → h2（test scope，持久化测试的内嵌库）
+
+（测试栈已全数迁出：一切 common 测试住试验场 common-packages-integration-test，法卷 TC-10；
+ dynamic-datasource / PG 驱动 / fixture 均随迁，本模块 POM 零测试依赖。）
 ```
 
 依赖树纯净：仅 `org.mybatis` 系，无任何 ORM 增强框架或其 SQL 解析器传递依赖。

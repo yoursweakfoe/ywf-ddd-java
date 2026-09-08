@@ -1,0 +1,30 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  # 双真 PG 源（TC-1/TC-9 框架轨，法案 2026-09-common-it-consolidation）：
+  # dynamic-datasource 路由教例在真 PostgreSQL 上实测，H2 已全仓退役。
+  # 「空库」语义 = 专用空 schema integration_test_vacant（无业务表）；
+  # fixture SQL 表名不带限定，命中/脱靶由 currentSchema 裁决。
+  # 库、双 schema、DDL 生命周期全归 PgTestSupport 自管（自建→启动复位→shutdown 清空），
+  # 人工前置仅剩「postgres 容器在跑」一条（TC-5 辖域）。
+  datasource:
+    dynamic:
+      primary: master
+      datasource:
+        master:
+          driver-class-name: org.postgresql.Driver
+          url: jdbc:postgresql://${DB_IT_HOST:localhost}:${DB_IT_PORT:5432}/${DB_IT_DB:ddd_framework_test}?currentSchema=integration_test
+          username: ${DB_IT_USER:ywf}
+          password: ${DB_IT_PASSWORD:ywf-local-123}
+        second:
+          driver-class-name: org.postgresql.Driver
+          # 同库异 schema：second 源指真空 schema，路由到它的查询必「表不存在」——
+          # 与 H2 旧戏法（同 URL 不跑 INIT）相比，这才是 PG 真实世界的隔离方式
+          url: jdbc:postgresql://${DB_IT_HOST:localhost}:${DB_IT_PORT:5432}/${DB_IT_DB:ddd_framework_test}?currentSchema=integration_test_vacant
+          username: ${DB_IT_USER:ywf}
+          password: ${DB_IT_PASSWORD:ywf-local-123}
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath*:/mapper/**/*.xml

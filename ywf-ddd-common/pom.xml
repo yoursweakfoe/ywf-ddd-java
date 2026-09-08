@@ -24,6 +24,8 @@
         <module>common-observability</module>
         <module>common-cloud</module>
         <module>common-exception</module>
+        <!-- 试验场（§9 三分法第三身份）：全部 common 测试集中地，不发布 -->
+        <module>common-packages-integration-test</module>
     </modules>
 
     <properties>

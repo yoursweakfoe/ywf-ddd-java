@@ -14,7 +14,9 @@ ywf-ddd-common/
 ├── common-security/       # 零信任身份（JWT 资源服务器，服务自验 JWT）
 ├── common-cloud/          # 微服务治理（Nacos + Seata + Feign/LB/CircuitBreaker + JWT 透传）
 ├── common-observability/  # 可观测性（结构化日志 + Actuator + Prometheus）
-└── common-test/           # 测试基础设施（ArchUnit 架构守护 + Spring Boot Test）
+├── common-test/           # 测试基础设施（ArchUnit 架构守护 + Spring Boot Test）
+└── common-packages-integration-test/  # 试验场（禁令卷 §9 第三身份）：全部 common 测试集中地，
+                                       # 真 PG 基座自建自清（PgTestSupport），不发布、src/main 永空置
 ```
 
 ## 模块依赖拓扑
@@ -35,8 +37,8 @@ common-cloud →  common-security（optional）          微服务治理（东�
 
 ── 测试依赖（test scope） ──
 
-common-test  ←  common-ddd / common-exception / common-security /
-                common-cloud / common-pg
+各 library 模块零测试栈（2026-09 集中法，法卷 TC-10）：
+common-test  ←  common-packages-integration-test（全仓 common 测试唯一居所，compile 全 common）
 ```
 
 ## 快速开始

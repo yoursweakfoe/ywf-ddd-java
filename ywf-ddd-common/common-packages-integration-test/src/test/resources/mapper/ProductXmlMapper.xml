@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yoursweakfoe.common.ddd.fixtures.mapper.ProductXmlMapper">
+
+    <!-- 常规手写 UPDATE：单实体参数直接透传 POJO，全列覆盖，无版本条件 -->
+    <update id="updatePlain">
+        UPDATE products
+        SET name   = #{name},
+            stock  = #{stock},
+            version = #{version}
+        WHERE id = #{id}
+          AND deleted = false
+    </update>
+</mapper>

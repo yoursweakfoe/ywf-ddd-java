@@ -46,19 +46,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ========== 测试 ========== -->
-        <dependency>
-            <groupId>com.yoursweakfoe</groupId>
-            <artifactId>common-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- Jackson（测试用：MockMvc standalone 管线需要 JSON 消息转换器写出 RFC 9457 响应体；
-             运行时业务服务自带 spring-boot-starter-web，无需本模块传递） -->
-        <dependency>
-            <groupId>tools.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>

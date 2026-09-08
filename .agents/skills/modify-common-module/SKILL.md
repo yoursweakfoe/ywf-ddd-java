@@ -11,7 +11,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 2. `knowledge/specs/current/modules/{module}.md`（对应法卷，严格件——文件名无 common- 前缀）
 3. `ywf-ddd-common/AGENTS.md`（就近宪法：javadoc 是规范法载体、破坏性变更立 ADR）
 4. `ywf-ddd-common/README.md`（模块依赖拓扑）
-5. `knowledge/specs/current/patterns/prohibitions.md` §9「Common 模块约束」（构件身份二分法——依赖审查判据的单一事实源）
+5. `knowledge/specs/current/patterns/prohibitions.md` §9「Common 模块约束」（构件身份三分法——依赖审查判据的单一事实源）
 
 ## 核心原则
 
