@@ -1,18 +1,25 @@
+# ============================================================================
+# 测试画像（profile: test，D 型集成测试用）
+#
+# 2026-09 裁决：真库测试取代 H2——sample 只区分本地开发测试与正式部署两态，
+# 测试直连 PostgreSQL 测试库 ddd_sample_application_test（与正式库 ddd_sample_application
+# 同形状，库形状权威 = 根下 db-migration 工程，测试不负责建表）。
+# 运行前置：`mvn test` 前 test 库须经 db-migration Job 建形（TC-1 法案同步修订中）。
+# ============================================================================
 spring:
   main:
     allow-bean-definition-overriding: true
   threads:
     virtual:
       enabled: true
-  # 单数据源 H2（MODE=PostgreSQL 兼容 PG 方言：schema 限定名 / LIMIT OFFSET / SELECT EXISTS）
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'classpath:schema.sql'
-    username: sa
-    password:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_TEST_URL:jdbc:postgresql://localhost:5432/ddd_sample_application_test?connectTimeout=10&socketTimeout=60&tcpKeepAlive=true}
+    username: ${DB_TEST_USER:ywf}
+    password: ${DB_TEST_PASSWORD:ywf-local-123}
     hikari:
-      maximum-pool-size: 200
-      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 10000
 
 mybatis:
   configuration:

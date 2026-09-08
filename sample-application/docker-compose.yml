@@ -53,10 +53,10 @@ services:
       - OTEL_LOGS_EXPORTER=none
       # 对接 ARMS 时替换为：
       # - OTEL_EXPORTER_OTLP_ENDPOINT=https://<region>-arms.aliyuncs.com:8090
-      # 启用容器内 PG 时取消注释：
-      # - DB_MASTER_URL=jdbc:postgresql://postgres:5432/app_master
-      # - DB_MASTER_USER=postgres
-      # - DB_MASTER_PASSWORD=postgres
+      # 容器访问宿主 ywf-infra 的 PG（Docker Desktop 原生支持 host.docker.internal）：
+      # - DB_MASTER_URL=jdbc:postgresql://host.docker.internal:5432/ddd_sample_application?connectTimeout=10&socketTimeout=60&tcpKeepAlive=true
+      # - DB_MASTER_USER=ywf
+      # - DB_MASTER_PASSWORD=ywf-local-123
     ports:
       - "8080:8080"    # REST 面（对外经 Higress 网关入口，东西向服务间 HTTP 直连）
     # 启用容器内基础设施时取消注释：
