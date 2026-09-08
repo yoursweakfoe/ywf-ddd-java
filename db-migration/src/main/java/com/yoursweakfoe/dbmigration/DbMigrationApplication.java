@@ -1,4 +1,4 @@
-package com.yoursweakfoe.DbMigration;
+package com.yoursweakfoe.dbmigration;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *   <li>Spring Boot 启动，自动装配 DataSource 与 Liquibase（spring-boot-starter-liquibase）；</li>
  *   <li>Liquibase bean 初始化阶段自动执行 update：应用
  *       {@code classpath:db/changelog/} 下未执行的变更集（纯 SQL formatted）；</li>
- *   <li>{@link com.yoursweakfoe.DbMigration.snapshot.SchemaSnapshotRunner}（ApplicationRunner，
+ *   <li>{@link com.yoursweakfoe.dbmigration.snapshot.SchemaSnapshotRunner}（ApplicationRunner，
  *       恰在上下文刷新完成后运行 = AFTER_MIGRATE 语义）从库内自省取回 schema 事实现状，
  *       写入 {@code db/current/}；</li>
  *   <li>{@code SpringApplication.exit} 关闭上下文，进程按退出码自然结束——
