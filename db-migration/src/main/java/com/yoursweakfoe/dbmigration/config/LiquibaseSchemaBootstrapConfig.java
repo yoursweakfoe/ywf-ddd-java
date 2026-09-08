@@ -1,4 +1,4 @@
-package com.yoursweakfoe.DbMigration.config;
+package com.yoursweakfoe.dbmigration.config;
 
 import java.sql.Connection;
 import java.sql.Statement;

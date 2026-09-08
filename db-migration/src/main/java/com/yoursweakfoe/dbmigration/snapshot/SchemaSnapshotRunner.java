@@ -1,4 +1,4 @@
-package com.yoursweakfoe.DbMigration.snapshot;
+package com.yoursweakfoe.dbmigration.snapshot;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
