@@ -35,6 +35,8 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 
 每个用例对应一个 Handler，实现 `CommandHandler<C, R>` 或 `QueryHandler<Q, R>`（common-ddd 提供）。
 
+两侧类型信息刻意不对称：契约里的 Command / Query 标记不带泛型，处理器接口却带——返回类型锚在处理器的方法签名上。对外契约只声明「问什么」，「答什么」由这里的签名承载；Command / Query 处理器之分同时充当架构校验的类型锚点，读写分途靠类型被盯住，不靠包名猜测。
+
 | 特征 | CommandHandler（写侧） | QueryHandler（读侧） |
 |---|---|---|
 | 返回类型 | DTO（不是 CO） | DTO 或 PageResult&lt;DTO&gt;（不是 CO） |
@@ -125,3 +127,7 @@ application/{agg}/handler/command/{Xxx}CommandHandler.java
 | DTO 携带内部字段 | |
 
 > 完整禁止清单（含「禁止 Handler 返回 CO」等）→ [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「Application 层禁止」（法条 canonical，AGENTS 核心约束 #2 为规范行）。
+
+---
+
+**决策快照账**：本页「处理器签名承载返回类型、处理器标记作架构校验类型锚点」论证现行版沉淀自 ADR-0005（决策快照）（契约侧镜像论证 ADR-0008（决策快照），其正文见 contract.md 同题段）。

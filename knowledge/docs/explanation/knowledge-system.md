@@ -1,7 +1,7 @@
-# 知识系统的自我解读（三类件：过程、事件、道理）
+﻿# 知识系统的自我解读（三类件：过程、事件、道理）
 
 > 本页回答"这套知识体系为什么长成 `docs/specs/decisions` 三区加 `.agents` 工作台"。判据一句话：**这句话能机械化执行吗？能→法卷；不能→这里。** 制度条文本体在 [归属法卷](../../specs/current/patterns/attribution-law.md)，本页只讲它背后的为什么。
-> 决策快照：[ADR-0036](../../decisions/ADR-0036-adr-argument-sedimentation.md)（三类件分层与论证沉淀）、`2026-09-archive-dossier-boundary` / `2026-10-rules-codification` 案卷。
+> 决策快照：ADR-0036（三类件分层与论证沉淀）、`2026-09-archive-dossier-boundary` / `2026-10-rules-codification` 案卷。
 
 ## 一个决策事实的三份分身
 
@@ -30,4 +30,4 @@
 归属法是宪法，但「元法亦是法」——它把自己也交给同一套立法程序管辖。这样体系里没有"不可被程序修改的神圣文本"，只有"此刻有效的条文 + 可查的授权史 + 可续写的道理"三份各得其所的记录。
 
 ---
-*本页属 `explanation/` 解读架（地图区）：与 `specs/current/` 法卷冲突时以法卷为准（宽严双份，法卷赢）；本页现行版论证复写自 [ADR-0036](../../decisions/ADR-0036-adr-argument-sedimentation.md)（决策快照，永久冻结）。*
+*本页属 `explanation/` 解读架（地图区）：与 `specs/current/` 法卷冲突时以法卷为准（宽严双份，法卷赢）；本页现行版论证复写自 ADR-0036（决策快照，永久冻结）。*

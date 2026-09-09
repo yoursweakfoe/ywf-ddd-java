@@ -56,7 +56,7 @@
 | ⑥ 代码 → changes/「⑥ 结果回填」 | 步骤 5–7：勾账 + 构建/测试全绿按变更性质定档；delta 每条 SHALL 取证源折叠后须指真实 文件:行/测试名 |
 | ⑦ changes/ → current/「⑦ 折叠落实」 | `new-bill` 步骤 6.1（ADDED 入位/MODIFIED 整节替换/REMOVED 删节留因）= 归属法 §4 文档同步义务**唯一时点** |
 | ⑧ changes/ → archive/「⑧ 归档(瘦身闸)｜整目录 git mv」 | 步骤 6.2 整目录 `git mv` 不拆件 + 6.3 只进不改 + 6.4 瘦身闸（→ 归属法 §4「案卷折叠入 archive 前」行） |
-| **③⁺/⑦⁺ 分支** decisions/ → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑦⁺ 同题散文强制复写（解释立法原因）」 | 论证沉淀是挂在线上两个时刻的分支义务：③⁺ 拍板当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 ADR 新立与账本登记钉同一行；⑦⁺ 折叠当刻**沉淀论证强制复写进同题解读篇、篇脚回指 `ADR-NNN（决策快照）`**——[归属法 §4「案卷折叠时（⑦⁺）」行](specs/current/patterns/attribution-law.md)（[ADR-0036](decisions/ADR-0036-adr-argument-sedimentation.md) 起：卷宗只当冻结的事件与当时思考，论证现行版的 home 在解读架；划界判据"法生效后该理由是否仍成立且指导读法"；事务性决策一行账即止，存量触发式随位收编） |
+| **③⁺/⑦⁺ 分支** decisions/ → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑦⁺ 同题散文强制复写（解释立法原因）」 | 论证沉淀是挂在线上两个时刻的分支义务：③⁺ 拍板当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 ADR 新立与账本登记钉同一行；⑦⁺ 折叠当刻**沉淀论证强制复写进同题解读篇、篇脚回指 `ADR-NNN（决策快照）`**——[归属法 §4「案卷折叠时（⑦⁺）」行](specs/current/patterns/attribution-law.md)（ADR-0036 起：卷宗只当冻结的事件与当时思考，论证现行版的 home 在解读架；划界判据"法生效后该理由是否仍成立且指导读法"；事务性决策一行账即止，存量触发式随位收编） |
 | 代码 → 教程架(tutorials)「代码驱动文档修改」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |
 | 代码 → 字典架(reference)「代码驱动文档修改」 | §2「包路径/类名/方法签名 → 源代码」「异常→HTTP 映射 → javadoc+法卷+C5」两行 |
 | current/ → 设计卡架(how-to)「法卷驱动文档修改·宽松副本」 | §2「用法规范/规范代码形状」行：docs 同题=设计卡（宽松件）、**冲突法卷赢**（宽严双份制） |
@@ -75,7 +75,7 @@ knowledge/
 │   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
-│   └── explanation/ 分层设计 5 篇 + knowledge-system 知识系统自解读 + theory-map 理论账本
+│   └── explanation/ 分层设计 5 篇 + 专论 5 篇（知识系统/云集成/安全/可观测/测试）+ theory-map 理论账本
 ├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 全局唯一编号，append-only
 └── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置

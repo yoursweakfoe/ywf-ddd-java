@@ -60,6 +60,7 @@ domain 是被依赖的核心、不依赖任何外层：application 经其接口�
 ### 聚合根设计范式
 
 - 继承 `AggregateRoot<ID>`，获得 `validate()` 不变量校验能力（save/update 持久化前由仓储自动调用）
+- 基类**只给构建块语义、不占业务字段**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化而不内置 id/version——ID 的类型（UUID / Long / 业务编码）与生成策略是业务决策，基类一旦持有字段即强制统一所有子类的身份形态，还背上子类未必需要的继承污染；子类多写几个字段的样板，是明确接受过的代价，换来的类型自由度是长期资产
 - 状态变迁通过行为方法暴露，不暴露 setter
 - 不变量校验使用显式 `if + throw new BusinessException(key)`，失败抛 BusinessException
 - 提供 `reconstitute()` 静态工厂供 Converter 重建
@@ -74,6 +75,17 @@ domain 是被依赖的核心、不依赖任何外层：application 经其接口�
 | 可变性 | 可变 | 不可变 |
 | 判等方式 | ID 判等 | 属性值判等 |
 | 推荐实现 | class | record |
+
+### 时间策略（一型一源）
+
+时间贯穿 domain / 持久化 / 契约 / 序列化四层，时区错误天然跨层扩散成系统性风险，故收敛为**一型一源**：类型全框架只认 `OffsetDateTime`，当前时间只认框架注入的 `Clock`。
+
+- **为何是这一型**：这是驱动映射矩阵逼出的唯一原生位——`timestamptz` 与 pgjdbc 双向原生只有 `OffsetDateTime`（Hibernate / jOOQ 等业界 ORM 亦收敛于此），不是口味选择。三个弃选的理由至今成立、指导读法：`ZonedDateTime` 驱动双向不支持；`LocalDateTime` 无时区语义，写入随会话时区漂移（同一瞬时可写出不同值）、读 `timestamptz` 直接抛异常；`Instant` 非原生，走 `Timestamp` 旧桥，跨库语义漂移
+- **读数预期先校准**：PG 把 `timestamptz` 归一化为绝对瞬时、以 UTC 存储——写入的偏移即弃、读回恒 `+00:00`（与会话 / JVM 时区无关），偏移只在类型里表达语义、不进存储；库端微秒精度，Java 纳秒位落库必丢，内存值与 DB 回显别做逐位比较
+- **为何统一时间源**：为可测试性——业务测试注入固定时钟即可冻住时间；框架缺省 UTC 时钟，业务自行声明时自动退位。聚合根与领域服务取当前时间一律经注入时钟派生，不裸调无参 `now()`
+- **比较与加锁纪律**：判「同一瞬时」用 `isEqual`——`equals` 还要求偏移相等（写读恒 UTC 后该坑已被结构性消除，但比较语义仍应写对表意）；`OffsetDateTime` 是 value-based 对象，禁对其实例加锁（与虚拟线程禁 `synchronized` 同向纪律）
+
+> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/prohibitions.md)；判例溯源见文末「决策快照账」。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
 
 ### 多数据源策略
 
@@ -121,7 +133,13 @@ domain/
 
 **决定**：Domain 层不定义具名领域异常（如 `InsufficientStockException`），统一使用 `BusinessException` + i18n 错误码（`"{aggregate}:err.{场景}"`）；Domain 层目录中**不设 `exception/` 包**。
 
+**为什么是字符串位点、不是数字码**：数字码紧凑，代价是服务端要养一张码→文案映射表、翻译责任钉死在服务端；字符串 key 让服务端零文案资源——前端按 key 渲染本地化文案，新增一门语言不动服务端一行码。key 的形状与命名细则是法卷条款（→ [exception 法卷](../../specs/current/modules/exception.md)），全仓清单登记在设计卡，本文不复述。
+
 **异常出 domain 后的三通道**（一句话概览，完整映射表不在此复述）：`BusinessException` → 缺省 422、`IllegalStateException`（含其子类 `OptimisticLockConflictException`，乐观锁冲突可重试）→ 409 + WARN、`SilentWriteLossException`（框架持久化层抛出的 INSERT/DELETE 0 影响行不可能状态，非领域异常、领域无感知）→ 500 + ERROR 告警。
+
+**为什么 409 与 422 分道**：409 是 HTTP 标准的「状态冲突」语义位，专门留给乐观锁 / 存在性冲突——这类冲突是暂时的，调用方重试有意义；业务规则违反（状态机非法转换也算）重试永远同样失败，走 422 缺省通道。两条通道由异常类型天然区分，调用方看状态码即可决定重试还是改输入；domain 侧的纪律由此推出：聚合根内守卫失败一律 `BusinessException`，不伸手占用 409——那是持久化冲突的语义，不是业务语义。
+
+**为什么出参贴 RFC 9457**：错误响应首先是给机器消费的——外部调用方要能程序化处理，HTTP 语义标准化优先于自定义格式。`application/problem+json` 的标准成员承载状态语义，`params` / `fieldErrors` 走合规扩展位；`type` 现为 about:blank，是给错误类型文档化预留的升级位。技术类异常的 detail 一律稳定泛化文案、原始消息只进服务端日志——错误体是对外的渗漏面，内部信息不外带。
 
 > 映射表 docs 侧 canonical → [knowledge/docs/reference/api/common-exception.md](../reference/api/common-exception.md)（与源码 `GlobalRestExceptionHandler` javadoc 映射表对表）；未采纳原因账本 → [knowledge/docs/explanation/theory-map.md](./theory-map.md)「具名领域异常」行；聚合根内 if-throw 完整示例 → [knowledge/docs/reference/api/common-ddd.md](../reference/api/common-ddd.md) 场景 1。
 
@@ -141,3 +159,15 @@ domain/
 | Repository 定义为接口 | 在 Domain 层实现 Repository |
 | 跨聚合通过 Repository 读取 | 跨聚合直接修改对方内部状态 |
 | 通过显式 if-throw + 错误码报错 | 定义具名领域异常类 |
+
+---
+
+## 决策快照账
+
+本篇各处「为什么」的现行版论证沉淀自下列判例；卷宗冻结事件与当时思考，本文随法演化、烂了直接修。引用刻意留明文、不设链接——判例卷宗日后精简不产幽灵路径：
+
+- ADR-0001（决策快照）· 基类不持有 id/version
+- ADR-0006（决策快照）· 时间一型一源
+- ADR-0011（决策快照）· 字符串位点而非数字错误码
+- ADR-0012（决策快照）· RFC 9457 错误载体
+- ADR-0013（决策快照）· 409 / 422 通道分离

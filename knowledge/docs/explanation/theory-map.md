@@ -1,4 +1,4 @@
-﻿## 架构理论参考
+## 架构理论参考
 
 ### 分层架构与包结构
 
@@ -49,7 +49,7 @@
 | 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸且仍需转换为错误码 |
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
-| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（[ADR-0001](../../decisions/ADR-0001-ddd-base-class-no-id-version.md)）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，how-to 篇提供复制粘贴示例 |
+| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（ADR-0001）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，how-to 篇提供复制粘贴示例 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略（XML 逐列枚举），本框架场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
 
@@ -103,7 +103,7 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| Resilience4j（熔断） | common-cloud 以 **optional** 提供 `spring-cloud-starter-circuitbreaker-resilience4j`（消费方按需显式声明），规则经 `resilience4j.*` 配置（[ADR-0022](../../decisions/ADR-0022-cloud-resilience4j-over-sentinel.md)）；采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
+| Resilience4j（熔断） | common-cloud 以 **optional** 提供 `spring-cloud-starter-circuitbreaker-resilience4j`（消费方按需显式声明），规则经 `resilience4j.*` 配置（ADR-0022）；采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
 
 **未采纳：**
 
@@ -124,9 +124,9 @@
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| JWT 签发 / Token 刷新套件（Keycloak、Spring Authorization Server） | Spring Security OAuth2、Keycloak | 服务下沉为 OAuth2 资源服务器**自验 JWT**（零信任，`DelegatingJwtDecoder` 按 `alg` 分发，[ADR-0018](../../decisions/ADR-0018-security-zero-trust-jwt-self-verify.md) / §ADR-0007），Higress 网关层仍可做粗筛（PEP）；签发 / 刷新 / 登出归独立认证服务（IdP），服务侧不提供签发能力，本框架不内置登录套件 |
+| JWT 签发 / Token 刷新套件（Keycloak、Spring Authorization Server） | Spring Security OAuth2、Keycloak | 服务下沉为 OAuth2 资源服务器**自验 JWT**（零信任，`DelegatingJwtDecoder` 按 `alg` 分发，ADR-0018 / §ADR-0007），Higress 网关层仍可做粗筛（PEP）；签发 / 刷新 / 登出归独立认证服务（IdP），服务侧不提供签发能力，本框架不内置登录套件 |
 | URL 级鉴权 FilterChain | Spring Security 官方 | 鉴权决策收口在网关；服务层仅提供 permit-all 边界链（common-security），方法级用 `@PreAuthorize` |
-| RBAC 权限模型（数据库存储） | Spring Security、Apache Shiro | 角色/权限管理属于业务域，各服务按需实现；框架只提供身份原语——principal 为原生 `Jwt`、claims 按名字自取（[ADR-0019](../../decisions/ADR-0019-security-native-jwt-no-projection.md)），不投影固定身份结构 |
+| RBAC 权限模型（数据库存储） | Spring Security、Apache Shiro | 角色/权限管理属于业务域，各服务按需实现；框架只提供身份原语——principal 为原生 `Jwt`、claims 按名字自取（ADR-0019），不投影固定身份结构 |
 | OAuth2 / SSO 登录流程 | Spring Authorization Server、Keycloak | 登录由独立认证服务 + 网关处理，业务微服务不参与登录流程 |
 | 数据权限（行级过滤） | MyBatis-Plus DataPermissionInterceptor | 数据权限与业务模型强耦合，由业务层 SQL 条件自行实现 |
 
@@ -152,7 +152,7 @@
 | 异常不透传内部堆栈 | REST 通道 GlobalRestExceptionHandler（@RestControllerAdvice）将 BusinessException 统一映射为 HTTP 422 + RFC 9457 Problem Details，Consumer 仅收到 messageKey + params |
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
-| 时间类型约定 | 全框架统一 `OffsetDateTime`，唯一时间源 = 框架注入 `Clock`；`timestamptz` 写入方偏移被丢弃、读回恒 `+00:00`（论证见 [ADR-0006](../../decisions/ADR-0006-ddd-offsetdatetime-and-clock.md)） |
+| 时间类型约定 | 全框架统一 `OffsetDateTime`，唯一时间源 = 框架注入 `Clock`；`timestamptz` 写入方偏移被丢弃、读回恒 `+00:00`（论证见 ADR-0006） |
 | sealed 类型（框架适用性决策） | **不施加于框架扩展点**：`AggregateRoot` / `Entity` / `ValueObject` / `Repository` / `Policy` / `Portal` / `DomainService` 是业务扩展点，sealed 会锁死业务继承；框架内唯一封闭层级 `PgArrayType` 已是 enum。sealed / pattern-matching switch 留给**业务侧**：状态转换守卫在聚合根内使用 JDK 21 穷尽性 switch（框架无 enum-switch 场景，不强制） |
 | swagger-annotations | REST 面文档注解（`@Operation` / `@Tag` / `@Schema` 纯注解 jar，零运行时零端点），契约层声明语义，配合 Apifox IDE 插件识别 |
 
@@ -163,8 +163,8 @@
 | Axon Framework | AxonIQ | 全套 Event Sourcing + CQRS 框架，过重；本项目只需轻量 CQRS 分离 |
 | jMolecules | xMolecules 项目 | DDD 注解库（@AggregateRoot、@Repository），本项目用 common-ddd 构建块替代 |
 | Spring Modulith | Spring 官方 | 模块化单体框架，本项目已是微服务架构，无需模块级事件/验证 |
-| MapStruct（代码生成映射） | 多数 CRUD 脚手架 | 未采纳（曾用后移除，定案见 [ADR-0003](../../decisions/ADR-0003-ddd-manual-conversion-no-mapstruct.md)）：AI 辅助开发下手写模板代码成本归零，而生成器的认知负担（注解处理链、生成代码不可见、Lombok 桥接、@MapperScan 误扫）仍在；Converter/Assembler/Presenter 统一纯手写显式映射，富领域模型走 reconstitute，完整性由往返测试守护 |
-| MyBatis-Plus（ORM 增强框架） | 国内 MyBatis 生态主流增强库 | 未采纳（2026-09 移除，[ADR-0007](../../decisions/ADR-0007-ddd-remove-mybatis-plus.md)）：Wrapper 动态生成 SQL + 拦截器织入使「真正执行的 SQL 不在代码库里」，与全链路可见性目标冲突；乐观锁 / 逻辑删除 / 审计填充 / 分页全部由每聚合手写 XML 的 SQL 文本承担。注：baomidou 系中独立于 ORM 增强的 dynamic-datasource 经一手调研证实与 MyBatis-Plus 零耦合，仍作消费方多数据源 opt-in 方案（见 knowledge/docs/explanation/infrastructure.md） |
+| MapStruct（代码生成映射） | 多数 CRUD 脚手架 | 未采纳（曾用后移除，定案见 ADR-0003）：AI 辅助开发下手写模板代码成本归零，而生成器的认知负担（注解处理链、生成代码不可见、Lombok 桥接、@MapperScan 误扫）仍在；Converter/Assembler/Presenter 统一纯手写显式映射，富领域模型走 reconstitute，完整性由往返测试守护 |
+| MyBatis-Plus（ORM 增强框架） | 国内 MyBatis 生态主流增强库 | 未采纳（2026-09 移除，ADR-0007）：Wrapper 动态生成 SQL + 拦截器织入使「真正执行的 SQL 不在代码库里」，与全链路可见性目标冲突；乐观锁 / 逻辑删除 / 审计填充 / 分页全部由每聚合手写 XML 的 SQL 文本承担。注：baomidou 系中独立于 ORM 增强的 dynamic-datasource 经一手调研证实与 MyBatis-Plus 零耦合，仍作消费方多数据源 opt-in 方案（见 knowledge/docs/explanation/infrastructure.md） |
 | Lombok @Data 用于领域模型 | 多数业务项目 | 充血模型禁止暴露 setter；@Data 生成 equals/hashCode 与 Entity ID 判等冲突 |
 
 ### 知识体系（自指）
@@ -173,7 +173,7 @@
 
 | 模式 / 制度 | 本项目采纳要素 |
 |------|--------|
-| 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，[ADR-0036](../../decisions/ADR-0036-adr-argument-sedimentation.md)） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（三件套，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
+| 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，ADR-0036） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（三件套，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
 
 ### 书籍与文章
 

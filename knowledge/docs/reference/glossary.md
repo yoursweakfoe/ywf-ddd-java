@@ -1,4 +1,4 @@
-﻿# 术语表
+# 术语表
 
 本项目特有术语的唯一登记处。本表定位 = **术语 → canonical 指针**：每行只给一句话身份定位，定义与论证在指针目标处单源维护，本表不复述（避免压缩副本与原文漂移）。业务词汇（文末）是领域通用语言本身，保留业务名。
 
@@ -70,13 +70,13 @@
 | 七校验 | check-docs 机器闸（C1–C7），退出码=FAIL 数，非零即返工 | → [doc-guards](doc-guards.md) |
 | 登记法 | 新增/迁移文档仅登记 docs/README 一处，其余载体只放指针 | → [docs/README](../README.md) |
 | 理论账本 | 模式采纳/未采纳的论证台账（通往法律的地图，本身不是法律） | → [theory-map.md](../explanation/theory-map.md) |
-| ADR（判例） | 决策事件件：全局唯一编号、append-only、推翻=新立案+supersede；载事件、当时思考快照与 Confirmation 授权——**论证现行版不住这里**（⑦⁺ 复写解读架，篇脚回指快照，[ADR-0036](../../decisions/ADR-0036-adr-argument-sedimentation.md)） | → [decisions/README](../../decisions/README.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
+| ADR（判例） | 决策事件件：全局唯一编号、append-only、推翻=新立案+supersede；载事件、当时思考快照与 Confirmation 授权——**论证现行版不住这里**（⑦⁺ 复写解读架，篇脚回指快照，ADR-0036） | → [decisions/README](../../decisions/README.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
 | 一次设计 | 定名复合事件：**修改（对现实动手）+ 决策（对价值拍板）齐备才算一次设计**；设计的论证沉淀出口=解读架 | → [knowledge/README §2.1](../../README.md)（驱动关系图边定义） |
 | 开发者＝项目主 | 立法流程的发起方与裁决方同人（AI 只递案卷，批准门硬停等拍板）；代码不立案、不施工，只是被驱动的事实 | → [knowledge/README §2.1](../../README.md) 导语 |
 | 立法八步（①–⑧） | 流程正序定名：立案起草→送审问决策→拍板沉淀→裁定落稿→按约施工→结果回填→折叠落实→归档 | → [knowledge/README §2.1 锚表](../../README.md)（各步法源= new-bill 步骤号） |
 | 决策快照回指 | 解读篇页脚强制 `→ ADR-NNN（决策快照）`——流可溯源、读者不必考古（2026-09 `adr-argument-sedimentation`） | → [归属法 §4「案卷折叠时（⑦⁺）」行](../../specs/current/patterns/attribution-law.md) |
 | 判例先行 | ③ 拍板前必翻 decisions/ 旧案确认无撞案；撞案=新立 ADR + supersede，旧案正文一字不动 | → [knowledge/README §2.1 行③](../../README.md)、[decisions/README](../../decisions/README.md) |
-| 论证沉淀 | 判例→解读架的两个分支义务（上标 ⁺ 记号）：③⁺ theory-map 账本行（与 ADR 同案）；⑦⁺ 沉淀论证（现行版）**强制复写**入同题解读篇、篇脚回指 `ADR-NNN（决策快照）`（[ADR-0036](../../decisions/ADR-0036-adr-argument-sedimentation.md) 起：卷宗只留事件与当时思考，论证现行版住解读架） | → [归属法 §1/§4](../../specs/current/patterns/attribution-law.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
+| 论证沉淀 | 判例→解读架的两个分支义务（上标 ⁺ 记号）：③⁺ theory-map 账本行（与 ADR 同案）；⑦⁺ 沉淀论证（现行版）**强制复写**入同题解读篇、篇脚回指 `ADR-NNN（决策快照）`（ADR-0036 起：卷宗只留事件与当时思考，论证现行版住解读架） | → [归属法 §1/§4](../../specs/current/patterns/attribution-law.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
 | 压缩宪法 / 就近宪法 | 根 AGENTS.md 九条每次必读；模块目录 AGENTS.md nearest-wins | → `AGENTS.md` 路由 |
 
 ## 命名映射规范
