@@ -1,6 +1,6 @@
 ﻿# 文档防腐工具链（knowledge/scripts/ 三文件说明书）
 
-> **辖域**：`knowledge/scripts/` 是伞下的**执法区**——工具本体是装置不是知识（非描述/非契约/非判例），但守护知识的东西与知识同伞才内聚（2026-09-06 用户裁定，自顶层迁入；辖域隔离靠"每区各自的法律"——C6 只扫 `decisions/`，物理同居不产生自我执法，同日初裁"居伞外"已 supersede）。工具的**说明**属于知识 → 住本区字典架，本页即唯一说明入口（登记法见 [../README.md](../README.md)；法源：`knowledge/specs/current/patterns/attribution-law.md` §1 执法行）。
+> **辖域**：`knowledge/scripts/` 是伞下的**执法区**——工具本体是装置不是知识（非描述/非契约/非判例），但守护知识的东西与知识同伞才内聚（2026-09-06 用户裁定，自顶层迁入；辖域隔离靠"每区各自的法律"——C6 只扫两册卷宗区〔decisions + 两侧 archive，历元制后扩〕，物理同居不产生自我执法，同日初裁"居伞外"已 supersede）。工具的**说明**属于知识 → 住本区字典架，本页即唯一说明入口（登记法见 [../README.md](../README.md)；法源：`knowledge/specs/current/patterns/attribution-law.md` §1 执法行）。
 
 ## 三文件一览
 
@@ -43,7 +43,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 | **C3 框架符号** | 改名鬼魂 | `com.yoursweakfoe.common` 全限定名、以及以 Exception/Mapper/Presenter/Persistence/Fixtures 等结尾的类 token，必须在源码可查（或白名单） | 类改名/删除后文档照引旧名 |
 | **C4 教学中立** | 文档沦为业务镜像 | 教学代码围栏与反引号内禁真实例聚合词；标注「真实例/如/sample」的行与登记文件豁免 | 通用教例里混进了具体业务类名 |
 | **C5 映射表对账** | 异常文档漏更 | `GlobalRestExceptionHandler` 每个 `@ExceptionHandler` 处理的类必须出现在 `reference/api/common-exception.md` | 处理器加了新通道，文档表没加行 |
-| **C6 卷宗防篡改** | 判例回改 | `knowledge/decisions/` 在 `git diff HEAD` 中出现删除行（README 除外）即红——正文 append-only，推翻=新立案 | 有人直接改了旧 ADR 正文 |
+| **C6 卷宗冻结 + 清册自洽（两臂）** | 判例/案卷回改、销账式偷删、空册残痕 | **冻结臂**：两册（`knowledge/decisions/` + 两侧 `specs/archive/`）本体文件在位 diff 含 minus 行即红（README 豁免；decisions 正文按宪章豁免 Status 行 1:1 对替）。**清册臂 (a)**：本体整删仅当 changes/ 有含「清册」的 bill 在途才放行，且删后该册必须归零（禁拆件/择留）。**清册臂 (b) 空册自洽**：decisions 空 ⇒ 活面不得残留 `ADR-\d{4}` 具体编号；两 archive 空 ⇒ 不得残留 date-slug 案名（历元工作区三区自身豁免；输出含 residue 计数与两臂 info 行） | 改旧 ADR 正文 = 冻结臂红；无 bill 偷删 = 清册臂红；册清空了但解读篇还写着"见 ADR-0042" = 空册自洽红 |
 | **C7 技能闸** | skill 逸出 spec 纪律 | `.agents/` 一级住民白名单（`README.md` + `skills/` + gitignored `memory/`/`logs/`）；每个技能目录必有 `SKILL.md`，其 frontmatter `name`==目录名（kebab，≤64）、`description` 非空 ≤1024、正文 ≤500 行（Agent Skills 规范上限；案卷 `2026-11-agents-workspace` L2） | skills/ 混进散文件或白名单外目录；`name:` 与目录漂移 |
 
 ### 变红之后的裁决纪律

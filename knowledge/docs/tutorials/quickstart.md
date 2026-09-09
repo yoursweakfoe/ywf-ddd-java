@@ -8,7 +8,7 @@
 ## 0. 前置
 
 - JDK 21 + Maven（无其它要求，Node/IDE 可选）
-- 仅跑「路线 B 起服务」时需要 PostgreSQL 16（本机或容器）；路线 A 零基础设施
+- PostgreSQL 16（本机或容器）——**两条路线都要**：路线 A 的测试基座 = 真 PG 测试库（前置 = ywf-infra `postgres` 环节在跑 + db-migration 对测试库建形，见路线 A 步 0 与 TC-5/TC-9）；路线 B 的服务库同理
 
 ## 路线 A｜一条命令跑全量验收（推荐第一步）
 

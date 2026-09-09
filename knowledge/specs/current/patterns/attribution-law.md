@@ -16,7 +16,9 @@
 
 伞 `knowledge/` 与区 `docs|specs|decisions|scripts` 本身不立法；方法树拒入伞（工具可弃，知识/契约不可弃）。执法工具链居伞内 `knowledge/scripts/`（2026-09-06 内聚裁定）：辖域是每区各自的法律、不是物理相邻。
 
-**三类件分家**（旧称「案卷与判例分家」；2026-09 `2026-09-archive-dossier-boundary` 立，2026-09 `2026-09-adr-argument-sedimentation` 补沉淀分层）：`specs/changes/`（审议中）与 `specs/archive/`（折叠后整袋迁入）里的三件套 = **立法过程件**（旧称「案卷」）——问题陈述、条款变化量（delta）、表决行、施工勾验；折叠即使命终、封存只进不改。`decisions/`（`ADR-NNNN` 本体）= **决策事件件**（旧称「判例卷宗」）——决策本身、当时的 context / 取舍 / consequences（思考快照）、Confirmation 授权收据；全局编号、append-only、跨时间被引（新案先查旧案、supersede 靠旧案快照活着）。`docs/explanation/` = **知识沉淀件**——**论证的现行版**（"这部法今天为什么成立"）的 canonical 居所，折叠时刻（⑦⁺）自 ADR 强制复写进来（→ §4「案卷折叠时（⑦⁺）」行），篇脚回指 `ADR-NNN（决策快照）` 供溯源。卷宗与解读的论证重叠**不是双写病灶，是源与流**：卷宗=冻结收据（回答「当时怎么定的、谁批的」），解读=活的现行（回答「今天为什么如此」），时效语义不同、执法闸各异（C6 护前者、§4 同步护后者）。两栖病灶（changes/archive 的 proposal 裁决表与 ADR Decision Outcome 近同文双写，本行立前有实证）的裁决一句话：**同一事实，过程归 `changes|archive/`、事件与当时思考归 `decisions/`、沉淀道理（现行版）归 `docs/explanation/`**。
+**三类件分家**（旧称「案卷与判例分家」；2026-09 `2026-09-archive-dossier-boundary` 立，2026-09 `2026-09-adr-argument-sedimentation` 补沉淀分层，2026-09 `2026-09-dossier-retirement` 补清册制）：`specs/changes/`（审议中）与 `specs/archive/`（折叠后整袋迁入）里的三件套 = **立法过程件**（旧称「案卷」）——问题陈述、条款变化量（delta）、表决行、施工勾验；折叠即使命终、封存只进**不改在位**，到期整册抹除（→「卷宗清册制」注）。`decisions/`（`ADR-NNNN` 本体）= **决策事件件**（旧称「判例卷宗」）——决策本身、当时的 context / 取舍 / consequences（思考快照）、Confirmation 授权收据；全局编号、append-only、跨时间被引（新案先查旧案、supersede 靠旧案快照活着）；本体同属**可清册存储**，历元终了随区归零（→ 彼注）。`docs/explanation/` = **知识沉淀件**——**论证的现行版**（"这部法今天为什么成立"）的 canonical 居所，折叠时刻（⑦⁺）自 ADR 强制复写进来（→ §4「案卷折叠时（⑦⁺）」行），页脚回指 `ADR-NNN（决策快照）` 供活册期内溯源，清册时刻随灭（行灭理存）。卷宗与解读的论证重叠**不是双写病灶，是源与流**：卷宗=冻结收据（回答「当时怎么定的、谁批的」），解读=活的现行（回答「今天为什么如此」），时效语义不同、执法闸各异（C6 护前者、§4 同步护后者）；流必须**先于源灭而独立存在**（自足判据）。两栖病灶（changes/archive 的 proposal 裁决表与 ADR Decision Outcome 近同文双写）的裁决一句话，今升级为**三归一清**：**同一事实，过程归 `changes|archive/`、事件与当时思考归 `decisions/`、沉淀道理（现行版，含前因后果）归 `docs/explanation/`——前两者的本体是可清册存储，到期彻底抹除，唯沉淀件永续**。
+
+**卷宗清册制**（2026-09 `2026-09-dossier-retirement` 立，项目主裁定基调=彻底抹除）：`specs/archive/`（含镜像区 archive）与 `decisions/` 两个本体存放区（合称**两册**）是**可清册存储**：于发布节点或项目主宣告时，经清册 bill **彻底抹除**——本体整袋删除（禁拆件、禁在位改、禁择留）+ README 账行同裁（README 常驻的是章程，不是账目）+ 活面**全部具体标识符净空**（`ADR-NNNN` 编号、date-slug 案名、解读篇页脚快照账行——改写为无编号散文或整行删除，行灭理存）。**自足判据**：抹除前，每案的**前因后果**（立因、取舍、被拒方案之拒因、生效边界）须已完整住进 `docs/explanation/` 或 current/ 条文——判据一句话：**一个从未见过卷宗的读者，能从解读架复述该案全部因果**；未过判据 = 先补沉淀再清册，缺节不得批。存活件仅两项：**解读架的因果全文 + current/ 的条文现行文本**。git 历史**不是**存活件也不是任何层的存在依赖（**法不考古**：知识的权威面永远在工作树）。**清册即改元**：两册归零、编号历元重启（新案自 `ADR-0001` 起，历元内唯一，跨历元同号法不救济）；执行清册的 bill 自身亦是案卷，下期清册随区归零（**仪式产物不豁免于仪式**）。机器执法：C6 两臂——冻结臂=三区本体在位涂改红（decisions 正文按宪章仅豁免 Status 行 1:1 对替）；清册臂=(a) 本体整删仅清册 bill 在途放行、且删后该册必须整册归零，(b) 空册自洽=册空则活面该期具体标识符残留必须为零。
 
 ## 2. 事实归属表
 
@@ -28,8 +30,8 @@
 | 用法规范/规范代码形状（严格件） | 中 | `specs/current/modules/*.md` + `specs/current/patterns/*.md`——条款+取证源+全套规范形状（全仓唯一样本） | docs 同题=设计卡：判据/决策点/边界+指针，**零形状代码**、禁条款编号；冲突法卷赢 | C1/C3/C4 |
 | 规范行（必须/禁止） | 中 | 法卷（`specs/current/`——[prohibitions](prohibitions.md) 为禁令对照表，[coding-conventions](coding-conventions.md) 为公约） | 一句复述 + 指针；AGENTS.md 九条例外 | 每行挂 R##/测试名 |
 | 设计论证（为什么；**含架构决策的沉淀论证现行版**——ADR 里的「当时思考」不在此行，归下行） | 低 | `docs/explanation/`（含 theory-map 理论账本） | 指针；**架构决策类于 ⑦⁺ 折叠时刻强制复写入同题解读篇**（§4 新行执法；事务性决策 theory-map 一行账即满足） | 低易变允许就近重述；强制复写部分由 §4 执法 |
-| 架构决策（事件与当时思考） | 冻结 | `decisions/`（`ADR-NNNN` 全局编号，Confirmation 必填） | `ADR-NNN` 限定名引用；**`changes/`+`archive/` 内涉已立 ADR 之决策只准表决行（何人何时批准/否决/裁定，至多附一句因）+ 指针，禁在过程件复写论证正文**（正文的**现行沉淀版**住 `docs/explanation/`——源流非副本，见 §1 三类件分家注；过程件永非其 home） | C6 diff-scope + Confirmation 必填 |
-| 立法/裁决过程事实 | 随案卷 | `specs/changes|archive/` 案卷本体（提案问题单、delta、表决行、tasks 勾验） | 判例卷宗与 docs 只准指针；折叠前过瘦身闸（§4 新行） | ddd-review 人肉抽查（机器化暂缓——语义比对超 C 闸能力，判据同实施内容基准律注） |
+| 架构决策（事件与当时思考） | 冻结在位，到期整册抹除 → §1 清册制注 | `decisions/`（`ADR-NNNN` 全局编号，Confirmation 必填；历元内唯一，清册改元归零） | 活册期内：`ADR-NNN` 限定名引用，**一律纯文本禁超链**；`changes/`+`archive/` 内涉已立 ADR 之决策只准表决行（何人何时批准/否决/裁定，至多附一句因）+ 指针，禁在过程件复写论证正文（正文的**现行沉淀版且含前因后果**住 `docs/explanation/`——源流非副本，见 §1 三类件分家注；过程件永非其 home）；清册期后：标识符净空、解读篇自足 | C6 冻结臂 + 清册臂 + Confirmation 必填 |
+| 立法/裁决过程事实 | 随案卷，到期整册抹除 → §1 清册制注 | `specs/changes|archive/` 案卷本体（提案问题单、delta、表决行、tasks 勾验） | 判例卷宗与 docs 只准指针；折叠前过瘦身闸（§4 行）；清册前过再核闸（§4 清册行，自足判据） | ddd-review 人肉抽查 + C6 清册臂（空册自洽） |
 | 需求/行为规格 | 随变更 | 框架：`knowledge/specs/`；示例业务：`sample-application/specs/`（同构镜像区） | skill 首步产出 delta | 归档折叠=同步义务唯一时点；C2/C3 扫两区 |
 | 任务流程（顺序+清单） | 低 | `.agents/skills/`（≤500 行） | 法卷指过来；**skill 内零法条零模板**（D6 推广）；形状性内容必须锚定法卷节号——**实施内容基准律**，见下表注 | C2/C3 + ddd-review 锚点抽查 |
 | 防腐工具行为与用法 | 中 | `knowledge/scripts/` 代码本体（行为即法）+ `reference/doc-guards.md`（说明唯一入口） | 一行 + 指针 | 人肉跑主机 + ddd-review 末步 |
@@ -60,6 +62,7 @@
 | 新设计决策 | `decisions/` 新立 ADR（MADR 骨架，Confirmation 必填）；`explanation/theory-map.md` 账本登记 |
 | 案卷折叠入 archive 前（瘦身闸） | 逐件查 proposal/delta：凡多句决策理由而其判例未立 → 先补 ADR 再折叠；案卷裁至表决行 + `→ ADR-NNN` 指针（判据 → §2「架构决策（事件与当时思考）」「立法/裁决过程事实」两行） |
 | 案卷折叠时（⑦⁺，2026-09 `adr-argument-sedimentation`） | 本案所立/所改判例的**沉淀论证同 PR 复写进 `docs/explanation/` 对应解读篇**，篇脚回指 `ADR-NNN（决策快照）`；无同题篇则立篇并按登记法仅登记 docs/README 一处；事务性决策（不新增"为什么"）theory-map 一行账即算沉淀完成（防灌水档）；**存量不溯及、触发式随位收编**；划界判据：法生效后该理由是否仍成立且指导读法——仍成立→解读有现行版，仅当时情境成立→留 `decisions/` 作化石 |
+| 卷宗清册执行（`specs/archive/` 案卷或 `decisions/` ADR 本体整册归零，含镜像区） | 七步仪式 SHALL 由独立清册 bill 承载：① **逐案再核表**（四栏：立因/取舍/被拒方案及拒因/生效边界 → 去向 = 解读篇某节某段，或判「纯史件，随灭」；表随 bill 递交，缺案缺栏则批准门不得通过）② **补沉淀**——再核发现的因果缺口，同 bill 内先复写进解读架（⑦⁺ 的追溯执行）③ **整袋删除**（whole-directory/whole-file，禁拆件）④ **净账**——README 账行同裁，两区 README 回到空壳章程态 ⑤ **净面**——全活面 `ADR-NNNN`/date-slug 具体标识符删除或转无编号散文（含页脚快照账行整行删、法卷生效注转年份散文），C1 验零幽灵 ⑥ **连带**——计数宣称/glossary/docs README/theory-map 账本同步 ⑦ 七闸绿（C6 清册臂 + 空册自洽 + check-diagrams + `mvn compile`）；此后新案编号自 `ADR-0001` 重启（改元） |
 | 新增文档 | 仅登记 `knowledge/docs/README.md` 一处（唯一索引；伞 README 只写三态法律） |
 | 新增规范行（必须/禁止） | 只能进法卷（走 changes/ 程序）；`.agents/` 内禁止出现裸法条——「方法区不载地图亦不载法」 |
 

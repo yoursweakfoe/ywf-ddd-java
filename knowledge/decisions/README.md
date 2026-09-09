@@ -6,6 +6,18 @@
 
 **上行部分冲正**（2026-09 `2026-09-adr-argument-sedimentation` / [ADR-0036](ADR-0036-adr-argument-sedimentation.md)，append-only 以新行改旧令）：本区 ADR 收窄为**决策事件件**——事件、当时思考快照、Confirmation 授权收据（三者仍是唯一居所、冻结不变）；**论证的现行版**（"今天为什么如此"）canonical 已迁 `docs/explanation/`，折叠时 ⑦⁺ 强制复写、篇脚回指本区快照。"案卷禁双写 ADR 正文"仍有效，语义精确化为"过程件（`changes/`+`archive/`）禁复写"。现行论述 → [knowledge-system.md](../docs/explanation/knowledge-system.md)。
 
+**本区改为可清册存储**（2026-09 `2026-09-dossier-retirement` / [ADR-0037](ADR-0037-dossier-retirement.md)，再增一行改旧令）：本区与两侧 archive 区 = **到期彻底归零**的历元卷宗——发布节点经清册 bill 将本体、本区索引/迁移各表、活面具体标识符一并抹除（自足判据前置：前因后果先入解读架，行灭理存）；清册后本 README 只余章程段，编号改元自 `ADR-0001` 重启。supersede 实施口径同步澄清：新立 ADR + 本表状态列登注为主，旧篇正文除 Status 行 1:1 对替外任何涂改均为冻结臂红牌（C6 本轮已补齐此闸与宪章的长期错位）。现行论述 → [knowledge-system.md](../docs/explanation/knowledge-system.md)「清册制」节。
+
+## 历元新案（重编号之后本区新立；本表为活册期工作表，清册随本体归零）
+
+| 编号 | 文件 | 一句话 | 状态 |
+|---|---|---|---|
+| ADR-0033 | [ADR-0033](ADR-0033-pg-native-shape-and-schema-naming-law.md) | PG 原生形状与 schema 命名法入典 | Accepted |
+| ADR-0034 | [ADR-0034](ADR-0034-sample-real-pg-test-base.md) | sample 测试底座换真 PG | Accepted |
+| ADR-0035 | [ADR-0035](ADR-0035-common-it-consolidation-real-pg.md) | common 集成测试并模块 + 真 PG 双库 | Accepted |
+| ADR-0036 | [ADR-0036](ADR-0036-adr-argument-sedimentation.md) | 论证现行版迁解读架（⑦⁺） | Accepted |
+| ADR-0037 | [ADR-0037](ADR-0037-dossier-retirement.md) | 卷宗清册制：到期彻底归零、改元重启 | Accepted |
+
 ## 已知历史违例（史注，不掩盖）
 
 - 旧「模块内各自从 0001 起编」时代，common-ddd 的事件类 ADR（旧 0003/0006/0007/0008）于 2026-09 事件留白（5bc4b4b）整删后，**0006/0007 号被复用承载了全新内容**——违反旧账本自述的「编号单调递增不复用」教义。全局重编号（本区 0001-0032）根治此患；旧→新以 §migration 为准，术语正名：**Superseded 墓碑**（有正文保留，如 ADR-0009/0014）≠ **Void**（编号空置无正文：ADR-0004/0015/0017）。

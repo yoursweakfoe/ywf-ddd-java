@@ -452,7 +452,6 @@ public class PaymentRepositoryImpl
     }
 
     @Override protected BasicConverter<Payment, PaymentPO> getConverter() { return converter; }
-    @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
     @Override public Optional<Payment> findById(UUID id) { return findDomainById(id); }
     @Override public void save(Payment domain) { saveDomain(domain); }
     @Override public void update(Payment domain) { updateDomain(domain); }

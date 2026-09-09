@@ -1,4 +1,4 @@
-# common-ddd
+﻿# common-ddd
 
 DDD 战术框架 —— 领域建模基类、CQRS 应用层契约、MyBatis 仓储支撑（手写 XML SQL）。
 
@@ -86,10 +86,10 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 | 语句 | XML 手写语义 |
 |---|---|
 | `insert` | 枚举全部业务列（业务铸造 ID 显式传参、`version` 写字面量 0、**不枚举**逻辑删除列——靠 DB 默认值） |
-| `updateById` | **全量 UPDATE** + `SET version = version + 1` + `WHERE id = #{id} AND version = #{version} AND is_delete = false`——版本条件由 SQL 文本携带，无运行时拦截器；无版本列的聚合省略该条件即可 |
-| `selectById` / `selectByIds` | 查询列 + `AND is_delete = false` 显式过滤（批量为 `foreach` IN） |
-| `deleteById` / `deleteByIds` | 逻辑删除聚合 = `UPDATE SET is_delete = true, updated_at = #{now}`（操作人列以 `<if test="updatedBy != null">` 守卫）；物理删除聚合 = `DELETE`。审计参数由基类传入，是否消费由聚合 XML 决定 |
-| `existsById` | `SELECT EXISTS(SELECT 1 ... AND is_delete = false)`——恒返回一行 boolean，不加载完整行（冲突分类依赖它） |
+| `updateById` | **全量 UPDATE** + `SET version = version + 1` + `WHERE id = #{id} AND version = #{version} AND is_deleted = false`——版本条件由 SQL 文本携带，无运行时拦截器；无版本列的聚合省略该条件即可 |
+| `selectById` / `selectByIds` | 查询列 + `AND is_deleted = false` 显式过滤（批量为 `foreach` IN） |
+| `deleteById` / `deleteByIds` | 逻辑删除聚合 = `UPDATE SET is_deleted = true, updated_at = #{now}`（操作人列以 `<if test="updatedBy != null">` 守卫）；物理删除聚合 = `DELETE`。审计参数由基类传入，是否消费由聚合 XML 决定 |
+| `existsById` | `SELECT EXISTS(SELECT 1 ... AND is_deleted = false)`——恒返回一行 boolean，不加载完整行（冲突分类依赖它） |
 
 逻辑删除列名、版本列有无、物理还是逻辑删除——都是**聚合级选择**，逐篇 XML 自行表达，不存在全局隐式约定。
 

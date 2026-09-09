@@ -9,8 +9,8 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 | 区 | 态 | 守则一句话 |
 |---|---|---|
 | `knowledge/docs/` | 地图·描述 | 代码变了它必须跟着变，烂了修文档 |
-| `knowledge/specs/` | 法律·框架契约 | 代码违反它=修代码；改法走 `changes/`，禁止迁就代码偷改 |
-| `knowledge/decisions/` | 判例卷宗 | 正文永不回改；推翻=新立 ADR + supersede 旧案 |
+| `knowledge/specs/` | 法律·框架契约 | 代码违反它=修代码；改法走 `changes/`，禁止迁就代码偷改；`archive/` 在位不改、到期整册归零（清册制） |
+| `knowledge/decisions/` | 判例卷宗（历元） | 正文在位不回改；推翻=新立 ADR + supersede 旧文；两册到期彻底抹除、编号改元重启（见归属法 §1 清册注） |
 | `.agents/` | 工作台·流程 | SOP 约束干活方式（skills only）；法律已入典——法条正文住 `knowledge/specs/current/` 法卷，本树不载法 |
 
 法律全文 = `knowledge/specs/current/patterns/attribution-law.md`（事实归属法）；伞宣言 = `knowledge/README.md`。业务包契约不入伞，住镜像区 `sample-application/specs/`（框架法=knowledge/specs，业务法=sample 树内）。

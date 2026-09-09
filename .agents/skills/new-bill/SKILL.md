@@ -30,7 +30,7 @@ description: 为知识体系起草、推进并归档一部法案（案卷三件�
 ## 第 2 步：选所属区、定 slug
 
 - **所属区**：框架法 → `knowledge/specs/`；业务法 → `sample-application/specs/`。辖域裁决 → 归属法卷 §1（把业务契约立进伞内即辖域违规）。模板两区共用，住框架区 `_template/`。
-- **slug**：目录名 `<YYYY-MM-kebab>`——立卷年月 + 望文生义的一两个英文词。体例参照已生效判例：`knowledge/specs/archive/2026-10-rules-codification/`、`knowledge/specs/archive/2026-09-pagequery-default-claim/`。
+- **slug**：目录名 `<YYYY-MM-kebab>`——立卷年月 + 望文生义的一两个英文词。形状以 `_template/` 骨架自明；历内在库例卷见 `knowledge/specs/archive/` 工作清单（清册归零后例随册灭，届时唯模板与 git 史可鉴——法不考古，模板为权威）。
 - 案卷一经立定身份即冻结规则生效：`changes/` 内=审议稿随便改，`current/` =现行法——折叠时刻前两者不一致**以 current 为准**（工位纪律 → changes/README）。
 
 ## 第 3 步：铺三件套
@@ -59,7 +59,7 @@ agent 递出案卷后**必须停下等人工**：批准、否决、待裁决问�
 
 1. 把 `spec-delta.md` 写回 `current/` 对应卷：ADDED 入位、MODIFIED 整节替换同名节、REMOVED 删节并在归档记录一句原因
 2. **整目录** `git mv` 到 `archive/`——不拆件、不留守
-3. 只进不改：本案与 archive/ 既有案卷此后永不回改（含错字）；要推翻旧案 = 新立案，旧案即历史记录（同卷宗法理 → `knowledge/specs/archive/README.md`）
+3. 在位只进不改：本案与 archive/ 既有案卷此后**在位**不回改（含错字）；要推翻旧案 = 新立案，旧案即历史记录——但**不是永存**：两册到期经清册 bill 彻底归零（→ 归属法卷 §1「卷宗清册制」注；`knowledge/specs/archive/README.md`）
 4. 连带义务：计数宣称、glossary、docs 同题设计卡若被本次改法波及，同 PR 修齐（冲突裁决法卷赢 → 归属法卷 §1）；**瘦身自查**：入档前逐件裁案卷，多句决策理由而判例未立先补 ADR，案卷只留表决行 + 指针（→ 归属法卷 §4「案卷折叠入 archive 前」行）
 5. **⑦⁺ 论证沉淀**：本案所立/所改判例的沉淀论证（现行版）同 PR 复写进 `docs/explanation/` 对应解读篇、篇脚回指 `ADR-NNN（决策快照）`；无同题篇立篇走登记法；事务性决策 theory-map 一行账即止（→ 归属法卷 §4「案卷折叠时（⑦⁺）」行）
 
@@ -76,7 +76,8 @@ agent 递出案卷后**必须停下等人工**：批准、否决、待裁决问�
 |---|---|
 | 直接改 `current/` 某节让它「和代码一致」 | 想改法就立案，否则修代码（§1 裁决，C 闸拦不住时靠人拦） |
 | proposal 递出未批就开工 | 第 4 步硬停 |
-| 归档后回改 archive/ 旧案卷 | 只进不改，新案接管 |
+| 归档后回改 archive/ 旧案卷 | 在位不改，新案接管（到期归零走清册 bill，不在案卷内涂改） |
+| 未立清册 bill 就 rm 两册本体（偷删/拆件/择留） | 清册 = 独立 bill 七步仪式（→ 归属法 §4）；C6 清册臂当场红 |
 | 把业务契约立进 `knowledge/specs/` | 辖域违规 → 镜像区 `sample-application/specs/` |
 | spec-delta 写成对全世界的全量描述 | delta 教义：只写变化量 |
 | 施工完一口气补勾 tasks | 完成即勾 |

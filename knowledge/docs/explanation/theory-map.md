@@ -52,6 +52,7 @@
 | 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定（ADR-0001）；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，how-to 篇提供复制粘贴示例 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略（XML 逐列枚举），本框架场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
+| 分页参数默认值注入（@DefaultValue / Integer 缺省回填） | Spring Data Web、多数 REST 脚手架惯例 | 不采纳（2026-09 立法定案，CC-9/RC-3/OR-6）：**逼迫调用方显式传参、拒不兜底**——静默补默认会把漏参错误伪装成「查第 1 页」的成功请求；项目主代码品味：接口不替调用方猜参数。现行行为：缺参原始绑定 0 → @Min(1) 拒绝 → 400 |
 
 ### CQRS 与事件架构
 
@@ -140,6 +141,7 @@
 | 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 东西向消费方依赖同一 contract jar（纯 Java 强类型契约），编译期即可发现契约不兼容 |
 | 测试数据工厂 (Fixture Builder) | Test Data Builder 模式、Instancio | 领域对象构造与业务强相关，通用工厂反而增加维护成本 |
 | 性能/压力测试工具 | JMeter、k6、Gatling | 属于 CI/CD 流水线职责，不纳入代码仓库依赖 |
+| H2 内存库（任何轨的测试基座） | Spring 测试惯例、多数脚手架默认 | 不采纳（2026-09 全仓退役，ADR-0034/0035，TC-1）：兼容模式永远隔一层方言，「H2 量不到真东西」，且兼容库的脚本习惯会反向侵蚀产库设计——测试基座唯真 PG（sample 轨 + 框架试验场轨，双库隔离 TC-9） |
 
 ### 框架与工具链
 
@@ -153,6 +155,7 @@
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
 | 时间类型约定 | 全框架统一 `OffsetDateTime`，唯一时间源 = 框架注入 `Clock`；`timestamptz` 写入方偏移被丢弃、读回恒 `+00:00`（论证见 ADR-0006） |
+| PG 原生形状与 schema 命名（ADR-0033，2026-09） | 表形状跟终库不跟测试工具：uuidv7 主键（DB 默认仅兜底、应用侧铸造传值覆盖）、timestamptz、全词蛇形审计列、jsonb 半结构化；聚合边界=schema 边界、领域词单数、保留字冲突升格行业 UB 术语不逃逸——论证 → [infrastructure.md](infrastructure.md)「为何 PG 原生形状与 schema 命名法」 |
 | sealed 类型（框架适用性决策） | **不施加于框架扩展点**：`AggregateRoot` / `Entity` / `ValueObject` / `Repository` / `Policy` / `Portal` / `DomainService` 是业务扩展点，sealed 会锁死业务继承；框架内唯一封闭层级 `PgArrayType` 已是 enum。sealed / pattern-matching switch 留给**业务侧**：状态转换守卫在聚合根内使用 JDK 21 穷尽性 switch（框架无 enum-switch 场景，不强制） |
 | swagger-annotations | REST 面文档注解（`@Operation` / `@Tag` / `@Schema` 纯注解 jar，零运行时零端点），契约层声明语义，配合 Apifox IDE 插件识别 |
 
@@ -174,6 +177,8 @@
 | 模式 / 制度 | 本项目采纳要素 |
 |------|--------|
 | 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，ADR-0036） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（三件套，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
+| 卷宗清册制（历元归零、改元重启，2026-09，ADR-0037） | 两册（`decisions/` + 两侧 archive）= 可清册存储：发布节点经清册 bill **彻底抹除**（本体整袋删 + 账行同裁 + 活面标识符净空，行灭理存）；前置自足判据=每案四栏因果（立因/取舍/被拒方案及拒因/生效边界）全文先住解读架，再核表随 bill 递交缺案不批；清册即改元、编号历元重启；法不考古（git 历史非知识依赖）；仪式产物不豁免于仪式——全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
+| 宽严双份与法典化三部曲（宽严双份，2026-09） | 规范内容两份表达而权威唯一：法卷=严格件（条款+取证+形状）、docs=宽松件（判据+指针），冲突法卷赢；判据一句话：**这句话能机械化执行吗**；所治之病——应然句寄居地图架时，规范的「保证」二字会被地图守则的被动跟随溶剂掉（代码漂移时轮不到文档说不）；三步 = api 用法节入典（8 模块法卷）→ how-to 降设计卡 → 统一用法形状归卷全仓唯一样本——全文 → [knowledge-system.md](knowledge-system.md) |
 
 ### 书籍与文章
 
