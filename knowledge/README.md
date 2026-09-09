@@ -38,12 +38,31 @@
 
 一篇文档按读者处境进一个架，不拆写四份——这是摆架的全部意义。**但象限只管描述**：规定句（"必须/禁止/应当这样写"）在四格里没有执照，一律上移一层住 `specs/` 法卷（2026-09-06 宽严双份裁定）。判据：**这句话能机械化执行吗？能→法卷；不能（语气/步骤/语境）→ docs。**
 
+### 2.1 驱动关系（D2 图）
+
+「地图=代码驱动」是 §1 表的压缩口号——四书架的真相源其实分叉。下图把每架画回各自的驱动者；**每条边都可在 [specs/current/patterns/attribution-law.md](specs/current/patterns/attribution-law.md) §1/§2 翻到法源**（锚见表），本图只作导览、不立法（伞不立法）。
+
+![驱动关系图](diagrams/gen/knowledge/README/drive-relations.svg)
+
+> 图源 = [`diagrams/knowledge/README/drive-relations.d2`](diagrams/knowledge/README/drive-relations.d2)（唯一可编辑面）。改源后重刷：`powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1`（TALA 引擎）；防陈旧对账：同法跑 `check-diagrams.ps1`。
+
+| 边（图上短标签） | 法源锚 |
+|---|---|
+| 代码 → 教程架「跑不通即bug」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |
+| 代码 → 字典架「漂移即烂」 | §2「包路径/类名/方法签名 → 源代码」「异常→HTTP 映射 → javadoc+法卷+C5」两行 |
+| 法卷 → 设计卡架「法卷赢」 | §2「用法规范/规范代码形状」行：docs 同题=设计卡、**冲突法卷赢**（宽严双份制） |
+| 判例 → 解读架「沉淀为解释」 | §2「设计论证（为什么）｜低易变｜canonical=`docs/explanation/`（含 theory-map）」行——docs 内唯一**非代码驱动**的架：意图驱动、最冻结；亦是体系蒸馏决策论证的地图侧出口 |
+| 判例 → 法卷「判例先行」 | §1 decisions 行「推翻=新立 ADR+supersede」；根 AGENTS 路由「先查旧判例再拍新板」 |
+| 法卷 → 代码「违法修码」 | §1 specs 行「与代码不符=二者之一必修」；改法一侧走下行 |
+| 代码 ↛ 法卷「违宪·偷改」（虚线✕） | §1 specs 行「禁止迁就代码偷改」；合法改法唯一通道 = `changes/` |
+
 ## 3 · 树
 
 ```
 knowledge/
 ├── README.md       本页：组织宣言（导览五问三分类，自身不立法）
 ├── docs/           地图 | README 唯一文档索引
+├── diagrams/       配图 | .d2 源按「文档仓库相对路径」镜像入册，gen/ 存 TALA 渲染 SVG 产物（render/check-diagrams.ps1 双件，源为唯一可编辑面）
 │   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表

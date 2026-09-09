@@ -1,0 +1,23 @@
+direction: right
+
+code: "代码\n（源码树 = 事实）"
+law: "specs/current 法卷\n（意图的严格件）"
+dec: "decisions/ 判例\n（冻结）"
+
+docs: {
+  label: "docs 四书架（Diátaxis 两轴切格）"
+  grid-columns: 2
+  grid-rows: 2
+  tutorials: "教程架（学习 × 动手）"
+  how-to: "设计卡架（工作 × 动手）"
+  explanation: "解读架（学习 × 认知）"
+  reference: "字典架（工作 × 认知）"
+}
+
+dec -> law: "判例先行"
+dec -> docs.explanation: "沉淀为解释"
+law -> docs.how-to: "法卷赢"
+law -> code: "违法修码"
+code -> docs.tutorials: "跑不通即bug"
+code -> docs.reference: "漂移即烂"
+code x-> law: "违宪·偷改" { style.stroke-dash: 3 }

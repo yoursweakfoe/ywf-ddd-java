@@ -69,6 +69,19 @@ lychee --config knowledge/scripts/lychee.toml "knowledge/**/*.md" ".agents/**/*.
 
 关键取舍：`exclude` 掉 localhost/127.0.0.1（文档里的 curl 示例是虚构本地端点，探测必死）；`include_fragments = false`（页内锚点脆弱度太高，v1 不验）；`cache = true` 加速重复跑。
 
+## render-diagrams.ps1 / check-diagrams.ps1 —— D2 图管线
+
+`knowledge/diagrams/` 载图的全部真相：`.d2` 源按**被注文档的仓库相对路径**镜像入册（如 `diagrams/knowledge/README/drive-relations.d2` 注 `knowledge/README.md`），产物 SVG 落 `diagrams/gen/<同镜像路径>/`，与源同入库（GitHub 网页渲染 SVG；ignore 产物=远程裂图，判例否决）。
+
+```powershell
+# 改完 .d2 源后重刷（默认 --layout tala，v0.9.0 bundled 引擎；三引擎肉眼对比裁决 2026-09-09）
+powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1
+# 防陈旧三方对账（源↔产物↔manifest 哈希，不依赖 d2 本体；孤儿 SVG 亦红）
+powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-diagrams.ps1
+```
+
+产物是**新的可腐烂面**——入库即欠同步债，故独立闸与 check-docs 同点跑（ddd-review 末步）。施工判例三条：PS 双引号串不解释 `\n`（用编辑工具改源，勿脚内 Replace）；`label.near:` 非法、边标签位移用裸键 `near:`；EAP=Stop 下 d2 的 stderr 成功横幅会被包成终止错误，脚本内已按 2>&1+ErrorRecord 还原姿势处理。
+
 ---
 
-*本页属 `reference/` 字典架：三文件行为变了（新增检查、改豁免类别、换 lychee 策略），本页必须跟着变——地图区守则，见 [../../specs/README.md](../../specs/README.md) 上方的归属法指针与 `归属法卷` §1。*
+*本页属 `reference/` 字典架：工具文件行为变了（新增检查、改豁免类别、换 lychee 策略、动图管线），本页必须跟着变——地图区守则，见 [../../specs/README.md](../../specs/README.md) 上方的归属法指针与 `归属法卷` §1。*
