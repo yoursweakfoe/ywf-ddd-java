@@ -16,6 +16,8 @@
 
 伞 `knowledge/` 与区 `docs|specs|decisions|scripts` 本身不立法；方法树拒入伞（工具可弃，知识/契约不可弃）。执法工具链居伞内 `knowledge/scripts/`（2026-09-06 内聚裁定）：辖域是每区各自的法律、不是物理相邻。
 
+**案卷与判例分家**（2026-09 `2026-09-archive-dossier-boundary`）：`specs/changes|archive/` 的案卷 = **立法过程件**——问题陈述、条款变化量（delta）、表决行、施工勾验；折叠即使命终、入档封存。`decisions/` 判例卷宗 = **决策论证件**——context / 取舍 / consequences，跨时间被引（新判例前查旧案、supersede 靠旧论证活着）。两栖病灶（本行立前实证：案卷 proposal 裁决表与 ADR Decision Outcome 近同文双写）的裁决一句话：**同一事实，论证归卷宗、过程归案卷**。
+
 ## 2. 事实归属表
 
 | 事实类别 | 易变性 | canonical home | 其余载体允许形式 | 机器背书 |
@@ -26,7 +28,8 @@
 | 用法规范/规范代码形状（严格件） | 中 | `specs/current/modules/*.md` + `specs/current/patterns/*.md`——条款+取证源+全套规范形状（全仓唯一样本） | docs 同题=设计卡：判据/决策点/边界+指针，**零形状代码**、禁条款编号；冲突法卷赢 | C1/C3/C4 |
 | 规范行（必须/禁止） | 中 | 法卷（`specs/current/`——[prohibitions](prohibitions.md) 为禁令对照表，[coding-conventions](coding-conventions.md) 为公约） | 一句复述 + 指针；AGENTS.md 九条例外 | 每行挂 R##/测试名 |
 | 设计论证（为什么） | 低 | `docs/explanation/`（含 theory-map 理论账本） | 指针 | —（低易变，允许就近重述） |
-| 架构决策 | 冻结 | `decisions/`（全局编号） | `ADR-NNN` 限定名引用 | C6 diff-scope + Confirmation 必填 |
+| 架构决策（论证） | 冻结 | `decisions/`（全局编号） | `ADR-NNN` 限定名引用；**案卷涉已立 ADR 之决策只准表决行（何人何时批准/否决/裁定，至多附一句因）+ 指针，禁复写论证正文** | C6 diff-scope + Confirmation 必填 |
+| 立法/裁决过程事实 | 随案卷 | `specs/changes|archive/` 案卷本体（提案问题单、delta、表决行、tasks 勾验） | 判例卷宗与 docs 只准指针；折叠前过瘦身闸（§4 新行） | ddd-review 人肉抽查（机器化暂缓——语义比对超 C 闸能力，判据同实施内容基准律注） |
 | 需求/行为规格 | 随变更 | 框架：`knowledge/specs/`；示例业务：`sample-application/specs/`（同构镜像区） | skill 首步产出 delta | 归档折叠=同步义务唯一时点；C2/C3 扫两区 |
 | 任务流程（顺序+清单） | 低 | `.agents/skills/`（≤500 行） | 法卷指过来；**skill 内零法条零模板**（D6 推广）；形状性内容必须锚定法卷节号——**实施内容基准律**，见下表注 | C2/C3 + ddd-review 锚点抽查 |
 | 防腐工具行为与用法 | 中 | `knowledge/scripts/` 代码本体（行为即法）+ `reference/doc-guards.md`（说明唯一入口） | 一行 + 指针 | 人肉跑主机 + ddd-review 末步 |
@@ -55,6 +58,7 @@
 | 新增/变更**示例业务聚合行为** | 先立 `sample-application/specs/changes/<slug>/` 三件套；归档折叠本区 `current/<agg>.md` |
 | 修订法卷条款 | 同 PR 核对 docs 同题设计卡无矛盾；有矛盾改 docs（法卷赢） |
 | 新设计决策 | `decisions/` 新立 ADR（MADR 骨架，Confirmation 必填）；`explanation/theory-map.md` 账本登记 |
+| 案卷折叠入 archive 前（瘦身闸） | 逐件查 proposal/delta：凡多句决策理由而其判例未立 → 先补 ADR 再折叠；案卷裁至表决行 + `→ ADR-NNN` 指针（判据 → §2「架构决策（论证）」「立法/裁决过程事实」两行） |
 | 新增文档 | 仅登记 `knowledge/docs/README.md` 一处（唯一索引；伞 README 只写三态法律） |
 | 新增规范行（必须/禁止） | 只能进法卷（走 changes/ 程序）；`.agents/` 内禁止出现裸法条——「方法区不载地图亦不载法」 |
 

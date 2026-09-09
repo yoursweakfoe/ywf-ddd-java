@@ -37,7 +37,7 @@ description: 为知识体系起草、推进并归档一部法案（案卷三件�
 
 从 `_template/` 复制三文件到 `changes/{slug}/` 填空，结构要求看模板原文、不自创变体：
 
-1. `proposal.md` —— 只写问题与边界，不写实现。待批态样本 → `knowledge/specs/changes/2026-11-agents-workspace/proposal.md`
+1. `proposal.md` —— 只写问题与边界，不写实现；涉既有 ADR 之裁决只登表决行（何人何时批/否/裁何事，至多附一句因）+ 指针，不复写论证 → 归属法卷 §2。待批态样本 → `knowledge/specs/changes/2026-11-agents-workspace/proposal.md`
 2. `spec-delta.md` —— 只描述变化量不描述全世界（delta 教义）；每条 SHALL 括注取证源（真实 文件:行 / 测试类名），无证据的意图用「待 changes/ 补全」留缺口、不硬写 → `knowledge/specs/README.md` 守则 3
 3. `tasks.md` —— 实现清单按依赖序，每条尾巴指回 delta 的 Requirement 名
 
@@ -60,7 +60,7 @@ agent 递出案卷后**必须停下等人工**：批准、否决、待裁决问�
 1. 把 `spec-delta.md` 写回 `current/` 对应卷：ADDED 入位、MODIFIED 整节替换同名节、REMOVED 删节并在归档记录一句原因
 2. **整目录** `git mv` 到 `archive/`——不拆件、不留守
 3. 只进不改：本案与 archive/ 既有案卷此后永不回改（含错字）；要推翻旧案 = 新立案，旧案即历史记录（同卷宗法理 → `knowledge/specs/archive/README.md`）
-4. 连带义务：计数宣称、glossary、docs 同题设计卡若被本次改法波及，同 PR 修齐（冲突裁决法卷赢 → 归属法卷 §1）
+4. 连带义务：计数宣称、glossary、docs 同题设计卡若被本次改法波及，同 PR 修齐（冲突裁决法卷赢 → 归属法卷 §1）；**瘦身自查**：入档前逐件裁案卷，多句决策理由而判例未立先补 ADR，案卷只留表决行 + 指针（→ 归属法卷 §4「案卷折叠入 archive 前」行）
 
 ## 第 7 步：验收
 

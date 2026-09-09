@@ -2,6 +2,8 @@
 
 **本区法律（append-only）**：卷宗正文永不回改。推翻旧决定 = 新立一案，旧案仅 Status 行改为 `Superseded by ADR-NNNN`。机器执法：`knowledge/scripts/check-docs.ps1` C6（diff 超出「新增文件 / Status 行」即红）。
 
+**论证与过程分家**（2026-09 `2026-09-archive-dossier-boundary`）：决策论证 canonical 住本区 ADR；specs/ 案卷内裁决只登表决行（何人何时批/否/裁何事，至多附一句因）+ → ADR-NNNN 指针，论证正文不得两处双写——全文 → [归属法 §1/§2](../specs/current/patterns/attribution-law.md)。
+
 ## 已知历史违例（史注，不掩盖）
 
 - 旧「模块内各自从 0001 起编」时代，common-ddd 的事件类 ADR（旧 0003/0006/0007/0008）于 2026-09 事件留白（5bc4b4b）整删后，**0006/0007 号被复用承载了全新内容**——违反旧账本自述的「编号单调递增不复用」教义。全局重编号（本区 0001-0032）根治此患；旧→新以 §migration 为准，术语正名：**Superseded 墓碑**（有正文保留，如 ADR-0009/0014）≠ **Void**（编号空置无正文：ADR-0004/0015/0017）。
