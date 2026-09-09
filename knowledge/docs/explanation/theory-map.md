@@ -167,6 +167,14 @@
 | MyBatis-Plus（ORM 增强框架） | 国内 MyBatis 生态主流增强库 | 未采纳（2026-09 移除，[ADR-0007](../../decisions/ADR-0007-ddd-remove-mybatis-plus.md)）：Wrapper 动态生成 SQL + 拦截器织入使「真正执行的 SQL 不在代码库里」，与全链路可见性目标冲突；乐观锁 / 逻辑删除 / 审计填充 / 分页全部由每聚合手写 XML 的 SQL 文本承担。注：baomidou 系中独立于 ORM 增强的 dynamic-datasource 经一手调研证实与 MyBatis-Plus 零耦合，仍作消费方多数据源 opt-in 方案（见 knowledge/docs/explanation/infrastructure.md） |
 | Lombok @Data 用于领域模型 | 多数业务项目 | 充血模型禁止暴露 setter；@Data 生成 equals/hashCode 与 Entity ID 判等冲突 |
 
+### 知识体系（自指）
+
+**采纳：**
+
+| 模式 / 制度 | 本项目采纳要素 |
+|------|--------|
+| 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，[ADR-0036](../../decisions/ADR-0036-adr-argument-sedimentation.md)） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（三件套，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
+
 ### 书籍与文章
 
 | 来源 | 关联要素 |
@@ -182,4 +190,4 @@
 
 ## ADR 总索引（已迁出）
 
-> 全仓判例总索引、旧号映射与「编号复用」史注已迁至 [`knowledge/decisions/README.md`](../../decisions/README.md)。本账本仅保留理论模式采纳/未采纳裁决（不复述判例——归属法）。
+> 全仓判例总索引、旧号映射与「编号复用」史注已迁至 [`knowledge/decisions/README.md`](../../decisions/README.md)。本账本仅保留理论模式与治理制度的采纳/未采纳裁决（不复述判例——归属法）。

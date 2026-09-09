@@ -45,9 +45,10 @@ specs.changes -> code: "⑤ 按约施工" { near: center }
 code -> specs.changes: "⑥ 结果回填" { near: center }
 specs.changes -> specs.current: "⑦ 折叠落实" { near: center }
 specs.changes -> specs.archive: "⑧ 归档(瘦身闸)" { near: center }
-# 论证沉淀不是静态关系，是挂在线上两个时刻的分支义务：③⁺ 账本行（归属法§4 新设计决策行，与ADR同案）；
-# ⑦⁺ 同题散文随动（new-bill 6.4 连带义务——法未定稿，散文没有稳定对象，故等折叠同PR）
-dec -> docs.explanation: "设计（修改与决策构成一次设计）驱动文档修改：论证沉淀\n③⁺ theory-map 账本行\n⑦⁺ 同题散文·解释立法原因" { near: center }
+# 论证沉淀=挂在线上两个时刻的分支义务（ADR-0036 后 ⑦⁺ 升格强制复写）：
+# ③⁺ theory-map 账本行（与 ADR 同案）；⑦⁺ 沉淀论证复写入同题解读篇、篇脚回指 ADR 快照——
+# 卷宗=冻结的事件与当时思考，解读=活的现行道理，重叠是源流非双写（归属法 §1 三类件分家）
+dec -> docs.explanation: "设计（修改与决策构成一次设计）驱动文档修改：论证沉淀\n③⁺ theory-map 账本行\n⑦⁺ 同题散文强制复写（解释立法原因）" { near: center }
 
 # ── 四象限静态驱动源（无编号 = 常态归属，非流程）──
 code -> docs.tutorials: "代码驱动文档修改" { near: center }

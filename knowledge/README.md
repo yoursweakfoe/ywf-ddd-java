@@ -40,7 +40,7 @@
 
 ### 2.1 驱动关系（D2 图）
 
-「地图=代码驱动」是 §1 表的压缩口号——四书架的真相源其实分叉。本图两类边：**带圈编号 ①–⑧ = 立法流程的先后序**（箭头太多，光靠方向表达不了顺序，编号即工序，**上标 ⁺ = 挂在该步时刻的分支义务**（如 ③⁺/⑦⁺ 论证沉淀，不改主线八步））；流程的发起方与裁决方是**同一个人：开发者＝项目主**（AI 只递案卷，批准门硬停等拍板）——代码只是被驱动的事实，不立案、不施工）；**无编号 = 常态驱动归属**（docs 四象限每架认一个主：tutorials/reference=纯地图受代码驱动、how-to=法条宽松副本受 `current/` 直驱、explanation=论证叙事受判例沉淀驱动（**一次设计 = 修改（对现实动手）+ 决策（对价值拍板），齐备才成立**——故其"为什么"沉淀入解读架），同时是**全系统引用面最广的 canonical 库**——how-to 全卡/字典见行/教程延伸/法卷论证指针四路引用它，图上淡虚线=阅读时引用（非驱动），法卷对解读的时效影响仍须经论证中转）。图外引用面还有两处：根 AGENTS 路由「为什么 → explanation/」与 skills 同步清单（`new-service`/`modify-common-module`/`ddd-review` 均指针到解读架）。**一切按流程安排，非法路径（偷改 `current/`、未批先施工）不入图**：意图的唯一合法出口就是 ①，画歪门反而稀释正门。每条边都可在 [specs/current/patterns/attribution-law.md](specs/current/patterns/attribution-law.md) §1/§2/§4 或 `new-bill` 步骤翻到法源（锚见表），本图只作导览、不立法（伞不立法）。
+「地图=代码驱动」是 §1 表的压缩口号——四书架的真相源其实分叉。本图两类边：**带圈编号 ①–⑧ = 立法流程的先后序**（箭头太多，光靠方向表达不了顺序，编号即工序，**上标 ⁺ = 挂在该步时刻的分支义务**（如 ③⁺/⑦⁺ 论证沉淀，不改主线八步））；流程的发起方与裁决方是**同一个人：开发者＝项目主**（AI 只递案卷，批准门硬停等拍板）——代码只是被驱动的事实，不立案、不施工）；**无编号 = 常态驱动归属**（docs 四象限每架认一个主：tutorials/reference=纯地图受代码驱动、how-to=法条宽松副本受 `current/` 直驱、explanation=知识沉淀件——**架构决策的论证现行版（"今天为什么如此"）canonical 居本架**（ADR-0036：卷宗只留事件、当时思考与授权收据；折叠 ⑦⁺ 强制复写至此，篇脚回指快照；"一次设计=修改+决策"的为什么同理在此），同时是**全系统引用面最广的 canonical 库**——how-to 全卡/字典见行/教程延伸/法卷论证指针四路引用它，图上淡虚线=阅读时引用（非驱动）。图外引用面还有两处：根 AGENTS 路由「为什么 → explanation/」与 skills 同步清单（`new-service`/`modify-common-module`/`ddd-review` 均指针到解读架）。**一切按流程安排，非法路径（偷改 `current/`、未批先施工）不入图**：意图的唯一合法出口就是 ①，画歪门反而稀释正门。每条边都可在 [specs/current/patterns/attribution-law.md](specs/current/patterns/attribution-law.md) §1/§2/§4 或 `new-bill` 步骤翻到法源（锚见表），本图只作导览、不立法（伞不立法）。
 
 ![驱动关系图](diagrams/gen/knowledge/README/drive-relations.svg)
 
@@ -56,7 +56,7 @@
 | ⑥ 代码 → changes/「⑥ 结果回填」 | 步骤 5–7：勾账 + 构建/测试全绿按变更性质定档；delta 每条 SHALL 取证源折叠后须指真实 文件:行/测试名 |
 | ⑦ changes/ → current/「⑦ 折叠落实」 | `new-bill` 步骤 6.1（ADDED 入位/MODIFIED 整节替换/REMOVED 删节留因）= 归属法 §4 文档同步义务**唯一时点** |
 | ⑧ changes/ → archive/「⑧ 归档(瘦身闸)｜整目录 git mv」 | 步骤 6.2 整目录 `git mv` 不拆件 + 6.3 只进不改 + 6.4 瘦身闸（→ 归属法 §4「案卷折叠入 archive 前」行） |
-| **③⁺/⑦⁺ 分支** 判例 → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑦⁺ 同题散文·解释立法原因」 | 论证沉淀**不是静态关系，是挂在线上两个时刻的分支义务**：③⁺ 拍板当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 ADR 新立与账本登记钉同一行（索引与案卷不可分家）；⑦⁺ 折叠当刻同题散文（分层设计篇）随案改写——`new-bill` 6.4 连带义务、`ddd-review`「explanation 已随动」；法未定稿前散文没有稳定对象，故必须等折叠同 PR（"同步义务唯一时点"教义的另一半） |
+| **③⁺/⑦⁺ 分支** decisions/ → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑦⁺ 同题散文强制复写（解释立法原因）」 | 论证沉淀是挂在线上两个时刻的分支义务：③⁺ 拍板当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 ADR 新立与账本登记钉同一行；⑦⁺ 折叠当刻**沉淀论证强制复写进同题解读篇、篇脚回指 `ADR-NNN（决策快照）`**——[归属法 §4「案卷折叠时（⑦⁺）」行](specs/current/patterns/attribution-law.md)（[ADR-0036](decisions/ADR-0036-adr-argument-sedimentation.md) 起：卷宗只当冻结的事件与当时思考，论证现行版的 home 在解读架；划界判据"法生效后该理由是否仍成立且指导读法"；事务性决策一行账即止，存量触发式随位收编） |
 | 代码 → 教程架(tutorials)「代码驱动文档修改」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |
 | 代码 → 字典架(reference)「代码驱动文档修改」 | §2「包路径/类名/方法签名 → 源代码」「异常→HTTP 映射 → javadoc+法卷+C5」两行 |
 | current/ → 设计卡架(how-to)「法卷驱动文档修改·宽松副本」 | §2「用法规范/规范代码形状」行：docs 同题=设计卡（宽松件）、**冲突法卷赢**（宽严双份制） |
@@ -75,7 +75,7 @@ knowledge/
 │   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
-│   └── explanation/ 分层设计 5 篇 + theory-map 理论账本
+│   └── explanation/ 分层设计 5 篇 + knowledge-system 知识系统自解读 + theory-map 理论账本
 ├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 全局唯一编号，append-only
 └── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置
