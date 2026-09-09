@@ -80,7 +80,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-dia
 powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-diagrams.ps1
 ```
 
-产物是**新的可腐烂面**——入库即欠同步债，故独立闸与 check-docs 同点跑（ddd-review 末步）。施工判例三条：PS 双引号串不解释 `\n`（用编辑工具改源，勿脚内 Replace）；`label.near:` 非法、边标签位移用裸键 `near:`；EAP=Stop 下 d2 的 stderr 成功横幅会被包成终止错误，脚本内已按 2>&1+ErrorRecord 还原姿势处理。
+产物是**新的可腐烂面**——入库即欠同步债，故独立闸与 check-docs 同点跑（ddd-review 末步）。施工判例五条：PS 双引号串不解释 `\n`（用编辑工具改源，勿脚内 Replace）；`label.near:` 非法、边标签位移用裸键 `near:`——且 **TALA 默认自动侧移边标签避让连线，密区会漂到邻线上误导认读，`{ near: center }` 可钉回本线中点**；网格 children 互连边的标签则被官方源码强制钉线中心、无侧移（drive-relations 引用边贴线之因）；**间隙只有网格容器三键 `grid-gap`/`vertical-gap`/`horizontal-gap`（官方 grid-diagrams 页），`style.gap`/`style.spacing` 不存在（invalid style keyword），根级裸写 `gap: 160` 更会静默建出名为 gap、标着 160 的幽灵节点**——非网格容器间的布局间距引擎自管，OSS 无旋钮（TALA 可用 `top`/`left` 锁位绕行）；EAP=Stop 下 d2 的 stderr 成功横幅会被包成终止错误，脚本内已按 2>&1+ErrorRecord 还原姿势处理。另：PS5.1 `Set-Content -Encoding UTF8` 必塞 BOM——`.d2`/`.java`/`.xml` 规矩无 BOM，脚本改这些文件后须剥（判例：drive-relations.d2 间隙调整时被塞，manifest 当场抓红）。
 
 ---
 

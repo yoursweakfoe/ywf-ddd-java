@@ -1,23 +1,61 @@
 direction: right
 
-code: "代码\n（源码树 = 事实）"
-law: "specs/current 法卷\n（意图的严格件）"
-dec: "decisions/ 判例\n（冻结）"
-
-docs: {
-  label: "docs 四书架（Diátaxis 两轴切格）"
-  grid-columns: 2
-  grid-rows: 2
-  tutorials: "教程架（学习 × 动手）"
-  how-to: "设计卡架（工作 × 动手）"
-  explanation: "解读架（学习 × 认知）"
-  reference: "字典架（工作 × 认知）"
+# 发起与裁决同人：开发者 = 项目主（图外无第三方）；容器内部层只写身份不写动作细节
+dev: {
+  label: "开发者"
+  role: "立案意图（新增行为/现实撞法）\n批准门（批准/否决/拍板问句）"
 }
 
-dec -> law: "判例先行"
-dec -> docs.explanation: "沉淀为解释"
-law -> docs.how-to: "法卷赢"
-law -> code: "违法修码"
-code -> docs.tutorials: "跑不通即bug"
-code -> docs.reference: "漂移即烂"
-code x-> law: "违宪·偷改" { style.stroke-dash: 3 }
+code: {
+  label: "code 代码库（源码树 = 事实）"
+  repo: "ywf-ddd-java"
+}
+
+dec: {
+  label: "decisions/ 判例（冻结）"
+  adrs: "ADR 账册"
+}
+
+specs: {
+  label: "specs/ 三身份"
+  changes: "changes/ 审议稿\n（唯一立法通道）"
+  current: "current/ 法卷\n（主内容·严格件）"
+  archive: "archive/ 存档案卷\n（冻结·不再驱动）" { style.stroke-dash: 3 }
+}
+
+docs: {
+  label: "docs 四象限（每架一驱动）"
+  grid-columns: 2
+  grid-rows: 2
+  grid-gap: 45
+  tutorials: "教程架(tutorials)：学习 × 动手"
+  how-to: "设计卡架(how-to)：工作 × 动手"
+  explanation: "解读架(explanation)：学习 × 认知\n（论证 canonical 库·被全系统引用）"
+  reference: "字典架(reference)：工作 × 认知"
+}
+
+# ── 立法流程 ①–⑧（编号=先后序；全量语义在 README 锚表，图上只留工序名）──
+# near: center = 标签钉死本线中点（TALA 默认自动侧移避让，密区里标签会漂到邻线上造成误读）
+dev -> specs.changes: "① 立案起草" { near: center }
+specs.changes -> dev: "② 送审问决策" { near: center }
+# 判例先行折入 ③ 标签：裁前必翻 decisions/ 旧案；撞案=新立 ADR supersede，旧案正文一个字不动
+dev -> dec: "③ 拍板沉淀·先查旧案" { near: center }
+dec -> specs.changes: "④ 裁定落稿" { near: center }
+specs.changes -> code: "⑤ 按约施工" { near: center }
+code -> specs.changes: "⑥ 结果回填" { near: center }
+specs.changes -> specs.current: "⑦ 折叠落实" { near: center }
+specs.changes -> specs.archive: "⑧ 归档(瘦身闸)" { near: center }
+# 论证沉淀不是静态关系，是挂在线上两个时刻的分支义务：③⁺ 账本行（归属法§4 新设计决策行，与ADR同案）；
+# ⑦⁺ 同题散文随动（new-bill 6.4 连带义务——法未定稿，散文没有稳定对象，故等折叠同PR）
+dec -> docs.explanation: "设计（修改与决策构成一次设计）驱动文档修改：论证沉淀\n③⁺ theory-map 账本行\n⑦⁺ 同题散文·解释立法原因" { near: center }
+
+# ── 四象限静态驱动源（无编号 = 常态归属，非流程）──
+code -> docs.tutorials: "代码驱动文档修改" { near: center }
+code -> docs.reference: "代码驱动文档修改" { near: center }
+specs.current -> docs.how-to: "法卷驱动文档修改·宽松副本" { near: center }
+
+# ── 解读架引用面（淡虚线 = 阅读时引用，非驱动；时效仍经论证中转）──
+docs.how-to -> docs.explanation: "引用·原理槽" { style.stroke-dash: 3; style.opacity: 0.4 }
+docs.reference -> docs.explanation: "引用·见行" { style.stroke-dash: 3; style.opacity: 0.4 }
+docs.tutorials -> docs.explanation: "引用·延伸" { style.stroke-dash: 3; style.opacity: 0.4 }
+specs.current -> docs.explanation: "引用·论证指针" { style.stroke-dash: 3; style.opacity: 0.4 }

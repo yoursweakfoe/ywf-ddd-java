@@ -40,21 +40,30 @@
 
 ### 2.1 驱动关系（D2 图）
 
-「地图=代码驱动」是 §1 表的压缩口号——四书架的真相源其实分叉。下图把每架画回各自的驱动者；**每条边都可在 [specs/current/patterns/attribution-law.md](specs/current/patterns/attribution-law.md) §1/§2 翻到法源**（锚见表），本图只作导览、不立法（伞不立法）。
+「地图=代码驱动」是 §1 表的压缩口号——四书架的真相源其实分叉。本图两类边：**带圈编号 ①–⑧ = 立法流程的先后序**（箭头太多，光靠方向表达不了顺序，编号即工序，**上标 ⁺ = 挂在该步时刻的分支义务**（如 ③⁺/⑦⁺ 论证沉淀，不改主线八步））；流程的发起方与裁决方是**同一个人：开发者＝项目主**（AI 只递案卷，批准门硬停等拍板）——代码只是被驱动的事实，不立案、不施工）；**无编号 = 常态驱动归属**（docs 四象限每架认一个主：tutorials/reference=纯地图受代码驱动、how-to=法条宽松副本受 `current/` 直驱、explanation=论证叙事受判例沉淀驱动（**一次设计 = 修改（对现实动手）+ 决策（对价值拍板），齐备才成立**——故其"为什么"沉淀入解读架），同时是**全系统引用面最广的 canonical 库**——how-to 全卡/字典见行/教程延伸/法卷论证指针四路引用它，图上淡虚线=阅读时引用（非驱动），法卷对解读的时效影响仍须经论证中转）。图外引用面还有两处：根 AGENTS 路由「为什么 → explanation/」与 skills 同步清单（`new-service`/`modify-common-module`/`ddd-review` 均指针到解读架）。**一切按流程安排，非法路径（偷改 `current/`、未批先施工）不入图**：意图的唯一合法出口就是 ①，画歪门反而稀释正门。每条边都可在 [specs/current/patterns/attribution-law.md](specs/current/patterns/attribution-law.md) §1/§2/§4 或 `new-bill` 步骤翻到法源（锚见表），本图只作导览、不立法（伞不立法）。
 
 ![驱动关系图](diagrams/gen/knowledge/README/drive-relations.svg)
 
 > 图源 = [`diagrams/knowledge/README/drive-relations.d2`](diagrams/knowledge/README/drive-relations.d2)（唯一可编辑面）。改源后重刷：`powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1`（TALA 引擎）；防陈旧对账：同法跑 `check-diagrams.ps1`。
 
-| 边（图上短标签） | 法源锚 |
+| 边（编号=工序，无编号=常态） | 法源锚 |
 |---|---|
-| 代码 → 教程架「跑不通即bug」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |
-| 代码 → 字典架「漂移即烂」 | §2「包路径/类名/方法签名 → 源代码」「异常→HTTP 映射 → javadoc+法卷+C5」两行 |
-| 法卷 → 设计卡架「法卷赢」 | §2「用法规范/规范代码形状」行：docs 同题=设计卡、**冲突法卷赢**（宽严双份制） |
-| 判例 → 解读架「沉淀为解释」 | §2「设计论证（为什么）｜低易变｜canonical=`docs/explanation/`（含 theory-map）」行——docs 内唯一**非代码驱动**的架：意图驱动、最冻结；亦是体系蒸馏决策论证的地图侧出口 |
-| 判例 → 法卷「判例先行」 | §1 decisions 行「推翻=新立 ADR+supersede」；根 AGENTS 路由「先查旧判例再拍新板」 |
-| 法卷 → 代码「违法修码」 | §1 specs 行「与代码不符=二者之一必修」；改法一侧走下行 |
-| 代码 ↛ 法卷「违宪·偷改」（虚线✕） | §1 specs 行「禁止迁就代码偷改」；合法改法唯一通道 = `changes/` |
+| ① 开发者 → changes/「① 立案起草｜全名：判断立案·起草三件套」 | 立案发起人是**开发者的意图**（想新增行为/发现现实与法不合），不是代码自己——代码只是被驱动的事实。工序锚：`new-bill` 步骤 1–3（归属法 §4 强制同步表逐行判触发，对不上不立空案；模板 `_template/`） |
+| ② changes/ → 开发者（＝项目主）「② 送审问决策」 | `new-bill` 步骤 4 批准门：agent 递案必须硬停等人，批准前禁施工 |
+| ③ 开发者（＝项目主）→ decisions/「③ 拍板沉淀·先查旧案」 | [decisions/README](decisions/README.md)：ADR 随裁决产生、append-only 冻结。**判例先行**（折注于此边）：项目主拍板**之前**必先翻卷宗确认无撞案；撞案则旧案正文一字不动（C6 闸执法），**新立 ADR 于状态行 supersede 旧案**——推翻=立新规接管，非删旧规（§1 decisions 行、根 AGENTS「先查旧判例再拍新板」）。不再单画平行边——同端点平行边是 TALA 标签漂移病灶 |
+| ④ decisions/ → changes/「④ 裁定落稿」 | 审议期纪律：`changes/` 内=审议稿随便改（步骤 2）；两阶段批准判例（proposal 先批、再补 delta/tasks，步骤 3 末注） |
+| ⑤ changes/ → 代码「按约施工」 | `new-bill` 步骤 5：按 tasks.md 推进、完成一条勾一条、范围要扩回批准门 |
+| ⑥ 代码 → changes/「⑥ 结果回填」 | 步骤 5–7：勾账 + 构建/测试全绿按变更性质定档；delta 每条 SHALL 取证源折叠后须指真实 文件:行/测试名 |
+| ⑦ changes/ → current/「⑦ 折叠落实」 | `new-bill` 步骤 6.1（ADDED 入位/MODIFIED 整节替换/REMOVED 删节留因）= 归属法 §4 文档同步义务**唯一时点** |
+| ⑧ changes/ → archive/「⑧ 归档(瘦身闸)｜整目录 git mv」 | 步骤 6.2 整目录 `git mv` 不拆件 + 6.3 只进不改 + 6.4 瘦身闸（→ 归属法 §4「案卷折叠入 archive 前」行） |
+| **③⁺/⑦⁺ 分支** 判例 → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑦⁺ 同题散文·解释立法原因」 | 论证沉淀**不是静态关系，是挂在线上两个时刻的分支义务**：③⁺ 拍板当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 ADR 新立与账本登记钉同一行（索引与案卷不可分家）；⑦⁺ 折叠当刻同题散文（分层设计篇）随案改写——`new-bill` 6.4 连带义务、`ddd-review`「explanation 已随动」；法未定稿前散文没有稳定对象，故必须等折叠同 PR（"同步义务唯一时点"教义的另一半） |
+| 代码 → 教程架(tutorials)「代码驱动文档修改」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |
+| 代码 → 字典架(reference)「代码驱动文档修改」 | §2「包路径/类名/方法签名 → 源代码」「异常→HTTP 映射 → javadoc+法卷+C5」两行 |
+| current/ → 设计卡架(how-to)「法卷驱动文档修改·宽松副本」 | §2「用法规范/规范代码形状」行：docs 同题=设计卡（宽松件）、**冲突法卷赢**（宽严双份制） |
+| current/ ⇢ 解读架（淡边）「引用·论证指针」 | **时效上无直驱边**（法条改论证存活，影响必经 ③ 新判例中转——与设计卡架"直驱宽松副本"恰成对照）；**引用上有真边**：法卷涉论证/对照表处只放指针不复制（D6 零复制），`external-gateway.md`「对偶结构对照表 canonical 只在解读架」、CC-6 理由账本 → theory-map、归属法 §2 设计论证行 canonical=`docs/explanation/` 自身 |
+| how-to 全卡 ⇢ 解读架「引用·原理槽」 | 每张设计卡首行固定位 `> 设计原理 → ../explanation/*.md`（13/13 全卡覆盖，[how-to/README](docs/how-to/README.md) 三架分工表） |
+| reference ⇢ 解读架「引用·见行」 | [glossary](docs/reference/glossary.md) 多行「→ 见 theory-map / infrastructure / adapter」；「理论账本」词条 |
+| tutorials ⇢ 解读架「引用·延伸」 | [quickstart](docs/tutorials/quickstart.md) 末节「读懂每层为什么这样设计 → explanation/」 |
 
 ## 3 · 树
 

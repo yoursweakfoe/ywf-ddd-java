@@ -71,6 +71,11 @@
 | 登记法 | 新增/迁移文档仅登记 docs/README 一处，其余载体只放指针 | → [docs/README](../README.md) |
 | 理论账本 | 模式采纳/未采纳的论证台账（通往法律的地图，本身不是法律） | → [theory-map.md](../explanation/theory-map.md) |
 | ADR（判例） | 卷宗条目：全局唯一编号、append-only、推翻=新立案+supersede | → [decisions/README](../../decisions/README.md) |
+| 一次设计 | 定名复合事件：**修改（对现实动手）+ 决策（对价值拍板）齐备才算一次设计**；设计的论证沉淀出口=解读架 | → [knowledge/README §2.1](../../README.md)（驱动关系图边定义） |
+| 开发者＝项目主 | 立法流程的发起方与裁决方同人（AI 只递案卷，批准门硬停等拍板）；代码不立案、不施工，只是被驱动的事实 | → [knowledge/README §2.1](../../README.md) 导语 |
+| 立法八步（①–⑧） | 流程正序定名：立案起草→送审问决策→拍板沉淀→裁定落稿→按约施工→结果回填→折叠落实→归档 | → [knowledge/README §2.1 锚表](../../README.md)（各步法源= new-bill 步骤号） |
+| 判例先行 | ③ 拍板前必翻 decisions/ 旧案确认无撞案；撞案=新立 ADR + supersede，旧案正文一字不动 | → [knowledge/README §2.1 行③](../../README.md)、[decisions/README](../../decisions/README.md) |
+| 论证沉淀 | 判例→解读架的两个分支义务（上标 ⁺ 记号）：③⁺ theory-map 账本行（与 ADR 同案）；⑦⁺ 同题散文·解释立法原因随折叠 | → `knowledge/specs/current/patterns/attribution-law.md` §4、[knowledge/README §2.1](../../README.md) |
 | 压缩宪法 / 就近宪法 | 根 AGENTS.md 九条每次必读；模块目录 AGENTS.md nearest-wins | → `AGENTS.md` 路由 |
 
 ## 命名映射规范
