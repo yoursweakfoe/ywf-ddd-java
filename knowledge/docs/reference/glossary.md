@@ -51,8 +51,8 @@
 
 | 术语 | 一句话 | canonical |
 |------|------|------|
-| 知识伞 | 根级 `knowledge/`：三类知识三个法律区 + 执法工具链同伞收纳，伞自身不立法 | → [knowledge/README.md](../../README.md) |
-| 诸区分野（四态） | 一区一法律：地图 / 契约（法律）/ 判例卷宗 / 方法（+ 执法工具链） | → `knowledge/specs/current/patterns/attribution-law.md` §1 |
+| 知识伞 | 根级 `knowledge/`：两类知识两个法律区 + 执法工具链同伞收纳，伞自身不立法（判例已归卷：裁决住案卷 §裁决记录） | → [knowledge/README.md](../../README.md) |
+| 诸区分野（三态） | 一区一法律：地图 / 契约（法律）/ 方法（+ 执法工具链）；裁决快照住案卷 specify §裁决记录，不独立成态 | → `knowledge/specs/current/patterns/attribution-law.md` §1 |
 | 判据一句话 | 「这句话能机械化执行吗？能→法卷；不能→docs」——内容归属的唯一问句 | → [knowledge/README §2](../../README.md)、`specs/README` 宽严双份 |
 | 宽严双份 | 法卷=严格件（唯一权威），docs=宽松件（语感与指针，禁条款编号与精确参数表）；冲突法卷赢 | → `specs/README` §宽严双份 |
 | 法卷 | `specs/current/{modules,patterns}/`——条款 + 取证源 + 规范形状 + 生效登记的严格件容器 | → `specs/README` |
@@ -70,15 +70,14 @@
 | 七校验 | check-docs 机器闸（C1–C7），退出码=FAIL 数，非零即返工 | → [doc-guards](doc-guards.md) |
 | 登记法 | 新增/迁移文档仅登记 docs/README 一处，其余载体只放指针 | → [docs/README](../README.md) |
 | 理论账本 | 模式采纳/未采纳的论证台账（通往法律的地图，本身不是法律） | → [theory-map.md](../explanation/theory-map.md) |
-| ADR（判例） | 决策事件件：**历元编号**（全局唯一限于当期；清册改元自 0001 重启）、append-only、推翻=新立案+supersede；载事件、当时思考快照与 Confirmation 授权——**论证现行版不住这里**（⑦⁺ 复写解读架，篇脚回指快照，论证沉淀案）；本体到期随册彻底抹除 | → [decisions/README](../../decisions/README.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
+| §裁决记录（案卷） | 案卷级决策事件唯一居所：门次收据＋裁定与当时理由＋supersede 宣告（Confirmation 收据必填）；裁一条落一条、落笔不改，随案封存 archive、到期随册归零（行灭理存）——2026-09 判例归卷案废独立判例区所立；论证现行版不住这里（⑨⁺ 复写解读架，篇脚回指快照） | → [changes/README](../../specs/changes/README.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
 | 一次设计 | 定名复合事件：**修改（对现实动手）+ 决策（对价值拍板）齐备才算一次设计**；设计的论证沉淀出口=解读架 | → [knowledge/README §2.1](../../README.md)（驱动关系图边定义） |
 | 开发者＝项目主 | 立法流程的发起方与裁决方同人（AI 只递案卷，批准门硬停等拍板）；代码不立案、不施工，只是被驱动的事实 | → [knowledge/README §2.1](../../README.md) 导语 |
-| 立法八步（①–⑧） | 流程正序定名：立案起草→送审问决策→拍板沉淀→裁定落稿→按约施工→结果回填→折叠落实→归档 | → [knowledge/README §2.1 锚表](../../README.md)（各步法源= new-bill 步骤号） |
-| 决策快照回指 | 解读篇页脚强制 `→ ADR-NNN（决策快照）`——流可溯源、读者不必考古（2026-09 论证沉淀案）；**仅活册期有效**，首期清册时整行删除（行灭理存，清册案） | → [归属法 §4「案卷折叠时（⑦⁺）」行](../../specs/current/patterns/attribution-law.md) |
-| 判例先行 | ③ 拍板前必翻 decisions/ 旧案确认无撞案；撞案=新立 ADR + supersede，旧案正文一字不动 | → [knowledge/README §2.1 行③](../../README.md)、[decisions/README](../../decisions/README.md) |
-| 论证沉淀 | 判例→解读架的两个分支义务（上标 ⁺ 记号）：③⁺ theory-map 账本行（与 ADR 同案）；⑦⁺ 沉淀论证（现行版）**强制复写**入同题解读篇、篇脚回指 `ADR-NNN（决策快照）` | → [归属法 §1/§4](../../specs/current/patterns/attribution-law.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
-| 卷宗清册制 | `decisions/` 与两侧 archive 到期**彻底抹除**：本体整袋删 + 账行同裁 + 活面标识符净空；C6 两臂执法（冻结臂守在位、清册臂守归零自洽） | → [归属法 §1「卷宗清册制」注](../../specs/current/patterns/attribution-law.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
-| 清册即改元 | 一次清册划一个历元：两册空壳交付、ADR 编号自 0001 重启、跨世同号法不救济；仪式产物（清册 bill 自身）不豁免于下期仪式 | → 归属法 §1 同注 |
+| 立法十步（①–⑩） | 流程正序定名：立案起草→Specify 门送审·裁定落笔→裁定入稿→Plan 门送审·放行裁定→按约施工→取证回填→折叠落实→归档（门回合一箭双号；⁺ 上标=挂时刻分支义务） | → [knowledge/README §2.1 锚表](../../README.md)（各步法源= new-bill 步骤号；旧八步沿革映射见 2026-09-adr-into-bill 案卷） |
+| 决策快照回指 | 解读篇页脚强制 `→ 案卷 <date-slug> §裁决记录（决策快照）`——流可溯源、读者不必考古（2026-09 论证沉淀案立、判例归卷案换形）；**仅活册期有效**，清册时整行删除（行灭理存） | → [归属法 §4「案卷折叠时（⑨⁺）」行](../../specs/current/patterns/attribution-law.md) |
+| 案卷先行 | ②③ 门回合裁定前必翻 `specs/archive/` 封存案卷 §裁决记录与解读架确认无撞案；撞案=新案 §裁决记录宣告 supersede，旧案一字不动 | → [knowledge/README §2.1 行②③](../../README.md)、归属法 §2「裁决与当时思考」行 |
+| 论证沉淀 | 案卷→解读架的两个分支义务（上标 ⁺ 记号）：③⁺ theory-map 账本行（与 §裁决记录落条同案）；⑨⁺ 沉淀论证（现行版）**强制复写**入同题解读篇、篇脚回指案卷 §裁决记录 | → [归属法 §1/§4](../../specs/current/patterns/attribution-law.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
+| 卷宗清册制 | 两侧 `specs/archive/` 案卷到期**彻底抹除**：本体整袋删 + 账行同裁 + 活面标识符净空；C6 两臂执法（冻结臂守在位、清册臂守废号零容忍与归零自洽；`decisions/` 区已由判例归卷案废并） | → [归属法 §1「卷宗清册制」注](../../specs/current/patterns/attribution-law.md)、[knowledge-system.md](../explanation/knowledge-system.md) |
 | 自足判据 | 清册先验门槛：每案四栏因果（立因/取舍/被拒方案及拒因/生效边界）须全文住进解读架或 current/ 条文——**没见过卷宗的读者能从解读架复述全部因果，才许抹** | → 归属法 §4「卷宗清册执行」行 |
 | 压缩宪法 / 就近宪法 | 根 AGENTS.md 九条每次必读；模块目录 AGENTS.md nearest-wins | → `AGENTS.md` 路由 |
 

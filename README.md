@@ -72,7 +72,7 @@ ywf-ddd-java/
 ├── ywf-ddd-common/        # 公共基础框架
 ├── sample-application/    # 示例业务服务
 ├── db-migration/          # 数据库迁移执行器（Liquibase 一次性 Job + schema 事实现状快照；独立 Maven 项目，不进根 reactor，未来整体迁出）
-├── knowledge/             # 知识伞：docs 地图 / specs 法律 / decisions 判例卷宗 / scripts 执法工具链
+├── knowledge/             # 知识伞：docs 地图 / specs 法律（案卷含 §裁决记录）/ scripts 执法工具链
 ├── .agents/               # AI 辅助开发规范（dotagents 约定，工具中立）
 └── AGENTS.md              # AI 代理入口文件（厂商中立标准）
 ```
@@ -95,4 +95,4 @@ ywf-ddd-java/
 
 ## 文档导航
 
-完整文档索引见 [knowledge/docs/README.md](knowledge/docs/README.md)（描述区·全仓唯一文档登记处）；框架行为契约在 [knowledge/specs/](knowledge/specs/README.md)，示例业务行为契约在 [sample-application/specs/](sample-application/specs/README.md)，架构决策判例卷宗在 [knowledge/decisions/](knowledge/decisions/README.md)。
+完整文档索引见 [knowledge/docs/README.md](knowledge/docs/README.md)（描述区·全仓唯一文档登记处）；框架行为契约在 [knowledge/specs/](knowledge/specs/README.md)，示例业务行为契约在 [sample-application/specs/](sample-application/specs/README.md)，历史裁决在 [knowledge/specs/archive/](knowledge/specs/archive/README.md) 各封存案卷 §裁决记录。

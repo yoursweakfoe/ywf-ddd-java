@@ -85,7 +85,7 @@ domain 是被依赖的核心、不依赖任何外层：application 经其接口�
 - **为何统一时间源**：为可测试性——业务测试注入固定时钟即可冻住时间；框架缺省 UTC 时钟，业务自行声明时自动退位。聚合根与领域服务取当前时间一律经注入时钟派生，不裸调无参 `now()`
 - **比较与加锁纪律**：判「同一瞬时」用 `isEqual`——`equals` 还要求偏移相等（写读恒 UTC 后该坑已被结构性消除，但比较语义仍应写对表意）；`OffsetDateTime` 是 value-based 对象，禁对其实例加锁（与虚拟线程禁 `synchronized` 同向纪律）
 
-> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/prohibitions.md)；判例论证即正文现行版（历元一文末快照账已随清册归零）。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
+> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/prohibitions.md)；裁决论证的现行版即本页正文（历元一文末快照账已随清册归零；裁决快照住封存案卷 §裁决记录）。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
 
 ### 多数据源策略
 

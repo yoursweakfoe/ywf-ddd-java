@@ -1,6 +1,6 @@
 ﻿# 文档防腐工具链（knowledge/scripts/ 三文件说明书）
 
-> **辖域**：`knowledge/scripts/` 是伞下的**执法区**——工具本体是装置不是知识（非描述/非契约/非判例），但守护知识的东西与知识同伞才内聚（2026-09-06 用户裁定，自顶层迁入；辖域隔离靠"每区各自的法律"——C6 只扫两册卷宗区〔decisions + 两侧 archive，历元制后扩〕，物理同居不产生自我执法，同日初裁"居伞外"已 supersede）。工具的**说明**属于知识 → 住本区字典架，本页即唯一说明入口（登记法见 [../README.md](../README.md)；法源：`knowledge/specs/current/patterns/attribution-law.md` §1 执法行）。
+> **辖域**：`knowledge/scripts/` 是伞下的**执法区**——工具本体是装置不是知识（非描述/非契约/非判例），但守护知识的东西与知识同伞才内聚（2026-09-06 用户裁定，自顶层迁入；辖域隔离靠"每区各自的法律"——C6 扫案卷区〔两侧 archive〕并在全仓维持废号零容忍〔`ADR-\d{4}` 永禁，编号制随 2026-09 判例归卷案废止〕，物理同居不产生自我执法，同日初裁"居伞外"已 supersede）。工具的**说明**属于知识 → 住本区字典架，本页即唯一说明入口（登记法见 [../README.md](../README.md)；法源：`knowledge/specs/current/patterns/attribution-law.md` §1 执法行）。
 
 ## 三文件一览
 
@@ -32,7 +32,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 | 全区 | 伞内全部 + `.agents/` + 根 README + AGENTS.md | C2 / C3 |
 | 定点 | 框架源码 ↔ 异常文档；`git diff HEAD`（只读）；`.agents/skills/` 实地 | C5 / C6 / C7 |
 
-`changes/`、`archive/`、`decisions/` 参与符号与计数校验但**豁免教学中立扫描**（案卷记录当时语，辖域条款见 `归属法卷` §3）；`specs/current/` 法卷自 2026-09-06 宽严双份裁定起**入列 C1/C4**——严格件必须保持 `{agg}`/虚构家族的中立形状，由机器担保而非自觉。
+`changes/`、`archive/` 参与符号与计数校验但**豁免教学中立扫描**（案卷记录当时语，辖域条款见 `归属法卷` §3）；`specs/current/` 法卷自 2026-09-06 宽严双份裁定起**入列 C1/C4**——严格件必须保持 `{agg}`/虚构家族的中立形状，由机器担保而非自觉。
 
 ### 七项检查各治什么病
 
@@ -43,7 +43,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs
 | **C3 框架符号** | 改名鬼魂 | `com.yoursweakfoe.common` 全限定名、以及以 Exception/Mapper/Presenter/Persistence/Fixtures 等结尾的类 token，必须在源码可查（或白名单） | 类改名/删除后文档照引旧名 |
 | **C4 教学中立** | 文档沦为业务镜像 | 教学代码围栏与反引号内禁真实例聚合词；标注「真实例/如/sample」的行与登记文件豁免 | 通用教例里混进了具体业务类名 |
 | **C5 映射表对账** | 异常文档漏更 | `GlobalRestExceptionHandler` 每个 `@ExceptionHandler` 处理的类必须出现在 `reference/api/common-exception.md` | 处理器加了新通道，文档表没加行 |
-| **C6 卷宗冻结 + 清册自洽（两臂）** | 判例/案卷回改、销账式偷删、空册残痕 | **冻结臂**：两册（`knowledge/decisions/` + 两侧 `specs/archive/`）本体文件在位 diff 含 minus 行即红（README 豁免；decisions 正文按宪章豁免 Status 行 1:1 对替）。**清册臂 (a)**：本体整删仅当清册 bill 存在才放行——bill 须**自名身份**（案卷 specify 正文载「清册 bill」字样，或案卷目录 slug 含 `cull`；旁称册制不误开臂——2026-09 由「一词即开」收严，sdd 案实测病灶）：在途（磁盘 changes/）或**自焚识别**（本轮 diff 删除的案卷 specify〔或旧 proposal〕其 HEAD 版满足同一自名判据，对应 §4 清册行「bill 末步自删」），且删后该册必须归零（禁拆件/择留）。**清册臂 (b) 空册自洽**：decisions 空 ⇒ 活面（仅扫 Markdown）不得残留 `ADR-\d{4}` 具体编号；两 archive 空 ⇒ 不得残留 date-slug 案名（历元工作区三区自身豁免；输出含 residue 计数与两臂 info 行） | 改旧 ADR 正文 = 冻结臂红；无 bill 偷删 = 清册臂红；册清空了但活面仍按具体编号指案 = 空册自洽红 |
+| **C6 案卷冻结 + 清册自洽（两臂）** | 封存档回改、销账式偷删、废号残留 | **冻结臂**：两侧 `specs/archive/` 案卷本体文件在位 diff 含 minus 行即红（README 豁免；旧 decisions Status 行对替豁免随判例归卷废止）。**清册臂 (a)**：本体整删仅当清册 bill 存在才放行——bill 须**自名身份**（案卷 specify 正文载「清册 bill」字样，或案卷目录 slug 含 `cull`；旁称册制不误开臂——2026-09 由「一词即开」收严，sdd 案实测病灶）：在途（磁盘 changes/）或**自焚识别**（本轮 diff 删除的案卷 specify〔或旧 proposal〕其 HEAD 版满足同一自名判据，对应 §4 清册行「bill 末步自删」），且删后该册必须归零（禁拆件/择留）。**清册臂 (b) 废号零容忍 + 空册自洽**：活面（仅扫 Markdown，changes/archive 历史语三区豁免）残留 `ADR-\d{4}` 具体编号**即红**——常设臂不待册空，编号制已废、残留即鬼（2026-09 判例归卷案）；两 archive 空 ⇒ 不得残留 date-slug 案名（输出含 residue 计数与两臂 info 行） | 改封存档正文 = 冻结臂红；无 bill 偷删 = 清册臂红；活面文档残留 `ADR-00NN` 式编号 = 废号臂红；册清空了但案名引用仍存 = 空册自洽红 |
 | **C7 技能闸** | skill 逸出 spec 纪律 | `.agents/` 一级住民白名单（`README.md` + `skills/` + gitignored `memory/`/`logs/`）；每个技能目录必有 `SKILL.md`，其 frontmatter `name`==目录名（kebab，≤64）、`description` 非空 ≤1024、正文 ≤500 行（Agent Skills 规范上限；案卷 历元一工位案 L2） | skills/ 混进散文件或白名单外目录；`name:` 与目录漂移 |
 
 ### 变红之后的裁决纪律

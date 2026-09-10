@@ -55,10 +55,10 @@ Product 契约面无修改（价格/名称不可变）、无删除、无上下�
 
 - **PI-1（库存非负）** `stock >= 0` 恒成立：领域层 `deductStock` 守卫 + 聚合 `validate()`（`product:err.stockNegative`）在每次 save/update 复核双重执法。（源：`Product.java:77-81,110-112`、`MybatisPersistence.java:212,274` `validateIfAggregate`）
 - **PI-2（防超卖守恒）** 并发下单下同一商品：剩余库存 ≥0、成功数+剩余=初始（严格守恒）——乐观锁版本条件而非行锁承担并发正确性。（实证 `T/integration/OptimisticLockConcurrencyTest.java:118-125`；SQL 依据 `ProductMapper.xml` updateById 版本条件）
-- **PI-3（乐观锁三分通道）** 与 order.md OI-1 同一框架事实：UPDATE 0 行+实体在 → `OptimisticLockConflictException`(409 可重试)；UPDATE 0 行+实体没 → ISE(409 不重试)；INSERT/DELETE 0 行 → `SilentWriteLossException`(500+ERROR)。论证指针：decisions/ 旧案、旧案（不复述）。Product 是这条通道的**主要受试方**（下单/取消冲突全部落在 Product 行上，源：`InventoryDomainService.java:54,69` 的 update 调用位）。
+- **PI-3（乐观锁三分通道）** 与 order.md OI-1 同一框架事实：UPDATE 0 行+实体在 → `OptimisticLockConflictException`(409 可重试)；UPDATE 0 行+实体没 → ISE(409 不重试)；INSERT/DELETE 0 行 → `SilentWriteLossException`(500+ERROR)。论证指针：`MybatisPersistence` javadoc 与解读架（不复述）。Product 是这条通道的**主要受试方**（下单/取消冲突全部落在 Product 行上，源：`InventoryDomainService.java:54,69` 的 update 调用位）。
 - **PI-4（单价唯一来源）** `Product.price` 是下单订单项单价的唯一来源，客户端不可报价。（源：`Product.java:27-29` 字段注释「下单时订单项单价的唯一来源」、`PlaceOrderHandler.java:61-66`；实证 `PlaceOrderHandlerTest.handle_shouldCreatePendingOrderWithRealUnitPrice`）
 - **PI-5（批量加载反 N+1）** 跨聚合取商品一律 `findAllById` 单次 IN；不存在 ID 静默缺席、由调用方守 `product:err.notFound`。（源：`S/domain/product/repository/ProductRepository.java:15-20` javadoc、`InventoryDomainService.java:76-81,103-106`）
-- **PI-6（错误码登记）** 本聚合全部错误为 `BusinessException` + i18n 位点 `product:err.{scene}`：`notFound` / `insufficientStock`(携 params) / `quantityMustBePositive` / `nameRequired` / `priceRequired` / `priceNegative` / `stockNegative`（抛出点：`Product.java:75,78,91,100-111`、`InventoryDomainService.java:105`、`PlaceOrderHandler.java:98`、`GetProductHandler.java:24`）。位点约定论证见 decisions/ 旧案（不复述）。
+- **PI-6（错误码登记）** 本聚合全部错误为 `BusinessException` + i18n 位点 `product:err.{scene}`：`notFound` / `insufficientStock`(携 params) / `quantityMustBePositive` / `nameRequired` / `priceRequired` / `priceNegative` / `stockNegative`（抛出点：`Product.java:75,78,91,100-111`、`InventoryDomainService.java:105`、`PlaceOrderHandler.java:98`、`GetProductHandler.java:24`）。位点约定论证见 EV-2 条款与解读架（不复述）。
 - **PI-7（无契约枚举镜像）** Product 面**不存在** domain↔contract 枚举对（无 status 值域），`ContractEnumParityTest` 的 PAIRS 现仅 Order 一行——将来为 Product 引入状态值域时，奇偶锁义务随之生效（先例规则见 order.md OI-8）。（源：`T/contract/ContractEnumParityTest.java:26-30`）
 
 ---

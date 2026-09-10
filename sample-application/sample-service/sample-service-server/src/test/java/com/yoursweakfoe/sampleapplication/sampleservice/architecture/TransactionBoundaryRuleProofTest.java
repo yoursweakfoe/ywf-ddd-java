@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * R11「@Transactional ∧ 显式 rollbackFor」的自证测试 —— 证明增强后的规则<strong>会失败</strong>、
  * <strong>白名单不是死闸</strong>、<strong>主语锚点不外溢</strong>。
  *
- * <p>背景（ADR-0002）：教义（BP-10/WC-2）承诺 {@code @Transactional(rollbackFor = Exception.class)}，
+ * <p>背景（R11 严格化，2026-09「修码就法」裁决）：教义（BP-10/WC-2）承诺 {@code @Transactional(rollbackFor = Exception.class)}，
  * 旧 R11 只查注解存在性——裸标注释照样过闸，而 Spring 默认回滚规则对受检异常不回滚，
  * 半途提交是一口真实的缝。规则升级为「属性显式存在」检查后，按 R4 空文教训同型补负证明：
  * 新谓词若无牙（属性名拼错、注解类型误配、stream 判据写反），「零命中通过」与「永假」不可区分。

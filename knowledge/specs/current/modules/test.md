@@ -57,7 +57,7 @@ class OrderAppServiceTest {
 
 ## 规则集治理（TR-1~3）
 
-> 2026-09 ArchUnit 论证载体分工案（ADR-0001）折叠入卷。设计论证的现行版住解读架 [`docs/explanation/architecture-rules.md`](../../../docs/explanation/architecture-rules.md)，本节只载治理条款（严格件）。
+> 2026-09 ArchUnit 论证载体分工案（案卷 2026-09-archunit-rule-doc）折叠入卷。设计论证的现行版住解读架 [`docs/explanation/architecture-rules.md`](../../../docs/explanation/architecture-rules.md)，本节只载治理条款（严格件）。
 
 | # | SHALL | 取证 | 背书 |
 |---|---|---|---|

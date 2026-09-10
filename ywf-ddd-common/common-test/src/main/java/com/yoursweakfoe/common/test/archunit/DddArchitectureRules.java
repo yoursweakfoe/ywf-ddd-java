@@ -348,7 +348,7 @@ public final class DddArchitectureRules {
             "org.springframework.transaction.annotation.Transactional";
 
     /**
-     * R11 判定（ADR-0002 严格化）：{@code @Transactional} 存在 ∧ {@code rollbackFor} 属性
+     * R11 判定（2026-09「修码就法」严格化裁决）：{@code @Transactional} 存在 ∧ {@code rollbackFor} 属性
      * <strong>显式声明</strong>。严格度=存在性、不判值（{@code Throwable.class} 等等价或更严
      * 写法放行；缺注解违例由 and 前段报告，本段只对「裸标」补位）。裸标即 Spring 默认回滚
      * 规则的 checked-exception 缝——教义（BP-10/WC-2）不接受这口缝。
@@ -380,7 +380,7 @@ public final class DddArchitectureRules {
      * 机器红线。<strong>怎么判</strong>：{@code methods} 级，名 {@code handle} ＋声明类实现
      * {@code CommandHandler} 标记（锚点而非包位置）⇒ {@link #TRANSACTIONAL_WITH_EXPLICIT_ROLLBACK_FOR}
      * （注解存在 ∧ 属性显式声明）；读侧 {@code QueryHandler} 刻意豁免（只读可省事务）。
-     * <strong>严格度定档（ADR-0002）</strong>：存在性检查、<strong>不判值</strong>——
+     * <strong>严格度定档（2026-09 严格化裁决）</strong>：存在性检查、<strong>不判值</strong>——
      * {@code Throwable.class} 等等价或更严的显式写法放行，属性值白名单不做（值级执法另案）。
      * <strong>负证明</strong>：{@code TransactionBoundaryRuleProofTest}（四锁：裸标必咬／漏标必咬／
      * 显式标注必放／非 Handler 不咬）。<strong>残余逃逸面（登记）</strong>：包内不实现接口的编排

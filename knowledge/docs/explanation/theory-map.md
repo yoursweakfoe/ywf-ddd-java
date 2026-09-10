@@ -137,7 +137,7 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| 注解属性存在级执法（R11 严格化，2026-09，ADR-0002） | 法卷（BP-10/WC-2）承诺 `@Transactional(rollbackFor = Exception.class)` 而 Spring 默认回滚规则不覆盖受检异常——裸标注解＝半途提交缝；红线升级为「注解 ∧ 属性显式存在」双查，严格度定档**存在性、不判值**（`Throwable.class` 等价更严变体放行）；配四锁负证明（裸标/漏标必咬、显式必放、非主语不咬）。旧「只查存在性」缺口账 A 就此销账 → [architecture-rules.md](architecture-rules.md)「装配位置块」节 |
+| 注解属性存在级执法（R11 严格化，2026-09，「修码就法」无案裁决——见 OL/WC 卷生效登记） | 法卷（BP-10/WC-2）承诺 `@Transactional(rollbackFor = Exception.class)` 而 Spring 默认回滚规则不覆盖受检异常——裸标注解＝半途提交缝；红线升级为「注解 ∧ 属性显式存在」双查，严格度定档**存在性、不判值**（`Throwable.class` 等价更严变体放行）；配四锁负证明（裸标/漏标必咬、显式必放、非主语不咬）。旧「只查存在性」缺口账 A 就此销账 → [architecture-rules.md](architecture-rules.md)「装配位置块」节 |
 
 **未采纳：**
 
@@ -182,10 +182,10 @@
 
 | 模式 / 制度 | 本项目采纳要素 |
 |------|--------|
-| 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，论证沉淀案） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（四件案卷，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
-| 案卷四段制（specify → plan → tasks → implement，2026-09，四段案卷案） | 过程件内部一件一身份：Specify 定做什么/验收（AC 账）、Plan 定怎么做+改哪些法（技术 P-x + 修卷 delta 条文唯一居所）、Tasks 纯清单（条内零参数指回 P-x）、Implement 记做了多少/凭什么是（勾验/AC→证据/源回填/漂移/收官闸）；批准门 = Specify 门 → Plan 门，**每案两停不论大小——法面刚性、出口在对话**（豁免只出自会话明示，ADR-0003 决策快照）；采证谱系 = Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）合流，命名取 Spec Kit 避与 delta `### Requirement:` 撞名——全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
-| 卷宗清册制（历元归零、改元重启，2026-09，清册案） | 两册（`decisions/` + 两侧 archive）= 可清册存储：发布节点经清册 bill **彻底抹除**（本体整袋删 + 账行同裁 + 活面标识符净空，行灭理存）；前置自足判据=每案四栏因果（立因/取舍/被拒方案及拒因/生效边界）全文先住解读架，再核表随 bill 递交缺案不批；清册即改元、编号历元重启；法不考古（git 历史非知识依赖）；仪式产物不豁免于仪式——全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
-| 规则集论证载体分工（ArchUnit 守护，历元二首案 ADR-0001） | 一行三判：论证现行版 canonical 住解读专论、代码 javadoc 只携挂载最小契约（守护/怎么判/挂载/空转四栏）、R 编号稳定性等规范行上收法卷 TR 系（法卷外不留裸法）——全文 → [architecture-rules.md](architecture-rules.md) |
+| 两类件分家 + 论证沉淀分层 + 判例归卷（知识系统自指裁决，2026-09，论证沉淀案立、判例归卷案成） | 同一决策事实按时间属性两分：立法过程与裁决事件（判决快照＋Confirmation 收据＋supersede 宣告）归案卷（四件，specify §裁决记录为裁决唯一居所，封存）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑨⁺ 强制复写 + 篇脚回指案卷快照）；案卷↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
+| 案卷四段制（specify → plan → tasks → implement，2026-09，四段案卷案） | 过程件内部一件一身份：Specify 定做什么/验收（AC 账）、Plan 定怎么做+改哪些法（技术 P-x + 修卷 delta 条文唯一居所）、Tasks 纯清单（条内零参数指回 P-x）、Implement 记做了多少/凭什么是（勾验/AC→证据/源回填/漂移/收官闸）；批准门 = Specify 门 → Plan 门，**每案两停不论大小——法面刚性、出口在对话**（豁免只出自会话明示 → 案卷 2026-09-sdd-four-stage §裁决记录）；采证谱系 = Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）合流，命名取 Spec Kit 避与 delta `### Requirement:` 撞名——全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
+| 卷宗清册制（到期归零，2026-09 清册案立、判例归卷案缩面） | 两侧 archive 案卷袋 = 可清册存储（`decisions/` 区已随判例归卷案废并入卷）：发布节点经清册 bill **彻底抹除**（本体整袋删 + 账行同裁 + 活面标识符净空，行灭理存）；前置自足判据=每案四栏因果（立因/取舍/被拒方案及拒因/生效边界）全文先住解读架，再核表随 bill 递交缺案不批；编号制已废、清册只重启案数；法不考古（git 历史非知识依赖）；仪式产物不豁免于仪式——全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
+| 规则集论证载体分工（ArchUnit 守护，案卷 2026-09-archunit-rule-doc §裁决记录） | 一行三判：论证现行版 canonical 住解读专论、代码 javadoc 只携挂载最小契约（守护/怎么判/挂载/空转四栏）、R 编号稳定性等规范行上收法卷 TR 系（法卷外不留裸法）——全文 → [architecture-rules.md](architecture-rules.md) |
 | 宽严双份与法典化三部曲（宽严双份，2026-09） | 规范内容两份表达而权威唯一：法卷=严格件（条款+取证+形状）、docs=宽松件（判据+指针），冲突法卷赢；判据一句话：**这句话能机械化执行吗**；所治之病——应然句寄居地图架时，规范的「保证」二字会被地图守则的被动跟随溶剂掉（代码漂移时轮不到文档说不）；三步 = api 用法节入典（8 模块法卷）→ how-to 降设计卡 → 统一用法形状归卷全仓唯一样本——全文 → [knowledge-system.md](knowledge-system.md) |
 
 ### 书籍与文章
@@ -201,6 +201,6 @@
 | COLA 4.x 开源架构 (张建飞) | 分层结构、adapter 命名、应用层编排模式 |
 | 《微服务架构设计模式》 Chris Richardson | Saga、服务拆分策略 |
 
-## ADR 总索引（已迁出）
+## 裁决索引（案卷先行）
 
-> 全仓判例总索引、旧号映射与「编号复用」史注已迁至 [`knowledge/decisions/README.md`](../../decisions/README.md)。本账本仅保留理论模式与治理制度的采纳/未采纳裁决（不复述判例——归属法）。
+> 活的裁决 = `specs/current/` 法卷条文与本页/解读架现行论证；历史裁决 = `specs/archive/` 各封存案卷 specify §裁决记录（随册清册归零，**法不考古**——无总索引、无旧号映射，编号制已废故无同号歧义）。先拍新板者，必先翻此两址确认无撞案（案卷先行）。本账本仅保留理论模式与治理制度的采纳/未采纳裁决（不复述案卷——归属法）。

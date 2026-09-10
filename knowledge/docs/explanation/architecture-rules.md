@@ -33,7 +33,7 @@
 | `sampleservice.infrastructure.persistence.master.{agg}.repository.{domain\|application}.*Impl` | `…master.{agg}.repository.*Impl`（读写四实现并级） |
 | `sampleservice.contract.{agg}.adapter.rest.{Agg}Controller` | `sampleservice.contract.{agg}.adapter.rest.controller.{Agg}Controller`——与框架标记 `common.ddd.adapter.rest.controller.RestAdapter` 精确对偶（server 实现镜像同一坐标） |
 
-坐标对偶现在也是不变量的一部分：contract 契约接口、server 实现、框架 marker 三段全同深，「镜像框架 marker 坐标」被保留段纪律接管。破坏不变量的后果是成片式的：段匹配歧义复活，要么规则成片误报（把 infra 内部自依赖判成跨层），要么为躲误报加排除、排除再掩护成片漏网。这也是为什么该裁决立 ADR 而非当清理顺手改。
+坐标对偶现在也是不变量的一部分：contract 契约接口、server 实现、框架 marker 三段全同深，「镜像框架 marker 坐标」被保留段纪律接管。破坏不变量的后果是成片式的：段匹配歧义复活，要么规则成片误报（把 infra 内部自依赖判成跨层），要么为躲误报加排除、排除再掩护成片漏网。这也是为什么该裁决郑重落案卷 §裁决记录而非当清理顺手改。
 
 ## 五块分工：一条红线图的四象限加一页契约
 
@@ -126,4 +126,4 @@ contract jar 是东西向消费方的唯一依赖；它一旦 import server 内�
 十四支规则加一支契约禁令，其实只有三句话：**位置用段匹配判、本质用类型锚点判、巧合命中一律换锚点**；**能空转的规则必须说得清凭什么不空转**（负证明、实数命中、或登记教义例外——不许「大概有用」）；**覆盖不到就记账**（缺口表 + 盲区段 + 废止案——承认红线图非全图，好过假装全图）。载体分工是第四句：**红线住代码、契约住 javadoc、道理住解读架、规范住法卷**——一句话有它自己的 home，读者就不用穿过八百行找它。
 
 ---
-*本页属 `explanation/` 解读架（地图区）：治理条款的权威是法卷 [modules/test.md](../../specs/current/modules/test.md)「规则集治理」节，冲突时法卷赢（宽严双份）；本页论证为决策快照的沉淀现行版（ADR-0001〔决策快照〕）——快照冻结、本页随法演化。*
+*本页属 `explanation/` 解读架（地图区）：治理条款的权威是法卷 [modules/test.md](../../specs/current/modules/test.md)「规则集治理」节，冲突时法卷赢（宽严双份）；本页论证为决策快照的沉淀现行版（→ 案卷 2026-09-archunit-rule-doc §裁决记录〔决策快照〕）——快照冻结、本页随法演化。*

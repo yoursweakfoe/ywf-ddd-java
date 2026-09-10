@@ -54,7 +54,7 @@ common-cloud → spring-cloud-starter-openfeign                    （optional�
 
 ## 6. 设计决策（已迁出）
 
-> 本模块全部决策日志已迁至 [`knowledge/decisions/`](../../../decisions/README.md)（全局编号 ADR-NNNN；旧号映射见该文 §migration）。归属法：判例住卷宗，地图只留指针——本区不再维护决策正文。
+> 本模块历史决策日志已随史卷宗归零（法不考古，无编号映射）。现行归属：裁决快照住封存案卷 §裁决记录、论证现行版住 `docs/explanation/`，地图只留指针——本区不维护决策正文。
 
 ## 7. 职责边界与技术债
 

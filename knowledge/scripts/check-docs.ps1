@@ -5,9 +5,9 @@
 .DESCRIPTION
   C1 pattern-instantiation  C2 file-count consistency  C3 framework symbols
   C4 business-word neutrality in pedagogy code  C5 exception mapping table parity  C6 dossier zones, two arms:
-    freeze arm = body files append-only (decisions bodies allow Status-line 1:1 swap per charter; archive bodies any minus = red; README exempt)
+    freeze arm = archive bill bodies append-only in place (any minus = red; README exempt; decisions Status-swap exemption retired by precedent-into-bill)
     cull arm   = (a) whole-file body deletions allowed only under a cull bill (bill must SELF-DECLARE: specify content matches '清册\s*bill' OR dir slug contains 'cull'; pre-4-stage bills: proposal.md; in-flight on disk OR self-immolated in this diff - see attribution-law §4) AND the zone must be fully emptied (no partial cull);
-                 (b) empty-dossier self-consistency: when a dossier is empty, no concrete identifier (ADR-\d{4} / date-slug) may remain anywhere on the living surface
+                 (b) retired-number zero-tolerance ALWAYS armed: no ADR-\d{4} identifier may live on the md surface outside changes/archive historical zones (numbering system abolished by precedent-into-bill) + empty-dossier self-consistency (both archives empty => no date-slug case name on the living surface)
   C7 skill-workspace conformance (.agents residents whitelist + SKILL.md spec gates: name==dir, desc<=1024, body<=500)
   Exit code = number of failing checks. -SelfTest asserts detection of injected violations.
 .NOTES
@@ -52,7 +52,6 @@ $teachEntries = if ($hasUmbrella) { @('knowledge/docs', '.agents', 'knowledge/sp
 $teachMd = Get-MdPaths $teachEntries
 $allMd   = Get-MdPaths (@('knowledge', 'docs', '.agents', 'sample-application/specs', 'AGENTS.md', 'README.md'))
 $exDocRel = if ($hasUmbrella) { 'knowledge/docs/reference/api/common-exception.md' } else { 'docs/common/common-exception.md' }
-$decDirs = @(@('knowledge/decisions', 'docs/adr') | Where-Object { Test-Path (Join-Path $root $_) })
 
 $sampleBase = Join-Path $root 'sample-application'
 $fwBase     = Join-Path $root 'ywf-ddd-common'
@@ -199,17 +198,16 @@ if ($handlerSrc -and (Test-Path $exDoc)) {
     else { "C5 info: handlers covered $covered/$(($covered + $missing.Count)) OK" }
 }
 
-# ---------- C6 dossier freeze + cull self-consistency (two arms; 历元一清册案 L1；首期清册案增自焚识别) ----------
+# ---------- C6 dossier freeze + cull self-consistency (two arms; 历元一清册案 L1；首期清册案增自焚识别；判例归卷案 2026-09：decisions 区废并入案卷、废号臂转常设) ----------
 # git may write harmless warnings (CRLF etc.) to stderr; PS5.1 EAP=Stop turns native stderr into a terminating
 # error even with 2>$null — downgrade for this block, restore at the end.
 $eapPrev = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-$dossierZones = @($decDirs + @('knowledge/specs/archive', 'sample-application/specs/archive') |
-    Select-Object -Unique | Where-Object { Test-Path (Join-Path $root $_) })
+$dossierZones = @(@('knowledge/specs/archive', 'sample-application/specs/archive') |
+    Where-Object { Test-Path (Join-Path $root $_) })
 function Get-DossierBodyNames([string]$zone) {
     $zp = Join-Path $root $zone
     if (-not (Test-Path $zp)) { return @() }
-    if ($zone -match 'archive') { @(Get-ChildItem $zp -Directory -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }) }
-    else { @(Get-ChildItem $zp -Filter 'ADR-*.md' -File -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }) }
+    @(Get-ChildItem $zp -Directory -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
 }
 $adrIdRx = 'ADR-\d{4}'
 $slugRx  = '\d{4}-\d{2}-[a-z][a-z0-9]*(-[a-z0-9]+)+'
@@ -226,7 +224,7 @@ if (-not $cullBill) {
         Where-Object { ($_ -match '/[0-9a-z-]*cull[a-z0-9-]*/') -or (((git -C $root show "HEAD:$_" 2>$null) | Out-String)) -match '清册\s*bill' }).Count -gt 0
 }
 
-# --- freeze arm: in-place minus lines = red (decisions bodies: Status-line 1:1 swap exempt per charter) ---
+# --- freeze arm: in-place minus lines = red (archive bill bodies: any minus = red; Status 对替豁免随判例归卷废止) ---
 $freezeChecked = 0
 foreach ($z in $dossierZones) {
     foreach ($p in @(git -C $root diff HEAD --name-only --diff-filter=M -- $z 2>$null)) {
@@ -236,18 +234,7 @@ foreach ($z in $dossierZones) {
         $diff = @((git -C $root diff HEAD -- $p 2>$null | Out-String) -split "\r?\n")
         $minus = @($diff | Where-Object { $_ -match '^-' -and $_ -notmatch '^---' })
         if ($minus.Count -eq 0) { continue }
-        $isDec = @($decDirs | Where-Object { $relP -match ('^' + [regex]::Escape($_) + '/') }).Count -gt 0
-        if ($isDec) {
-            $bad = @($minus | Where-Object { $_ -notmatch '^-\*\*Status\*\*' })
-            $plusStatus = @($diff | Where-Object { $_ -match '^\+\*\*Status\*\*' })
-            if ($bad.Count -eq 0 -and $plusStatus.Count -eq $minus.Count) {
-                "C6 info: freeze arm - Status-line supersede swap allowed: $relP ($($minus.Count))"
-                continue
-            }
-            Add-Fail 'C6' "$relP : 在位涂改 $($minus.Count) line(s) - 冻结臂：除 Status 行 1:1 对替外零容忍；supersede 走新立 ADR + 索引表状态列"
-        } else {
-            Add-Fail 'C6' "$relP : $($minus.Count) deleted line(s) - 案卷本体在位不改（冻结臂）"
-        }
+        Add-Fail 'C6' "$relP : $($minus.Count) deleted line(s) - 案卷本体在位不改（冻结臂）"
     }
 }
 # --- cull arm (a): whole-file body deletions only under an in-flight cull bill, and only as total emptying ---
@@ -259,25 +246,24 @@ foreach ($z in $dossierZones) {
     if ($remain.Count -gt 0) { Add-Fail 'C6' "$z : 清册必须整册归零，删后仍余 $($remain.Count) 件 - 禁拆件/择留（清册臂(a)）" }
     else { "C6 info: $z emptied under in-flight cull bill - 清册臂(a) OK" }
 }
-# --- cull arm (b): empty dossier ⇒ zero concrete identifiers on the living surface ---
-$zoneSelfRx = '^knowledge/(decisions|specs/(changes|archive))/|^docs/adr/|^sample-application/specs/(changes|archive)/'
-$decBodies = @(Get-DossierBodyNames 'knowledge/decisions')
-$decEmpty = ($decBodies.Count) -eq 0
+# --- cull arm (b): retired-number zero-tolerance (ALWAYS armed, 判例归卷案：编号制已废、残留即鬼) + empty-dossier self-consistency (date-slug) ---
+$zoneSelfRx = '^knowledge/specs/(changes|archive)/|^sample-application/specs/(changes|archive)/'
 $arcEmpty = (@(Get-DossierBodyNames 'knowledge/specs/archive')).Count -eq 0 -and (@(Get-DossierBodyNames 'sample-application/specs/archive')).Count -eq 0
-$idHits = @()
-if ($decEmpty -or $arcEmpty) {
-    $idTargets = @($allMd | Where-Object { (($_.Replace($root + '\', '')) -replace '\\', '/') -notmatch $zoneSelfRx } | Sort-Object -Unique)
-    foreach ($f in $idTargets) {
-        $rel = (($f.Replace($root + '\', '')) -replace '\\', '/')
-        $t = [System.IO.File]::ReadAllText($f, [Text.Encoding]::UTF8)
-        if ($decEmpty) { foreach ($m in [regex]::Matches($t, $adrIdRx)) { $idHits += "$rel : $($m.Value)" } }
-        if ($arcEmpty) { foreach ($m in [regex]::Matches($t, $slugRx))  { $idHits += "$rel : slug $($m.Value)" } }
-    }
+$adrHits = @(); $slugHits = @()
+$targets = @($allMd | Where-Object { (($_.Replace($root + '\', '')) -replace '\\', '/') -notmatch $zoneSelfRx } | Sort-Object -Unique)
+foreach ($f in $targets) {
+    $rel = (($f.Replace($root + '\', '')) -replace '\\', '/')
+    $t = [System.IO.File]::ReadAllText($f, [Text.Encoding]::UTF8)
+    foreach ($m in [regex]::Matches($t, $adrIdRx)) { $adrHits += "$rel : $($m.Value)" }
+    if ($arcEmpty) { foreach ($m in [regex]::Matches($t, $slugRx)) { $slugHits += "$rel : slug $($m.Value)" } }
 }
-if ($idHits.Count) {
-    Add-Fail 'C6' "空册自洽被破：活面残留该期具体标识符 $($idHits.Count) 处（首5：$(($idHits | Select-Object -First 5) -join ' | ')）- 清册臂(b)"
+if ($adrHits.Count) {
+    Add-Fail 'C6' "废号零容忍被破：活面残留已废判例编号 $($adrHits.Count) 处（首5：$(($adrHits | Select-Object -First 5) -join ' | ')）- 清册臂(b)"
 }
-"C6 info: freeze-arm-modified=$freezeChecked; cull-bill-in-flight=$cullBill; decisions=$(if ($decEmpty) { 'EMPTY' } else { "$($decBodies.Count) bodies" }); archive=$(if ($arcEmpty) { 'EMPTY' } else { 'OCCUPIED' }); active-id-residue=$($idHits.Count)"
+if ($slugHits.Count) {
+    Add-Fail 'C6' "空册自洽被破：两册已空而活面残留 date-slug 案名 $($slugHits.Count) 处（首5：$(($slugHits | Select-Object -First 5) -join ' | ')）- 清册臂(b)"
+}
+"C6 info: freeze-arm-modified=$freezeChecked; cull-bill-in-flight=$cullBill; archive=$(if ($arcEmpty) { 'EMPTY' } else { 'OCCUPIED' }); adr-residue=$($adrHits.Count); slug-residue=$($slugHits.Count)"
 $ErrorActionPreference = $eapPrev
 
 # ---------- C7 skill-workspace conformance (agents-workspace L2) ----------

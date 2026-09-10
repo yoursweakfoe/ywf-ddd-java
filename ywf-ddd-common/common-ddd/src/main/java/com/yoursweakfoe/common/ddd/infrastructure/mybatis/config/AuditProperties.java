@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * <p>{@code AuditFieldFiller} 自动维护创建时间 / 更新时间字段，以及可选的创建人 / 修改人字段。
  * 字段名默认统一为 {@code createdAt} / {@code updatedAt} / {@code createdBy} / {@code updatedBy}
  * （缺省与 BP-S1 PG 原生建表形状逐字同构——列 `created_at` 经 map-underscore 即属性 `createdAt`，
- * 正常消费零配置；ADR-0033 将缺省从旧缩写 {@code createAt}/{@code updateAt} 随形改定，系破坏性变更）；
+ * 正常消费零配置；历元旧案将缺省从旧缩写 {@code createAt}/{@code updateAt} 随形改定，系破坏性变更）；
  * 业务若已存在不同命名的审计字段（如 {@code creator} / {@code modifier}），
  * 经本配置覆盖即可，无需强行改造表结构以对齐框架默认命名。
  *
@@ -37,7 +37,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties(prefix = "ywf.ddd.audit")
 public record AuditProperties(
-        /** 创建时间字段名，默认 {@code createdAt}（ADR-0033 随 BP-S1 形状定名） */
+        /** 创建时间字段名，默认 {@code createdAt}（历元旧案随 BP-S1 形状定名） */
         @DefaultValue("createdAt") String createField,
         /** 更新时间字段名，默认 {@code updatedAt} */
         @DefaultValue("updatedAt") String updateField,

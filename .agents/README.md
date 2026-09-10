@@ -14,7 +14,7 @@
 - 法条正文（用法规范/禁令/公约/归属法）→ `knowledge/specs/current/`（modules 8 卷 + patterns 15 卷，含法律入典改革新增 3 卷）
 - 业务行为法 → `sample-application/specs/`（镜像区）
 - 项目背景/结构地图 → 根 `README.md`、`knowledge/README.md`、`knowledge/docs/`
-- 判例 → `knowledge/decisions/`
+- 旧裁决（案卷先行）→ `knowledge/specs/archive/` 封存案卷 specify §裁决记录、`knowledge/docs/explanation/`（现行论证）
 
 原 `.agents/rules/01-05` 五部已依上述归宿拆解注销：描述归地图、规范归法典、叙事归解读、元法归归属法卷。
 

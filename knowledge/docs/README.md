@@ -1,7 +1,7 @@
 ﻿# knowledge/docs/ —— 描述区索引（地图区 · 全仓唯一文档登记处）
 
 > **本区=地图（描述）**：代码变了这里必须跟着变，与代码不符即文档 bug。守则全文见 `knowledge/specs/current/patterns/attribution-law.md`。
-> 契约在 `../specs/`、判例卷宗在 `../decisions/`——法律与卷宗**不登本索引**（各区自持索引，防双登记）。
+> 契约（含封存案卷与其 §裁决记录）在 `../specs/`——法律**不登本索引**（各区自持索引，防双登记）。
 > 人类总入口 = 根 `README.md`；AI 入口 = `AGENTS.md`。
 
 ## 四书架（按读者处境分架）
@@ -11,7 +11,7 @@
 | `tutorials/` | 从零跑通（教程） | [quickstart.md](tutorials/quickstart.md) |
 | `how-to/` | 带着任务来（**设计卡**：该不该用/怎么选，浅层指引零形状代码；一切具体如何用法卷承载） | 子索引见 [how-to/README.md](how-to/README.md)（13 篇，逐篇挂 governing 法卷） |
 | `reference/` | 查事实（字典） | [glossary.md](reference/glossary.md) 术语唯一登记（术语→canonical 指针 + 命名映射 + 订单域通用语言）· [api/](reference/api/) 框架模块文档 8 篇（common-contract/ddd/exception/cloud/pg/security/observability/test）· [doc-guards.md](reference/doc-guards.md)（`knowledge/scripts/` 防腐工具链说明书）· 包结构=源码直查（组成法见 `specs/current/patterns/aggregate-blueprint.md` §5） |
-| `explanation/` | 搞懂为什么（解读）——**论证 canonical 库、全系统被引用最广的一架**（how-to 全卡原理槽 / 字典见行 / 教程延伸 / 法卷论证指针，四路皆指此；架构决策的沉淀论证现行版住这里〔⑦⁺ 复写，快照留 `decisions/`〕，「一次设计=修改+决策」的为什么同理在此） | 层设计 5 篇（[contract](explanation/contract.md) / [adapter](explanation/adapter.md) / [application](explanation/application.md) / [domain](explanation/domain.md) / [infrastructure](explanation/infrastructure.md)）+ 专论 6 篇（[knowledge-system](explanation/knowledge-system.md) 知识系统三类件 / [cloud-integration](explanation/cloud-integration.md) 云集成 / [security](explanation/security.md) 安全层 / [observability](explanation/observability.md) 可观测 / [testing](explanation/testing.md) 测试 / [architecture-rules](explanation/architecture-rules.md) ArchUnit 规则集设计与载体分工）+ [theory-map.md](explanation/theory-map.md)（理论账本） |
+| `explanation/` | 搞懂为什么（解读）——**论证 canonical 库、全系统被引用最广的一架**（how-to 全卡原理槽 / 字典见行 / 教程延伸 / 法卷论证指针，四路皆指此；架构决策的沉淀论证现行版住这里〔⑨⁺ 复写，快照住案卷 §裁决记录〕，「一次设计=修改+决策」的为什么同理在此） | 层设计 5 篇（[contract](explanation/contract.md) / [adapter](explanation/adapter.md) / [application](explanation/application.md) / [domain](explanation/domain.md) / [infrastructure](explanation/infrastructure.md)）+ 专论 6 篇（[knowledge-system](explanation/knowledge-system.md) 知识系统三类件 / [cloud-integration](explanation/cloud-integration.md) 云集成 / [security](explanation/security.md) 安全层 / [observability](explanation/observability.md) 可观测 / [testing](explanation/testing.md) 测试 / [architecture-rules](explanation/architecture-rules.md) ArchUnit 规则集设计与载体分工）+ [theory-map.md](explanation/theory-map.md)（理论账本） |
 
 ## 登记法
 

@@ -47,7 +47,7 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- PG 生态（opt-in）：common-pg 自动注册 UUID/JSONB 等 TypeHandler（ADR-0027 判例），
+        <!-- PG 生态（opt-in）：common-pg 自动注册 UUID/JSONB 等 TypeHandler（历元旧案），
              pgjdbc 驱动经其 compile 依赖传递入 runtime classpath。
              2026-09 镜像案：test profile 直连真 PG 测试库，H2 依赖随 tc-9 裁决退役 -->
         <dependency>

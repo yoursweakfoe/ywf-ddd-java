@@ -1,6 +1,7 @@
 direction: right
 
-# 发起与裁决同人：开发者 = 项目主（图外无第三方）；容器内部层只写身份不写动作细节
+# 发起与裁决同人：开发者 = 项目主（图外无第三方）；四段 = changes 容器内四块独立段位，
+# 工序边精锚到段：裁决写在哪、delta 从哪起量、账在哪回填，图上直读（2026-09 判例归卷案：判例不再独立成区）
 dev: {
   label: "开发者"
   role: "立案意图（新增行为/现实撞法）\n批准门（批准/否决/拍板问句）"
@@ -11,14 +12,14 @@ code: {
   repo: "ywf-ddd-java"
 }
 
-dec: {
-  label: "decisions/ 判例（在位冻结·到期归零）"
-  adrs: "本历元 ADR 账（清册随本体归零，编号改元重启）"
-}
-
 specs: {
-  label: "specs/ 三身份"
-  changes: "changes/ 审议稿\n（唯一立法通道）\nspecify → plan → tasks → implement"
+  label: "specs/"
+  changes: "changes/ 审议稿（唯一立法通道）" {
+    specify: "specify\n问题 + AC 账\n§裁决记录（裁定快照+门次收据）"
+    plan: "plan\n技术形状 P-x\n§修卷 delta（条文唯一居所）"
+    tasks: "tasks\n纯执行清单"
+    implement: "implement\n执行账 + 取证 + 收官闸"
+  }
   current: "current/ 法卷\n（主内容·严格件）"
   archive: "archive/ 存档案卷\n（在位不改·到期整册归零）" { style.stroke-dash: 3 }
 }
@@ -34,21 +35,24 @@ docs: {
   reference: "字典架(reference)：工作 × 认知"
 }
 
-# ── 立法流程 ①–⑧（编号=先后序；全量语义在 README 锚表，图上只留工序名）──
-# near: center = 标签钉死本线中点（TALA 默认自动侧移避让，密区里标签会漂到邻线上造成误读）
-dev -> specs.changes: "① 立案起草（Specify：做什么/验收）" { near: center }
-specs.changes -> dev: "② 分档送审（Specify 门 → Plan 门）" { near: center }
-# 判例先行折入 ③ 标签：裁前必翻 decisions/ 旧案；撞案=新立 ADR supersede，旧案正文一个字不动
-dev -> dec: "③ 拍板沉淀·先查旧案" { near: center }
-dec -> specs.changes: "④ 裁定落稿" { near: center }
-specs.changes -> code: "⑤ 按约施工（Tasks×Implement）" { near: center }
-code -> specs.changes: "⑥ 结果回填" { near: center }
-specs.changes -> specs.current: "⑦ 折叠落实" { near: center }
-specs.changes -> specs.archive: "⑧ 归档(瘦身闸)" { near: center }
-# 论证沉淀=挂在线上两个时刻的分支义务（ADR-0036 后 ⑦⁺ 升格强制复写）：
-# ③⁺ theory-map 账本行（与 ADR 同案）；⑦⁺ 沉淀论证复写入同题解读篇、篇脚回指 ADR 快照——
-# 卷宗=冻结的事件与当时思考，解读=活的现行道理，重叠是源流非双写（归属法 §1 三类件分家）
-dec -> docs.explanation: "设计（修改与决策构成一次设计）驱动文档修改：论证沉淀\n③⁺ theory-map 账本行\n⑦⁺ 同题散文强制复写（解释立法原因）" { near: center }
+# ── 立法流程 主干①–⑩（编号=先后序；全量语义在 README 锚表，图上只留工序名；
+#    门回合一箭双号——同端点同向平行边是 TALA 标签漂移病灶，旧案学费见 doc-guards 图管线节）──
+# near: center = 标签钉死本线中点
+dev -> specs.changes.specify: "① 立案起草（Specify：做什么/验收）" { near: center }
+specs.changes.specify <-> dev: "② Specify 门送审 · ③ 裁定落笔（裁先翻 archive 案卷 §裁决记录与解读架；裁定写进 §裁决记录）" { near: center }
+specs.changes.specify -> specs.changes.plan: "④ 裁定入稿（裁决转写 P-x 与 delta 草稿）" { near: center }
+specs.changes.plan <-> dev: "⑤ Plan 门送审（技术形状+修卷量） · ⑥ 放行裁定（批准=开工，收据落 §裁决记录）" { near: center }
+# 段间派生联动（无编号=案卷内常态，非工序时刻）：施工图唯一源自 plan，账是清单的 1:1 影子（法源 changes/README 四件职责、归属法 §4 施工与验收行）
+specs.changes.plan -> specs.changes.tasks: "派生约束：条项只指 P-x（条内零参数）" { near: center }
+specs.changes.tasks -> specs.changes.implement: "映账：执行账 1:1 条项、完成即勾" { near: center }
+specs.changes.tasks -> code: "⑦ 按约施工（完成即勾）" { near: center }
+code -> specs.changes.implement: "⑧ 取证回填（账+delta 源回填+漂移回门）" { near: center }
+specs.changes.plan -> specs.current: "⑨ 折叠落实（delta 起量）" { near: center }
+specs.changes -> specs.archive: "⑩ 归档整袋（瘦身闸）" { near: center }
+# 论证沉淀=挂在时刻上的分支义务（上标⁺，不改主干十步）：③⁺ 裁定当刻 theory-map 账本行（与 §裁决记录同案）；
+# ⑨⁺ 折叠当刻沉淀论证复写入同题解读篇、篇脚回指案卷 §裁决记录——
+# 案卷=冻结的事件与当时思考，解读=活的现行道理，重叠是源流非双写（归属法 §1 两类件分家）
+specs.changes.specify -> docs.explanation: "设计（修改与决策构成一次设计）驱动文档修改：论证沉淀\n③⁺ theory-map 账本行\n⑨⁺ 同题散文强制复写（解释立法原因）" { near: center }
 
 # ── 四象限静态驱动源（无编号 = 常态归属，非流程）──
 code -> docs.tutorials: "代码驱动文档修改" { near: center }

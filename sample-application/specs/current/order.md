@@ -91,7 +91,7 @@
 - **OW-7.4（补偿原子化）** 取消与库存回补**同事务直调**（`InventoryDomainService.replenishStock`）：回补失败整体回滚，接口返回即已回补，无异步等待；成功后商品库存回到下单前值。（源：`CancelOrderHandler.java:35-44` javadoc「同生共死」；实证 `RestEndpointIntegrationTest.java:245-259` `afterCancelOrder_stockReplenished`（100→扣2→回补→100））
 - **OW-7.5（缺口）** PAID 单取消后无任何退款/对账动作——仅状态与库存事实。<!-- 待 changes/ 补全：PAID 态取消的退款流程契约位 -->
 
-<!-- 待 changes/ 补全：全聚合无所有权/身份校验——customerId 是输入不是凭证，任何调用方可对任意订单执行 pay/cancel（现行「身份不投影」姿势，论证见 decisions/ 判例，不复述；是否收紧归 changes/） -->
+<!-- 待 changes/ 补全：全聚合无所有权/身份校验——customerId 是输入不是凭证，任何调用方可对任意订单执行 pay/cancel（现行「身份不投影」姿势，论证住解读架与封存案卷 §裁决记录，不复述；是否收紧归 changes/） -->
 <!-- 待 changes/ 补全：下单无幂等键——同参重复提交产生多笔订单（源码无任何去重路径） -->
 <!-- 待 changes/ 补全：无订单修改/删除 REST 面（domain Repository 具备 deleteById，契约面刻意不暴露） -->
 
@@ -117,16 +117,16 @@
 
 ## 5. 不变量
 
-- **OI-1（乐观锁三分通道）** 影响行数 0 的分类处理：①UPDATE 0 行且实体仍在 → `OptimisticLockConflictException`（**409**，唯一可重试类别；仅下单自动重试，见 OW-1.6）；②UPDATE 0 行且实体已消失 → 普通 `IllegalStateException`（**409**，不重试）；③INSERT/DELETE 0 行 → `SilentWriteLossException`（**500+ERROR 告警通道**，重试无意义）。论证与判例：见 `knowledge/decisions/` 旧案（全量 UPDATE 决策）、旧案（ISE→409 通道）；SilentWriteLoss→500 独立通道暂无专文 ADR <!-- 待 changes/ 补全：WP-3 若收编 B4 判例则回填编号 -->。（源：`CM/common-ddd/.../persistence/MybatisPersistence.java:211-220,273-303,339` 及 `throwUpdateFailed:289-303`、`CM/common-exception/.../type/OptimisticLockConflictException.java` + `SilentWriteLossException.java` javadoc、`GlobalRestExceptionHandler` 映射表）
+- **OI-1（乐观锁三分通道）** 影响行数 0 的分类处理：①UPDATE 0 行且实体仍在 → `OptimisticLockConflictException`（**409**，唯一可重试类别；仅下单自动重试，见 OW-1.6）；②UPDATE 0 行且实体已消失 → 普通 `IllegalStateException`（**409**，不重试）；③INSERT/DELETE 0 行 → `SilentWriteLossException`（**500+ERROR 告警通道**，重试无意义）。论证与裁决：现行版住 `MybatisPersistence` javadoc（规范法载体：全量 UPDATE 决策与 ISE→409、SilentWriteLoss→500 三分通道分类）与解读架，不复述 <!-- 待 changes/ 补全：WP-3 若收编三分通道裁决史则回填其封存案卷指针 -->。（源：`CM/common-ddd/.../persistence/MybatisPersistence.java:211-220,273-303,339` 及 `throwUpdateFailed:289-303`、`CM/common-exception/.../type/OptimisticLockConflictException.java` + `SilentWriteLossException.java` javadoc、`GlobalRestExceptionHandler` 映射表）
 - **OI-2（防超卖守恒律）** 并发对同一商品下单：剩余库存 ≥0；成功订单数 ≤ 初始库存；**成功数 + 剩余库存 = 初始库存**（严格守恒）；每请求必被归类（200/409/422/500/传输失败五桶求和=请求数）。（实证 `T/integration/OptimisticLockConcurrencyTest.java:118-125`——20 线程×1 件 vs 库存 10，@Tag("stress")）
-- **OI-3（版本条件 SQL 文本）** 乐观锁由手写 XML 的 `SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_deleted = false` 文本自身承担（无运行时拦截器）；每次 UPDATE 全列覆写。（源：`resources/mapper/order/OrderMapper.xml` updateById；全量 UPDATE 理由见 decisions/ 旧案，不复述）
+- **OI-3（版本条件 SQL 文本）** 乐观锁由手写 XML 的 `SET version = version + 1 ... WHERE id = #{id} AND version = #{version} AND is_deleted = false` 文本自身承担（无运行时拦截器）；每次 UPDATE 全列覆写。（源：`resources/mapper/order/OrderMapper.xml` updateById；全量 UPDATE 理由见 `MybatisPersistence` javadoc 与解读架，不复述）
 - **OI-4（创建即合法 + 双扇门）** 聚合构造恒两扇门：新建=`OrderFactory.create`（铸 UUIDv7 + 立即 place() 校验），重建=`Order.reconstitute`（惰性）；业务构造器包私有，「谁能 new 订单」由包结构编译期锁死。（源：`Order.java:38-48` javadoc、`OrderFactory.java:12-31`；UUIDv7 策略：`OrderFactory.java:19-22` javadoc + `db-migration/.../0001-init-schema.sql` id 列定义）
 - **OI-5（不变量每次写复核）** `save/update` 持久化前框架自动再调 `validate()`：items 非空、customerId 非空、totalAmount>0 在任何一次落库时都成立（不是仅创建时）。（源：`MybatisPersistence.java:212,274` `validateIfAggregate`、`Order.java:170-180`）
 - **OI-6（派生值物化）** `totalAmount = Σ(quantity × unitPrice)` 于创建时计算并物化（写侧算、读侧只投影存储值）；订单项值对象自身守 `order:err.productIdRequired / quantityMustBePositive / unitPriceRequired`。（源：`Order.java:47,209-213`、`S/domain/order/model/OrderItem.java:17-32`；实证 `OrderTest.java:209-216` 25.50 合计）
 - **OI-7（跨聚合协调三纪律）** 库存批量操作遵守：①商品**单次 IN 查询**加载（禁 N+1）；②同商品多订单项数量**合并为一次聚合调用+一次 UPDATE**（防对同一聚合连续两次乐观锁踩空）；③全部 Product 更新按 **productId 全局升序**（TreeMap）统一锁序，消除交叉持锁死锁。（源：`S/domain/shared/service/InventoryDomainService.java:26-38,76-93`；实证 `T/domain/shared/service/InventoryDomainServiceTest.java:90-103` 合并仅 update 一次；`S/domain/product/repository/ProductRepository.java:15-20` findAllById 契约）
 - **OI-8（枚举奇偶锁）** domain `OrderStatus` 与 contract `OrderStatus` 必须恒为同一值域（任一侧增删/改名 → 构建期红）；wire 值=常量名；消费方遇未知字面量硬失败（反序列化异常），须先升级 contract jar 再消费新值。（源：`T/contract/ContractEnumParityTest.java:26-50`、`C/order/enums/OrderStatus.java:4-15`；呈现层 `valueOf` 收口脏值当场 fail-fast：`S/application/order/presenter/OrderPresenter.java:26`）
-- **OI-9（错误码登记）** 本聚合全部错误为 `BusinessException` + i18n 位点 `order:err.{scene}`，无具名领域异常（键族登记见 §6；位点约定论证见 decisions/ 旧案，不复述）。
-- **OI-10（时间/操作人）** 时间字段统一 `OffsetDateTime`；created_at/updated_at 由应用层 `AuditFieldFiller` 填充（非 DB 触发器），时钟经注入 `Clock`。（源：`Order.java:32-34`、`db-migration/.../0001-init-schema.sql` 审计列定义、`MybatisPersistence.java:214,276` fillInsert/fillUpdate；理由见 decisions/ 旧案，不复述）
+- **OI-9（错误码登记）** 本聚合全部错误为 `BusinessException` + i18n 位点 `order:err.{scene}`，无具名领域异常（键族登记见 §6；位点约定论证见 EV-2 条款与解读架，不复述）。
+- **OI-10（时间/操作人）** 时间字段统一 `OffsetDateTime`；created_at/updated_at 由应用层 `AuditFieldFiller` 填充（非 DB 触发器），时钟经注入 `Clock`。（源：`Order.java:32-34`、`db-migration/.../0001-init-schema.sql` 审计列定义、`MybatisPersistence.java:214,276` fillInsert/fillUpdate；理由见 `MybatisPersistence`/`AuditFieldFiller` javadoc，不复述）
 
 - **OS-S（形状权威引用）** 本册不复述表形状/命名条款——权威链：框架卷 BP-S1~S3 → `db-migration/.../changes/*.sql`（唯一 DDL 事实，双库实证同形）；本册仅在上限对齐括注中引用全名，形状再演进走 changes/ 通道。
 

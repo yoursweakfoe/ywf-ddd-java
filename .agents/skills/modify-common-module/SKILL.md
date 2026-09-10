@@ -9,7 +9,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 1. `knowledge/docs/reference/api/common-{module}.md`（目标模块手册，描述镜像）
 2. `knowledge/specs/current/modules/{module}.md`（对应法卷，严格件——文件名无 common- 前缀）
-3. `ywf-ddd-common/AGENTS.md`（就近宪法：javadoc 是规范法载体、破坏性变更立 ADR）
+3. `ywf-ddd-common/AGENTS.md`（就近宪法：javadoc 是规范法载体、破坏性变更立案）
 4. `ywf-ddd-common/README.md`（模块依赖拓扑）
 5. `knowledge/specs/current/patterns/prohibitions.md` §9「Common 模块约束」（构件身份三分法——依赖审查判据的单一事实源）
 
@@ -38,7 +38,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 
 - 更新 `knowledge/docs/reference/api/common-{module}.md`（地图被动跟随）：§2 核心功能类表（新增/修改的类）、§4 依赖关系（如有变化）；§3「使用方式」已降为法卷指针，形状代码不再回填该节
 - 规范形状/行为条款同步进法卷 `knowledge/specs/current/modules/{module}.md`（严格件唯一权威）——修订法卷必须走 `knowledge/specs/changes/` 程序，禁止迁就代码偷改（归属法 §4）
-- 新设计决策 → `knowledge/decisions/` 新立 ADR，决策正文不入 api 手册（其 §6「设计决策」已迁出卷宗区）
+- 新设计决策 → 本案 specify §裁决记录落条（无案「修码就法」→ 法卷生效登记行＋theory-map 账本行，→ 归属法 §4）；决策正文不入 api 手册（其 §6「设计决策」已迁出案卷）
 - 触及 javadoc 规范表（`GlobalRestExceptionHandler` 异常映射 / `MybatisPersistence` 通道行为）→ 同 PR 改其 javadoc + api 手册对应表（C5 对账 → 归属法 §4 强制同步表）
 
 ### 4. 补充/更新测试
@@ -69,7 +69,7 @@ description: 修改 ywf-ddd-common 公共模块的公开 API 或内部实现。�
 - [ ] `knowledge/docs/reference/api/common-{module}.md` 已同步更新
 - [ ] 依赖符合模块身份登记判据（禁令卷 §9 诸戒律，按登记身份对号）
 - [ ] 子 pom 声明处零 `<exclusions>`（排除只写在策略文件 depMgmt → 禁令卷 §9「exclusions 卫生集中制」）
-- [ ] 触及规范形状/行为条款：法卷 `knowledge/specs/current/modules/{module}.md` 已经 `knowledge/specs/changes/` 程序修订；破坏性公开 API 变更已新立 ADR（→ `ywf-ddd-common/AGENTS.md`）
+- [ ] 触及规范形状/行为条款：法卷 `knowledge/specs/current/modules/{module}.md` 已经 `knowledge/specs/changes/` 程序修订；破坏性公开 API 变更已立案并于该案 §裁决记录落条（→ `ywf-ddd-common/AGENTS.md`）
 - [ ] `knowledge/scripts/check-docs.ps1` 全绿：C3 符号对账牵连 api 手册与全仓 docs 引用的类/方法名——符号删改报红先修文档；豁免走 `knowledge/scripts/check-docs.whitelist.txt`，只删不增、新增须 PR 评审写理由（归属法 §6）
 - [ ] 无业务逻辑泄漏（common 模块纯技术骨架）
 
