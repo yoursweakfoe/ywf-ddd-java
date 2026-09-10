@@ -14,7 +14,7 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DddArchitectureRules` 类（每条规则的 `as(...)` 描述文本自带 R 编号前缀，与下表一致）：
+公开常量位于 `DddArchitectureRules` 类（每条规则的 `as(...)` 描述文本自带 R 编号前缀与法卷锚条款号——失败消息自带路由，与下表一致）。**本表=字典镜像**；规则集设计论证的现行版（为什么这样判、类型锚点 vs 段匹配、空转与缺口账、沿革）→ [architecture-rules.md](../../explanation/architecture-rules.md)；治理条款（编号稳定性、载体分工）→ [法卷 test.md](../../specs/current/modules/test.md)「规则集治理」节：
 
 | 常量名 | 编号 | 守护内容 |
 |--------|------|---------|
@@ -30,7 +30,7 @@
 | `CONTROLLER_IMPL_NAMING_MUST_BE_MARKED` | R8b | 类名以 ControllerImpl 结尾必须实现 RestAdapter 标记 |
 | `APPLICATION_DTOS_ARE_MARKED_AND_IN_APPLICATION` | R10a | 实现 ApplicationDTO 标记的类必须位于 application 层 |
 | `APPLICATION_DTO_PACKAGE_CLASSES_MUST_BE_MARKED` | R10b | ..application..dto.. 包下顶层类必须实现 ApplicationDTO 标记 |
-| `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional（写侧事务边界强制） |
+| `COMMAND_HANDLERS_ARE_TRANSACTIONAL` | R11 | CommandHandler.handle 必须标注 @Transactional **且显式声明 rollbackFor**（写侧事务边界强制；严格度=属性存在性、不判值，2026-09 缺口账 A 销账，持四锁负证明） |
 | `DOMAIN_HAS_NO_PUBLIC_SETTERS` | R12 | Domain 层禁止 public setter（守护充血模型不变量） |
 | `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁依赖任何写侧 `Repository` 类型——2026-09 起宾语从段匹配切换为**类型锚点**（assignableTo Repository，布局无关）；CQRS 读侧只走 QueryRepository 读端口 |
 | `SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER` | R14a | 实现 ScheduledAdapter 标记的类必须位于 adapter 层（定时任务入口角色） |
@@ -43,6 +43,7 @@
 > （adapter / application / domain / infrastructure / contract 五段只允许出现在其真实层位置，
 > 读写与接口归属改由类名后缀 + 标记接口表达），现行规则直接用裸段谓词、零层排除——sample 的
 > ApplicationArchitectureTest 已全量挂载共享常量、零本地覆写，旧防撞姿势随之退役。
+> 不变量完整论证与迁移坐标对照表 → [architecture-rules.md](../../explanation/architecture-rules.md)「保留段唯一语义」节。
 
 ### Spring Boot Test 统一版本
 
@@ -50,11 +51,7 @@ JUnit 5 + Mockito + AssertJ + Spring Test，版本由 Spring Boot BOM 管理。
 
 ## 3. 使用方式
 
-> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/
-test
-.md](../../../specs/current/modules/
-test
-.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
+> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/test.md](../../../specs/current/modules/test.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
 
 ## 4. 依赖关系
 

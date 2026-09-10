@@ -29,7 +29,7 @@ com.yoursweakfoe.common.contract
         └── IntegrationEvent.java
 ```
 
-> 包结构为扁平真值：集成事件契约直接位于 `dto/event/` 下——2026-09-05 包命名税迁移前此处曾多一层 `integration/` 嵌套子包，现已消除（迁移坐标对照见 `DddArchitectureRules` 类头）。
+> 包结构为扁平真值：集成事件契约直接位于 `dto/event/` 下——2026-09-05 包命名税迁移前此处曾多一层 `integration/` 嵌套子包，现已消除（迁移坐标对照 → [architecture-rules.md](../../explanation/architecture-rules.md)「保留段唯一语义」节）。
 
 ## 2. 核心能力
 

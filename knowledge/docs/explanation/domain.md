@@ -154,7 +154,7 @@ domain/
 
 | 允许 | 禁止 |
 |------|------|
-| 使用 common-ddd 构建块 | 引入框架**运行时**依赖（DI 容器 / AOP / 持久化 API 等）——唯一例外 `org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`），ArchUnit A2 白名单守护 |
+| 使用 common-ddd 构建块 | 引入框架**运行时**依赖（DI 容器 / AOP / 持久化 API 等）——唯一例外 `org.springframework.stereotype` 装配注解（如领域服务上的 `@Service`），ArchUnit R4 stereotype 白名单守护（A2 旧号已随上收共享库作废） |
 | 聚合根内封装业务规则 | 暴露 setter 或 public 字段 |
 | Repository 定义为接口 | 在 Domain 层实现 Repository |
 | 跨聚合通过 Repository 读取 | 跨聚合直接修改对方内部状态 |

@@ -43,7 +43,7 @@
 | DomainService | 跨聚合协调的无状态领域服务标记接口 | → 见 [cross-aggregate 法卷 CA-1](../../specs/current/patterns/cross-aggregate.md) |
 | opt-in | common 模块按需引入设计：依赖不强制传递，用到才声明 | → 见 [common-cloud.md §1 / §5](api/common-cloud.md) |
 | PgArrayType | common-pg 枚举：Java 数组类型 → PG 数组类型名映射 | → 见 [common-pg.md §2](api/common-pg.md) |
-| DddArchitectureRules | ArchUnit 预置规则常量类（R1–R14/C1 系；R15 已删除、编号作废） | → 见 [common-test.md §2](api/common-test.md) |
+| DddArchitectureRules | ArchUnit 预置规则常量类（R1–R14/C1 系；R15 已删除、编号作废） | → 见 [common-test.md §2](api/common-test.md)、[architecture-rules.md](../explanation/architecture-rules.md) |
 | RFC 9457 | Problem Details for HTTP APIs（原 RFC 7807）：type/title/status/detail/instance + `application/problem+json` | → 见 [common-exception.md §2](api/common-exception.md) |
 | 枚举双份（contract / domain） | 同名枚举在 contract 与 domain 各存一份是**刻意的上下文隔离**（`contract/{agg}/enums/` 与 `domain/{agg}/model/`）：契约稳定与建模自由解耦，**禁止为「去重」合并共享**（canonical 即本行；sample 有真实双份可对照） | 本行 |
 

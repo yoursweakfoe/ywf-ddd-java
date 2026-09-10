@@ -75,7 +75,7 @@ knowledge/
 │   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
-│   └── explanation/ 分层设计 5 篇 + 专论 5 篇（知识系统/云集成/安全/可观测/测试）+ theory-map 理论账本
+│   └── explanation/ 分层设计 5 篇 + 专论 6 篇（知识系统/云集成/安全/可观测/测试/规则集设计）+ theory-map 理论账本
 ├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿 · archive/ 存档（在位不改·到期整册归零）（业务法→ ../sample-application/specs/）
 ├── decisions/      卷宗 | ADR-NNNN 历元编号（append-only 在位冻结；清册彻底归零后改元重启）
 └── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置
