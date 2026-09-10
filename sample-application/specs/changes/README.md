@@ -4,4 +4,4 @@
 
 受理对象：示例业务行为契约（`../current/{agg}.md`）的 ADDED/MODIFIED/REMOVED 修订案。框架/脚手架行为的法案请投框架区，勿入本树。
 
-首案开册：`2026-09-order-product-pg-shape`（2026-09-08，随框架案 `2026-09-pg-native-shape-and-real-testdb` 合流施工、同 PR 折叠）。
+册况：历元一首案（样本形状落地）已随清册归零，本区现为空册；业务修订案自历元二起逐案立入。

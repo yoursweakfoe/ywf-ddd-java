@@ -99,14 +99,14 @@ application 层读端口同样以空标记定型：`QueryRepository`（`common-d
 
 - `fillInsert`：createdAt / updatedAt（已有值不覆盖）+ createdBy / updatedBy（四道宽松守卫：字段名已配置、容器存在 `CurrentUserProvider` Bean、provider 返回非 null、PO 声明该字段）
 - `fillUpdate`：无条件刷新 updatedAt +（守卫满足时）updatedBy
-- 时间源 = 注入 `Clock`（`ClockAutoConfiguration` 缺省 UTC，业务 Bean 退位，见 ADR-0006）；字段名经 `AuditProperties`（`ywf.ddd.audit.*`）可配
+- 时间源 = 注入 `Clock`（`ClockAutoConfiguration` 缺省 UTC，业务 Bean 退位，见 旧案）；字段名经 `AuditProperties`（`ywf.ddd.audit.*`）可配
 - 逻辑删除的审计刷新不走本组件——由基类把 `now` / `updatedBy` 作为 delete 语句的 SQL 参数传入
 
 ### MyBatis 持久化自动配置
 
 `MybatisDddAutoConfiguration`：装配自检**双卫兵**——`@ConditionalOnClass(SqlSessionFactory.class)`（classpath 剔除 starter 时挡住）+ `@ConditionalOnBean(SqlSessionFactory.class)`（容器级缺席挡住，如排除 `MybatisAutoConfiguration` / 自备 ORM），两路都优雅退化、不产半残 Bean。注意其语义是自检而非「保护纯领域消费方」——common-ddd 是定型装配（opinionated starter），所有采用服务都是单 jar 全套四层、不存在纯领域消费方；after mybatis-spring-boot-starter 的 `MybatisAutoConfiguration` 排序、`@Import(AuditFieldFiller)` + `@EnableConfigurationProperties(AuditProperties)`；`Clock` 由独立的 `ClockAutoConfiguration` 提供。
 
-**零运行时插件**——框架不注册任何 MyBatis `Interceptor`：分页（XML LIMIT/OFFSET 双语句）、乐观锁（UPDATE 文本的版本条件）均由手写 SQL 承担；防全表 UPDATE/DELETE 不设运行时拦截器，手写 XML 使每条语句可见、可 review，「无 WHERE 全表操作」是评审可见项而非运行时黑盒（论证见 ADR-0007）。业务侧经标准 `mybatis.*` 配置命名空间自定义（`configuration.*` / `type-aliases-package` / `mapper-locations`）。
+**零运行时插件**——框架不注册任何 MyBatis `Interceptor`：分页（XML LIMIT/OFFSET 双语句）、乐观锁（UPDATE 文本的版本条件）均由手写 SQL 承担；防全表 UPDATE/DELETE 不设运行时拦截器，手写 XML 使每条语句可见、可 review，「无 WHERE 全表操作」是评审可见项而非运行时黑盒。业务侧经标准 `mybatis.*` 配置命名空间自定义（`configuration.*` / `type-aliases-package` / `mapper-locations`）。
 
 ## 3. 使用方式
 
@@ -135,8 +135,8 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 - **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
-- **SQL 文本即契约**：每条执行的语句都在仓库里（手写 XML），无动态生成、无运行时织入（ADR-0007）
-- **`@ConditionalOnMissingBean`**：`Clock` 等平台级 Bean 允许业务项目定义自己的 Bean 覆盖，该 Bean 退位（`@Bean` 方法级条件，非类级整体退位，见 ADR-0006）
+- **SQL 文本即契约**：每条执行的语句都在仓库里（手写 XML），无动态生成、无运行时织入
+- **`@ConditionalOnMissingBean`**：`Clock` 等平台级 Bean 允许业务项目定义自己的 Bean 覆盖，该 Bean 退位（`@Bean` 方法级条件，非类级整体退位，见 旧案）
 
 ## 6. 设计决策（已迁出）
 

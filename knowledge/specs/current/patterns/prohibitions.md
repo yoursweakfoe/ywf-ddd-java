@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：禁令全表（框架法 · 严格件）
 
-> **身份**：本卷是所有「禁止」条款的一站式对照表——违反任何一条即架构违规；修卷走 `../../changes/`。前身 `.agents/rules/04`（兼收 02 的禁止面）升格入典（法案 `2026-10-rules-codification`）。ddd-review / PR 审查逐条对照本卷；已在他卷有正身者标互指。
+> **身份**：本卷是所有「禁止」条款的一站式对照表——违反任何一条即架构违规；修卷走 `../../changes/`。前身 `.agents/rules/04`（兼收 02 的禁止面）升格入典（法案 2026-10 法条归典案）。ddd-review / PR 审查逐条对照本卷；已在他卷有正身者标互指。
 > **机器对账**：C1/C3/C4 扫本卷；多数条款有 ArchUnit R## 或测试实证背书（括注处为取证）。
 
 ## §1 Domain 层禁止
@@ -40,11 +40,11 @@
 
 - 禁止任何实现类 / 业务逻辑 / 依赖 server 模块
 - 禁止依赖 Spring / MyBatis **运行时基础设施**（DI / Bean / AutoConfiguration / 持久化）
-- 允许（且应当）承载 HTTP 映射 + 文档 + 校验注解（重契约单一事实源，ADR-0010 判例）：`@RequestMapping` 系 / `@Tag` `@Operation` `@Schema` / `@NotNull` `@Valid`——均为注解级依赖，映射经 ControllerImpl 继承承载 → [CC-7](coding-conventions.md)
+- 允许（且应当）承载 HTTP 映射 + 文档 + 校验注解（重契约单一事实源，旧案 判例）：`@RequestMapping` 系 / `@Tag` `@Operation` `@Schema` / `@NotNull` `@Valid`——均为注解级依赖，映射经 ControllerImpl 继承承载 → [CC-7](coding-conventions.md)
 
 ## §6 持久化与 SQL 铁律
 
-- 禁止 MyBatis-Plus 进框架依赖树（持久化 = `DddMapper` 七语句 + 手写 XML；ADR-0007 判例）。dynamic-datasource 为经一手调研证实零耦合的多数据源 opt-in 方案，`@DS` 合法
+- 禁止 MyBatis-Plus 进框架依赖树（持久化 = `DddMapper` 七语句 + 手写 XML；旧案 判例）。dynamic-datasource 为经一手调研证实零耦合的多数据源 opt-in 方案，`@DS` 合法
 - 禁止 PO 携带任何 ORM 注解（纯 `@Data` POJO；表名/主键/版本条件/逻辑删除全在 XML SQL 文本 → BP-X2）
 - 禁止 Wrapper 式动态条件——查询一律具名 Mapper 方法 + 具名 XML 语句（`<sql>` 片段复用防漂移）
 - 建表 DDL 默认含 `version BIGINT NOT NULL DEFAULT 0` + `is_deleted BOOLEAN NOT NULL DEFAULT FALSE`，PO 声明对应字段；显式豁免的聚合 XML 省略对应条件（逐聚合自决，无共享开关 → BP-12）
@@ -53,7 +53,7 @@
 
 ## §7 时间与线程
 
-- 禁止 `LocalDateTime` / `ZonedDateTime` 作持久化时间类型（统一 `OffsetDateTime`，ADR-0006 判例：前者写入依赖会话时区、读 `timestamptz` 抛异常；后者 pgjdbc 双向抛异常）→ [CC-5](coding-conventions.md)
+- 禁止 `LocalDateTime` / `ZonedDateTime` 作持久化时间类型（统一 `OffsetDateTime`，旧案 判例：前者写入依赖会话时区、读 `timestamptz` 抛异常；后者 pgjdbc 双向抛异常）→ [CC-5](coding-conventions.md)
 - 禁止生产代码使用 `synchronized` 块/方法（虚拟线程 pinning）；互斥用 `ReentrantLock`（AGENTS 九条 8；项目启用 JDK21 虚拟线程。ThreadLocal 正常；身份上下文由 Security 链管理，业务代码勿手工清理）
 
 ## §8 通用禁止
@@ -67,7 +67,7 @@
 
 - **工具库**：依赖 = 本包编译所需；判据：最小化，超出即裁剪。
 - **定型装配**（opinionated starter，「我们做的是脚手架封装，不是库封装」）：依赖 = 使用方注定继承的**命运清单**。教义前提：所有采用方服务都是单 jar 全套四层，装配替使用方预先决策整条技术栈。
-- **试验场**（`common-packages-integration-test`，2026-09 `2026-09-common-it-consolidation` 登记）：不发布、无消费方——依赖面 = 全 common + 任意测试栈，**无最小化质证义务**（污染止于自身）；铁律反在产物侧：`src/main` 永空置（出现产码即违规，一切代码是测试）、`maven.deploy.skip` 在位、真库基座只准真 PG（TC-9 框架轨/TC-10）。
+- **试验场**（`common-packages-integration-test`，2026-09 试验场归并案 登记）：不发布、无消费方——依赖面 = 全 common + 任意测试栈，**无最小化质证义务**（污染止于自身）；铁律反在产物侧：`src/main` 永空置（出现产码即违规，一切代码是测试）、`maven.deploy.skip` 在位、真库基座只准真 PG（TC-9 框架轨/TC-10）。
 
 定型装配三条戒律：
 

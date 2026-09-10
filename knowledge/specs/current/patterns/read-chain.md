@@ -1,7 +1,7 @@
 ﻿# 用法规范法卷：读用例链（框架法 · 严格件）
 
 > **身份**：本卷是读用例链**统一用法**的唯一权威——条款与全套规范形状在此，全仓他处不得复写形状；违反本卷=修代码，修卷只走 `../../changes/` 程序。docs 同题篇（`../../../docs/how-to/read-path.md`）为设计卡（选型与边界叙事，零形状代码），冲突以本卷为准（宽严双份，2026-09-06）。
-> **机器对账**：C1（`{agg}` 实例化）/ C3（符号）/ C4（中立）扫本卷；教例家族 Reservation（虚构教例，sample 未实现，D4 教学中立教义），真实例只准出现在带「真实例」标记的指针位。开册法案：`2026-09-howto-codification`；统一用法归卷：`2026-09-usage-consolidation`。
+> **机器对账**：C1（`{agg}` 实例化）/ C3（符号）/ C4（中立）扫本卷；教例家族 Reservation（虚构教例，sample 未实现，D4 教学中立教义），真实例只准出现在带「真实例」标记的指针位。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
 
 ## §1 条款
 
@@ -9,7 +9,7 @@
 |---|---|---|---|
 | RC-1 | 读侧绕过聚合根：读端口接口定义于 `application/{agg}/repository/`，`extends QueryRepository`；infra 实现直投 PO → DTO，不加载聚合 | R13；R1b 白名单放行 infra 对该端口的实现依赖 | C1 实例化 |
 | RC-2 | QueryHandler 只注入读端口，禁止依赖 domain 侧写 Repository | R13（QueryHandler 禁触 domain 仓储） | ArchUnit |
-| RC-3 | 分页链路：Query record 经 `@ModelAttribute` 绑定 → 构造 `PageResult`；缺参绑定为原始类型默认值 → 校验注解 → 400；**无默认分页值**（此承诺自卷 `modules/contract.md` §3.1，本条互指不复述） | `modules/ddd.md` 场景 4；binding 案卷 `archive/2026-09-pagequery-default-claim` | C3 |
+| RC-3 | 分页链路：Query record 经 `@ModelAttribute` 绑定 → 构造 `PageResult`；缺参绑定为原始类型默认值 → 校验注解 → 400；**无默认分页值**（此承诺自卷 `modules/contract.md` §3.1，本条互指不复述） | `modules/ddd.md` 场景 4（binding 沿革为历元一分页参数案，已清册归零） | C3 |
 | RC-4 | 多视图投影用 ViewDTO/ViewPresenter，规则见 `application-objects.md`（AO-1 准入） | `modules/ddd.md` 场景 4 | — |
 | RC-5 | Query 契约形态：单条 = 实现 `Query` + `@NotNull` `UUID` 组件（非法格式由 Web 层类型转换拦截 → 400）；分页 = record 实现 `PageableQuery`（`pageNum()`/`pageSize()` 与 record 组件**同签名**，零覆写样板）；校验注解声明在 record 组件上；过滤字段用**契约枚举**而非裸 String——非法字面量在 Spring 绑定层即 400 typeMismatch，显式失败优于静默空页 | `PageableQuery` javadoc（入参约束由业务 record 在组件上声明；`MAX_PAGE_SIZE` 上限在册）+ 本卷 §2.2 形状；缺参无默认裁决见 RC-3 互指 | C3 |
 | RC-6 | 读端口类型纪律：端口接口 `extends QueryRepository`（common-ddd 空标记），供 R1b / R13 架构规则按类型识别，方法签名自由；端口返回 application 层**读 DTO**（无 version 字段），禁泄漏 domain 类型；读侧不经写 Repository、不经 Converter、不经 Assembler | ArchUnit R1b / R13（原篇载明）+ 本卷 §2.6 形状 | ArchUnit |

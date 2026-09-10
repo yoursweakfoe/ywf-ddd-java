@@ -85,7 +85,7 @@ domain 是被依赖的核心、不依赖任何外层：application 经其接口�
 - **为何统一时间源**：为可测试性——业务测试注入固定时钟即可冻住时间；框架缺省 UTC 时钟，业务自行声明时自动退位。聚合根与领域服务取当前时间一律经注入时钟派生，不裸调无参 `now()`
 - **比较与加锁纪律**：判「同一瞬时」用 `isEqual`——`equals` 还要求偏移相等（写读恒 UTC 后该坑已被结构性消除，但比较语义仍应写对表意）；`OffsetDateTime` 是 value-based 对象，禁对其实例加锁（与虚拟线程禁 `synchronized` 同向纪律）
 
-> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/prohibitions.md)；判例溯源见文末「决策快照账」。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
+> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/prohibitions.md)；判例论证即正文现行版（历元一文末快照账已随清册归零）。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
 
 ### 多数据源策略
 
@@ -160,14 +160,3 @@ domain/
 | 跨聚合通过 Repository 读取 | 跨聚合直接修改对方内部状态 |
 | 通过显式 if-throw + 错误码报错 | 定义具名领域异常类 |
 
----
-
-## 决策快照账
-
-本篇各处「为什么」的现行版论证沉淀自下列判例；卷宗冻结事件与当时思考，本文随法演化、烂了直接修。引用刻意留明文、不设链接——判例卷宗日后精简不产幽灵路径：
-
-- ADR-0001（决策快照）· 基类不持有 id/version
-- ADR-0006（决策快照）· 时间一型一源
-- ADR-0011（决策快照）· 字符串位点而非数字错误码
-- ADR-0012（决策快照）· RFC 9457 错误载体
-- ADR-0013（决策快照）· 409 / 422 通道分离

@@ -142,6 +142,3 @@ PaymentCO payment = paymentRestClient.get()
 | `@Tag` / `@Operation` / `@GetMapping` / `@RequestMapping`（接口）、`@Schema`（CO/CQE） | 引入运行时框架 |
 | java.io.Serializable | 依赖 server 模块 |
 
----
-
-**决策快照账**：本页「CQRS 标记纯类型」论证现行版沉淀自 ADR-0005（决策快照）、ADR-0008（决策快照）；「为什么契约绑定协议（重契约）」沉淀自 ADR-0010（决策快照），其前身 ADR-0009（决策快照，轻契约立场已废）仅以幸存内核并入该段叙事。

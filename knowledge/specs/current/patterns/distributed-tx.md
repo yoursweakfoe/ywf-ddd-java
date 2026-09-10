@@ -1,7 +1,7 @@
 ﻿# 用法规范法卷：分布式事务（框架法 · 严格件）
 
 > **身份**：本卷是 Seata AT 使用边界与 XID 透传形态**统一用法**的唯一权威——全套规范形状（依赖/配置/双端组件/Handler 模板）在此，全仓他处不得复写形状；违反本卷=修代码，修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/distributed-transaction.md`）为设计卡（选型与边界叙事，零形状代码），冲突以本卷为准。
-> **机器对账**：C1/C3/C4 扫本卷；教例家族 Invoice/Inventory 跨服务示意系（虚构，与 cross-aggregate 同系；PlaceOrderHandler 为真实例对照）。开册法案：`2026-09-howto-codification`；统一用法归卷：`2026-09-usage-consolidation`。
+> **机器对账**：C1/C3/C4 扫本卷；教例家族 Invoice/Inventory 跨服务示意系（虚构，与 cross-aggregate 同系；PlaceOrderHandler 为真实例对照）。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
 
 ## §1 条款
 

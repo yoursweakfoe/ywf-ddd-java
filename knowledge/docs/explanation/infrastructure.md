@@ -66,7 +66,7 @@ PO 零 ORM 注解、Mapper 手写七条语句、Converter 手写映射，不是�
 
 **为何转换层手写（不用 MapStruct）**。与 SQL 论证同源：AI 辅助开发下手写模板成本归零，生成器的认知负担却一分不少——注解处理链、生成代码不可见、Lombok 桥接、`@MapperScan` 误扫，全是「运行时看不见、却会替你做事」的东西。手写换来映射可见、可 grep、可评审，聚合根 reconstitute 的完整性就有了明确守护人：**往返测试（round-trip test）是本决策的证人**。同一教义上行覆盖应用层——Assembler / Presenter 亦纯手写显式映射（→ [application.md](application.md)）。
 
-三根柱子共用一个人观：看不见的代码不能评审，不能评审就不能信任——所以让真相留在文本里。（三案账目见篇脚「决策快照账」）
+三根柱子共用一个人观：看不见的代码不能评审，不能评审就不能信任——所以让真相留在文本里。
 
 ### gateway/ — 外部系统网关实现
 
@@ -158,7 +158,7 @@ Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 - JSONB 恰恰不能自动路由：它的 Java 侧载体往往就是 String，而 String 的类型槽位早被 MyBatis 默认处理器占据，路由器无从分辨「这个 String 参数是普通文本还是 jsonb 文档」——这是技术不可行，不是口味偏好。于是每处 JSONB 参数位 / 结果位在 XML 语句里显式声明 typeHandler。这条「必须写出来」的义务与「手写教义」严丝合缝：义务可见、可 grep，宁多写一点，不留隐式魔法。
 - 使用场景与语句形状 → [common-pg 法卷](../../specs/current/modules/pg.md)（严格件），速查在 [reference/api/common-pg.md](../reference/api/common-pg.md)，本篇不复抄代码。
 
-（三案账目见篇脚「决策快照账」）
+
 
 ### gateway 的边界
 
@@ -184,4 +184,3 @@ Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 ---
 *本页属 `explanation/` 解读架（地图区）：与 `specs/current/` 法卷形状冲突时以法卷为准（宽严双份，法卷赢）。*
 
-*决策快照账：本页持久化 / PG 诸论证为下列判例的现行沉淀（事件、当时思考与授权收据存判例卷宗，正文冻结）——ADR-0002（决策快照）全量 UPDATE ｜ ADR-0003（决策快照）手写映射 ｜ ADR-0007（决策快照）逐出 ORM 增强 ｜ ADR-0027（决策快照）TypeHandler 自动注册 ｜ ADR-0028（决策快照）JSONB 显式声明 ｜ ADR-0033（决策快照）PG 原生形状与 schema 命名法。*

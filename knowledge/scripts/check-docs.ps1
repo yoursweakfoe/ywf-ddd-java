@@ -6,7 +6,7 @@
   C1 pattern-instantiation  C2 file-count consistency  C3 framework symbols
   C4 business-word neutrality in pedagogy code  C5 exception mapping table parity  C6 dossier zones, two arms:
     freeze arm = body files append-only (decisions bodies allow Status-line 1:1 swap per charter; archive bodies any minus = red; README exempt)
-    cull arm   = (a) whole-file body deletions allowed only with a cull bill in-flight (changes/*/proposal.md matching 清册) AND the zone must be fully emptied (no partial cull);
+    cull arm   = (a) whole-file body deletions allowed only under a cull bill (proposal.md matching 清册, in-flight on disk OR self-immolated in this diff - see attribution-law §4) AND the zone must be fully emptied (no partial cull);
                  (b) empty-dossier self-consistency: when a dossier is empty, no concrete identifier (ADR-\d{4} / date-slug) may remain anywhere on the living surface
   C7 skill-workspace conformance (.agents residents whitelist + SKILL.md spec gates: name==dir, desc<=1024, body<=500)
   Exit code = number of failing checks. -SelfTest asserts detection of injected violations.
@@ -199,7 +199,7 @@ if ($handlerSrc -and (Test-Path $exDoc)) {
     else { "C5 info: handlers covered $covered/$(($covered + $missing.Count)) OK" }
 }
 
-# ---------- C6 dossier freeze + cull self-consistency (two arms; 2026-09-dossier-retirement L1) ----------
+# ---------- C6 dossier freeze + cull self-consistency (two arms; 历元一清册案 L1；首期清册案增自焚识别) ----------
 # git may write harmless warnings (CRLF etc.) to stderr; PS5.1 EAP=Stop turns native stderr into a terminating
 # error even with 2>$null — downgrade for this block, restore at the end.
 $eapPrev = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
@@ -216,6 +216,13 @@ $slugRx  = '\d{4}-\d{2}-[a-z][a-z0-9]*(-[a-z0-9]+)+'
 # cull bill in-flight = any live (non-template) proposal under changes/ that legislates a cull
 $cullBill = @(Get-ChildItem (Join-Path $root 'knowledge/specs/changes'), (Join-Path $root 'sample-application/specs/changes') -Filter 'proposal.md' -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -notmatch '_template' -and ((Get-Content $_.FullName -Raw -Encoding UTF8) -match '清册') }).Count -gt 0
+# self-immolating cull bill (attribution-law §4): the bill deletes its own dir as terminal act, so at final-gate
+# time no proposal is on disk. Evidence = a proposal.md under changes/ deleted in this diff whose HEAD content legislates a cull.
+if (-not $cullBill) {
+    $cullBill = @(git -C $root diff HEAD --name-only --diff-filter=D -- 'knowledge/specs/changes' 'sample-application/specs/changes' 2>$null |
+        Where-Object { $_ -match '(^|/)proposal\.md$' -and $_ -notmatch '_template' } |
+        Where-Object { (((git -C $root show "HEAD:$_" 2>$null) | Out-String)) -match '清册' }).Count -gt 0
+}
 
 # --- freeze arm: in-place minus lines = red (decisions bodies: Status-line 1:1 swap exempt per charter) ---
 $freezeChecked = 0
@@ -245,7 +252,7 @@ foreach ($z in $dossierZones) {
 foreach ($z in $dossierZones) {
     $dels = @(git -C $root diff HEAD --name-only --diff-filter=D -- $z 2>$null | Where-Object { $_ -notmatch '(^|/)README\.md$' })
     if ($dels.Count -eq 0) { continue }
-    if (-not $cullBill) { Add-Fail 'C6' "$z : $($dels.Count) body file(s) deleted but no cull bill in-flight (changes/*/proposal.md 含「清册」) - 清册臂(a)"; continue }
+    if (-not $cullBill) { Add-Fail 'C6' "$z : $($dels.Count) body file(s) deleted but no cull bill (on-disk in-flight or self-immolated in diff; proposal 含「清册」) - 清册臂(a)"; continue }
     $remain = Get-DossierBodyNames $z
     if ($remain.Count -gt 0) { Add-Fail 'C6' "$z : 清册必须整册归零，删后仍余 $($remain.Count) 件 - 禁拆件/择留（清册臂(a)）" }
     else { "C6 info: $z emptied under in-flight cull bill - 清册臂(a) OK" }

@@ -1,7 +1,7 @@
 ﻿# 用法规范法卷：定时任务（框架法 · 严格件）
 
 > **身份**：本卷是 Scheduler 入口**统一用法**的唯一权威——全套规范形状在此，全仓他处不得复写形状；违反本卷=修代码，修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/scheduled-task.md`）为设计卡（选型与边界叙事，零形状代码），冲突以本卷为准。
-> **机器对账**：C1/C3/C4 扫本卷；教例家族 {Agg} 通式（虚构模板；OrderAutoDeliverScheduler 等为真实例映射名，sample 未落地）。开册法案：`2026-09-howto-codification`；统一用法归卷：`2026-09-usage-consolidation`。
+> **机器对账**：C1/C3/C4 扫本卷；教例家族 {Agg} 通式（虚构模板；OrderAutoDeliverScheduler 等为真实例映射名，sample 未落地）。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
 
 ## §1 条款
 
@@ -9,7 +9,7 @@
 |---|---|---|---|
 | SC-1 | 定时任务入口置于 `adapter/task/scheduler/`，实现 `ScheduledAdapter` 标记接口（R14a 位置约束、R14b 标记约束） | 框架 `ScheduledAdapter`（common-ddd 在库）；ArchUnit | C3 |
 | SC-2 | Scheduler 方法体纯透传（委托 AppService/Handler），禁止在调度类内写业务分支——与 Adapter 纯透传同规 | AGENTS 九条 2；WC-4 互指 | ArchUnit |
-| SC-3 | 时间判断一律使用注入的 `Clock`，禁止直调 `OffsetDateTime.now()`（统一时间源、可测性） | AGENTS 九条 8；ADR-0006 判例；`modules/ddd.md` Clock 条款 | 测试可注入验证 |
+| SC-3 | 时间判断一律使用注入的 `Clock`，禁止直调 `OffsetDateTime.now()`（统一时间源、可测性） | AGENTS 九条 8；旧案 判例；`modules/ddd.md` Clock 条款 | 测试可注入验证 |
 | SC-4 | 多实例部署的调度必须自带幂等：分布式锁（防并发重入）+ 业务状态守卫（防重复效应），二者缺一不可 | 原篇「多实例部署分布式锁」注记入法 | <!-- 锁组件落地度待注：见原篇状态表 --> |
 | SC-5 | 触发注解按调度模式选择：自建 `@Scheduled`（Spring 原生、无额外依赖，启动类需 `@EnableScheduling`）或平台化 handler 注解（如 XXL-Job `@XxlJob`）——R14a/R14b 只认「包位置 + 标记」不认触发注解，变体对规则影响为零 | 本卷 §2.3/§2.6/§2.7 形状；原篇 §5「零影响」注记入法 | ArchUnit |
 | SC-6 | 定时批量落库一律经 `MybatisPersistence` 基类 `updateDomainBatch`（**非** Repository 五方法生命周期契约成员，内部逐条 validate），原子性由 Handler `@Transactional` 保证；超大批量调用方自行分片（≤500 条/批）；决策型读（如 `findShippedBefore`）按业务命名追加 `{Agg}Repository` 子接口、由具名 Mapper 方法实现 | BW 卷互指（BW-3/BW-4/BW-5）；契约见 `how-to/new-aggregate.md` ⑭/⑰（原篇注） | 守恒测试 |
@@ -95,7 +95,7 @@ public int autoDeliverExpired() {
 public class AutoDeliverExpiredHandler {
 
     private final {Agg}Repository {agg}Repository;
-    private final Clock clock;                    // 框架统一时间源（ClockAutoConfiguration 提供，ADR-0006）
+    private final Clock clock;                    // 框架统一时间源（ClockAutoConfiguration 提供，旧案）
 
     public AutoDeliverExpiredHandler({Agg}Repository {agg}Repository, Clock clock) {
         this.{agg}Repository = {agg}Repository;

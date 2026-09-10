@@ -1,22 +1,9 @@
-﻿# archive/ —— 已归档案卷（在位只进不改，到期整册归零）
+﻿# knowledge/specs/archive/ —— 已归档案卷（历元工作袋，到期归零）
 
-> 身份：折叠完成案卷（`<YYYY-MM-slug>/` 整目录）的存放区与**工作清单**。本区是**可清册存储**：发布节点经清册 bill 将本体、下列清单、活面相关标识符**一并彻底抹除**（→ 归属法 §1「卷宗清册制」注、§4「卷宗清册执行」行）。本 README 常驻的是上方章程段；清单随清册归零，回到空壳态——**知识不以本区为存在依赖**：因果全文住 `docs/explanation/`（清册前过自足判据），条文现行文本住 `specs/current/`。在位纪律：三件套一字不回改（含错字）；拆件删、择留删、无 bill 偷删皆违规——C6 清册臂拦。
->
-> 审计链：在位期内=本清单 + 本体；清册后**不留账**（法不考古，git 历史非知识居住位）。
+**册况**：历元一案卷已清册归零；本袋现为空袋，新案卷自历元二起逐案折叠入住。
 
-| 案卷（date-slug） | 主题一句话 | 状态 |
-|---|---|---|
-| 2026-10-rules-codification | 规则入典：法从 `.agents/rules` 迁住 specs | 在库 |
-| 2026-09-framework-codification | 框架 API 法卷化（reference/api 八篇对表） | 在库 |
-| 2026-09-howto-codification | 设计卡化：how-to 零形状条款、法条宽松副本制 | 在库 |
-| 2026-09-usage-consolidation | 用法文档并架归位 | 在库 |
-| 2026-09-pagequery-default-claim | 分页契约默认值入法（CC-9 / RC-3 / OR-6） | 在库 |
-| 2026-09-pg-native-shape-and-real-testdb | PG 原生形状与真测试库（TC-5/TC-9、BP-S 系） | 在库※ |
-| 2026-09-common-it-consolidation | common 集成测试并模块（193 项真 PG 双库） | 在库 |
-| 2026-09-archive-dossier-boundary | 案卷与判例分家（三类件前身） | 在库 |
-| 2026-09-adr-argument-sedimentation | 论证沉淀入解读架（⑦⁺ 立，ADR-0036） | 在库 |
-| 2026-09-dossier-retirement | 卷宗清册制（彻底抹除、改元重启，ADR-0037） | 在库 |
+**入袋规矩**：折叠完成的案卷**整目录**迁入（`<YYYY-MM-kebab>/` 三件套），不拆件、不留守；一名一袋，望文生义。在位只进不改（含错字）——过程留痕即记录；要推翻旧案 = 新立案接管，旧袋即历史。拆件删、择留删、无清册 bill 偷删皆红（C6 清册臂）。
 
-※ 该卷 tasks.md 存折叠时漏勾（9 项未勾而实已全量执行，2026-09-09 清册前置普查发现）；按「在位不改」不回改，清册再核时以本注为准、表中一笔处置。
+**入档前义务**：瘦身闸（多句决策理由而判例未立者先补 ADR，案卷只留表决行 + 指针）；⑦⁺ 论证沉淀（现行版复写 `docs/explanation/` 同题篇、篇脚回指 `ADR-NNN（决策快照）`，回指仅活册期有效）——两道闸条文与豁免 → [归属法](../current/patterns/attribution-law.md) §4 强制同步表。
 
-> 案卷内出现的 `capabilities/` 系起草时旧目录名（2026-09-06 已更名 `current/`），在位记录不回改、清册后无记录。
+**终态 = 清册归零**：本袋（连同镜像区 archive 与 `decisions/`）是**可清册存储**——发布节点由清册 bill 整袋彻底抹除（本体 + README 账行 + 活面标识符；审计链阅后即焚，**不留账**——法不考古，git 历史非知识居住位），自足判据前置、逐案再核表缺案不批；清册 bill 不折叠、末步自焚（§4「卷宗清册执行」行含条款全文）。因果全文常驻 `docs/explanation/`、条文现行文本常驻 `specs/current/`，知识不以本区为存在依赖。制度原理 → [knowledge-system.md](../../docs/explanation/knowledge-system.md)「清册制」节。机器执法：check-docs C6 两臂。

@@ -1,7 +1,7 @@
 ﻿# 用法规范法卷：乐观锁与冲突重试（框架法 · 严格件）
 
 > **身份**：本卷是版本冲突识别与重试形态**统一用法**的唯一权威——全套规范形状（传播路径/重试模板/策略表）在此，全仓他处不得复写形状；违反本卷=修代码，修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/optimistic-lock-retry.md`）为设计卡（选型与边界叙事，零形状代码），冲突以本卷为准。
-> **机器对账**：C1/C3/C4 扫本卷；教例家族 Payment（虚构，与 error-handling 同系）；重试件真实例 RetryablePlaceOrderHandler 已落地。开册法案：`2026-09-howto-codification`；统一用法归卷：`2026-09-usage-consolidation`。
+> **机器对账**：C1/C3/C4 扫本卷；教例家族 Payment（虚构，与 error-handling 同系）；重试件真实例 RetryablePlaceOrderHandler 已落地。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
 
 ## §1 条款
 
@@ -10,7 +10,7 @@
 | OL-1 | 冲突识别只走**类型通道**：UPDATE 版本条件 0 行 → 框架抛 `OptimisticLockConflictException`（extends `IllegalStateException`）；INSERT/DELETE 0 行 → `SilentWriteLossException`。二者消费路径不同（409 冲突通道 vs 500 静默丢失通道，`modules/exception.md` EV-4） | 框架 `MybatisPersistence.updateDomain()` 失败路径 javadoc | 守恒测试（冲突通道实证） |
 | OL-2 | **禁止按异常消息文本判断冲突**；新增冲突通道时禁止要求消费方改文本匹配（文本是给人看的，类型是给机器跟的） | 原篇「消费方按类型分支即可……新通道禁止依赖消息文本判断」入法 | — |
 | OL-3 | 重试方只 catch `OptimisticLockConflictException`；每次重试必须**重新 load** 聚合再执行行为，禁止复用内存中旧实例 | 原篇「Handler 层 findById 已保证每次加载新实例」入法；WC-2 互指 | — |
-| OL-4 | `version` 字段由框架 SQL 维护（`SET version = version + 1 ... AND version = #{version}`），业务层禁止手工读写版本号 | `aggregate-blueprint.md` BP-X1 互引（XML 语句契约）；ADR-0002 全量更新无脏检查判例 | 乐观锁压测 |
+| OL-4 | `version` 字段由框架 SQL 维护（`SET version = version + 1 ... AND version = #{version}`），业务层禁止手工读写版本号 | `aggregate-blueprint.md` BP-X1 互引（XML 语句契约）；旧案 全量更新无脏检查判例 | 乐观锁压测 |
 | OL-5 | 自动重试形态 = Handler 层包装器：按 `OptimisticLockConflictException` **类型识别**（零消息耦合）、指数退避（基延迟 × 2 的幂，模板 100ms → 200ms → 400ms）、最大 3 次耗尽上抛（由全局异常处理返回 409）；禁止零退避热重试（加剧冲突）；重试等待用 `Thread.sleep`（虚拟线程下不占载体线程，安全） | 本卷 §2.4 形状；原篇要点「避免热重试加剧冲突」入法 | 真实例单测（4 例，见 §3） |
 | OL-6 | 重试是应用层编排关注点：领域层只负责"冲突时抛异常"，聚合根内禁止重试 | 原篇「注意事项」表入法 | — |
 | OL-7 | 重试器围栏：只 catch `OptimisticLockConflictException`（UPDATE 版本冲突）；「实体消失」的普通 `IllegalStateException` 与 `SilentWriteLossException`（INSERT/DELETE 0 行写丢失，500+ERROR）**同样直接上抛**——后两者重试无意义，必须让告警吵醒人，重试包装器不得 catch 后者 | 原篇「三分通道围栏」注记入法；OL-1 通道表 | — |

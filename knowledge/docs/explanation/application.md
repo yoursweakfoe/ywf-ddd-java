@@ -128,6 +128,3 @@ application/{agg}/handler/command/{Xxx}CommandHandler.java
 
 > 完整禁止清单（含「禁止 Handler 返回 CO」等）→ [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「Application 层禁止」（法条 canonical，AGENTS 核心约束 #2 为规范行）。
 
----
-
-**决策快照账**：本页「处理器签名承载返回类型、处理器标记作架构校验类型锚点」论证现行版沉淀自 ADR-0005（决策快照）（契约侧镜像论证 ADR-0008（决策快照），其正文见 contract.md 同题段）。

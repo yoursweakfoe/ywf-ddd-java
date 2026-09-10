@@ -1,7 +1,7 @@
 ﻿# 用法规范法卷：聚合构建宪（框架法 · 严格件）
 
 > **身份**：本卷是「一个聚合 = 哪些文件、什么形状」的建筑宪章——**22 个文件**完整清单（20 最小闭环 + 读端口配对 ⑳㉑ 两文件，契约枚举 ㉒ 计入契约段）；修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/new-aggregate.md`）为设计卡（选型与边界叙事，零形状代码），逐件教学走查已整体归卷于本卷 §4，冲突以本卷为准。
-> **机器对账**：C1（下列 `{agg}` 位以真实聚合代入核验）/ C3 / C4 扫本卷；教例家族 = Payment（虚构教例，sample 未实现）。开册法案：`2026-09-howto-codification`；统一用法归卷：`2026-09-usage-consolidation`。
+> **机器对账**：C1（下列 `{agg}` 位以真实聚合代入核验）/ C3 / C4 扫本卷；教例家族 = Payment（虚构教例，sample 未实现）。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
 
 ## §1 文件清单（建筑宪位置表，㉠-㉒ 为全局槽位号）
 
@@ -62,7 +62,7 @@ sample-service-server/src/main/resources/
 | BP-X2 | PO 纯 `@Data` 零 ORM 注解；Mapper `extends DddMapper`；RepositoryImpl 继承 `MybatisPersistence`；Converter.toDomain 一律经 `reconstitute()` 重建 | AGENTS 九条 9；`modules/ddd.md`；TC-2 互指 |
 | BP-X3 | 读端口 ⑳ 必须 `extends QueryRepository` 且位于 `application/{agg}/repository/`（R13） | read-chain RC-1 互指 |
 | BP-S1 | 库表形状唯一权威 = `db-migration` 变更集（PG 原生形状法）：`id UUID DEFAULT uuidv7()`（PG18 内建，工厂铸造传值覆盖）、`created_at/updated_at TIMESTAMPTZ DEFAULT now() NOT NULL`、`created_by/updated_by UUID`、`is_deleted BOOLEAN NOT NULL DEFAULT FALSE`、`version BIGINT NOT NULL DEFAULT 0`；DB 默认只兜手工插入，正常写路径审计归应用层（AuditFieldFiller + Clock） | `db-migration/.../0001-init-schema.sql` 双库 SHA256 同形实证；sample PO 换形后 119 测试对账 |
-| BP-S2 | schema 命名法：聚合边界 = schema 边界，领域词单数（`product.product`）；SQL 保留字冲突 SHALL 升级行业 UB 术语（order→sales_order），禁止引号/前缀逃逸；schema 名与 Java 聚合包名单数惯例逐字同构，微服务拆分整 schema 平移 | 用户 2026-09 裁决（ADR-0033）；本卷 §4 教学块与 sample 包树实证 |
+| BP-S2 | schema 命名法：聚合边界 = schema 边界，领域词单数（`product.product`）；SQL 保留字冲突 SHALL 升级行业 UB 术语（order→sales_order），禁止引号/前缀逃逸；schema 名与 Java 聚合包名单数惯例逐字同构，微服务拆分整 schema 平移 | 用户 2026-09 裁决；本卷 §4 教学块与 sample 包树实证 |
 | BP-S3 | 外部工具账表住各自独立 schema（Liquibase 账表→`liquibase`，执行器引导件幂等自建；Seata TC 优先分库、`undo_log` 随业务连接落 public），与业务 schema 互不混列 | `db-migration` `LiquibaseSchemaBootstrapConfig`；双库账表按 schema 清点实证 |
 
 ## §3 验收单（交付闸，逐条可机械化）
@@ -77,7 +77,7 @@ sample-service-server/src/main/resources/
 
 ## §4 全套规范形状（①-㉒ 逐件教学走查）
 
-> 本节走查整体自 docs 同题篇归卷而来（统一用法归卷 `2026-09-usage-consolidation`）。全套为**虚构教例，sample 未实现**（Payment 家族——教学世界观：Payment 家族 = 聚合构建场景，Reservation 家族 = 写/读路径走查）。各件代码即槽位文件的规范形状唯一样本，条款注记见 §2 各 BP 行取证指针。
+> 本节走查整体自 docs 同题篇归卷而来（统一用法归卷 2026-09 用法归卷案）。全套为**虚构教例，sample 未实现**（Payment 家族——教学世界观：Payment 家族 = 聚合构建场景，Reservation 家族 = 写/读路径走查）。各件代码即槽位文件的规范形状唯一样本，条款注记见 §2 各 BP 行取证指针。
 
 ### 4.① Contract — Controller 契约接口
 
