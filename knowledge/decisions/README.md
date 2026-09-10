@@ -1,6 +1,6 @@
 # knowledge/decisions/ —— 判例卷宗（态3：冻结 · 可清册存储）
 
-**册况**：历元二 · 在册两案。本区一切案卷由新裁决逐案立起，无继承正文。
+**册况**：历元二 · 在册三案。本区一切案卷由新裁决逐案立起，无继承正文。
 
 ## 历元二工作表（主记账位，清册时账行同裁）
 
@@ -8,6 +8,7 @@
 |---|---|---|---|
 | ADR-0001 | ArchUnit 规则集论证载体分工 | Accepted | 2026-09-archunit-rule-doc |
 | ADR-0002 | R11 rollbackFor 严格化与失败消息挂法卷锚 | Accepted | 无（修码就法，不立案） |
+| ADR-0003 | 案卷四段制与双门刚性批准 | Accepted | 2026-09-sdd-four-stage |
 
 **一案一身（本区法律，append-only）**：ADR 正文永不回改。推翻旧决定 = 新立一案（取新编号），旧案仅 Status 行改为 `Superseded by ADR-NNNN`；本 README 的历元工作表登状态列，为主记账位。判例先行：拍板之前必先翻本区确认无撞案。机器执法：`knowledge/scripts/check-docs.ps1` C6 冻结臂（在位涂改即红，仅豁免 Status 行 1:1 对替）。
 

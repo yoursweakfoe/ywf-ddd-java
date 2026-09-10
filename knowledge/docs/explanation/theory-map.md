@@ -182,7 +182,8 @@
 
 | 模式 / 制度 | 本项目采纳要素 |
 |------|--------|
-| 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，论证沉淀案） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（三件套，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
+| 三类件分家 + 论证沉淀分层（知识系统自指裁决，2026-09，论证沉淀案） | 同一决策事实按时间属性三分：立法过程归 `specs/changes\|archive/`（四件案卷，封存）、决策事件与当时思考归 `decisions/`（冻结收据 + Confirmation）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑦⁺ 强制复写 + 篇脚回指快照）；卷宗↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
+| 案卷四段制（specify → plan → tasks → implement，2026-09，四段案卷案） | 过程件内部一件一身份：Specify 定做什么/验收（AC 账）、Plan 定怎么做+改哪些法（技术 P-x + 修卷 delta 条文唯一居所）、Tasks 纯清单（条内零参数指回 P-x）、Implement 记做了多少/凭什么是（勾验/AC→证据/源回填/漂移/收官闸）；批准门 = Specify 门 → Plan 门，**每案两停不论大小——法面刚性、出口在对话**（豁免只出自会话明示，ADR-0003 决策快照）；采证谱系 = Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）合流，命名取 Spec Kit 避与 delta `### Requirement:` 撞名——全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
 | 卷宗清册制（历元归零、改元重启，2026-09，清册案） | 两册（`decisions/` + 两侧 archive）= 可清册存储：发布节点经清册 bill **彻底抹除**（本体整袋删 + 账行同裁 + 活面标识符净空，行灭理存）；前置自足判据=每案四栏因果（立因/取舍/被拒方案及拒因/生效边界）全文先住解读架，再核表随 bill 递交缺案不批；清册即改元、编号历元重启；法不考古（git 历史非知识依赖）；仪式产物不豁免于仪式——全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
 | 规则集论证载体分工（ArchUnit 守护，历元二首案 ADR-0001） | 一行三判：论证现行版 canonical 住解读专论、代码 javadoc 只携挂载最小契约（守护/怎么判/挂载/空转四栏）、R 编号稳定性等规范行上收法卷 TR 系（法卷外不留裸法）——全文 → [architecture-rules.md](architecture-rules.md) |
 | 宽严双份与法典化三部曲（宽严双份，2026-09） | 规范内容两份表达而权威唯一：法卷=严格件（条款+取证+形状）、docs=宽松件（判据+指针），冲突法卷赢；判据一句话：**这句话能机械化执行吗**；所治之病——应然句寄居地图架时，规范的「保证」二字会被地图守则的被动跟随溶剂掉（代码漂移时轮不到文档说不）；三步 = api 用法节入典（8 模块法卷）→ how-to 降设计卡 → 统一用法形状归卷全仓唯一样本——全文 → [knowledge-system.md](knowledge-system.md) |

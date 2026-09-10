@@ -14,7 +14,7 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（proposal → spec-delta → tasks，模板 = `knowledge/specs/changes/_template/`）。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立四件套（specify → plan → tasks → implement，模板 = `knowledge/specs/changes/_template/`）。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 ## 步骤
 
 按阶段顺序创建（顺序 = 法卷 BP-3：contract → domain → infrastructure → application → adapter，接口先行、依赖倒序；槽位编号 ①-㉒ = 法卷 §1，逐件形状走查 = 法卷 §4）：

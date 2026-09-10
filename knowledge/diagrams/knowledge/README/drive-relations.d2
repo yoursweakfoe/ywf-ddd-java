@@ -18,7 +18,7 @@ dec: {
 
 specs: {
   label: "specs/ 三身份"
-  changes: "changes/ 审议稿\n（唯一立法通道）"
+  changes: "changes/ 审议稿\n（唯一立法通道）\nspecify → plan → tasks → implement"
   current: "current/ 法卷\n（主内容·严格件）"
   archive: "archive/ 存档案卷\n（在位不改·到期整册归零）" { style.stroke-dash: 3 }
 }
@@ -36,12 +36,12 @@ docs: {
 
 # ── 立法流程 ①–⑧（编号=先后序；全量语义在 README 锚表，图上只留工序名）──
 # near: center = 标签钉死本线中点（TALA 默认自动侧移避让，密区里标签会漂到邻线上造成误读）
-dev -> specs.changes: "① 立案起草" { near: center }
-specs.changes -> dev: "② 送审问决策" { near: center }
+dev -> specs.changes: "① 立案起草（Specify：做什么/验收）" { near: center }
+specs.changes -> dev: "② 分档送审（Specify 门 → Plan 门）" { near: center }
 # 判例先行折入 ③ 标签：裁前必翻 decisions/ 旧案；撞案=新立 ADR supersede，旧案正文一个字不动
 dev -> dec: "③ 拍板沉淀·先查旧案" { near: center }
 dec -> specs.changes: "④ 裁定落稿" { near: center }
-specs.changes -> code: "⑤ 按约施工" { near: center }
+specs.changes -> code: "⑤ 按约施工（Tasks×Implement）" { near: center }
 code -> specs.changes: "⑥ 结果回填" { near: center }
 specs.changes -> specs.current: "⑦ 折叠落实" { near: center }
 specs.changes -> specs.archive: "⑧ 归档(瘦身闸)" { near: center }

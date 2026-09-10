@@ -59,7 +59,7 @@
 | 设计卡 | how-to 架形态：只答「该不该用、怎么选」，零形状代码 | → [how-to/README](../how-to/README.md) |
 | 镜像区 | 业务行为法住 `sample-application/specs/`（同构三分区）；业务名只在本树合法 | → 该区 README |
 | 现行本 / 审议中 / 已归档 | 法的三层身份：`current/` / `changes/` / `archive/`，一名一身份 | → `specs/README` 目录表 |
-| 三件套 | 一份法案 = proposal → spec-delta → tasks（模板 `changes/_template/`） | → [changes/README](../../specs/changes/README.md) |
+| 四件套 | 一份法案 = specify → plan → tasks → implement（模板 `changes/_template/`；2026-09 四段案卷法立案，三件套为其前史形） | → [changes/README](../../specs/changes/README.md) |
 | 归档折叠 | delta 合入 current、案卷进 archive 的那一刻——文档同步义务唯一时点 | → `specs/README` 守则 2 |
 | 生效登记 | 法卷末节：条款 ✅ 生效 / ⛔ 未落地在册声明（未生效不装死） | → 各法卷 §生效登记（如 [batch-write §3](../../specs/current/patterns/batch-write.md)） |
 | 业务不入伞 | 契约天然记生意：业务法与业务词不入知识伞（D4 教义第二兑现） | → [knowledge/README](../../README.md)、`sample-application/specs/README` |

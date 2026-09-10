@@ -48,13 +48,13 @@
 
 | 边（编号=工序，无编号=常态） | 法源锚 |
 |---|---|
-| ① 开发者 → changes/「① 立案起草｜全名：判断立案·起草三件套」 | 立案发起人是**开发者的意图**（想新增行为/发现现实与法不合），不是代码自己——代码只是被驱动的事实。工序锚：`new-bill` 步骤 1–3（归属法 §4 强制同步表逐行判触发，对不上不立空案；模板 `_template/`） |
-| ② changes/ → 开发者（＝项目主）「② 送审问决策」 | `new-bill` 步骤 4 批准门：agent 递案必须硬停等人，批准前禁施工 |
+| ① 开发者 → changes/「① 立案起草｜全名：判断立案·起草四件（Specify 先行）」 | 立案发起人是**开发者的意图**（想新增行为/发现现实与法不合），不是代码自己——代码只是被驱动的事实。工序锚：`new-bill` 步骤 1–3（归属法 §4 强制同步表逐行判触发，对不上不立空案；模板 `_template/`） |
+| ② changes/ → 开发者（＝项目主）「② 送审问决策」 | `new-bill` 步骤 4 批准门：agent 递案必须硬停等人，批准前禁施工；门分档 Specify 门 → Plan 门，每案两停不论大小（四段案卷法后；放行豁免唯会话中项目主明示） |
 | ③ 开发者（＝项目主）→ decisions/「③ 拍板沉淀·先查旧案」 | [decisions/README](decisions/README.md)：ADR 随裁决产生、append-only 冻结。**判例先行**（折注于此边）：项目主拍板**之前**必先翻卷宗确认无撞案；撞案则旧案正文一字不动（C6 闸执法），**新立 ADR 于状态行 supersede 旧案**——推翻=立新规接管，非删旧规（§1 decisions 行、根 AGENTS「先查旧判例再拍新板」）。不再单画平行边——同端点平行边是 TALA 标签漂移病灶 |
-| ④ decisions/ → changes/「④ 裁定落稿」 | 审议期纪律：`changes/` 内=审议稿随便改（步骤 2）；两阶段批准判例（proposal 先批、再补 delta/tasks，步骤 3 末注） |
-| ⑤ changes/ → 代码「按约施工」 | `new-bill` 步骤 5：按 tasks.md 推进、完成一条勾一条、范围要扩回批准门 |
-| ⑥ 代码 → changes/「⑥ 结果回填」 | 步骤 5–7：勾账 + 构建/测试全绿按变更性质定档；delta 每条 SHALL 取证源折叠后须指真实 文件:行/测试名 |
-| ⑦ changes/ → current/「⑦ 折叠落实」 | `new-bill` 步骤 6.1（ADDED 入位/MODIFIED 整节替换/REMOVED 删节留因）= 归属法 §4 文档同步义务**唯一时点** |
+| ④ decisions/ → changes/「④ 裁定落稿」 | 审议期纪律：`changes/` 内=审议稿随便改（步骤 2）；门分档常制：Specify 门验验收、Plan 门验方案与修卷量（2026-09 四段案卷法立，supersede 历元一两阶段批准判例） |
+| ⑤ changes/ → 代码「⑤ 按约施工（Tasks×Implement）」 | `new-bill` 步骤 5：按 tasks.md 推进、完成一条勾一条、取证入 implement.md 执行账、范围要扩回批准门并记漂移 |
+| ⑥ 代码 → changes/「⑥ 结果回填（implement 账 + delta 源回填）」 | 步骤 5–7：勾账 + 构建/测试全绿按变更性质定档；plan §delta 每条 SHALL 的源须在折叠前经 implement §3 回填为真实 文件:行/测试名 |
+| ⑦ changes/ → current/「⑦ 折叠落实」 | `new-bill` 步骤 6.1（plan §修卷 delta 起量：ADDED 入位/MODIFIED 整节替换/REMOVED 删节留因）= 归属法 §4 文档同步义务**唯一时点** |
 | ⑧ changes/ → archive/「⑧ 归档(瘦身闸)｜整目录 git mv」 | 步骤 6.2 整目录 `git mv` 不拆件 + 6.3 只进不改 + 6.4 瘦身闸（→ 归属法 §4「案卷折叠入 archive 前」行） |
 | **③⁺/⑦⁺ 分支** decisions/ → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑦⁺ 同题散文强制复写（解释立法原因）」 | 论证沉淀是挂在线上两个时刻的分支义务：③⁺ 拍板当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 ADR 新立与账本登记钉同一行；⑦⁺ 折叠当刻**沉淀论证强制复写进同题解读篇、篇脚回指 `ADR-NNN（决策快照）`**——[归属法 §4「案卷折叠时（⑦⁺）」行](specs/current/patterns/attribution-law.md) |
 | 代码 → 教程架(tutorials)「代码驱动文档修改」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |

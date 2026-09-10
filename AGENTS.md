@@ -18,7 +18,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 ## Context routing（按需触发，非全量预读）
 
 - **动手改码前按层详读法条**：分层/依赖 → `禁令卷`；命名/惯例 → `编码公约卷`；禁令全表 → `禁令卷`；文档义务 → `归属法卷`；项目背景 → `根 README`
-- **新行为先立契约**：写码前在行为所属区的 `changes/<slug>/` 出三件套（框架 → `knowledge/specs/`，示例业务 → `sample-application/specs/`；模板统一在 `knowledge/specs/changes/_template/`），完成后归档折叠回所属区 `current/`——文档同步义务只在那一刻发生
+- **新行为先立契约**：写码前在行为所属区的 `changes/<slug>/` 出四件套（specify → plan → tasks → implement；框架 → `knowledge/specs/`，示例业务 → `sample-application/specs/`；模板统一在 `knowledge/specs/changes/_template/`），完成后归档折叠回所属区 `current/`——文档同步义务只在那一刻发生
 - **执行结构化任务 USE 对应技能**（12 个，全部显式点名）：
   - 创建：新建聚合 `new-aggregate` ｜ 新增用例 `new-usecase` ｜ 新建微服务 `new-service` ｜ 新增外部集成 `new-portal`
   - 增量：批量写操作 `batch-operations` ｜ 定时任务 `scheduled-task` ｜ 编写测试 `new-test` ｜ 修改 common 模块 `modify-common-module`

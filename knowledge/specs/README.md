@@ -5,7 +5,7 @@
 守则（详法见 `knowledge/specs/current/patterns/attribution-law.md` 归属法 + 诸区分野条款；业务镜像区同文援引同一套规则，此处不复述）：
 
 1. **代码违反本法 = 改代码**，或走 `changes/` 流程正式修法；**禁止为迁就代码偷改本法**（那是把法律当地图画）。
-2. 修法唯一通道：`changes/<YYYY-MM-slug>/` 立三件套（proposal → spec-delta → tasks）→ 实现 → **归档折叠**进 `current/`，那一刻是文档同步义务唯一发生时点。
+2. 修法唯一通道：`changes/<YYYY-MM-slug>/` 立四件套（specify → plan → tasks → implement）：Specify 定验收、Plan 定技术形状与修卷 delta、Tasks 拆施工、Implement 记执行账与取证——批准门分档（Specify 门 → Plan 门，**每案两停不论大小**，过门方可施工），实现全绿后**归档折叠**进 `current/`，那一刻是文档同步义务唯一发生时点。
 3. 每条 SHALL 括注取证源（实现文件:行 或 测试类名）；无证据的意图不写入，用 `<!-- 待 changes/ 补全 -->` 留缺口。
 4. 行为断言与 `knowledge/decisions/` 判例互指不复述；机械背书（ArchUnit R##/测试类）写进句尾，与 check-docs 对账。
 
@@ -15,7 +15,7 @@
 |---|---|---|
 | `current/modules/<module>.md` | **模块法卷**（8 卷）：单模块用法规范，与 common 模块同名 | 只能经 changes/ 归档折叠写入 |
 | `current/patterns/<pattern>.md` | **模式法卷**（15 卷）：跨模块横切规范（链/宪/闸），条款编号 + 生效登记 | 同上 |
-| `changes/<slug>/` | **审议中**：还没生效的修订案 | 定稿前随便改；`_template/` 三件套模板**本区与业务镜像区共用**（流程是业务无关通识，故住知识区） |
+| `changes/<slug>/` | **审议中**：还没生效的修订案 | 定稿前随便改；`_template/` 四件套模板**本区与业务镜像区共用**（流程是业务无关通识，故住知识区） |
 | `archive/` | **已归档**：折叠完成的案卷（date-slug 命名）——过程件，决策论证的家在 `decisions/` 与 `docs/explanation/`（归属法 §1 分家注）；**到期整册彻底抹除**（§1 清册制注、§4 清册行），README 只常驻章程 | 在位只进不改——过程留痕即记录；清册 = 合法整袋归零（bill 仪式 + 自足判据前置），账行同裁不留痕 |
 
 ## 宽严双份（2026-09-06 裁定）

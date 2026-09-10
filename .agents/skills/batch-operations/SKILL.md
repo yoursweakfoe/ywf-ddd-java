@@ -13,7 +13,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`，首案时开册、目录未立属正常）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立四件套（模板在 `knowledge/specs/changes/_template/`，首案时开册、目录未立属正常）：specify（问题/验收 AC 账/不做/裁决问句）→ plan（技术裁量 + 对 current 的修卷 delta：ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks（纯清单）→ implement（执行账）。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 
 ## 步骤
 

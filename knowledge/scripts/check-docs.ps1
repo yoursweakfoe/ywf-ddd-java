@@ -6,7 +6,7 @@
   C1 pattern-instantiation  C2 file-count consistency  C3 framework symbols
   C4 business-word neutrality in pedagogy code  C5 exception mapping table parity  C6 dossier zones, two arms:
     freeze arm = body files append-only (decisions bodies allow Status-line 1:1 swap per charter; archive bodies any minus = red; README exempt)
-    cull arm   = (a) whole-file body deletions allowed only under a cull bill (proposal.md matching 清册, in-flight on disk OR self-immolated in this diff - see attribution-law §4) AND the zone must be fully emptied (no partial cull);
+    cull arm   = (a) whole-file body deletions allowed only under a cull bill (bill must SELF-DECLARE: specify content matches '清册\s*bill' OR dir slug contains 'cull'; pre-4-stage bills: proposal.md; in-flight on disk OR self-immolated in this diff - see attribution-law §4) AND the zone must be fully emptied (no partial cull);
                  (b) empty-dossier self-consistency: when a dossier is empty, no concrete identifier (ADR-\d{4} / date-slug) may remain anywhere on the living surface
   C7 skill-workspace conformance (.agents residents whitelist + SKILL.md spec gates: name==dir, desc<=1024, body<=500)
   Exit code = number of failing checks. -SelfTest asserts detection of injected violations.
@@ -213,15 +213,17 @@ function Get-DossierBodyNames([string]$zone) {
 }
 $adrIdRx = 'ADR-\d{4}'
 $slugRx  = '\d{4}-\d{2}-[a-z][a-z0-9]*(-[a-z0-9]+)+'
-# cull bill in-flight = any live (non-template) proposal under changes/ that legislates a cull
-$cullBill = @(Get-ChildItem (Join-Path $root 'knowledge/specs/changes'), (Join-Path $root 'sample-application/specs/changes') -Filter 'proposal.md' -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -notmatch '_template' -and ((Get-Content $_.FullName -Raw -Encoding UTF8) -match '清册') }).Count -gt 0
+# cull bill in-flight = any live (non-template) bill (specify.md; 四段案卷法前为 proposal.md) under changes/ that SELF-DECLARES a cull
+# （谓词史：历元一以「载『清册』一词」为凭——过宽，任何合法提及册制的修法审议案误开臂（2026-09 sdd-four-stage 案实测）；
+#   收严=自称识别：正文载「清册 bill」字样或案卷目录 slug 含 cull，真清册 bill 必自名其身份，旁称不再触发）
+$cullBill = @(Get-ChildItem (Join-Path $root 'knowledge/specs/changes'), (Join-Path $root 'sample-application/specs/changes') -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -match '^(specify|proposal)\.md$' -and $_.FullName -notmatch '_template' -and (($_.Directory.Name -match 'cull') -or ((Get-Content $_.FullName -Raw -Encoding UTF8) -match '清册\s*bill')) }).Count -gt 0
 # self-immolating cull bill (attribution-law §4): the bill deletes its own dir as terminal act, so at final-gate
-# time no proposal is on disk. Evidence = a proposal.md under changes/ deleted in this diff whose HEAD content legislates a cull.
+# time no bill file is on disk. Evidence = a specify.md (or legacy proposal.md) under changes/ deleted in this diff whose HEAD content self-declares a cull.
 if (-not $cullBill) {
     $cullBill = @(git -C $root diff HEAD --name-only --diff-filter=D -- 'knowledge/specs/changes' 'sample-application/specs/changes' 2>$null |
-        Where-Object { $_ -match '(^|/)proposal\.md$' -and $_ -notmatch '_template' } |
-        Where-Object { (((git -C $root show "HEAD:$_" 2>$null) | Out-String)) -match '清册' }).Count -gt 0
+        Where-Object { $_ -match '(^|/)(specify|proposal)\.md$' -and $_ -notmatch '_template' } |
+        Where-Object { ($_ -match '/[0-9a-z-]*cull[a-z0-9-]*/') -or (((git -C $root show "HEAD:$_" 2>$null) | Out-String)) -match '清册\s*bill' }).Count -gt 0
 }
 
 # --- freeze arm: in-place minus lines = red (decisions bodies: Status-line 1:1 swap exempt per charter) ---
@@ -252,7 +254,7 @@ foreach ($z in $dossierZones) {
 foreach ($z in $dossierZones) {
     $dels = @(git -C $root diff HEAD --name-only --diff-filter=D -- $z 2>$null | Where-Object { $_ -notmatch '(^|/)README\.md$' })
     if ($dels.Count -eq 0) { continue }
-    if (-not $cullBill) { Add-Fail 'C6' "$z : $($dels.Count) body file(s) deleted but no cull bill (on-disk in-flight or self-immolated in diff; proposal 含「清册」) - 清册臂(a)"; continue }
+    if (-not $cullBill) { Add-Fail 'C6' "$z : $($dels.Count) body file(s) deleted but no cull bill (on-disk in-flight or self-immolated in diff; 案卷须自称「清册 bill」或目录 slug 载 cull) - 清册臂(a)"; continue }
     $remain = Get-DossierBodyNames $z
     if ($remain.Count -gt 0) { Add-Fail 'C6' "$z : 清册必须整册归零，删后仍余 $($remain.Count) 件 - 禁拆件/择留（清册臂(a)）" }
     else { "C6 info: $z emptied under in-flight cull bill - 清册臂(a) OK" }

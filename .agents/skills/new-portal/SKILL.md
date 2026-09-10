@@ -13,7 +13,7 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 
 ## 第 0 步：契约先行（spec-first）
 
-动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立三件套（模板在 `knowledge/specs/changes/_template/`）：proposal（why/what/不做）→ spec-delta（对 current 的 ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
+动手实现前，在 `sample-application/specs/changes/<YYYY-MM-slug>/` 立四件套（模板在 `knowledge/specs/changes/_template/`）：specify（问题/验收 AC 账/不做/裁决问句）→ plan（技术裁量 + 对 current 的修卷 delta：ADDED/MODIFIED/REMOVED，SHALL+Scenario）→ tasks（纯清单）→ implement（执行账）。测试全绿后归档折叠进 `sample-application/specs/current/<agg>.md`——文档同步义务只在那一刻发生（归属法卷 §4）。
 
 ## 概念
 
@@ -58,7 +58,7 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 
 ## 文档同步
 
-- 行为契约已在第 0 步闭环（changes/ 三件套归档折叠=同步义务唯一时点），本节只列同时可能触发的其余文档义务
+- 行为契约已在第 0 步闭环（changes/ 四件套归档折叠=同步义务唯一时点），本节只列同时可能触发的其余文档义务
 - 新增**通用容错模式 / 统一 HTTP Client 等通用 Gateway 基础设施** = 框架行为变更 → 走 `knowledge/specs/changes/<slug>/` 修订 `knowledge/specs/current/patterns/external-gateway.md`（或对应 common 模块卷），归档后 docs 设计卡跟随；动了 common 公开 API 则更新 `knowledge/docs/reference/api/common-*.md`，程序走 `modify-common-module` skill
 - sample 首次真实落地业务 Gateway：法卷 §3 生效登记业务侧行（现为 ⛔ 虚构教例）须随 changes/ 程序同修，不得直接改法卷
 - 仅选型判据变化（何时用/决策点）才动设计卡 `knowledge/docs/how-to/gateway.md`

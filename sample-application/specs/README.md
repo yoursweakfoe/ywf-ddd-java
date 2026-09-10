@@ -2,7 +2,7 @@
 
 伞下的法 = 框架/脚手架层；**本示例业务树的行为法住在业务树自己身上**（2026-09-06 辖域裁定）。理由：契约天然描述生意，业务名只在本树合法（出树即违规，见 `../../sample-application/AGENTS.md`），所以记载业务契约的载体也不能进 `knowledge/`——这是「业务不入知识」教义的第二处兑现。
 
-守则与流程**援引框架区，不复述**：法律全文 = [knowledge/specs/README.md](../../knowledge/specs/README.md)；三件套模板 = [knowledge/specs/changes/_template/](../../knowledge/specs/changes/_template/)（业务无关通识，住知识区共用）；同步义务 = `knowledge/specs/current/patterns/attribution-law.md` §4。
+守则与流程**援引框架区，不复述**：法律全文 = [knowledge/specs/README.md](../../knowledge/specs/README.md)；四件套模板 = [knowledge/specs/changes/_template/](../../knowledge/specs/changes/_template/)（业务无关通识，住知识区共用）；同步义务 = `knowledge/specs/current/patterns/attribution-law.md` §4。
 
 | 目录 | 身份 |
 |---|---|

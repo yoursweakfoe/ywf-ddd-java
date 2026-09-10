@@ -2,11 +2,15 @@
 
 > 本区受理**框架/脚手架行为**的法案；业务包的法案立到镜像区 `sample-application/specs/changes/`（模板共用本区 `_template/`）。
 
-一个变更 = 一个目录：`<YYYY-MM-slug>/`，内含三件套（从 `_template/` 复制起稿）：
+一个变更 = 一个目录：`<YYYY-MM-slug>/`，内含四件套（从 `_template/` 复制起稿；案卷形状随立案时现行模板）：
 
-1. `proposal.md` —— why + what changes + 不做什么（只写问题与边界，不写实现）
-2. `spec-delta.md` —— 对 `../current/<agg>.md` 的 ADDED / MODIFIED / REMOVED（SHALL + GIVEN/WHEN/THEN）
-3. `tasks.md` —— 实现清单，每条尾巴指回 delta 的 Requirement
+1. `specify.md` —— 做什么与算不算成：Why / What changes / 验收 AC 账 / 约束 / 不做 / 裁决节（零实现、零法条正文）
+2. `plan.md` —— 怎么做与改哪些法：技术决策（P-x，含被拒案）+ 修卷 delta（ADDED / MODIFIED / REMOVED，SHALL + GIVEN/WHEN/THEN，**法条正文唯一居所**，每条标 ← AC-n）+ 波及面与回退
+3. `tasks.md` —— 纯执行清单：条项 = 一个可验收动作，条内零设计参数（指回 P-x），尾巴指 AC-n
+4. `implement.md` —— 执行账本：完成即勾、取证、AC→证据映射、delta 源回填、漂移回门、收官闸
 
-**折叠即修法**：实现完成、测试全绿后，把 delta 内容合入 current 对应节，本目录整体移入 `../archive/`（date-slug 命名，只进不改）。唯一例外：**清册 bill 不折叠**——执行卷宗清册的案卷末步整删自身目录（自焚，→ 归属法 §4「卷宗清册执行」行），三区零残留。
+**三写禁绝**（宽严双份制的案卷内镜像）：问题只住 specify、条文正文只住 plan、账只住 implement，其余位置只准以 AC-n / P-x 指针出现。
+**批准门分档** = Specify 门 → Plan 门，每案两停不论大小；法面不设并审或豁免条款，放行只出自会话中项目主明示指令（法面刚性、出口在对话 → ADR-0003）。
+
+**折叠即修法**：实现完成、implement 账清（每条 SHALL 源已回填真实取证）后，把 `plan.md` 的修卷 delta 合入 current 对应节，本目录整体移入 `../archive/`（date-slug 命名，只进不改）。唯一例外：**清册 bill 不折叠**——执行卷宗清册的案卷末步整删自身目录（自焚，→ 归属法 §4「卷宗清册执行」行），三区零残留。
 那一刻是该变更全部文档同步义务的唯一发生时点（归属法卷 §4）。在此之前，本目录是草稿，current 是现行法——两者不一致时以 current 为准，代码违规修代码。
