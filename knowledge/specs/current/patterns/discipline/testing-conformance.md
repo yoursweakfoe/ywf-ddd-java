@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：测试符合性（框架法 · 严格件）
 
-> **身份**：本卷是测试写法统一用法的唯一权威。条款与全套规范形状只在本卷，全仓其他文档不得复写形状。违反本卷 = 修代码；修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/testing.md`）是设计卡，只讲选型与边界叙事，零形状代码。
+> **身份**：本卷是测试写法统一用法的唯一权威。条款与全套规范形状只在本卷，全仓其他文档不得复写形状。违反本卷 = 修代码；修卷走 `../../../changes/`。docs 同题篇（`../../../../docs/how-to/testing.md`）是设计卡，只讲选型与边界叙事，零形状代码。
 > **机器对账**：C1/C3/C4 扫本卷。教例家族为 `{Agg}`/`{Action}` 通式 + 虚构 Fixture（`Test{Agg}s`）；真实例只准出现在带「真实例」标记的指针位，即 §2.8。
 
 ## §1 条款
@@ -139,7 +139,7 @@ class {Agg}ConverterTest {                                 // TC-1：C 型=往�
 
 ### 2.4 D 型 · 集成测试（@SpringBootTest + test profile，真 PG 测试库）
 
-位置：`integration/{Feature}IntegrationTest.java`。test profile 直连真 PG 测试库，运行前置见 TC-5；库形状权威 = db-migration，测试代码不建表、不管 DDL。真 PG 真方言真 SQL，无兼容模式转译层，入口见 [../../docs/tutorials/quickstart.md](../../../docs/tutorials/quickstart.md) 路线 A。框架轨即 common 试验场（TC-10）同走真 PG，唯形状权威换 `PgTestSupport` 三段生命周期、卷位置保原包镜像。
+位置：`integration/{Feature}IntegrationTest.java`。test profile 直连真 PG 测试库，运行前置见 TC-5；库形状权威 = db-migration，测试代码不建表、不管 DDL。真 PG 真方言真 SQL，无兼容模式转译层，入口见 [../../docs/tutorials/quickstart.md](../../../../docs/tutorials/quickstart.md) 路线 A。框架轨即 common 试验场（TC-10）同走真 PG，唯形状权威换 `PgTestSupport` 三段生命周期、卷位置保原包镜像。
 
 ```java
 @SpringBootTest

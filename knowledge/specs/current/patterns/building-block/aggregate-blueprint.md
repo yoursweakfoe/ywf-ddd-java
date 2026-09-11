@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：聚合构建宪（框架法 · 严格件）
 
-> **身份**：本卷规定一个聚合由哪些文件构成、每个文件什么形状。完整清单共 **22 个文件**：20 个最小闭环，加读端口配对 ⑳㉑ 两文件；契约枚举 ㉒ 计入契约段。修改本卷必须走 `../../changes/` 立案。docs 同题篇 `../../../docs/how-to/new-aggregate.md` 是设计卡，只讲选型与边界，零形状代码；逐件教学走查全部收在本卷 §4。内容冲突时以本卷为准。
+> **身份**：本卷规定一个聚合由哪些文件构成、每个文件什么形状。完整清单共 **22 个文件**：20 个最小闭环，加读端口配对 ⑳㉑ 两文件；契约枚举 ㉒ 计入契约段。修改本卷必须走 `../../../changes/` 立案。docs 同题篇 `../../../../docs/how-to/new-aggregate.md` 是设计卡，只讲选型与边界，零形状代码；逐件教学走查全部收在本卷 §4。内容冲突时以本卷为准。
 > **机器对账**：C1 把下列 `{agg}` 位以真实聚合代入核验；C3/C4 扫本卷。教例家族 = Payment（虚构教例，sample 未实现）。
 
 ## §1 文件清单（①-㉒ 为全局槽位号）
@@ -64,6 +64,7 @@ sample-service-server/src/main/resources/
 | BP-S1 | 库表形状唯一权威 = `db-migration` 变更集，采 PG 原生形状：`id UUID DEFAULT uuidv7()`、`created_at/updated_at TIMESTAMPTZ DEFAULT now() NOT NULL`、`created_by/updated_by UUID`、`is_deleted BOOLEAN NOT NULL DEFAULT FALSE`、`version BIGINT NOT NULL DEFAULT 0`。uuidv7() 为 PG18 内建，工厂铸造 ID 传值覆盖默认。DB 默认只兜手工插入；正常写路径的审计字段归应用层（AuditFieldFiller + Clock）。 | `db-migration/.../0001-init-schema.sql` 双库 SHA256 同形实证；sample PO 换形后 119 测试对账 |
 | BP-S2 | schema 命名：聚合边界 = schema 边界，领域词用单数（`product.product`）。与 SQL 保留字冲突时必须升级为行业 UB 术语，如 order→sales_order；禁止用引号或前缀逃逸。schema 名与 Java 聚合包名的单数惯例逐字同构；微服务拆分时整 schema 平移。 | 用户 2026-09 裁决；本卷 §4 教学块与 sample 包树实证 |
 | BP-S3 | 外部工具账表各住独立 schema，与业务 schema 互不混列：Liquibase 账表→`liquibase`，由执行器引导件幂等自建；Seata TC 优先分库，`undo_log` 随业务连接落 public。 | `db-migration` `LiquibaseSchemaBootstrapConfig`；双库账表按 schema 清点实证 |
+| CC-7 | contract 模块内容有白名单：只放 Controller 契约接口、CQE、CO、枚举；只依赖 common-contract 的标记接口。东西向调用复用同一契约接口：一期走 RestClient 静态直连，Feign 为选项，需引入 common-cloud 才启用。（原号随身，自公约卷整条迁来，一字未改） | [contract 卷](../../modules/contract.md)；案卷 2026-09-pattern-taxonomy 搬家账 2 |
 
 ## §3 验收单（交付闸，逐条可机械化）
 
@@ -148,7 +149,7 @@ Query 没有独立模板，形状与 ②③ 同模式：`@Data` + Serializable�
 public enum PaymentStatus { PENDING, SUCCESS, FAILED, REFUNDED }
 ```
 
-`PaymentCO.status` 的类型是该契约枚举，不是 `String`。消费方从 contract jar 直接拿到合法值域，OpenAPI 自动枚举合法值。它与 ⑬ `domain/payment/model/PaymentStatus` 是同一值域的两个并存化身：domain 不依赖 contract，contract 不依赖 server 内部，分层规则双向封死引用方向，所以两份枚举无法消除。正确的收口不是合并，而是**奇偶锁**：两个枚举的常量名集合由守卫测试锁死，任一侧增删或改名常量，构建期即红。真实例：sample 的 `contract/ContractEnumParityTest.java`。内部 DTO 仍为 `String`，Assembler 走 `domain.name()` 出口；`String → 契约枚举` 在 Presenter 层用 `valueOf` 收口，示例见 §4.⑨。未知字面量当场 fail-fast，含义是消费方需要升级 contract jar。当前形状的完整走查对照 → [write-path.md](../../../docs/how-to/write-path.md)，Reservation 家族已按此形状示范。
+`PaymentCO.status` 的类型是该契约枚举，不是 `String`。消费方从 contract jar 直接拿到合法值域，OpenAPI 自动枚举合法值。它与 ⑬ `domain/payment/model/PaymentStatus` 是同一值域的两个并存化身：domain 不依赖 contract，contract 不依赖 server 内部，分层规则双向封死引用方向，所以两份枚举无法消除。正确的收口不是合并，而是**奇偶锁**：两个枚举的常量名集合由守卫测试锁死，任一侧增删或改名常量，构建期即红。真实例：sample 的 `contract/ContractEnumParityTest.java`。内部 DTO 仍为 `String`，Assembler 走 `domain.name()` 出口；`String → 契约枚举` 在 Presenter 层用 `valueOf` 收口，示例见 §4.⑨。未知字面量当场 fail-fast，含义是消费方需要升级 contract jar。当前形状的完整走查对照 → [write-path.md](../../../../docs/how-to/write-path.md)，Reservation 家族已按此形状示范。
 
 ### 4.⑤ Adapter — Controller 实现
 
@@ -307,7 +308,7 @@ public class GetPaymentHandler implements QueryHandler<GetPaymentQuery, PaymentD
 }
 ```
 
-> 读侧不经 ⑭ `PaymentRepository`，也不经 ⑧ Assembler，由读端口直接投影 DTO；⑭ 是 domain 的写侧契约。读侧教义与分页/多视图完整形态以 [read-chain 法卷](read-chain.md) 为 canonical。本最小模板直接复用 ⑦ `PaymentDTO` 作读投影，version 等内部字段由 Presenter 过滤。需要读写独立演进时，按 read-path.md 拆出 `PaymentViewDTO` 和 `PaymentViewPresenter`。
+> 读侧不经 ⑭ `PaymentRepository`，也不经 ⑧ Assembler，由读端口直接投影 DTO；⑭ 是 domain 的写侧契约。读侧教义与分页/多视图完整形态以 [read-chain 法卷](../chain/read-chain.md) 为 canonical。本最小模板直接复用 ⑦ `PaymentDTO` 作读投影，version 等内部字段由 Presenter 过滤。需要读写独立演进时，按 read-path.md 拆出 `PaymentViewDTO` 和 `PaymentViewPresenter`。
 
 ### 4.⑫ Domain — 聚合根
 
@@ -460,7 +461,7 @@ public class PaymentRepositoryImpl
 
 ### 4.⑲ Infrastructure — 手写 XML（DddMapper 七条语句）
 
-手写 XML 位于 `src/main/resources/mapper/payment/PaymentMapper.xml`，七条语句逐条可见。各语句的列级语义以 [knowledge/docs/reference/api/common-ddd.md](../../../docs/reference/api/common-ddd.md) §2 的 DddMapper 七语句契约表为准，例如 INSERT 不枚举 `is_deleted`、UPDATE 携带版本条件、删除消费基类传入的 `now` / `updatedBy` 审计参数。本节只给完整模板：
+手写 XML 位于 `src/main/resources/mapper/payment/PaymentMapper.xml`，七条语句逐条可见。各语句的列级语义以 [knowledge/docs/reference/api/common-ddd.md](../../../../docs/reference/api/common-ddd.md) §2 的 DddMapper 七语句契约表为准，例如 INSERT 不枚举 `is_deleted`、UPDATE 携带版本条件、删除消费基类传入的 `now` / `updatedBy` 审计参数。本节只给完整模板：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -590,7 +591,7 @@ public class PaymentQueryRepositoryImpl implements PaymentQueryRepository {
 
 要点：
 - 读端口接口放 `application/payment/repository/` 且 `extends QueryRepository`。在 R13 下（QueryHandler 禁触 domain 仓储）这是唯一合法读路径；R1b 白名单同时放行 infra 对该端口的实现依赖。
-- 完整读侧形态含分页双语句、`safe*()` 钳制、ViewDTO/ViewPresenter 多视图，以 [read-chain 法卷](read-chain.md) 为 canonical。本节只登记新聚合清单所需的最小文件集。
+- 完整读侧形态含分页双语句、`safe*()` 钳制、ViewDTO/ViewPresenter 多视图，以 [read-chain 法卷](../chain/read-chain.md) 为 canonical。本节只登记新聚合清单所需的最小文件集。
 
 ## §5 服务骨架通式（本卷的 service 级扩展）
 

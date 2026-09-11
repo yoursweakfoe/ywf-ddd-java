@@ -1,6 +1,6 @@
 ﻿# 文档防腐工具链（knowledge/scripts/ 三文件说明书）
 
-> `knowledge/scripts/` 是伞下的执法区：工具本身不是知识，它守护另外三个区。工具行为以代码本体为准，本区的**说明书**属于知识，住字典架，本页是唯一说明入口（登记法见 [../README.md](../README.md)，法源见归属法卷 `knowledge/specs/current/patterns/attribution-law.md` §1 执法行）。
+> `knowledge/scripts/` 是伞下的执法区：工具本身不是知识，它守护另外三个区。工具行为以代码本体为准，本区的**说明书**属于知识，住字典架，本页是唯一说明入口（登记法见 [../README.md](../README.md)，法源见归属法卷 `knowledge/specs/current/patterns/meta/attribution-law.md` §1 执法行）。
 > 执法区放在伞内是辖域安排：C6 要读案卷区，也就是两侧 `specs/archive/`，并在全仓维持废号零容忍。物理同居不产生自我执法，C6 的规则边界由归属法卷划定。本页前三个脚本是主体，图管线的 render/check-diagrams 两个脚本在末节。
 
 ## 三文件一览

@@ -13,7 +13,7 @@ domain 层承载核心业务逻辑，**零框架依赖**。它是整个系统最
 
 ## 包结构
 
-→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/new-aggregate.md](../how-to/new-aggregate.md)，即新聚合模板。
 
@@ -21,7 +21,7 @@ domain 层承载核心业务逻辑，**零框架依赖**。它是整个系统最
 
 ### 聚合内部组件
 
-聚合内部子包清单与逐包准入规则——model / repository / portal / service / factory / policy——canonical 见 [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)，本文不复制表格。本文只强调两条贯穿全部组件的设计纪律：
+聚合内部子包清单与逐包准入规则——model / repository / portal / service / factory / policy——canonical 见 [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)，本文不复制表格。本文只强调两条贯穿全部组件的设计纪律：
 
 1. 领域构件**零框架运行时依赖**：纯 Java + common-ddd 构建块。
 2. 接口与实现分离：Repository / Portal 定义在本层，实现在 Infrastructure 层。
@@ -53,7 +53,7 @@ domain 层承载核心业务逻辑，**零框架依赖**。它是整个系统最
 
 结论：domain 是被依赖的核心，不依赖任何外层。application 经其接口编排聚合行为——load → 行为 → save；infrastructure 反向依赖，实现其 Repository / Portal 接口，这就是依赖倒置。domain 自身零外部依赖：只有纯 Java + common-ddd。
 
-→ 分层依赖方向法条——含结构图——canonical 在 [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「依赖方向」，ArchUnit 执法，本文不复制图。
+→ 分层依赖方向法条——含结构图——canonical 在 [knowledge/specs/current/patterns/discipline/prohibitions.md](../../specs/current/patterns/discipline/prohibitions.md)「依赖方向」，ArchUnit 执法，本文不复制图。
 
 ## 专题
 
@@ -85,7 +85,7 @@ domain 层承载核心业务逻辑，**零框架依赖**。它是整个系统最
 - **为何统一时间源**：为可测试性。业务测试注入固定时钟即可冻住时间。框架缺省 UTC 时钟；业务自行声明时钟时，框架缺省自动退位。聚合根与领域服务取当前时间一律经注入时钟派生，不裸调无参 `now()`。
 - **比较与加锁纪律**：判「同一瞬时」用 `isEqual`。`equals` 还要求偏移相等——写读恒 UTC 后该坑已被结构性消除，但比较语义仍应写对表意。`OffsetDateTime` 是 value-based 对象，禁对其实例加锁，这与虚拟线程禁 `synchronized` 同向。
 
-> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/prohibitions.md)。裁决论证的现行版即本页正文；当时如何裁定的快照住封存案卷 §裁决记录。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
+> 禁用类型清单与时间律条文 → [coding-conventions.md](../../specs/current/patterns/discipline/coding-conventions.md)、[prohibitions.md](../../specs/current/patterns/discipline/prohibitions.md)。裁决论证的现行版即本页正文；当时如何裁定的快照住封存案卷 §裁决记录。容器 `TZ=UTC`、展示层取串等落地细则住其他层解读，本篇不越界。
 
 ### 多数据源策略
 

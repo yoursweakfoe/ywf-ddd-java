@@ -7,9 +7,9 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 
 ## 前置阅读
 
-1. `knowledge/specs/current/patterns/external-gateway.md`（**法卷=唯一权威**：§1 条款 GW-1～GW-9、§2 规范形状 2.1～2.5、§3 生效登记；教例 payment+支付宝为虚构教例、sample 未实现，照形状施工勿在 sample 找真实例）
+1. `knowledge/specs/current/patterns/boundary/external-gateway.md`（**法卷=唯一权威**：§1 条款 GW-1～GW-9、§2 规范形状 2.1～2.5、§3 生效登记；教例 payment+支付宝为虚构教例、sample 未实现，照形状施工勿在 sample 找真实例）
 2. `knowledge/docs/how-to/gateway.md`（设计卡：何时需要外部集成 + 四个设计决策点，零形状代码）
-3. `knowledge/specs/current/patterns/prohibitions.md`（§1 Domain 禁止含 R4 白名单；§4 Infra 禁止，ACL 互指 GW-2）
+3. `knowledge/specs/current/patterns/discipline/prohibitions.md`（§1 Domain 禁止含 R4 白名单；§4 Infra 禁止，ACL 互指 GW-2）
 
 ## 第 0 步：契约先行（spec-first）
 
@@ -59,6 +59,6 @@ description: 为已有聚合新增外部系统集成（Portal 接口 + Gateway �
 ## 文档同步
 
 - 行为契约已在第 0 步闭环（changes/ 四件套归档折叠=同步义务唯一时点），本节只列同时可能触发的其余文档义务
-- 新增**通用容错模式 / 统一 HTTP Client 等通用 Gateway 基础设施** = 框架行为变更 → 走 `knowledge/specs/changes/<slug>/` 修订 `knowledge/specs/current/patterns/external-gateway.md`（或对应 common 模块卷），归档后 docs 设计卡跟随；动了 common 公开 API 则更新 `knowledge/docs/reference/api/common-*.md`，程序走 `modify-common-module` skill
+- 新增**通用容错模式 / 统一 HTTP Client 等通用 Gateway 基础设施** = 框架行为变更 → 走 `knowledge/specs/changes/<slug>/` 修订 `knowledge/specs/current/patterns/boundary/external-gateway.md`（或对应 common 模块卷），归档后 docs 设计卡跟随；动了 common 公开 API 则更新 `knowledge/docs/reference/api/common-*.md`，程序走 `modify-common-module` skill
 - sample 首次真实落地业务 Gateway：法卷 §3 生效登记业务侧行（现为 ⛔ 虚构教例）须随 changes/ 程序同修，不得直接改法卷
 - 仅选型判据变化（何时用/决策点）才动设计卡 `knowledge/docs/how-to/gateway.md`

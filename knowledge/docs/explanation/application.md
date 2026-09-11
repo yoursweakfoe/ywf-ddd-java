@@ -15,7 +15,7 @@ application 层编排业务用例。**极薄，不含业务逻辑**，所有决�
 
 ## 包结构
 
-→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md) 看写路径 | [cookbook/read-path.md](../how-to/read-path.md) 看读路径
 
@@ -88,7 +88,7 @@ DTO 和 CO 是**两个不同职责的边界对象**，强制分离，不可合�
 | 职责 | 领域模型的完整内部投影 | 内部细节清洗后的外部安全视图 |
 | 变更影响 | 内部重构，无外部影响 | Breaking change，需协调消费方 |
 
-> 归属、生产者、可包含字段等命名规范行，canonical 见 [knowledge/specs/current/patterns/coding-conventions.md](../../specs/current/patterns/coding-conventions.md)「DTO / CO 强制分离」表，本文不复制。
+> 归属、生产者、可包含字段等命名规范行，canonical 见 [knowledge/specs/current/patterns/discipline/coding-conventions.md](../../specs/current/patterns/discipline/coding-conventions.md)「DTO / CO 强制分离」表，本文不复制。
 
 ```
 Handler 内部：Domain → Assembler.toDTO() → DTO
@@ -124,4 +124,4 @@ application/{agg}/handler/command/{Xxx}CommandHandler.java
 | AppService 返回 CO | CO 暴露内部实现细节 |
 | DTO 携带内部字段 | |
 
-> 完整禁止清单——含「禁止 Handler 返回 CO」等——见 [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「Application 层禁止」。法条 canonical 在那份法卷；AGENTS 核心约束 #2 是其规范行复述位。
+> 完整禁止清单——含「禁止 Handler 返回 CO」等——见 [knowledge/specs/current/patterns/discipline/prohibitions.md](../../specs/current/patterns/discipline/prohibitions.md)「Application 层禁止」。法条 canonical 在那份法卷；AGENTS 核心约束 #2 是其规范行复述位。

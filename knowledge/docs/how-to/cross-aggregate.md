@@ -1,6 +1,6 @@
 ﻿# 跨聚合协调 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该协调、放哪里"。链路图、代码模板、文件清单全在法卷 → [../../specs/current/patterns/cross-aggregate.md](../../specs/current/patterns/cross-aggregate.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该协调、放哪里"。链路图、代码模板、文件清单全在法卷 → [../../specs/current/patterns/collaboration/cross-aggregate.md](../../specs/current/patterns/collaboration/cross-aggregate.md)。
 
 > 设计原理 → [../explanation/domain.md](../explanation/domain.md)（领域服务章节）
 
@@ -28,7 +28,7 @@
 
 ## 相关
 
-- **SecurityUtil 获取当前用户** → `knowledge/docs/reference/api/common-security.md` + `knowledge/specs/current/patterns/coding-conventions.md`（SecurityUtil 使用层归属）
+- **SecurityUtil 获取当前用户** → `knowledge/docs/reference/api/common-security.md` + `knowledge/specs/current/patterns/discipline/coding-conventions.md`（SecurityUtil 使用层归属）
 - **common-pg TypeHandler** → `knowledge/docs/reference/api/common-pg.md`（UUID/JSONB/数组自动映射）
 - **Factory 复杂创建** → [../explanation/domain.md](../explanation/domain.md)（Factory 章节）
 

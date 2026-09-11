@@ -1,6 +1,6 @@
 ﻿# 定时任务 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、选型表与落地模板全在法卷 → [../../specs/current/patterns/scheduler.md](../../specs/current/patterns/scheduler.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、选型表与落地模板全在法卷 → [../../specs/current/patterns/chain/scheduler.md](../../specs/current/patterns/chain/scheduler.md)。
 
 > 设计原理 → [../explanation/adapter.md](../explanation/adapter.md) ｜ 同类入口参照 → [write-path.md](write-path.md)（web 入口）
 

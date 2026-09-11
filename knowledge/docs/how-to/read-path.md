@@ -1,6 +1,6 @@
 ﻿# 读路径 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、文件清单全在法卷 → [../../specs/current/patterns/read-chain.md](../../specs/current/patterns/read-chain.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、文件清单全在法卷 → [../../specs/current/patterns/chain/read-chain.md](../../specs/current/patterns/chain/read-chain.md)。
 
 > 设计原理 → [../explanation/application.md](../explanation/application.md)
 

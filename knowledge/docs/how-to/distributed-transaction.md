@@ -1,6 +1,6 @@
 ﻿# 分布式事务（Seata AT）· 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状与代码（依赖/配置/双端组件/Handler 模板）、选型表、落地模板全在法卷 → [../../specs/current/patterns/distributed-tx.md](../../specs/current/patterns/distributed-tx.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状与代码（依赖/配置/双端组件/Handler 模板）、选型表、落地模板全在法卷 → [../../specs/current/patterns/boundary/distributed-tx.md](../../specs/current/patterns/boundary/distributed-tx.md)。
 
 > 设计原理 → [../explanation/infrastructure.md](../explanation/infrastructure.md)
 

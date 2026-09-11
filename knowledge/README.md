@@ -18,7 +18,7 @@
 
 | 区 | 性质 | 规则一句话 | 法律全文在哪 |
 |---|---|---|---|
-| `docs/` | 地图（描述） | 代码变了它没跟 → 这是文档 bug，改文档 | [归属法](specs/current/patterns/attribution-law.md) |
+| `docs/` | 地图（描述） | 代码变了它没跟 → 这是文档 bug，改文档 | [归属法](specs/current/patterns/meta/attribution-law.md) |
 | `specs/` | 法律（框架契约） | 代码违反它 → 改代码。改法必须走 `changes/` 程序，禁止为了迁就代码偷改法条。docs 同题文章与法卷冲突时，法卷为准。`archive/` 只进不改，到期整册归零 | `specs/README.md` |
 | `scripts/` | 执法（工具链） | 不是知识，是守护前两区的机器检查。工具行为以代码为准，说明书住字典架 | [docs/reference/doc-guards.md](docs/reference/doc-guards.md) |
 
@@ -49,7 +49,7 @@
 
 > 图源 = [`diagrams/knowledge/README/drive-relations.d2`](diagrams/knowledge/README/drive-relations.d2)（唯一可编辑面）。改源后重刷：`powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1`（TALA 引擎）；防陈旧对账：同法跑 `check-diagrams.ps1`。
 
-每条边的法源都能在 [归属法](specs/current/patterns/attribution-law.md) §1/§2/§4 或 `new-bill` 技能对应步骤找到。图只做导览，不立法。下面两张表列全图所有边。
+每条边的法源都能在 [归属法](specs/current/patterns/meta/attribution-law.md) §1/§2/§4 或 `new-bill` 技能对应步骤找到。图只做导览，不立法。下面两张表列全图所有边。
 
 **立法十步**（编号即工序先后；②③、⑤⑥ 是两道门的往返）：
 
@@ -89,8 +89,8 @@ knowledge/
 │   ├── tutorials/  quickstart：从 clone 到跑通
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码，规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
-│   └── explanation/ 分层设计 5 篇 + 专论 6 篇（知识系统/云集成/安全/可观测/测试/规则集设计）+ theory-map 理论账本
-├── specs/          法律·框架区 | current/{modules|patterns}/ 法卷 · changes/ 审议中案卷 · archive/ 封存（业务法在 ../sample-application/specs/）
+│   └── explanation/ 分层设计 5 篇 + 专论 7 篇（知识系统/云集成/安全/可观测/测试/规则集设计/摆架 rationale）+ theory-map 理论账本
+├── specs/          法律·框架区 | current/modules/ 模块法卷 · current/patterns/<十摊>/ 模式法卷（摊进路径；摆架宪法 → patterns/meta/pattern-taxonomy.md）· changes/ 审议中案卷 · archive/ 封存（业务法在 ../sample-application/specs/）
 └── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置
 ```
 

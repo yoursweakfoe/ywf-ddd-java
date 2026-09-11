@@ -2,7 +2,7 @@
 
 > **身份**：本卷是知识系统的宪法。核心只有一条——**每类事实恰好有一个权威住所，其他所有地方只准写"一句规范 + 路径指针"**。它管的是文档和代码的维护行为本身：违反就按本卷裁决去修放错地方的那份。
 > **本卷也是法**：它住在 `specs/`，改它要走和改别的法卷一模一样的 `changes/` 立案程序。体系里没有免修于程序的宪法。（前身是 `.agents/rules/05`，2026-10 法律入典改革升格至此。）
-> **机器对账**：本卷各条的判据由 `knowledge/scripts/check-docs.ps1` 七校验执行，说明见 [docs/reference/doc-guards.md](../../../docs/reference/doc-guards.md)。
+> **机器对账**：本卷各条的判据由 `knowledge/scripts/check-docs.ps1` 七校验执行，说明见 [docs/reference/doc-guards.md](../../../../docs/reference/doc-guards.md)。
 
 ## 1. 诸区分野（一目录一法律）
 
@@ -43,9 +43,9 @@
 |---|---|---|---|---|
 | 包路径/类名/方法签名 | 高 | 源代码本身 | 一句规范 + `→ 见 path`；**md 禁手抄结构树**（包树地图不设二手） | check-docs C1/C3 |
 | 异常→HTTP 映射、错误码格式 | 高 | `GlobalRestExceptionHandler` javadoc（代码）+ exception 法卷 EV 系（承诺）+ `reference/api/common-exception.md` §2 表（描述镜像） | 一行 + 指针 | C5 对账 |
-| 服务/聚合结构组成 | 高 | `specs/current/patterns/aggregate-blueprint.md`（§1 槽位清单 + §5 通式） | 指针 | C1 |
+| 服务/聚合结构组成 | 高 | `specs/current/patterns/building-block/aggregate-blueprint.md`（§1 槽位清单 + §5 通式） | 指针 | C1 |
 | 用法规范/规范代码形状（严格件） | 中 | `specs/current/modules/*.md` + `specs/current/patterns/*.md`：条款 + 取证源 + 全套规范形状（全仓唯一样本） | docs 同题 = 设计卡：判据/决策点/边界 + 指针，**零形状代码**、禁条款编号；冲突法卷赢 | C1/C3/C4 |
-| 规范行（必须/禁止） | 中 | 法卷（`specs/current/`；[prohibitions](prohibitions.md) 为禁令对照表，[coding-conventions](coding-conventions.md) 为公约） | 一句复述 + 指针；AGENTS.md 九条是唯一例外 | 每行挂 R##/测试名 |
+| 规范行（必须/禁止） | 中 | 法卷（`specs/current/`；[prohibitions](../discipline/prohibitions.md) 为禁令对照表，[coding-conventions](../discipline/coding-conventions.md) 为公约） | 一句复述 + 指针；AGENTS.md 九条是唯一例外 | 每行挂 R##/测试名 |
 | 设计论证（为什么；含架构决策的沉淀论证现行版。案卷 §裁决记录里的"当时思考"不算，归下行） | 低 | `docs/explanation/`（含 theory-map 理论账本） | 指针。架构决策类论证在 ⑨⁺ 折叠时刻强制复写入同题解读篇；事务性决策 theory-map 一行账即可 | 低易变允许就近重述；强制复写部分由 §4 执法 |
 | 裁决与当时思考（决策事件） | 冻结在位，到期整册抹除（→ §1 清册制） | 案卷 `specs/changes|archive/` 的 `specify §裁决记录` 节：门次收据 + 裁定 + 当时理由 + supersede 宣告；**不设全局编号**，引用 = date-slug 案名 + 节名 | 案卷外只准一句表决行 `→ 案卷 <date-slug> §裁决记录`，**纯文本禁超链**（案卷会迁移、会被清册，超链必成鬼）；禁在其余载体复写论证正文（现行版住 `docs/explanation/`，源与流不算副本）；清册后标识符净空 | C6 冻结臂 + 清册臂；Confirmation 收据必填 |
 | 立法/裁决过程事实 | 随案卷，到期整册抹除（→ §1 清册制） | 案卷本体（specify 的问题与裁决记录、plan 的 delta、tasks 勾验、implement 执行账） | docs 其余架只准指针；折叠前过瘦身闸、清册前过再核闸（都在 §4） | ddd-review 人肉抽查 + C6 清册臂 |
@@ -53,6 +53,7 @@
 | 任务流程（顺序 + 清单） | 低 | `.agents/skills/`（≤500 行） | 法卷指过来。**skill 内零法条零模板**（D6 推广）；形状性内容必须锚定法卷某卷某节（实施内容基准律，见下表注） | C2/C3 + ddd-review 锚点抽查 |
 | 防腐工具行为与用法 | 中 | `knowledge/scripts/` 代码本体（行为即法）+ `reference/doc-guards.md`（说明唯一入口） | 一行 + 指针 | 人肉跑主机 + ddd-review 末步 |
 | 术语 → 身份定位 | 中 | `docs/reference/glossary.md`：只准"一句定位 + 指针"，禁定义复述 | 指针 | — |
+| 法卷摊归属与摆架判据（摊地图、牌面、空穴登记、搬家账） | 低 | `specs/current/patterns/meta/pattern-taxonomy.md` §2/§3/§4 ＋ 目录路径本身（摆架卷 meta-2：路径即名册） | 一句守则 + 指针（specs/README 目录表、伞 README 树行、摊头牌面）；禁复写摊卡正文 | 评审项（ddd-review 新卷归摊） |
 | 元法（本卷：事实归属本身） | 低 | 本卷 | 一句守则 + 指针（伞 README / docs README 各留一行） | — |
 
 **易变性分层**：低易变的教义就近重述是有益冗余；高易变的事实重述是纯债——只禁后者。
@@ -86,7 +87,7 @@
 
 ## 5. i18n 错误码管理
 
-- 格式 `{aggregate}:err.{scene}`。messageKey 是前端渲染位点，服务端不维护 messages.properties；条款 → [EV-2](../modules/exception.md)。
+- 格式 `{aggregate}:err.{scene}`。messageKey 是前端渲染位点，服务端不维护 messages.properties；条款 → [EV-2](../../modules/exception.md)。
 - 全仓 key 清单的唯一登记账本 = `knowledge/docs/how-to/error-handling.md`（登记簿居设计卡，形状条款在法卷）。禁硬编码可读文案作 key。
 
 ## 6. 防复发

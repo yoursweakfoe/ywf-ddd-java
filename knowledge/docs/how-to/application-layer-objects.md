@@ -1,6 +1,6 @@
 ﻿# 应用层内部对象 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"用哪种对象、准不准入"。代码模板、承载对比、选择表全在法卷 → [../../specs/current/patterns/application-objects.md](../../specs/current/patterns/application-objects.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"用哪种对象、准不准入"。代码模板、承载对比、选择表全在法卷 → [../../specs/current/patterns/building-block/application-objects.md](../../specs/current/patterns/building-block/application-objects.md)。
 
 > 设计原理 → [../explanation/application.md](../explanation/application.md)
 
@@ -8,7 +8,7 @@
 
 Application 层夹在两类对象之间：Handler 管领域与内部数据的来回，Presenter 管内部数据到契约 CO 的出口。这一层需要按用途区分数据对象，用后缀把语义写在名字上，而不是一律叫 DTO。
 
-写侧投影 DTO 是基线。读侧多视图、入路径富化、外部报文防腐是三个扩展场景，分别对应 ViewDTO / ParamsDTO / RecordDTO，这些都是虚构教例名。四对象角色总表、写/读承载对比、准入选择表都在法卷 §2.4~§2.6。DTO 与 CO 的职责分工 canonical 在 `knowledge/specs/current/patterns/coding-conventions.md`，本卡不复述。
+写侧投影 DTO 是基线。读侧多视图、入路径富化、外部报文防腐是三个扩展场景，分别对应 ViewDTO / ParamsDTO / RecordDTO，这些都是虚构教例名。四对象角色总表、写/读承载对比、准入选择表都在法卷 §2.4~§2.6。DTO 与 CO 的职责分工 canonical 在 `knowledge/specs/current/patterns/discipline/coding-conventions.md`，本卡不复述。
 
 ## 决策点
 

@@ -8,8 +8,8 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 ## 前置阅读
 
 1. `sample-application/`（全仓唯一真实骨架参照：pom 层级 / 配置 / Docker / compose 皆有活体样本）
-2. `knowledge/specs/current/patterns/aggregate-blueprint.md` §5（服务骨架通式：一个服务该有哪些目录、各目录住什么）
-3. `knowledge/specs/current/patterns/coding-conventions.md` §2（CC-3 结构映射：目录 / groupId / 包名 / 服务名命名，本文件不复述）
+2. `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` §5（服务骨架通式：一个服务该有哪些目录、各目录住什么）
+3. `knowledge/specs/current/patterns/discipline/coding-conventions.md` §2（CC-3 结构映射：目录 / groupId / 包名 / 服务名命名，本文件不复述）
 4. `ywf-ddd-common/README.md`（模块依赖拓扑 + BOM 引入方式）
 
 ## 步骤
@@ -17,7 +17,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 ### Phase 1: Maven 模块骨架
 
 1. 三层 POM 结构：应用根 POM（parent = `spring-boot-starter-parent`，packaging=pom）→ 服务聚合 POM `{service}/`（packaging=pom）→ 两个叶子模块 `{service}-contract/`（公开契约 jar）与 `{service}-server/`（Spring Boot 应用）。形状逐级照抄 `sample-application/pom.xml` → `sample-application/sample-service/pom.xml`
-2. 命名映射（目录 kebab-case、groupId、Java 包名、Spring 服务名）→ CC-3（`knowledge/specs/current/patterns/coding-conventions.md` §2.2），本文件不复述
+2. 命名映射（目录 kebab-case、groupId、Java 包名、Spring 服务名）→ CC-3（`knowledge/specs/current/patterns/discipline/coding-conventions.md` §2.2），本文件不复述
 3. 应用根 POM `properties`：`common.version` + `lombok.version`（annotationProcessorPaths 不走 dependencyManagement，须显式声明）+ 用 `maven.compiler.release=21` 压过 Boot parent 的缺省值；若引入 `common-cloud`，Spring Cloud / Spring Cloud Alibaba BOM 也须自行 import（BOM 不传递 properties，参照样本注释）
 4. 应用根 POM `dependencyManagement` import `ywf-ddd-common` BOM、`build/pluginManagement` 配 lombok 注解处理器——两段完整 XML 以 `sample-application/pom.xml` 为参照照抄，不在此重写
 
@@ -55,7 +55,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 
 - [ ] `mvn clean compile` 编译通过
 - [ ] BOM import 版本与 ywf-ddd-common 一致
-- [ ] 目录骨架符合 `knowledge/specs/current/patterns/aggregate-blueprint.md` §5 通式（聚合逐槽建满另按 §1 清单走 `new-aggregate` 对账）
+- [ ] 目录骨架符合 `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` §5 通式（聚合逐槽建满另按 §1 清单走 `new-aggregate` 对账）
 - [ ] application.yml 数据源为普通单 `spring.datasource`（多数据源需显式引入 dynamic-datasource 并说明理由）
 - [ ] ArchUnit 通过（引入 common-test 后即挂共享规则集，`knowledge/specs/current/modules/test.md` 场景 1）
 - [ ] Dockerfile 默认 profile=prod，OTel 环境变量齐全

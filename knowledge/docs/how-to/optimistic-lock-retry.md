@@ -1,6 +1,6 @@
 ﻿# 乐观锁冲突与重试 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状与代码（传播路径/重试模板/策略表/409 契约）全在法卷 → [../../specs/current/patterns/optimistic-lock.md](../../specs/current/patterns/optimistic-lock.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状与代码（传播路径/重试模板/策略表/409 契约）全在法卷 → [../../specs/current/patterns/collaboration/optimistic-lock.md](../../specs/current/patterns/collaboration/optimistic-lock.md)。
 
 > 设计原理 → [../explanation/infrastructure.md](../explanation/infrastructure.md) ｜ 分类契约字典 → [../reference/api/common-ddd.md](../reference/api/common-ddd.md) §2「持久化支撑（MybatisPersistence）」
 

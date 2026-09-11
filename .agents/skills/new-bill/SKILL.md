@@ -9,7 +9,7 @@ description: 为知识体系起草、推进并归档一部法案（案卷四件�
 
 ## 前置阅读（动笔前）
 
-- 元法：`knowledge/specs/current/patterns/attribution-law.md` —— §1 诸区分野（冲突裁决表）、§4 强制同步规则（「要不要立案」的触发源）
+- 元法：`knowledge/specs/current/patterns/meta/attribution-law.md` —— §1 诸区分野（冲突裁决表）、§4 强制同步规则（「要不要立案」的触发源）
 - 法区宪章：`knowledge/specs/README.md` —— current / changes / archive 一名一身份，宽严双份
 - 工位纪律：`knowledge/specs/changes/README.md` —— 案卷目录制、三写禁绝与「折叠即修法」
 - 四件套模板：`knowledge/specs/changes/_template/` —— specify.md / plan.md / tasks.md / implement.md（形状权威在模板本身，本 skill 不复述）

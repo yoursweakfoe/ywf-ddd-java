@@ -7,9 +7,9 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 
 ## 前置阅读
 
-- `knowledge/specs/current/patterns/batch-write.md`（批量写法卷：BW-1~BW-7 条款 + §2 规范形状，施工唯一权威——本技能只载工序，形状不复述）
+- `knowledge/specs/current/patterns/chain/batch-write.md`（批量写法卷：BW-1~BW-7 条款 + §2 规范形状，施工唯一权威——本技能只载工序，形状不复述）
 - `knowledge/docs/how-to/batch-operations.md`（设计卡：该不该用、原子性三档位选型、批大小归谁管、边界代价）
-- `knowledge/specs/current/patterns/write-chain.md`（写侧四拍链 WC-2/WC-3/WC-4/WC-9——批量形态即其一扩多的展开）
+- `knowledge/specs/current/patterns/chain/write-chain.md`（写侧四拍链 WC-2/WC-3/WC-4/WC-9——批量形态即其一扩多的展开）
 
 ## 第 0 步：契约先行（spec-first）
 

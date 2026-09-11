@@ -14,7 +14,7 @@ infrastructure 层提供技术实现，通过**依赖倒置**实现 Domain 层�
 
 ## 包结构
 
-→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)
 
 > 完整代码示例 → [how-to/write-path.md](../how-to/write-path.md) 看 PO / Converter / RepositoryImpl | [how-to/new-aggregate.md](../how-to/new-aggregate.md) 看完整模板。
 
@@ -35,7 +35,7 @@ infrastructure 层提供技术实现，通过**依赖倒置**实现 Domain 层�
 | Converter | `XxxConverter implements BasicConverter<D, P>` | 手动实现：富领域模型需要 reconstitute。 | 聚合根 `converter/` |
 | Repository 实现 | `XxxRepositoryImpl implements XxxRepository` | 继承 `MybatisPersistence`，标注 `@Component`。 | 聚合根 `repository/`。写读两侧 Impl **同包平铺**，读实现 `XxxQueryRepositoryImpl` 以类名后缀区分。 |
 
-> **mybatis/ 边界**：仅收「撤换 ORM 时需彻底删除」的纯技术文件，即 PO、Mapper 及其 XML；Converter、RepositoryImpl 留聚合根下。完整论证——为何 PO+Mapper 整体属 MyBatis 家族、撤换后各自删还是改——canonical 见 [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md) 的 mybatis/ 边界注记，本文不复制。
+> **mybatis/ 边界**：仅收「撤换 ORM 时需彻底删除」的纯技术文件，即 PO、Mapper 及其 XML；Converter、RepositoryImpl 留聚合根下。完整论证——为何 PO+Mapper 整体属 MyBatis 家族、撤换后各自删还是改——canonical 见 [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md) 的 mybatis/ 边界注记，本文不复制。
 
 `MybatisPersistence` 基类方法语义、`DddMapper<PO>` 七条通用语句的 XML 契约——insert、updateById 乐观锁条件、selectById、deleteById 逻辑删除、existsById 等——canonical 详表见 [common-ddd §2 仓储支撑](../reference/api/common-ddd.md#2-核心能力)，此处不复述。分层职责只此两句：
 
@@ -115,7 +115,7 @@ Spring `@Configuration` 类，存放**跨技术域的全局配置**。
 
 本层实现 domain 定义的 Repository / Portal 接口，这就是依赖倒置。application 经 domain 接口间接使用本层实现；本层不被 domain、application 直接引用。同时本层是服务内持有技术框架与 SDK 的唯一合法位——MyBatis、OSS Client 等，虚构教例——SDK 类型不外泄出本层。
 
-→ 依赖方向法条——含结构图——canonical 在 [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「依赖方向」「依赖倒置」两节，ArchUnit 执法，本文不复制图。
+→ 依赖方向法条——含结构图——canonical 在 [knowledge/specs/current/patterns/discipline/prohibitions.md](../../specs/current/patterns/discipline/prohibitions.md)「依赖方向」「依赖倒置」两节，ArchUnit 执法，本文不复制图。
 
 ## 专题
 

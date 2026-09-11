@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：禁令全表（框架法 · 严格件）
 
-> **身份**：本卷是所有「禁止」条款的一站式对照表，违反任何一条即架构违规；修卷走 `../../changes/`。ddd-review 与 PR 审查逐条对照本卷。已在他卷有正身的条款标互指。前身是 `.agents/rules/04`（兼收 02 的禁止面），2026-10 法条归典升格至此。
+> **身份**：本卷是所有「禁止」条款的一站式对照表，违反任何一条即架构违规；修卷走 `../../../changes/`。ddd-review 与 PR 审查逐条对照本卷。已在他卷有正身的条款标互指。前身是 `.agents/rules/04`（兼收 02 的禁止面），2026-10 法条归典升格至此。
 > **机器对账**：C1/C3/C4 扫本卷。多数条款有 ArchUnit R## 或测试实证背书，括注处即取证。
 
 ## §1 Domain 层禁止
@@ -8,8 +8,8 @@
 - 禁止引入 Spring / MyBatis 框架**运行时**依赖：DI 容器、AOP、持久化 API。唯一例外是 `org.springframework.stereotype` 装配注解，它纯元数据，在 R4 白名单 `DOMAIN_IS_FRAMEWORK_NEUTRAL_EXCEPT_STEREOTYPE` 内
 - 禁止暴露 setter 或 public 字段。状态变迁只经行为方法；Lombok 律 → [CC-6](coding-conventions.md)
 - 禁止在 Domain 层实现 Repository。实现必须在 Infrastructure，AGENTS 九条 5
-- 禁止跨聚合直接修改对方内部状态。经 Repository 读取；协调律 → [cross-aggregate](cross-aggregate.md)
-- 禁止定义具名领域异常。统一 `BusinessException` + 错误码 → [EV-1](../modules/exception.md)；反例 `InsufficientStockException` 为在册反面教学例
+- 禁止跨聚合直接修改对方内部状态。经 Repository 读取；协调律 → [cross-aggregate](../collaboration/cross-aggregate.md)
+- 禁止定义具名领域异常。统一 `BusinessException` + 错误码 → [EV-1](../../modules/exception.md)；反例 `InsufficientStockException` 为在册反面教学例
 - 禁止使用 Lombok `@Data`。聚合根/实体/值对象手写 equals/toString，判等基于 ID
 
 ## §2 Application 层禁止
@@ -32,7 +32,7 @@
 - 禁止在 PO / Repository 中写业务逻辑。仅技术实现 + ACL 翻译 → GW-2
 - 禁止被 Domain 层引用。引用方向反过来即违法
 - 禁止外部 SDK 类型泄漏到 Domain。必须 ACL 翻译 → GW-2
-- 禁止跨聚合共享 PO / Mapper。聚合自包含 → [blueprint §5](aggregate-blueprint.md)
+- 禁止跨聚合共享 PO / Mapper。聚合自包含 → [blueprint §5](../building-block/aggregate-blueprint.md)
 - 禁止在 Repository 拼接 SQL 字符串。一切 SQL 落手写 XML，见 §6
 - 最小充分原则：禁止引入当前不使用的组件，"以后可能用到"不是理由。禁止死代码：注释块、TODO-restore、空实现。禁止 `System.out` 替代 SLF4J
 
@@ -44,12 +44,16 @@
 
 ## §6 持久化与 SQL 铁律
 
-- 禁止 MyBatis-Plus 进框架依赖树。持久化 = `DddMapper` 七语句 + 手写 XML，旧案卷判例。dynamic-datasource 是经一手调研证实零耦合的多数据源 opt-in 方案，`@DS` 合法
-- 禁止 PO 携带任何 ORM 注解。纯 `@Data` POJO；表名/主键/版本条件/逻辑删除全在 XML SQL 文本 → BP-X2
-- 禁止 Wrapper 式动态条件。查询一律具名 Mapper 方法 + 具名 XML 语句，`<sql>` 片段复用防漂移
-- 建表 DDL 默认含 `version BIGINT NOT NULL DEFAULT 0` + `is_deleted BOOLEAN NOT NULL DEFAULT FALSE`，PO 声明对应字段。显式豁免的聚合 XML 省略对应条件，逐聚合自决，无共享开关 → BP-12
-- `updateById`（有版本列）**必须**携 `SET version = version + 1 ... AND version = #{version} AND is_deleted = false`，无运行时拦截器。0 行后果三分通道 → [optimistic-lock OL-1](optimistic-lock.md)，行为由 sample `OptimisticLockConcurrencyTest` 实证
-- 逻辑删除聚合的每条 select/update/delete **必须**显式 `AND is_deleted = false`，漏一处即泄漏。豁免聚合写物理 `DELETE`
+六条正身已迁 → [../data-access/persistence-sql.md](../data-access/persistence-sql.md) data-access-1～data-access-6（案卷 2026-09-pattern-taxonomy 搬家账 3；六条本无编号，首次铸号按摆架卷编号总则取摊名式）。本节保留对照，逐条即原句：
+
+- 禁 MyBatis-Plus 入框架依赖树 → data-access-1
+- 禁 PO 携带 ORM 注解 → data-access-2
+- 禁 Wrapper 式动态条件 → data-access-3
+- DDL 默认含 version/is_deleted 两列 → data-access-4
+- `updateById` 必携版本条件、无拦截器、0 行三分通道 → data-access-5
+- 逻辑删除聚合每语句显式 `AND is_deleted = false` → data-access-6
+
+评审照此六行查 persistence-sql 卷；违任一即架构违规。
 
 ## §7 时间与线程
 

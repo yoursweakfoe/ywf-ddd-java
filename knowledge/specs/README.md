@@ -2,7 +2,7 @@
 
 本区只立**框架/脚手架层**（common 模块自身）的行为法。业务包的行为法不住这里，住镜像区 [`../../sample-application/specs/`](../../sample-application/specs/README.md)——契约写的是生意，业务名只在那棵树合法；本区承载通识。
 
-本区四条例外守则（全法见归属法卷 `knowledge/specs/current/patterns/attribution-law.md`，业务镜像区援引同一套，不复述）：
+本区四条例外守则（全法见归属法卷 `knowledge/specs/current/patterns/meta/attribution-law.md`，业务镜像区援引同一套，不复述）：
 
 1. **代码违反本法 → 改代码**。想改法，走 `changes/` 程序。禁止为了迁就现状偷改法条——那是把法律当地图。
 2. 改法唯一通道：`changes/<YYYY-MM-slug>/` 立四件套（specify 定验收 → plan 定技术形状与修卷 delta → tasks 拆施工 → implement 记执行账）。两道批准门（Specify 门、Plan 门），每案两停、不论大小，过门才能施工。实现全绿后折叠归档进 `current/`——文档同步义务只在那一刻发生。
@@ -14,7 +14,7 @@
 | 目录 | 身份 | 改法 |
 |---|---|---|
 | `current/modules/<module>.md` | **模块法卷**（8 卷）：单个 common 模块的用法规范，与模块同名 | 只能经 changes/ 折叠写入 |
-| `current/patterns/<pattern>.md` | **模式法卷**（15 卷）：跨模块的横切规范，条款编号 + 生效登记 | 同上 |
+| `current/patterns/<摊>/<pattern>.md` | **模式法卷**（19 卷，十个摊目录）：跨模块的横切规范，条款编号 + 生效登记；摊卡、空穴登记、搬家账 → 摆架法卷 `patterns/meta/pattern-taxonomy.md`；**卷籍以路径为唯一名册**，册内无卷的摊（diplomacy/、deploy-ops/）有牌面待法 | 同上 |
 | `changes/<slug>/` | **审议中**：还没生效的修订案 | 定稿前随便改。`_template/` 四件套模板两区共用（立法流程是业务无关通识，住知识区） |
 | `archive/` | **已归档**：折叠完成的案卷（date-slug 命名）。裁决快照住案卷自己的 specify §裁决记录；现行论证复写在 `docs/explanation/` | 只进不改（连错字都不改）。到期时由清册 bill 整册彻底删除——删除前必须满足自足判据（见归属法卷）。README 常驻，只记章程不记账目 |
 

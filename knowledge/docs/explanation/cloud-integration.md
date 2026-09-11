@@ -1,6 +1,6 @@
 ﻿# 云集成 — 框架为什么这样跟云上生态咬合
 
-> 本页回答"这套框架为什么这样接 Spring Cloud / 阿里云生态"：东西向怎么调、熔断交给谁、Nacos 与 Seata 怎么引进来、身份怎么沿调用链走。依赖坐标、配置键、代码形状的唯一权威在法卷：[common-cloud 模块卷](../../specs/current/modules/cloud.md)、[分布式事务卷](../../specs/current/patterns/distributed-tx.md)、[security 模块卷](../../specs/current/modules/security.md)、[外部集成卷](../../specs/current/patterns/external-gateway.md)。本页只讲这些形状背后的为什么，属宽松件，与法卷冲突以法卷为准。未采纳模式的账目在 [theory-map 微服务治理节](theory-map.md)。
+> 本页回答"这套框架为什么这样接 Spring Cloud / 阿里云生态"：东西向怎么调、熔断交给谁、Nacos 与 Seata 怎么引进来、身份怎么沿调用链走。依赖坐标、配置键、代码形状的唯一权威在法卷：[common-cloud 模块卷](../../specs/current/modules/cloud.md)、[分布式事务卷](../../specs/current/patterns/boundary/distributed-tx.md)、[security 模块卷](../../specs/current/modules/security.md)、[外部集成卷](../../specs/current/patterns/boundary/external-gateway.md)。本页只讲这些形状背后的为什么，属宽松件，与法卷冲突以法卷为准。未采纳模式的账目在 [theory-map 微服务治理节](theory-map.md)。
 
 ## 贯穿六案的一条气质：用生态，不入教派
 
@@ -40,7 +40,7 @@ gRPC 曾摆上桌面，但强类型协议的收益有前提：接口量大、调
 
 Seata 的引入复刻了上面的版本自主权：独立构件、版本独立管理，升级不受任何生态 BOM 发布节奏约束。
 
-更有味道的是透传侧的裁决。分布式事务成链要求 XID 跨服务透传，框架却拒绝内置这个能力。header 定名、出站拦截器与入站 Filter 的挂点、上下文绑定的清理时机，这些还没收敛成一种公认形态；焊进框架，等于让全体消费方共担认知修正的成本，而框架定位本就偏薄。于是框架只提供事务构件与开关，透传以配方模板沉淀：双端各手写一环，缺环即断链。这条铁律的现行法在 [分布式事务卷](../../specs/current/patterns/distributed-tx.md)。
+更有味道的是透传侧的裁决。分布式事务成链要求 XID 跨服务透传，框架却拒绝内置这个能力。header 定名、出站拦截器与入站 Filter 的挂点、上下文绑定的清理时机，这些还没收敛成一种公认形态；焊进框架，等于让全体消费方共担认知修正的成本，而框架定位本就偏薄。于是框架只提供事务构件与开关，透传以配方模板沉淀：双端各手写一环，缺环即断链。这条铁律的现行法在 [分布式事务卷](../../specs/current/patterns/boundary/distributed-tx.md)。
 
 对照下一章的 JWT 透传"内置"：同样是往 HTTP header 里放东西，去向相反，尺子却唯一：**稳了就焊，没稳就配方**。"XID 不进框架"当年真正的论证就是这句：不是透传本身不好，是它的形状还没长死。
 

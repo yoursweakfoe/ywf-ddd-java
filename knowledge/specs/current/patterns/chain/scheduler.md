@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：定时任务（框架法 · 严格件）
 
-> **身份**：本卷是 Scheduler 入口统一用法的唯一权威。规范代码形状只在本卷登记，全仓其他位置不得复写形状。代码违反本卷就修代码；要修改本卷，走 `../../changes/` 立案。docs 同题篇 `../../../docs/how-to/scheduled-task.md` 是设计卡，只讲选型与边界叙事，零形状代码；与本卷冲突时以本卷为准。
+> **身份**：本卷是 Scheduler 入口统一用法的唯一权威。规范代码形状只在本卷登记，全仓其他位置不得复写形状。代码违反本卷就修代码；要修改本卷，走 `../../../changes/` 立案。docs 同题篇 `../../../../docs/how-to/scheduled-task.md` 是设计卡，只讲选型与边界叙事，零形状代码；与本卷冲突时以本卷为准。
 > **机器对账**：C1/C3/C4 扫本卷。教例是 {Agg} 通式虚构模板；OrderAutoDeliverScheduler 等是真实例映射名，sample 尚未落地。
 
 ## §1 条款
@@ -13,7 +13,7 @@
 | SC-4 | 多实例部署的调度必须自带幂等：分布式锁防并发重入，业务状态守卫防重复效应，二者缺一不可 | 原设计卡多实例部署注记 | <!-- 锁组件落地度待注：见原篇状态表 --> |
 | SC-5 | 触发注解按调度模式选择。自建模式用 Spring 原生 `@Scheduled`：无额外依赖，启动类需 `@EnableScheduling`。平台化模式用平台 handler 注解（如 XXL-Job `@XxlJob`）。R14a/R14b 只认包位置和标记接口，不认触发注解，变体对规则影响为零 | 本卷 §2.3/§2.6/§2.7 形状（零影响注记） | ArchUnit |
 | SC-6 | 定时批量落库一律经 `MybatisPersistence` 基类 `updateDomainBatch`。它不是 Repository 五方法生命周期契约的成员，内部逐条 validate；原子性由 Handler `@Transactional` 保证。超大批量由调用方自行分片，每批 ≤500 条。决策型读（如 `findShippedBefore`）按业务命名追加到 `{Agg}Repository` 子接口，由具名 Mapper 方法实现 | BW 卷互指：BW-3/BW-4/BW-5；契约见 `how-to/new-aggregate.md` ⑭/⑰ | 守恒测试 |
-| SC-7 | 下游协调与各入口完全一致；时间只是又一种触发源。聚合行为只做状态变迁与校验；需联动其他聚合时，由 Handler / DomainService 同事务直调。禁止调度专用下游通道 | 原设计卡「下游协调」节；[cross-aggregate.md](cross-aggregate.md) 互指 | — |
+| SC-7 | 下游协调与各入口完全一致；时间只是又一种触发源。聚合行为只做状态变迁与校验；需联动其他聚合时，由 Handler / DomainService 同事务直调。禁止调度专用下游通道 | 原设计卡「下游协调」节；[cross-aggregate.md](../collaboration/cross-aggregate.md) 互指 | — |
 | SC-8 | 平台化调度的失败重试不是可重入豁免。无论自建还是平台模式，Handler/聚合侧的状态机守卫与幂等语义照常承担 | SC-4 配对；原设计卡幂等责任提示 | — |
 
 ## §2 规范形状（统一用法唯一样本）

@@ -1,24 +1,24 @@
 ﻿# 用法规范法卷：写用例链（框架法 · 严格件）
 
-> **身份**：本卷是写用例链统一用法的唯一权威，条款与全套规范代码形状都住本卷，全仓其他位置不得复写这些形状。代码违反本卷就修代码；修订本卷只能走 `../../changes/` 立案程序。docs 同题篇 `../../../docs/how-to/write-path.md` 是设计卡，只讲选型与边界，零形状代码；两处冲突时以本卷为准。
+> **身份**：本卷是写用例链统一用法的唯一权威，条款与全套规范代码形状都住本卷，全仓其他位置不得复写这些形状。代码违反本卷就修代码；修订本卷只能走 `../../../changes/` 立案程序。docs 同题篇 `../../../../docs/how-to/write-path.md` 是设计卡，只讲选型与边界，零形状代码；两处冲突时以本卷为准。
 > **机器对账**：C1 检查 `{agg}` 实例化、C3 检查符号、C4 检查教学中立，三道闸扫本卷。教例家族 Reservation 是虚构教例，sample 未实现；真实例名称只准出现在带「真实例」标记的指针位。
 
 ## §1 条款
 
 | # | SHALL | 取证 | 背书 |
 |---|---|---|---|
-| WC-1 | 依赖方向单向：`adapter → application → domain ← infrastructure`。domain 层零框架运行时依赖；stereotype 豁免，只允许纯 Java + common-ddd | ArchUnit 双端守护，规则集在 common-test | R1/R2 系 |
+| WC-1 | 本条正身已迁入 [../meta/layering.md](../meta/layering.md)，仍号 WC-1（原号随身）；本行墓碑互指，不复述 | 案卷 2026-09-pattern-taxonomy 搬家账 1 | layering.md WC-1 |
 | WC-2 | 写侧 Handler 执行形态固定四拍：load 聚合 → 调聚合行为 → save → toDTO。Handler 必须标 `@Transactional` | `modules/ddd.md` 场景 3；AGENTS 九条 3 | ArchUnit |
 | WC-3 | 业务规则以 if-throw 形式封装在聚合根内；Handler 内禁止业务分支判断 | AGENTS 九条 4；`modules/ddd.md` 场景 1 | 聚合根守卫测试 |
 | WC-4 | Handler 返回 DTO；AppService 返回 CO；Adapter 实现契约接口，纯透传零逻辑 | AGENTS 九条 2；`modules/ddd.md` | R10b，DTO 标记规则 |
 | WC-5 | Assembler（domain→DTO）与 Presenter（DTO→CO）强制分离，禁止一个类同时承担两者 | AGENTS 九条 6；框架基类 `BasicAssembler`/`BasicPresenter` | C3 |
 | WC-6 | 异常场景在聚合行为方法内显式 `if + throw BusinessException(messageKey)`；禁止吞错、返回 null 或布尔 | `modules/exception.md` EV-1 | — |
 | WC-7 | 契约边界输入纪律：Command 里的聚合 ID 全程 `UUID`，禁止降级 String；此条与批量卷 BW-2 同源裁决。路径参数由 Adapter 注入，用 `@Schema(hidden = true)` 对请求体隐藏。文本字段标 `@Size(max = 列宽)`，金额标 `@Digits(integer = 8, fraction = 2)`，上界对齐 schema 精度。越界输入在绑定层拦成 400 + fieldErrors；400 先于 422 发生 | 真实例：sample orders 表 customer_id VARCHAR(50)、tracking_number VARCHAR(100)、cancel_reason VARCHAR(500)；products 表 name VARCHAR(100)、price DECIMAL(10,2)，列宽见 db-migration 0001 变更集；对应命令 PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型 | 评审项 |
-| WC-8 | 契约输出纪律：CO 是对外安全视图，version、审计等内部字段不暴露。status 值域 = 契约枚举，枚举住 `contract/{agg}/enums/`；它与 domain 状态机的奇偶镜像由守卫测试锁死。String → 枚举在呈现层用 valueOf 收口，脏值当场 fail-fast，映射不外溢。消费方从契约 jar 直接拿到合法值域，OpenAPI 自动枚举 | 真实例：sample `ContractEnumParityTest` 奇偶守卫测试；CO 内部字段不暴露 <!-- 待 ../../changes/ 补全 --> | 守卫测试 |
+| WC-8 | 契约输出纪律：CO 是对外安全视图，version、审计等内部字段不暴露。status 值域 = 契约枚举，枚举住 `contract/{agg}/enums/`；它与 domain 状态机的奇偶镜像由守卫测试锁死。String → 枚举在呈现层用 valueOf 收口，脏值当场 fail-fast，映射不外溢。消费方从契约 jar 直接拿到合法值域，OpenAPI 自动枚举 | 真实例：sample `ContractEnumParityTest` 奇偶守卫测试；CO 内部字段不暴露 <!-- 待 ../../../changes/ 补全 --> | 守卫测试 |
 | WC-9 | 入口分工：REST 映射与 OpenAPI 文档注解（@Tag/@Operation/@*Mapping）全部住契约接口；实现类只标协议并透传，即 `@RestController` + `RestAdapter`，零逻辑 | ArchUnit R8a/R8b，RestAdapter 标记双向锁 + 本卷 §2.3 形状 | ArchUnit |
 | WC-10 | 仓储义务：持久化必须走基类通道，即 saveDomain/updateDomain 系。基类在 save/update 前自动执行 `validate()`，并经 `AuditFieldFiller` 显式填充审计字段。仓储层不声明事务，事务边界在 Handler，与 WC-2 互指。跨聚合协调 = 同事务直调，规范见跨聚合卷 | `MybatisPersistence` javadoc「内置行为契约」「事务边界（上收至应用层）」两节 | C5 同区 |
 | WC-11 | 持久化文本形态：PO 是纯 `@Data` POJO，零 ORM 注解。表名、乐观锁版本条件、逻辑删除过滤全部写在 XML SQL 文本里、逐条可见；禁止任何运行时拦截器参与 | `MybatisPersistence` javadoc + 本卷 §2.10 形状 | 评审项 |
-| WC-12 | 写失败语义三分，绝不静默失败。UPDATE 影响 0 行且版本条件未命中、实体仍在 → `OptimisticLockConflictException`：409，可重试，属正常并发流。UPDATE 影响 0 行且目标已被并发删除 → 普通 `IllegalStateException`：409，业务竞态，重试无意义，且不应被重试器吞掉。INSERT/DELETE 影响 0 行 → `SilentWriteLossException`，类型在 `com.yoursweakfoe.common.exception.type`：写丢失级不可能状态，500 + ERROR 告警通道，勿重试，需人工介入 | `MybatisPersistence` javadoc「内置行为契约」三分通道条；异常→HTTP 映射的唯一完整表在 `GlobalRestExceptionHandler` javadoc，docs 侧 canonical 见 [common-exception.md](../../../docs/reference/api/common-exception.md) | C5 同区 |
+| WC-12 | 写失败语义三分，绝不静默失败。UPDATE 影响 0 行且版本条件未命中、实体仍在 → `OptimisticLockConflictException`：409，可重试，属正常并发流。UPDATE 影响 0 行且目标已被并发删除 → 普通 `IllegalStateException`：409，业务竞态，重试无意义，且不应被重试器吞掉。INSERT/DELETE 影响 0 行 → `SilentWriteLossException`，类型在 `com.yoursweakfoe.common.exception.type`：写丢失级不可能状态，500 + ERROR 告警通道，勿重试，需人工介入 | `MybatisPersistence` javadoc「内置行为契约」三分通道条；异常→HTTP 映射的唯一完整表在 `GlobalRestExceptionHandler` javadoc，docs 侧 canonical 见 [common-exception.md](../../../../docs/reference/api/common-exception.md) | C5 同区 |
 
 ## §2 规范形状（统一用法唯一样本）
 
@@ -265,7 +265,7 @@ public interface ReservationRepository extends Repository<Reservation, UUID> {
 
 ### 2.10 Infrastructure — PO / Converter / Mapper + XML / RepositoryImpl
 
-PO 是纯 `@Data` POJO，零 ORM 注解（WC-11）。表名、乐观锁版本条件、逻辑删除过滤全部在 XML 的 SQL 文本里。语句模板见 [new-aggregate.md](../../../docs/how-to/new-aggregate.md) ⑲：
+PO 是纯 `@Data` POJO，零 ORM 注解（WC-11）。表名、乐观锁版本条件、逻辑删除过滤全部在 XML 的 SQL 文本里。语句模板见 [new-aggregate.md](../../../../docs/how-to/new-aggregate.md) ⑲：
 
 ```java
 @Data
@@ -342,7 +342,7 @@ public class ReservationRepositoryImpl
 }
 ```
 
-> 仓储只负责持久化与不变量校验：save/update 前自动执行 `validate()`，并经 `AuditFieldFiller` 显式填充审计字段。事务边界在应用层 Handler（WC-10）。跨聚合协调用同事务直调，规范见 [cross-aggregate.md](cross-aggregate.md) 卷。
+> 仓储只负责持久化与不变量校验：save/update 前自动执行 `validate()`，并经 `AuditFieldFiller` 显式填充审计字段。事务边界在应用层 Handler（WC-10）。跨聚合协调用同事务直调，规范见 [cross-aggregate.md](../collaboration/cross-aggregate.md) 卷。
 
 ### 2.11 并发写：影响行数 0 的语义三分处置（WC-12）
 
@@ -352,7 +352,7 @@ public class ReservationRepositoryImpl
 - **更新目标已被并发删除** → 普通 `IllegalStateException`：409，业务竞态；重试无意义，不应被重试器吞掉。
 - **INSERT / DELETE 影响 0 行** → `SilentWriteLossException`，类型在 `com.yoursweakfoe.common.exception.type`：写丢失级不可能状态；500 + ERROR 告警通道，勿重试，需人工介入。
 
-真实例：异常 → HTTP 映射的唯一完整表在 GlobalRestExceptionHandler javadoc，docs 侧 canonical 见 [common-exception.md](../../../docs/reference/api/common-exception.md)。
+真实例：异常 → HTTP 映射的唯一完整表在 GlobalRestExceptionHandler javadoc，docs 侧 canonical 见 [common-exception.md](../../../../docs/reference/api/common-exception.md)。
 
 ### 2.12 教例文件清单（写路径走查逐文件对位）
 
@@ -385,6 +385,6 @@ public class ReservationRepositoryImpl
 | WC-1~WC-6 | ✅ | sample 示例聚合现行遵循；ArchUnit 双端守护 |
 | WC-2/WC-3 真实例同构 | ✅ | 本卷形状与 sample-application 的写路径实现同构。真实例对照：OrderAppService.java:38、PayOrderHandler.java 的 load → 行为 → save → toDTO、Order.java:107-110 的 requireStatus 守卫；仅作对照，不逐字镜像 |
 | WC-7 输入上界改型 | ✅ | 真实例：db-migration 0001 变更集列宽对账；PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型 |
-| WC-8 契约枚举奇偶 | ✅ | 真实例：sample `ContractEnumParityTest` 守卫在册；CO 内部字段不暴露 <!-- 待 ../../changes/ 补全 --> |
+| WC-8 契约枚举奇偶 | ✅ | 真实例：sample `ContractEnumParityTest` 守卫在册；CO 内部字段不暴露 <!-- 待 ../../../changes/ 补全 --> |
 | WC-9~WC-12 | ✅ | 入口分工、仓储义务、持久化文本形态、写失败语义三分四条均已生效：本卷 §2 形状在册；框架侧规范文本在 `MybatisPersistence` 与 `GlobalRestExceptionHandler` javadoc |
 | Reservation 教例全链走查模板 | ⛔ 虚构教例，sample 未落地 | §2 即落地模板 + §2.12 文件清单；设计判断见 docs 设计卡 |

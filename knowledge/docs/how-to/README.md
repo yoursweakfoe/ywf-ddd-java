@@ -9,19 +9,19 @@
 
 | 设计卡 | 管什么决策 | 法卷 |
 |------|------|------|
-| [write-path.md](write-path.md) | 写用例要不要走这条链；规则、拦截、并发、契约暴露怎么选 | `../../specs/current/patterns/write-chain.md` |
-| [read-path.md](read-path.md) | 读查询走投影还是走聚合 | `../../specs/current/patterns/read-chain.md` |
-| [cross-aggregate.md](cross-aggregate.md) | 多聚合协作放哪一层 | `../../specs/current/patterns/cross-aggregate.md` |
-| [policy-pattern.md](policy-pattern.md) | 规则要不要抽成策略 | `../../specs/current/patterns/domain-policy.md` |
-| [gateway.md](gateway.md) | 外部系统在哪层接进来 | `../../specs/current/patterns/external-gateway.md` |
-| [new-aggregate.md](new-aggregate.md) | 该不该立新聚合 | `../../specs/current/patterns/aggregate-blueprint.md` |
+| [write-path.md](write-path.md) | 写用例要不要走这条链；规则、拦截、并发、契约暴露怎么选 | `../../specs/current/patterns/chain/write-chain.md` |
+| [read-path.md](read-path.md) | 读查询走投影还是走聚合 | `../../specs/current/patterns/chain/read-chain.md` |
+| [cross-aggregate.md](cross-aggregate.md) | 多聚合协作放哪一层 | `../../specs/current/patterns/collaboration/cross-aggregate.md` |
+| [policy-pattern.md](policy-pattern.md) | 规则要不要抽成策略 | `../../specs/current/patterns/building-block/domain-policy.md` |
+| [gateway.md](gateway.md) | 外部系统在哪层接进来 | `../../specs/current/patterns/boundary/external-gateway.md` |
+| [new-aggregate.md](new-aggregate.md) | 该不该立新聚合 | `../../specs/current/patterns/building-block/aggregate-blueprint.md` |
 | [error-handling.md](error-handling.md) | 错误语义怎么设计；i18n key 登记账本在本篇 | `../../specs/current/modules/exception.md` |
-| [batch-operations.md](batch-operations.md) | 批量写的三档原子性怎么选 | `../../specs/current/patterns/batch-write.md` |
-| [scheduled-task.md](scheduled-task.md) | 定时任务要不要建、重复执行谁防 | `../../specs/current/patterns/scheduler.md` |
-| [distributed-transaction.md](distributed-transaction.md) | 本地事务和分布式事务怎么划界 | `../../specs/current/patterns/distributed-tx.md` |
-| [application-layer-objects.md](application-layer-objects.md) | 应用层中间对象该不该建 | `../../specs/current/patterns/application-objects.md` |
-| [optimistic-lock-retry.md](optimistic-lock-retry.md) | 冲突要不要重试 | `../../specs/current/patterns/optimistic-lock.md` |
-| [testing.md](testing.md) | 测试分四类，各测什么 | `../../specs/current/patterns/testing-conformance.md` |
+| [batch-operations.md](batch-operations.md) | 批量写的三档原子性怎么选 | `../../specs/current/patterns/chain/batch-write.md` |
+| [scheduled-task.md](scheduled-task.md) | 定时任务要不要建、重复执行谁防 | `../../specs/current/patterns/chain/scheduler.md` |
+| [distributed-transaction.md](distributed-transaction.md) | 本地事务和分布式事务怎么划界 | `../../specs/current/patterns/boundary/distributed-tx.md` |
+| [application-layer-objects.md](application-layer-objects.md) | 应用层中间对象该不该建 | `../../specs/current/patterns/building-block/application-objects.md` |
+| [optimistic-lock-retry.md](optimistic-lock-retry.md) | 冲突要不要重试 | `../../specs/current/patterns/collaboration/optimistic-lock.md` |
+| [testing.md](testing.md) | 测试分四类，各测什么 | `../../specs/current/patterns/discipline/testing-conformance.md` |
 
 ## 与 explanation / specs 的三架分工
 

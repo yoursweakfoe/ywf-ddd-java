@@ -7,10 +7,10 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 
 ## 前置阅读
 
-- 写操作 → `knowledge/specs/current/patterns/write-chain.md`（WC 系条款 + §2 形状唯一样本；同题设计卡 `knowledge/docs/how-to/write-path.md` 仅载选型叙事）
-- 读操作 → `knowledge/specs/current/patterns/read-chain.md`（RC 系条款 + §2 形状；同题设计卡 `knowledge/docs/how-to/read-path.md`）
-- 读侧中间对象取舍 → `knowledge/specs/current/patterns/application-objects.md`（AO 系）
-- 命名后缀/分页细则 → `knowledge/specs/current/patterns/coding-conventions.md`（CC 系；写/读固定模式已归两条链路法卷，本卷 §3 仅互指）
+- 写操作 → `knowledge/specs/current/patterns/chain/write-chain.md`（WC 系条款 + §2 形状唯一样本；同题设计卡 `knowledge/docs/how-to/write-path.md` 仅载选型叙事）
+- 读操作 → `knowledge/specs/current/patterns/chain/read-chain.md`（RC 系条款 + §2 形状；同题设计卡 `knowledge/docs/how-to/read-path.md`）
+- 读侧中间对象取舍 → `knowledge/specs/current/patterns/building-block/application-objects.md`（AO 系）
+- 命名后缀/分页细则 → `knowledge/specs/current/patterns/discipline/coding-conventions.md`（CC 系；写/读固定模式已归两条链路法卷，本卷 §3 仅互指）
 
 ## 第 0 步：契约先行（spec-first）
 
@@ -71,7 +71,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
    - 实现 `DomainService` 标记、标 `@Service` 组件扫描注册（→ CA-1/CA-5；R4 stereotype 豁免，本体仍纯 Java）
    - 协调多个 Repository，修改多个聚合；事务边界留在 Handler，Service 不吞事务（→ CA-2）
 2. Handler 调用 Domain Service（而非直接操作多个 Repository；同事务补偿动作同步直调 → CA-3）
-- 条款与形状唯一权威 → `knowledge/specs/current/patterns/cross-aggregate.md`（CA 系）；选型叙事见同题设计卡 `knowledge/docs/how-to/cross-aggregate.md`
+- 条款与形状唯一权威 → `knowledge/specs/current/patterns/collaboration/cross-aggregate.md`（CA 系）；选型叙事见同题设计卡 `knowledge/docs/how-to/cross-aggregate.md`
 
 ## 变体：批量 Handler
 
@@ -81,7 +81,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 2. Handler 返回 `List<DTO>`，标注 `@Transactional`（整批原子 = 默认形态 → BW-3；部分失败为互斥独立形态 → BW-6）
 3. 批量落库一律走基类通道 `updateDomainBatch`（逐条 validate、不绕聚合行为 → BW-4；大批自行分片建议 ≤500 条/批 → BW-5）
 4. AppService 使用 `presentList()` 呈现
-- 条款与形状唯一权威 → `knowledge/specs/current/patterns/batch-write.md`（BW 系）；完整 SOP 直接用 `batch-operations` skill
+- 条款与形状唯一权威 → `knowledge/specs/current/patterns/chain/batch-write.md`（BW 系）；完整 SOP 直接用 `batch-operations` skill
 
 ## 文档同步
 

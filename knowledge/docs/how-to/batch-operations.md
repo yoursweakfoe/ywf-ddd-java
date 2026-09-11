@@ -1,6 +1,6 @@
 ﻿# 批量操作 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、消费契约全在法卷 → [../../specs/current/patterns/batch-write.md](../../specs/current/patterns/batch-write.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、消费契约全在法卷 → [../../specs/current/patterns/chain/batch-write.md](../../specs/current/patterns/chain/batch-write.md)。
 
 ## 什么时候需要批量写
 

@@ -1,6 +1,6 @@
 ﻿# 写路径 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、文件清单全在法卷 → [../../specs/current/patterns/write-chain.md](../../specs/current/patterns/write-chain.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、文件清单全在法卷 → [../../specs/current/patterns/chain/write-chain.md](../../specs/current/patterns/chain/write-chain.md)。
 
 > 设计原理 → [../explanation/application.md](../explanation/application.md)
 
@@ -10,13 +10,13 @@
 
 教例家族 Reservation 的全链走查已模板化在册，见法卷 §2。Reservation 即预约单，是虚构教例，sample 未实现，属 D4 教学中立要求。
 
-批量形态不属本链，走[批量卷](../../specs/current/patterns/batch-write.md)。多聚合协作也不属本链，走[跨聚合卷](../../specs/current/patterns/cross-aggregate.md)。
+批量形态不属本链，走[批量卷](../../specs/current/patterns/chain/batch-write.md)。多聚合协作也不属本链，走[跨聚合卷](../../specs/current/patterns/collaboration/cross-aggregate.md)。
 
 ## 四个设计决策点
 
 1. **规则放哪**：if-throw 全部写进聚合根，见法卷 WC-3。反过来，Handler 里想写 if 的瞬间，就是规则游离在聚合外的信号。异常统一抛 BusinessException 并带 i18n 位点，前端收到 422，见法卷 WC-6。
 2. **拦截次序**：输入上界对齐数据库列宽，绑定层先挡下 400，见法卷 WC-7。业务上的非法状态后到，返回 422。两条通道不互相代劳。上界不写，超长输入就会穿透到 DB，变成 500 噪音。
-3. **并发姿态**：乐观锁的版本条件由 XML 语句文本自身携带，没有运行时拦截器，见法卷 WC-11。影响行数为 0 时按语义三分处置：409 可重试、409 业务竞态、500 写丢失告警。任何一档都不许静默，见法卷 WC-12。重试模板见[乐观锁卷](../../specs/current/patterns/optimistic-lock.md)。
+3. **并发姿态**：乐观锁的版本条件由 XML 语句文本自身携带，没有运行时拦截器，见法卷 WC-11。影响行数为 0 时按语义三分处置：409 可重试、409 业务竞态、500 写丢失告警。任何一档都不许静默，见法卷 WC-12。重试模板见[乐观锁卷](../../specs/current/patterns/collaboration/optimistic-lock.md)。
 4. **契约暴露到哪为止**：CO 是给外部看的安全视图，version 和审计字段不暴露。status 值域用契约枚举，由呈现层收口，消费方从契约 jar 直接拿合法值域，见法卷 WC-8。入口层零逻辑、纯透传，映射与文档注解全住契约接口，见法卷 WC-9。
 
 ## 边界与代价

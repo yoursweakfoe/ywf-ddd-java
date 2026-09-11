@@ -16,7 +16,7 @@ contract 模块定义服务的公开契约。它是消费方——其他微服�
 
 ## 包结构
 
-→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md)，看 Command / CO 的定义。
 

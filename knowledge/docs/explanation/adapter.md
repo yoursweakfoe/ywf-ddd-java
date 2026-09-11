@@ -16,7 +16,7 @@ adapter 层把外部协议请求适配成对内部应用层的调用。**不含�
 
 ## 包结构
 
-→ [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
+→ [aggregate-blueprint §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)
 
 > 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md)，看 Controller 在写路径中的位置。
 

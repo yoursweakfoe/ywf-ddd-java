@@ -7,7 +7,7 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 
 ## 前置阅读
 
-- `knowledge/specs/current/patterns/scheduler.md`（定时任务法卷：SC-1~SC-8 条款 + §2 规范形状，施工唯一权威——本技能只载工序，形状不复述）
+- `knowledge/specs/current/patterns/chain/scheduler.md`（定时任务法卷：SC-1~SC-8 条款 + §2 规范形状，施工唯一权威——本技能只载工序，形状不复述）
 - `knowledge/docs/how-to/scheduled-task.md`（设计卡：何时需要时间驱动入口、四个设计决策点、边界代价——零形状代码）
 
 ## 第 0 步：契约先行（spec-first）
@@ -17,7 +17,7 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
 ## 步骤（链路与形状唯一权威 → 法卷 §2：全景 2.1、入口 2.3、门面 2.4、编排 2.5、开关 2.6）
 
 1. **adapter**：创建 `adapter/task/scheduler/{Agg}{Action}Scheduler.java`，形状照法卷 §2.3
-   - 实现 `ScheduledAdapter` 标记（SC-1：包位置 + 标记双重约束，R14a/R14b 机器强制，漏实现被架构测试拦截）；adapter 层不按聚合分包 → 蓝图卷 §5 服务骨架通式（`knowledge/specs/current/patterns/aggregate-blueprint.md`）
+   - 实现 `ScheduledAdapter` 标记（SC-1：包位置 + 标记双重约束，R14a/R14b 机器强制，漏实现被架构测试拦截）；adapter 层不按聚合分包 → 蓝图卷 §5 服务骨架通式（`knowledge/specs/current/patterns/building-block/aggregate-blueprint.md`）
    - 触发注解按调度模式选：自建 `@Scheduled(cron = "...")`，或平台化 handler 注解（如 `@XxlJob`，变体形状 §2.7）——SC-5：R14 只认「包位置 + 标记」不认触发注解，换注解对规则零影响
    - 构造器注入 `{Agg}AppService`；方法体纯透传（SC-2）：日志开始 → 委托 AppService → 日志结束（含处理数量）
 2. **application**：在 `{Agg}AppService` 新增方法——用例门面只委托 Handler（SC-2，形状 §2.4）

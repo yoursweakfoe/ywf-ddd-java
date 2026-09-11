@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：分布式事务（框架法 · 严格件）
 
-> **身份**：本卷是 Seata AT 使用边界与 XID 透传形态统一用法的唯一权威。全套规范形状——依赖、配置、双端组件、Handler 模板——只在本卷，全仓其他文档不得复写形状。违反本卷 = 修代码；修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/distributed-transaction.md`）是设计卡，只讲选型与边界叙事，零形状代码；与本卷冲突时以本卷为准。
+> **身份**：本卷是 Seata AT 使用边界与 XID 透传形态统一用法的唯一权威。全套规范形状——依赖、配置、双端组件、Handler 模板——只在本卷，全仓其他文档不得复写形状。违反本卷 = 修代码；修卷走 `../../../changes/`。docs 同题篇（`../../../../docs/how-to/distributed-transaction.md`）是设计卡，只讲选型与边界叙事，零形状代码；与本卷冲突时以本卷为准。
 > **机器对账**：C1/C3/C4 扫本卷。教例家族为 Invoice/Inventory 跨服务示意系，虚构，与 cross-aggregate 同系；PlaceOrderHandler 为真实例对照。
 
 ## §1 条款
@@ -17,7 +17,7 @@
 
 ## §2 规范形状（统一用法唯一样本）
 
-> 教例分两面。跨服务示意版是**虚构教例**：`invoice` / `inventory` 聚合系，与 [cross-aggregate.md](cross-aggregate.md) 同一虚构系。同服务真实形态有 sample 落位，见 §2.7 与 §3。案例为「下单 = 创建订单 + 扣减库存（跨服务）」：扣库存失败时订单必须回滚。
+> 教例分两面。跨服务示意版是**虚构教例**：`invoice` / `inventory` 聚合系，与 [cross-aggregate.md](../collaboration/cross-aggregate.md) 同一虚构系。同服务真实形态有 sample 落位，见 §2.7 与 §3。案例为「下单 = 创建订单 + 扣减库存（跨服务）」：扣库存失败时订单必须回滚。
 
 ### 2.1 依赖引入
 
@@ -185,4 +185,4 @@ TM（Transaction Manager）—— @GlobalTransactional 标注的方法
 | `SeataXidBindFilter`（入站：读取 header 并 bind/unbind RootContext） | ⛔ 未落地 | infrastructure/config 段，§2.6 即落地模板 |
 | Seata 自动代理 DataSource | ⛔ 未落地 | 无需手写代码（starter 自动装配，DT-3） |
 
-> **落地状态注记**：示例应用为单服务，两聚合同数据源（真实例）。本卷 §2.4 及 XID 透传、`DeductStockCommand` 均为跨服务**示意模板**，sample 中不存在 `RestClient` 注入与 `@GlobalTransactional` 用法。服务内真实形态见 §2.7，与 [cross-aggregate.md](cross-aggregate.md) 同链路。
+> **落地状态注记**：示例应用为单服务，两聚合同数据源（真实例）。本卷 §2.4 及 XID 透传、`DeductStockCommand` 均为跨服务**示意模板**，sample 中不存在 `RestClient` 注入与 `@GlobalTransactional` 用法。服务内真实形态见 §2.7，与 [cross-aggregate.md](../collaboration/cross-aggregate.md) 同链路。

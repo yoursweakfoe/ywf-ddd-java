@@ -7,10 +7,10 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 ## 前置阅读
 
-1. `knowledge/specs/current/patterns/aggregate-blueprint.md`（聚合构建宪：§1 槽位清单 ①-㉒、§2 BP 条款、§3 验收单、§4 逐件规范形状、§5 服务骨架——本技能只承载顺序与清单，下文「法卷」即指本卷，形状以法卷为唯一权威）
+1. `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md`（聚合构建宪：§1 槽位清单 ①-㉒、§2 BP 条款、§3 验收单、§4 逐件规范形状、§5 服务骨架——本技能只承载顺序与清单，下文「法卷」即指本卷，形状以法卷为唯一权威）
 2. `knowledge/docs/how-to/new-aggregate.md`（设计卡：拆分信号与决策点，尚未定案是否新建时先读）
-3. `knowledge/specs/current/patterns/prohibitions.md`（分层禁令 + §6 持久化与 SQL 铁律）
-4. `knowledge/specs/current/patterns/coding-conventions.md`（命名 + 泛型）
+3. `knowledge/specs/current/patterns/discipline/prohibitions.md`（分层禁令 + §6 持久化与 SQL 铁律）
+4. `knowledge/specs/current/patterns/discipline/coding-conventions.md`（命名 + 泛型）
 
 ## 第 0 步：契约先行（spec-first）
 
@@ -54,7 +54,7 @@ description: 从零创建 DDD 聚合（22 个文件 = 20+2，5 阶段：20 最�
 
 20. ⑤ `adapter/rest/controller/{Agg}ControllerImpl.java` — ControllerImpl（`@RestController` 实现契约接口 + `RestAdapter` 标记，纯透传零逻辑，BP-4，R8a/R8b）→ 法卷 §4.⑤
 
-> **读端口配对**（⑳㉑，⑪ 依赖，= 法卷 §1 清单 22 文件中不计入 20 最小闭环的 2 件，BP-1 允许随首个读用例补齐）：`application/{agg}/repository/{Agg}QueryRepository.java`（`extends QueryRepository` 标记，BP-X3）+ `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java`（与 ⑱ 写侧 Impl 同包，PO → 读 DTO 直接投影，BP-11）。形状 → 法卷 §4.⑳㉑；读链路条款 → `knowledge/specs/current/patterns/read-chain.md` 法卷（选型设计卡 → `knowledge/docs/how-to/read-path.md`）。
+> **读端口配对**（⑳㉑，⑪ 依赖，= 法卷 §1 清单 22 文件中不计入 20 最小闭环的 2 件，BP-1 允许随首个读用例补齐）：`application/{agg}/repository/{Agg}QueryRepository.java`（`extends QueryRepository` 标记，BP-X3）+ `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java`（与 ⑱ 写侧 Impl 同包，PO → 读 DTO 直接投影，BP-11）。形状 → 法卷 §4.⑳㉑；读链路条款 → `knowledge/specs/current/patterns/chain/read-chain.md` 法卷（选型设计卡 → `knowledge/docs/how-to/read-path.md`）。
 
 ## 验证
 

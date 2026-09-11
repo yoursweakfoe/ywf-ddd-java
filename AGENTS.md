@@ -12,7 +12,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 | `knowledge/specs/` | 法律·框架契约 | 代码违反它=修代码；改法走 `changes/`，禁止迁就代码偷改；`archive/` 在位不改、到期整册归零（清册制）；裁决快照住案卷 specify §裁决记录，同袋同灭 |
 | `.agents/` | 工作台·流程 | SOP 约束干活方式（skills only）；法律已入典——法条正文住 `knowledge/specs/current/` 法卷，本树不载法 |
 
-法律全文 = `knowledge/specs/current/patterns/attribution-law.md`（事实归属法）；伞宣言 = `knowledge/README.md`。业务包契约不入伞，住镜像区 `sample-application/specs/`（框架法=knowledge/specs，业务法=sample 树内）。
+法律全文 = `knowledge/specs/current/patterns/meta/attribution-law.md`（事实归属法）；伞宣言 = `knowledge/README.md`。业务包契约不入伞，住镜像区 `sample-application/specs/`（框架法=knowledge/specs，业务法=sample 树内）。
 
 ## Context routing（按需触发，非全量预读）
 
@@ -23,7 +23,7 @@ DDD 战术模式微服务框架。修改代码前必须理解分层约束。
   - 增量：批量写操作 `batch-operations` ｜ 定时任务 `scheduled-task` ｜ 编写测试 `new-test` ｜ 修改 common 模块 `modify-common-module`
   - 审查：架构合规自查 `ddd-review`（编码完成必跑）｜ 生产就绪 `ops-review` ｜ 测试充分性 `test-review`
   - 立法：起草/推进/折叠法案 `new-bill`（一切规范变更先立约，见下条）
-- **查知识（指针驱动，用到才取）**：结构速查→ 源码树直查（glob/IDE）；服务骨架组成法 → `knowledge/specs/current/patterns/aggregate-blueprint.md` §5；框架 API→ `reference/api/common-*.md`；为什么→ `explanation/`；旧裁决→ `specs/archive/` 封存案卷 §裁决记录＋`explanation/`（先查旧案再拍新板——案卷先行）；框架行为与用法规范→ `knowledge/specs/`（current/ 法卷=严格件唯一权威，docs 同题节仅宽松指引，冲突法卷赢）、业务行为现状→ `sample-application/specs/current/`；术语→ `knowledge/docs/reference/glossary.md`；全索引→ `knowledge/docs/README.md`
+- **查知识（指针驱动，用到才取）**：结构速查→ 源码树直查（glob/IDE）；服务骨架组成法 → `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` §5；框架 API→ `reference/api/common-*.md`；为什么→ `explanation/`；旧裁决→ `specs/archive/` 封存案卷 §裁决记录＋`explanation/`（先查旧案再拍新板——案卷先行）；框架行为与用法规范→ `knowledge/specs/`（current/ 法卷=严格件唯一权威，docs 同题节仅宽松指引，冲突法卷赢）、业务行为现状→ `sample-application/specs/current/`；术语→ `knowledge/docs/reference/glossary.md`；全索引→ `knowledge/docs/README.md`
 - **进入模块目录时就近读**：`ywf-ddd-common/AGENTS.md`、`sample-application/AGENTS.md`（nearest-wins）
 - **文档防腐**：交付前跑 `knowledge/scripts/check-docs.ps1`（七校验；ddd-review 末步已内置）；工具说明见 `knowledge/docs/reference/doc-guards.md`
 

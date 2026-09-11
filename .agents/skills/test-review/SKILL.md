@@ -8,14 +8,14 @@ description: 测试工程师视角审查代码变更（覆盖率、边界情况�
 ## Role
 
 以测试工程师视角检视代码变更，确保覆盖率、边界情况、造数与 Mock 策略、ArchUnit 合规、测试基础设施不被忽略。
-本技能不载法：测试条款唯一权威 = `knowledge/specs/current/patterns/testing-conformance.md`（TC-1~8），各检查点按指针到条款对账，此处不复述规范原文（归属法卷 §2 / D6）。
+本技能不载法：测试条款唯一权威 = `knowledge/specs/current/patterns/discipline/testing-conformance.md`（TC-1~8），各检查点按指针到条款对账，此处不复述规范原文（归属法卷 §2 / D6）。
 审查结果按严重度分级：FAIL（必须补测）/ WARN（建议补测）/ PASS。
 
 ## 前置阅读
 
 | 读什么 | 文件 | 取什么 |
 |---|---|---|
-| 测试法卷（唯一权威） | `knowledge/specs/current/patterns/testing-conformance.md` | §1 条款 TC-1~8；§2 规范形状（§2.7 验收终板、§2.8 真实例指针位） |
+| 测试法卷（唯一权威） | `knowledge/specs/current/patterns/discipline/testing-conformance.md` | §1 条款 TC-1~8；§2 规范形状（§2.7 验收终板、§2.8 真实例指针位） |
 | common-test 法卷 | `knowledge/specs/current/modules/test.md` | 场景 1 ArchUnit 守护挂载式 / 场景 2·3 容器集成与单元形状 |
 | ArchUnit 规则编号表 | `knowledge/docs/reference/api/common-test.md` §2 | R1~R14b / C1 教义唯一事实源，判违规只引编号不复述 |
 | 横切法卷（按维度取） | `knowledge/specs/current/patterns/` 下 `read-chain.md`（RC-3/5/7）、`optimistic-lock.md`（OL-1/5）、`cross-aggregate.md`（CA-3）、`write-chain.md`（WC-7）；`knowledge/specs/current/modules/pg.md` 场景 1~3 | 边界与基础设施检查点的条款锚 |

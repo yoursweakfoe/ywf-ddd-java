@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：读用例链（框架法 · 严格件）
 
-> **身份**：本卷是读用例链统一用法的唯一权威，条款与全套规范代码形状都住本卷，全仓其他位置不得复写这些形状。代码违反本卷就修代码；修订本卷只能走 `../../changes/` 立案程序。docs 同题篇 `../../../docs/how-to/read-path.md` 是设计卡，只讲选型与边界，零形状代码；两处冲突时以本卷为准。
+> **身份**：本卷是读用例链统一用法的唯一权威，条款与全套规范代码形状都住本卷，全仓其他位置不得复写这些形状。代码违反本卷就修代码；修订本卷只能走 `../../../changes/` 立案程序。docs 同题篇 `../../../../docs/how-to/read-path.md` 是设计卡，只讲选型与边界，零形状代码；两处冲突时以本卷为准。
 > **机器对账**：C1 检查 `{agg}` 实例化、C3 检查符号、C4 检查教学中立，三道闸扫本卷。教例家族 Reservation 是虚构教例，sample 未实现；真实例名称只准出现在带「真实例」标记的指针位。
 
 ## §1 条款
@@ -14,8 +14,9 @@
 | RC-5 | Query 契约形态。单条：实现 `Query`，`UUID` 组件标 `@NotNull`，非法格式由 Web 层类型转换拦截、返回 400。分页：record 实现 `PageableQuery`，`pageNum()`/`pageSize()` 与 record 组件同签名，零覆写样板；校验注解声明在 record 组件上。过滤字段用契约枚举而非裸 String：非法字面量在 Spring 绑定层即 400 typeMismatch，当场失败优于静默返回空页 | `PageableQuery` javadoc：入参约束由业务 record 在组件上声明，`MAX_PAGE_SIZE` 上限在册 + 本卷 §2.2 形状；缺参无默认的裁决见 RC-3 互指 | C3 |
 | RC-6 | 读端口类型纪律。端口接口 `extends QueryRepository`，这是 common-ddd 的空标记，供 R1b、R13 架构规则按类型识别；方法签名自由。端口返回 application 层读 DTO，读 DTO 无 version 字段，禁止泄漏 domain 类型。读侧不经写 Repository、不经 Converter、不经 Assembler | ArchUnit R1b / R13 + 本卷 §2.6 形状 | ArchUnit |
 | RC-7 | 分页实现形态：手写双语句。取数（LIMIT/OFFSET）与计数（同条件）是两条具名 Mapper 方法，共享 XML `<sql>` 条件片段，杜绝两条语句条件漂移。实现侧统一消费 `safePageNum()`/`safePageSize()` 做防御性钳制，范围 1..MAX_PAGE_SIZE，即使调用点未经 Bean Validation 也安全。offset 由钳制后的页码经 long 乘法换算，防大页码溢出。`PageResult<T>` 隔离底层分页形态，它在 common-contract、与 `PageableQuery` 同居契约层。禁止运行时分页插件参与 | 真实例：sample `OrderMapper.xml` 分页双语句 + `OrderQueryRepositoryImpl.findPage`，本卷形状与之同构 | 评审项 |
-| RC-8 | 读侧没有业务判断。业务规则只在写侧的领域聚合根内计算，并物化到 PO 列；读侧只投影物化后的值。若某个"读"需要现算业务逻辑，那是建模信号：该计算应下沉到写侧物化，禁止在读路径引入领域判断 | <!-- 待 ../../changes/ 补全 --> | 评审项 |
+| RC-8 | 读侧没有业务判断。业务规则只在写侧的领域聚合根内计算，并物化到 PO 列；读侧只投影物化后的值。若某个"读"需要现算业务逻辑，那是建模信号：该计算应下沉到写侧物化，禁止在读路径引入领域判断 | <!-- 待 ../../../changes/ 补全 --> | 评审项 |
 | RC-9 | 只读编排。QueryHandler 不标 `@Transactional`，因为操作只读；只注入读端口；返回读 DTO 或 `PageResult<读 DTO>`，不返回 CO。读 DTO → CO 由 ViewPresenter 收口，与 WC-4 互指 | 本卷 §2.5 形状；RC-2 即 R13 | ArchUnit |
+| CC-9 | 分页契约：`PageableQuery` 由 Query record 实现；页码从 **1** 起。`pageNum` 和 `pageSize` 必须显式传入，不设默认注入：缺参会落成 0，被 `@Min(1)` 拦下返回 400。页大小上限为 `MAX_PAGE_SIZE`；`safe*()` 是执行侧的第二道防线。`@Valid` 标在契约接口的方法参数上。（原号随身，自公约卷整条迁来，一字未改） | contract 模块卷 + `PageableQuery` javadoc | 400 三通道测试 |
 
 ## §2 规范形状（统一用法唯一样本）
 

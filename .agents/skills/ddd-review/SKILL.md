@@ -11,11 +11,11 @@ description: DDD 架构合规审查。完成编码后必跑自查、人工要求
 
 | 读什么 | 文件 | 取什么 |
 |---|---|---|
-| 禁令卷 | `knowledge/specs/current/patterns/prohibitions.md` | §1~§4 四层禁止面、§5 契约、§6 持久化铁律、§7 时间与线程、§8 通用、§9 Common 登记表、§10 Git 工作法 |
-| 编码公约卷 | `knowledge/specs/current/patterns/coding-conventions.md` | CC-1~CC-9；§2.1 类型后缀表；§2.2 结构映射表 |
-| blueprint 卷（聚合构建宪） | `knowledge/specs/current/patterns/aggregate-blueprint.md` | §1 槽位表（㉠-㉒）、§2 BP 条款、§3 验收单、§5 服务骨架通式 |
+| 禁令卷 | `knowledge/specs/current/patterns/discipline/prohibitions.md` | §1~§4 四层禁止面、§5 契约、§6 持久化铁律、§7 时间与线程、§8 通用、§9 Common 登记表、§10 Git 工作法 |
+| 编码公约卷 | `knowledge/specs/current/patterns/discipline/coding-conventions.md` | CC-1~CC-9；§2.1 类型后缀表；§2.2 结构映射表 |
+| blueprint 卷（聚合构建宪） | `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` | §1 槽位表（㉠-㉒）、§2 BP 条款、§3 验收单、§5 服务骨架通式 |
 | ArchUnit 编号表 | `knowledge/docs/reference/api/common-test.md` §2 | R 系 / C1 规则编号表（规则 `as()` 前缀与 `DddArchitectureRules` 源码自对账；检查项只引编号不复述） |
-| 归属法卷 | `knowledge/specs/current/patterns/attribution-law.md` | §2 事实归属表、§4 强制同步规则（「文档与契约」维度用） |
+| 归属法卷 | `knowledge/specs/current/patterns/meta/attribution-law.md` | §2 事实归属表、§4 强制同步规则（「文档与契约」维度用） |
 
 ## 审查清单
 
@@ -87,6 +87,7 @@ description: DDD 架构合规审查。完成编码后必跑自查、人工要求
 - [ ] 新行为已走所属契约区 `changes/<slug>/` 四件套并归档折叠（框架 → `knowledge/specs/`、示例业务 → `sample-application/specs/`），相关 how-to / explanation 已随动、折叠之外无孤儿债（法条 归属法卷 §4——归档折叠是同步义务唯一发生时点）
 - [ ] 锚点抽查（实施内容基准律 → 归属法卷 §2 表注，本条不复述）：本次涉及的 skill/docs 中每处形状性表述（包位/注解/签名/文件槽位）逐一验证**已挂法卷节号且翻卷可解析**；锚不到 = 法卷覆盖缺口，走 `changes/` 立案补法、不得就地自造；纯工序句免检
 - [ ] 新增/变更公开 API：`knowledge/docs/reference/api/` 对应模块文档已同 PR 随更（法条 禁令卷 §9「新增 common 模块必附文档」行；异常→HTTP 映射表另有 C5 对账 = EV-5）
+- [ ] 新卷归摊：本次若新增 `specs/current/patterns/` 法卷，逐卷以摊卡验证问句裁决归摊（法条 → `knowledge/specs/current/patterns/meta/pattern-taxonomy.md` meta-1/2/5：恰落一摊、路径即名册、编号取摊名式）；任何摊都裁不进 = 摊地图缺口，回 `changes/` 先改摊地图
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-docs.ps1` 退出码 0（非零即 FAIL；校验清单以工具输出为准不在本复述，变红裁决纪律——文档错修文档、工具误伤修工具——见 `knowledge/docs/reference/doc-guards.md`；新增 C3 豁免须 PR 评审写理由进 `knowledge/scripts/check-docs.whitelist.txt`，只删不增）
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/check-diagrams.ps1` 退出码 0（触及 diagrams/ 图源或产物时必跑；三方哈希对账语义 → doc-guards 图管线节）
 

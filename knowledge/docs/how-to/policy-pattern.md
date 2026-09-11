@@ -1,6 +1,6 @@
 ﻿# 领域策略 Policy · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该抽、怎么组合"。形状、Before/After 对照、组合形态选择表、职责边界表全在法卷 → [../../specs/current/patterns/domain-policy.md](../../specs/current/patterns/domain-policy.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该抽、怎么组合"。形状、Before/After 对照、组合形态选择表、职责边界表全在法卷 → [../../specs/current/patterns/building-block/domain-policy.md](../../specs/current/patterns/building-block/domain-policy.md)。
 
 > 设计原理 → [../explanation/domain.md](../explanation/domain.md)（领域策略章节）
 

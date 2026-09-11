@@ -5,13 +5,13 @@ description: 为已有聚合、Handler、Domain 模型或基础设施组件编�
 
 # 新增测试
 
-> 本技能只载流程不载法：定性 → 立约 → 造数 → 分层施工 → 验证。四类测试条款（TC-1~8）、规范形状模板、Fixture 模式与命名表全住法卷 `knowledge/specs/current/patterns/testing-conformance.md`（唯一载体），每步按指针取用，此不复述。
+> 本技能只载流程不载法：定性 → 立约 → 造数 → 分层施工 → 验证。四类测试条款（TC-1~8）、规范形状模板、Fixture 模式与命名表全住法卷 `knowledge/specs/current/patterns/discipline/testing-conformance.md`（唯一载体），每步按指针取用，此不复述。
 
 ## 前置阅读
 
 | 读什么 | 文件 | 内容 |
 |---|---|---|
-| 测试法卷（唯一权威） | `knowledge/specs/current/patterns/testing-conformance.md` | §1 条款 TC-1~8；§2 规范形状（§2.5 Fixture、§2.6 命名、§2.7 验收终板、§2.8 真实例指针位） |
+| 测试法卷（唯一权威） | `knowledge/specs/current/patterns/discipline/testing-conformance.md` | §1 条款 TC-1~8；§2 规范形状（§2.5 Fixture、§2.6 命名、§2.7 验收终板、§2.8 真实例指针位） |
 | common-test 模块法卷 | `knowledge/specs/current/modules/test.md` | 场景 1 ArchUnit 守护 / 场景 2 容器集成 / 场景 3 Mockito 单元 |
 | common-test 字典 | `knowledge/docs/reference/api/common-test.md` | ArchUnit 规则集与测试基础设施 API（描述镜像） |
 | 设计卡（宽松件） | `knowledge/docs/how-to/testing.md` | 选型判据存疑才读；冲突法卷赢 |

@@ -1,6 +1,6 @@
 ﻿# 用法规范法卷：应用层内部对象（框架法 · 严格件）
 
-> **身份**：本卷是应用层内部数据对象统一用法的唯一权威，对象共四种：DTO、ViewDTO、Params、Record。规范形状只写在本卷，全仓其他文档不得复写。违反本卷就改代码；修改本卷必须走 `../../changes/` 立案。docs 同题篇 `../../../docs/how-to/application-layer-objects.md` 是设计卡，只讲选型与边界的叙事，零形状代码。
+> **身份**：本卷是应用层内部数据对象统一用法的唯一权威，对象共四种：DTO、ViewDTO、Params、Record。规范形状只写在本卷，全仓其他文档不得复写。违反本卷就改代码；修改本卷必须走 `../../../changes/` 立案。docs 同题篇 `../../../../docs/how-to/application-layer-objects.md` 是设计卡，只讲选型与边界的叙事，零形状代码。
 > **机器对账**：C1/C3/C4 扫本卷；教例家族 = {Agg} 通式 + Payment（虚构教例）。
 
 ## §1 条款
@@ -93,7 +93,7 @@ public class {Action}{Agg}Handler implements CommandHandler<{Action}{Agg}Command
 
 ### 2.3 防腐层中间数据：RecordDTO
 
-> ⚠ 未决冲突登记：落地一律以 AO-4 为准，即不可变、私有构造 + 静态工厂唯一入口。下方教学模板是可 set 形态；模板与法条的差异如何裁决，尚未定案：`<!-- 待 ../../changes/ 补全 -->`。
+> ⚠ 未决冲突登记：落地一律以 AO-4 为准，即不可变、私有构造 + 静态工厂唯一入口。下方教学模板是可 set 形态；模板与法条的差异如何裁决，尚未定案：`<!-- 待 ../../../changes/ 补全 -->`。
 
 ```java
 // application/payment/dto/PaymentCallbackRecordDTO.java —— 防腐层中间格式（虚构教例）
@@ -134,7 +134,7 @@ Handler 负责领域与内部数据互转，Presenter 负责内部数据与契�
 
 ### 2.5 写/读投影承载对比
 
-DTO（内部视图）与 CO（契约输出）的职责分工规范表，canonical 在 `knowledge/specs/current/patterns/coding-conventions.md`，即 DTO/CO 强制分离条款，本卷不复制。本卷在它之上再加一层解耦：写侧 DTO 与读侧 DTO 分开，避免一个肥 DTO 贯穿所有层。
+DTO（内部视图）与 CO（契约输出）的职责分工规范表，canonical 在 `knowledge/specs/current/patterns/discipline/coding-conventions.md`，即 DTO/CO 强制分离条款，本卷不复制。本卷在它之上再加一层解耦：写侧 DTO 与读侧 DTO 分开，避免一个肥 DTO 贯穿所有层。
 
 | DTO | 承载 | Presenter | 说明 |
 |-----|------|-----------|------|

@@ -1,6 +1,6 @@
 ﻿# Gateway（Portal 实现）· 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、命名表与落地模板全在法卷 → [../../specs/current/patterns/external-gateway.md](../../specs/current/patterns/external-gateway.md)。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该用、怎么选"。形状、代码、命名表与落地模板全在法卷 → [../../specs/current/patterns/boundary/external-gateway.md](../../specs/current/patterns/boundary/external-gateway.md)。
 
 > 设计原理 → [../explanation/infrastructure.md](../explanation/infrastructure.md)（gateway 章节）
 

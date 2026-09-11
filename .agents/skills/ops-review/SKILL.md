@@ -16,7 +16,7 @@ description: 运维/SRE 视角审查代码变更（容器化、可观测性、�
 
 - 可观测法卷 `knowledge/specs/current/modules/observability.md`（宽松件 `knowledge/docs/reference/api/common-observability.md` §2：MDC 键、OTel 挂法细节）
 - 云原生能力表 `knowledge/specs/current/modules/cloud.md` §3.1（能力 → 显式依赖 → 启用前提：Nacos / Seata / 熔断）
-- 条款编号对照：`knowledge/specs/current/patterns/prohibitions.md` §4 §7（System.out / synchronized）、`knowledge/specs/current/patterns/batch-write.md` BW-5（批量体量）、`knowledge/specs/current/patterns/external-gateway.md` GW-3（超时注入）、`knowledge/specs/current/patterns/scheduler.md` SC-4（调度幂等）
+- 条款编号对照：`knowledge/specs/current/patterns/discipline/prohibitions.md` §4 §7（System.out / synchronized）、`knowledge/specs/current/patterns/chain/batch-write.md` BW-5（批量体量）、`knowledge/specs/current/patterns/boundary/external-gateway.md` GW-3（超时注入）、`knowledge/specs/current/patterns/chain/scheduler.md` SC-4（调度幂等）
 
 ## 审查维度
 

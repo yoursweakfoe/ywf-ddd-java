@@ -11,7 +11,7 @@
 
 **法律与描述的居所**（经 AGENTS 路由按需读，本树零复数副本）：
 
-- 法条正文（用法规范/禁令/公约/归属法）→ `knowledge/specs/current/`（modules 8 卷 + patterns 15 卷，含法律入典改革新增 3 卷）
+- 法条正文（用法规范/禁令/公约/归属法）→ `knowledge/specs/current/`（modules 8 卷 + patterns 19 卷，按十摊目录摆架；归架判据 → `knowledge/specs/current/patterns/meta/pattern-taxonomy.md`）
 - 业务行为法 → `sample-application/specs/`（镜像区）
 - 项目背景/结构地图 → 根 `README.md`、`knowledge/README.md`、`knowledge/docs/`
 - 旧裁决（案卷先行）→ `knowledge/specs/archive/` 封存案卷 specify §裁决记录、`knowledge/docs/explanation/`（现行论证）
