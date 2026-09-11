@@ -1,5 +1,5 @@
-﻿# render-diagrams.ps1 —— 把 knowledge/diagrams/ 下全部 .d2 源渲染为 gen/ 镜像路径 SVG 并写 manifest。
-# 镜像约定：diagrams/<文档仓库相对路径(去 .md)>/<图名>.d2 → diagrams/gen/<同路径>/<图名>.svg。
+﻿# render-diagrams.ps1 —— 把 knowledge/diagrams/ 下全部 .d2 源渲染为同目录邻座 SVG 并写 manifest。
+# 同名并存约定：diagrams/<文档仓库相对路径(去 .md)>/<图名>.d2 → 同目录 <图名>.svg；manifest 落 diagrams/ 根。
 # 用法：powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1 [-Layout tala]
 # 依赖：d2 CLI（winget Terrastruct.D2；未装时探测 C:\Program Files\D2\d2.exe）。
 # 默认引擎 TALA（d2 官方原生架构图库内引擎；三引擎同源码肉眼对比裁决 2026-09-09，dagre 斜线乱串、elk 尚可、tala 最优）。
@@ -17,16 +17,14 @@ function Get-Sha256($path) {
     (Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash.ToLowerInvariant()
 }
 
-$sources = Get-ChildItem -Recurse -File -Path $dgrid -Filter '*.d2' |
-    Where-Object { $_.FullName -notmatch '\\gen\\' } | Sort-Object FullName
+$sources = Get-ChildItem -Recurse -File -Path $dgrid -Filter '*.d2' | Sort-Object FullName
 $manifest = @()
 $failed = 0
 
 foreach ($src in $sources) {
     $rel = $src.FullName.Substring($dgrid.Length + 1)                       # knowledge\README\drive-relations.d2
-    $outRel = Join-Path (Split-Path -Parent $rel) ($src.BaseName + '.svg')  # knowledge\README\drive-relations.svg
-    $out = Join-Path $dgrid (Join-Path 'gen' $outRel)
-    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $out) | Out-Null
+    $out = Join-Path $src.DirectoryName ($src.BaseName + '.svg')             # 源旁邻座同名 SVG，不落独立产物层
+    $outRel = ($rel -replace '\.d2$', '.svg') -replace '\\', '/'            # knowledge/README/drive-relations.svg
     Write-Host "render: $rel"
     # d2 把成功横幅写 stderr——EAP=Stop 下原生命中会被包装成终止错误；
     # 正规解法：2>&1 接流后手动还原 ErrorRecord 文本，成败只以 $LASTEXITCODE 裁决
@@ -36,11 +34,9 @@ foreach ($src in $sources) {
     $d2out | ForEach-Object { if ($_ -is [System.Management.Automation.ErrorRecord]) { Write-Host "  $($_.Exception.Message)" } else { Write-Host "  $_" } }
     $ErrorActionPreference = $prevEAP
     if ($LASTEXITCODE -ne 0) { Write-Warning "d2 编译失败: $rel"; $failed++; continue }
-    $manifest += ('{0}  {1}  {2}' -f (Get-Sha256 $src.FullName), (Get-Sha256 $out), ($outRel -replace '\\','/'))
+    $manifest += ('{0}  {1}  {2}' -f (Get-Sha256 $src.FullName), (Get-Sha256 $out), $outRel)
 }
 
 if ($failed -gt 0) { Write-Error "$failed 张图编译失败，manifest 未写"; exit 1 }
-$genDir = Join-Path $dgrid 'gen'
-New-Item -ItemType Directory -Force -Path $genDir | Out-Null
-[System.IO.File]::WriteAllLines((Join-Path $genDir 'manifest.sha256'), [string[]]$manifest, (New-Object System.Text.UTF8Encoding($false)))
-Write-Host ("done: {0} 张图已渲染，manifest 写入 gen/manifest.sha256" -f $manifest.Count)
+[System.IO.File]::WriteAllLines((Join-Path $dgrid 'manifest.sha256'), [string[]]$manifest, (New-Object System.Text.UTF8Encoding($false)))
+Write-Host ("done: {0} 张图已渲染，manifest 写入 diagrams/manifest.sha256" -f $manifest.Count)

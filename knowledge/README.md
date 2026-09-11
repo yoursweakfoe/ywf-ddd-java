@@ -45,7 +45,7 @@
 - 流程的发起方和裁决方是同一个人：开发者，即项目主。AI 只起草案卷、执行施工；两道批准门必须停下等人拍板。代码本身只是被改的对象，不立案、不施工。
 - 图只画合法路径。偷改 `current/`、未批先施工这类行为不入图——非法路径没有资格占用版面。
 
-![驱动关系图](diagrams/gen/knowledge/README/drive-relations.svg)
+![驱动关系图](diagrams/knowledge/README/drive-relations.svg)
 
 > 图源 = [`diagrams/knowledge/README/drive-relations.d2`](diagrams/knowledge/README/drive-relations.d2)（唯一可编辑面）。改源后重刷：`powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1`（TALA 引擎）；防陈旧对账：同法跑 `check-diagrams.ps1`。
 
@@ -85,7 +85,7 @@
 knowledge/
 ├── README.md       本页：组织宣言（讲清结构为什么这样，本身不立法）
 ├── docs/           地图区 | README 是唯一文档索引
-├── diagrams/       配图 | .d2 源按文档相对路径镜像存放；gen/ 存渲染出的 SVG（render/check-diagrams.ps1 两脚本，源是唯一可编辑面）
+├── diagrams/       配图 | .d2 源按文档相对路径镜像存放，渲染出的同名 SVG 与源并存于同目录（render/check-diagrams.ps1 两脚本，源是唯一可编辑面）
 │   ├── tutorials/  quickstart：从 clone 到跑通
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码，规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表

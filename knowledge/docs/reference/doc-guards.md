@@ -72,7 +72,7 @@ lychee --config knowledge/scripts/lychee.toml "knowledge/**/*.md" ".agents/**/*.
 
 ## render-diagrams.ps1 / check-diagrams.ps1 —— D2 图管线
 
-`knowledge/diagrams/` 载图的全部真相。`.d2` 源按被注文档的仓库相对路径镜像入册，例如 `diagrams/knowledge/README/drive-relations.d2` 注 `knowledge/README.md`；渲染产物 SVG 落 `diagrams/gen/` 下的同镜像路径。源与产物同入库，因为 GitHub 网页能渲染 SVG，ignore 产物会导致远程裂图。
+`knowledge/diagrams/` 载图的全部真相。`.d2` 源按被注文档的仓库相对路径镜像入册，例如 `diagrams/knowledge/README/drive-relations.d2` 注 `knowledge/README.md`；渲染产物 SVG 与源同名邻座、并存于同一目录，对账账本 `manifest.sha256` 落 `diagrams/` 根。源与产物同入库，因为 GitHub 网页能渲染 SVG，ignore 产物会导致远程裂图。
 
 ```powershell
 # 改完 .d2 源后重刷，默认 --layout tala，v0.9.0 bundled 引擎

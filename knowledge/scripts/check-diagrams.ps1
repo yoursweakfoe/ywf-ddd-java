@@ -4,8 +4,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $dgrid = Join-Path $root 'knowledge\diagrams'
-$gen = Join-Path $dgrid 'gen'
-$manifestPath = Join-Path $gen 'manifest.sha256'
+$manifestPath = Join-Path $dgrid 'manifest.sha256'
 
 if (-not (Test-Path $manifestPath)) {
     Write-Host 'result: FAIL - manifest 缺失（先跑 scripts/render-diagrams.ps1）'
@@ -20,22 +19,24 @@ foreach ($line in (Get-Content -LiteralPath $manifestPath -Encoding UTF8)) {
 }
 
 $problems = @()
-$sources = Get-ChildItem -Recurse -File -Path $dgrid -Filter '*.d2' |
-    Where-Object { $_.FullName -notmatch '\\gen\\' }
+$sources = Get-ChildItem -Recurse -File -Path $dgrid -Filter '*.d2'
 foreach ($src in $sources) {
     $rel = ($src.FullName.Substring($dgrid.Length + 1) -replace '\\','/')
     $svgRel = ($rel -replace '\.d2$','.svg')
     if (-not $entries.ContainsKey($svgRel)) { $problems += "$rel : 未入 manifest（跑 render-diagrams）"; continue }
     $srcHash, $svgHash = $entries[$svgRel]
     if ((Get-Sha256 $src.FullName) -ne $srcHash) { $problems += "$rel : 源已变、产物过期（重渲染）"; continue }
-    $svg = Join-Path $gen ($svgRel -replace '/','\')
+    $svg = Join-Path $src.DirectoryName ($src.BaseName + '.svg')             # 源旁邻座同名 SVG
     if (-not (Test-Path -LiteralPath $svg)) { $problems += "$svgRel : 产物缺失（须入库）" }
     elseif ((Get-Sha256 $svg) -ne $svgHash) { $problems += "$svgRel : 产物与源脱钩（SVG 被手改？）" }
 }
-# 孤儿产物：gen 下 svg 无对应源
-foreach ($svg in (Get-ChildItem -Recurse -File -Path $gen -Filter '*.svg')) {
-    $rel = ($svg.FullName.Substring($gen.Length + 1) -replace '\\','/')
-    if (-not (Test-Path -LiteralPath (Join-Path $dgrid ($rel -replace '\.svg$','.d2')))) { $problems += "gen/${rel}: 孤儿产物（无源文件）" }
+# 孤儿产物：svg 无同目录同名 .d2 源
+foreach ($svg in (Get-ChildItem -Recurse -File -Path $dgrid -Filter '*.svg')) {
+    $pair = Join-Path $svg.DirectoryName ($svg.BaseName + '.d2')
+    if (-not (Test-Path -LiteralPath $pair)) {
+        $rel = ($svg.FullName.Substring($dgrid.Length + 1) -replace '\\','/')
+        $problems += "$rel : 孤儿产物（无源文件）"
+    }
 }
 
 if ($problems.Count -gt 0) {
