@@ -46,7 +46,7 @@
         </dependency>
         <!-- common-observability 故意不引：零测试引用，且其 actuator 自动装配会把
              DataSourceHealthContributor 塞进一切 @EnableAutoConfiguration 上下文
-             （security 卷首炸实证，法案 2026-09-common-it-consolidation 施工实录） -->
+             （security 卷首炸实证，历元旧案施工实录） -->
         <!-- 测试栈聚合器（managed test scope：junit/mockito/assertj/spring-test/mockmvc/archunit 全量入位） -->
         <dependency>
             <groupId>com.yoursweakfoe</groupId>

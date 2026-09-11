@@ -536,7 +536,7 @@ class MybatisPersistenceTest {
     /**
      * 路由真实生效证明（audit C7① —— 根治「两源同 URL」幻影）：master 与 second 同为真 PG
      * 同库异 schema——表只建在 integration_test，second 源的 currentSchema=integration_test_vacant
-     * 空无一物（「空库」的 PG 真实表达，见法案 2026-09-common-it-consolidation）。同一语句在
+     * 空无一物（「空库」的 PG 真实表达，见历元旧案）。同一语句在
      * push("second") 后必须失败（表不存在）、poll() 恢复路由后必须成功——若路由不咬，两侧行为
      * 恒等，本双向断言无从成立。dynamic-datasource 的工具类在试验场登场不触任何架构禁则。
      */

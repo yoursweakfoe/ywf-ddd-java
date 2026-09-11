@@ -56,7 +56,7 @@ class ResourceServerIntegrationTest {
 
     @SpringBootConfiguration
     // 本卷只演资源服务器语义；exception advice 在场会把 AuthorizationDenied 403 吞成 500
-    // （跨模块组合缺口已由试验场实证，映射补全另案裁决——2026-09-common-it-consolidation 施工实录）
+    // （跨模块组合缺口已由试验场实证，映射补全另案裁决——历元旧案施工实录）
     @EnableAutoConfiguration(exclude = com.yoursweakfoe.common.exception.ExceptionAutoConfiguration.class)
     @Import(IdentityController.class)
     static class TestConfig {

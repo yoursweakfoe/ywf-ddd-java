@@ -183,9 +183,9 @@
 | 模式 / 制度 | 本项目采纳要素 |
 |------|--------|
 | 两类件分家、论证沉淀分层、判例归卷 | 知识系统自指裁决，2026-09；论证沉淀案立、判例归卷案成。同一决策事实按时间属性两分：立法过程与裁决事件（判决快照、Confirmation 收据、supersede 宣告）归案卷，四件案卷，specify §裁决记录是裁决唯一居所，封存后不动。沉淀道理的现行版归 `docs/explanation/`，是活的地图：⑨⁺ 强制复写，篇脚回指案卷快照。案卷与解读的论证重叠是源流关系，不是双写。全文 → [knowledge-system.md](knowledge-system.md) |
-| 案卷四段制（specify → plan → tasks → implement） | 2026-09 四段案卷案。过程件内部一件一身份：Specify 定做什么与验收（AC 账）；Plan 定怎么做与改哪些法，技术裁量 P-x 加修卷 delta，条文唯一居所；Tasks 纯清单，条内零参数、指回 P-x；Implement 记做了多少、凭什么是，即勾验、AC→证据、源回填、漂移、收官闸。批准门为 Specify 门 → Plan 门，**每案两停、不论大小**：法面刚性、出口在对话，豁免只出自会话明示 → 案卷 2026-09-sdd-four-stage §裁决记录。采证谱系是 Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）的合流；命名取 Spec Kit，避开与 delta `### Requirement:` 撞名。全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
+| 案卷四段制（specify → plan → tasks → implement） | 2026-09 四段案卷案。过程件内部一件一身份：Specify 定做什么与验收（AC 账）；Plan 定怎么做与改哪些法，技术裁量 P-x 加修卷 delta，条文唯一居所；Tasks 纯清单，条内零参数、指回 P-x；Implement 记做了多少、凭什么是，即勾验、AC→证据、源回填、漂移、收官闸。批准门为 Specify 门 → Plan 门，**每案两停、不论大小**：法面刚性、出口在对话，豁免只出自会话明示。采证谱系是 Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）的合流；命名取 Spec Kit，避开与 delta `### Requirement:` 撞名。全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
 | 卷宗清册制（到期归零） | 2026-09 清册案立、判例归卷案缩面。两侧 archive 案卷袋是可清册存储，不是永久档案馆（`decisions/` 区已废，并入案卷）。发布节点经清册 bill **彻底抹除**：本体整袋删、账行同裁、活面标识符净空；快照随册灭，论证留下。前置门槛是自足判据：每案四栏因果（立因、取舍、被拒方案及拒因、生效边界）先全文住进解读架，再核表随 bill 递交，缺案不批。旧编号制已废，清册只重启案数。不拿 git 历史当知识依赖。执行清册的 bill 自身也到期归零：仪式产物不豁免于仪式。全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
-| 规则集论证载体分工 | ArchUnit 守护，案卷 2026-09-archunit-rule-doc §裁决记录。一行三判：论证现行版 canonical 住解读专论；代码 javadoc 只携挂载最小契约，四栏为守护、怎么判、挂载、空转；R 编号稳定性等规范行上收法卷 TR 系，法卷之外不留裸法条。全文 → [architecture-rules.md](architecture-rules.md) |
+| 规则集论证载体分工 | ArchUnit 守护。一行三判：论证现行版 canonical 住解读专论；代码 javadoc 只携挂载最小契约，四栏为守护、怎么判、挂载、空转；R 编号稳定性等规范行上收法卷 TR 系，法卷之外不留裸法条。全文 → [architecture-rules.md](architecture-rules.md) |
 | 宽严双份与法典化三部曲 | 2026-09。同一份规范两份表达，权威唯一：法卷是严格件，载条款、取证源、形状；docs 是宽松件，载判据与指针。冲突时法卷赢。归属判据一句话：**这句话能机械化执行吗**。所治之病：应然句寄居地图架时，规范的"保证"二字会被地图守则的被动跟随溶剂掉，代码漂移时轮不到文档说不。三步：api 用法节入典（8 模块法卷）→ how-to 降为设计卡 → 统一用法形状归卷，成全仓唯一样本。全文 → [knowledge-system.md](knowledge-system.md) |
 
 ### 书籍与文章

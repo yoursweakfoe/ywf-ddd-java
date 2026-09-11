@@ -11,7 +11,7 @@ import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 集成测试 PG 基座的三段生命周期（TC-9 框架轨；法案 2026-09-common-it-consolidation）。
+ * 集成测试 PG 基座的三段生命周期（TC-9 框架轨；历元旧案）。
  *
  * <p>① 自建——经 maintenance 库 {@code postgres} 裸连接，专属测试库缺失则 CREATE DATABASE，零人工前置；
  * ② 复位——每 JVM 首次触库时 DROP/CREATE {@code integration_test} 与 {@code integration_test_vacant}

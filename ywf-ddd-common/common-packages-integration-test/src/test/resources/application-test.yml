@@ -1,7 +1,7 @@
 spring:
   main:
     allow-bean-definition-overriding: true
-  # 双真 PG 源（TC-1/TC-9 框架轨，法案 2026-09-common-it-consolidation）：
+  # 双真 PG 源（TC-1/TC-9 框架轨，历元旧案）：
   # dynamic-datasource 路由教例在真 PostgreSQL 上实测，H2 已全仓退役。
   # 「空库」语义 = 专用空 schema integration_test_vacant（无业务表）；
   # fixture SQL 表名不带限定，命中/脱靶由 currentSchema 裁决。
