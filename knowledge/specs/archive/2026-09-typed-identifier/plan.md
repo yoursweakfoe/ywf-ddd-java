@@ -7,7 +7,7 @@
 - **P-2 {Agg}Id 形状**：选定 `public record {Agg}Id(V value) implements Identifier<V>, Serializable`，落位 `domain/{agg}/id/`，命名 `{Agg}Id`；紧凑构造器仅 null 检查，**不做底值合法性校验**——禁查格式（非法格式到不了此处：Web 层类型转换 400 判例在先），亦**禁查 UUID 版本位**（存量行/手工插入行经装载路径照样过 of()，查版本=炸历史数据；出生保证归铸造入口 AggregateIds，类型只装箱不站岗）（裁定 Q5）；`Serializable` 系满足 `MybatisPersistence` 持久槽既有约束，JDK 面不破域纯度；静态入口 `of(V)` 供 P-3 定型位使用。被拒：嵌套于聚合根文件（跨聚合 import 须只见 id 包，不见根类）。
 - **P-3 类型化币种范围**：选定「写侧全程、读侧契约不入」——{Agg}Id 流通域 = domain（根身份槽、跨聚合引用槽）+ application 写侧（Handler 局部、DTO、DomainService 签名）；豁免位 = 契约 CQE/CO、PO、读侧（QueryRepository 端口与读 DTO）、聚合内子实体 PK，全维持原生承载。**读侧豁免的根据是宪章不是权衡**：RC-6 现行文本已定「读端口禁泄漏 domain 类型」，项目主裁定读侧独立性原则（裁定 Q6）——本案对 id 包不开任何新例外；登记残余账：读端口参数混放（两者皆裸 UUID）不受编译锁，风险定级低（读错=404 级难堪，非写坏级灾难）随此姿势接受。被拒：读侧同步类型化（正面撞 RC-6 与「读绕过 domain」教义）。
 - **P-4 持久接缝**：选定 RepositoryImpl 覆写既有钩子 `toPersistenceId`（`id.value()` 一行）为唯一领域 ID→原生主键转换位，每仓储恰一处；PO / Mapper 接口 / XML 七语句 / DB schema 零修改；DddMapper javadoc「业务铸造 ID 的聚合显式插入 id」句在转换后仍逐字为真。被拒：给 DddMapper 加身份泛型（把写侧币种渗进持久契约，破 P-3 豁免面）。
-- **P-5 执法与负证明**：选定 ArchUnit 新规则 **R15**（现集尾数 R14b 之下一号）：凡 `AggregateRoot` 具体子类的 ID 泛型实参必须实现 `Identifier`，且 `Repository` 端口 ID 槽与根槽一致；负证明探针按 TransactionBoundaryProbes 四锁格式成对发行（裸类型根必咬 / 类型化根必放 / 子实体 PK 与读端口豁免位不误咬 / 端口-根槽不一致必咬），混放编译锁以 javac 期望失败取证脚本落账。被拒：只发规则不发探针（R11 先例：新谓词不过负证明即空文）。
+- **P-5 执法与负证明**：选定 ArchUnit 新规则 **R15**（现集尾数 R14b 后第一位**废号顶位**——裁定 Q8：「占位缺失就顶上」；旧 R15 baomidou 禁令作废账原位保留）：凡 `AggregateRoot` 具体子类的 ID 泛型实参必须实现 `Identifier`，且 `Repository` 端口 ID 槽与根槽一致；负证明探针按 TransactionBoundaryProbes 四锁格式成对发行（裸类型根必咬 / 类型化根必放 / 子实体 PK 与读端口豁免位不误咬 / **端口裸槽必咬**——施工时点勘获：原「端口-根槽不一致」形状被框架 F-边界 `Repository<Domain extends Identifiable<ID>, ID>` 编译期锁死、javac 不可构造，等式臂降为裸继承/擦除逃路之防御备胎，见 implement §4），混放编译锁以 javac 期望失败取证脚本落账。被拒：只发规则不发探针（R11 先例：新谓词不过负证明即空文）。
 - **P-6 示例迁移形状**：选定 sample 两聚合同步迁型作参考实现——两 `*Id` record、两根泛型实参换型、Factory/reconstitute/Converter 装配点、OrderItem 的商品引用槽、InventoryDomainService 与全部写 Handler 入口定型、测试夹具（TestOrders/OrderFixtures 等）随动；全量 mvn 绿 + check-docs 绿。被拒：只改法卷不动 sample（法失参照即空转）。
 - **P-7 来源三分法定型**：法裁三来源=应用铸造（默认姿，铸造唯一入口教义不动）/ 自然键（{Agg}Id 包业务值事实，无铸造）/ DB 代铸（insert 省 id + useGeneratedKeys 通道——DddMapper 契约已留半槽；其「创建即合法」例外语义本案不立）。机制类型无感的 AC-5 证明以法卷内 Long 承载教例（`PaymentId(Long value)` 形态）纸面完成，不落 sample、不建设施。被拒：本案顺手补号段/雪花（为未存在需求建机制＝事件管线病灶翻版）。
 - **P-8 计数与全表重排（裁定 Q7 定档）**：新件 `{Agg}Id` **插位为 ⑫**（domain 段、聚合根之前——身份先于根被引用，阅读序=依赖序），原 ⑫–㉒ 全体顺移 +1，**①–⑪ 不动**（插位点在其后）。总计数 22（20+2）→ **23（21+2）**。换号全表（旧件名 → 旧号 → 新号）：契约接口 ①、CO ②、Command ③、Query ④、ControllerImpl ⑤、AppService ⑥、DTO ⑦、Assembler ⑧、Presenter ⑨、CommandHandler ⑩、QueryHandler ⑪——以上十一次段原号照旧；聚合根 ⑫→⑬、状态枚举 ⑬→⑭、Repository 端口 ⑭→⑮、PO ⑮→⑯、Converter ⑯→⑰、Mapper ⑰→⑱、RepositoryImpl ⑱→⑲、手写 XML ⑲→⑳、读端口 ⑳→㉑、读实现 ㉑→㉒、契约枚举 ㉒→㉓；新件身份终类型 = 新 ⑫。映射一行注于蓝图 §生效登记（卷内自闭环考古锚）。
@@ -21,32 +21,32 @@
 
 ### ADDED
 #### Requirement: 身份词汇发行（ddd 模块卷）   ← AC-2
-系统 SHALL 于 common-ddd `domain/model` 发行纯 Java 身份词汇接口 `Identifier<V>`（唯一方法 `V value()`，零 JDK 外依赖），作为聚合身份终类型的唯一类型学锚点；框架不发行抽象基类、解析器或任何运行期设施。（源：待回填 → implement §3）
+系统 SHALL 于 common-ddd `domain/model` 发行纯 Java 身份词汇接口 `Identifier<V>`（唯一方法 `V value()`，零 JDK 外依赖），作为聚合身份终类型的唯一类型学锚点；框架不发行抽象基类、解析器或任何运行期设施。（源：`common-ddd/.../domain/model/Identifier.java` 在库；框架扫描 `DddArchitectureTest` r3/r4 绿 11/11＝域纯度不破）
 ##### Scenario: 域纯度不破
 - GIVEN 新接口文件 ｜ WHEN R4 现行域纯度规则扫描 ｜ THEN 绿，零新增依赖边
 
 #### Requirement: BP-13 聚合根身份终类型化（蓝图 §2）   ← AC-1
-聚合根 SHALL 以专属终类型 `{Agg}Id`（`public record`，implements `Identifier<V>` 与 `Serializable`，落位 `domain/{agg}/id/`，命名 `{Agg}Id`，紧凑构造器仅 null 检查、不校验底值，形状细则住 P-2）为其 `AggregateRoot<ID>` 身份槽实参；原生类型（UUID/Long/String 直用）不再合格。R15 + 负证明探针锁死。（源：待回填 → implement §3）
+聚合根 SHALL 以专属终类型 `{Agg}Id`（`public record`，implements `Identifier<V>` 与 `Serializable`，落位 `domain/{agg}/id/`，命名 `{Agg}Id`，紧凑构造器仅 null 检查、不校验底值，形状细则住 P-2）为其 `AggregateRoot<ID>` 身份槽实参；原生类型（UUID/Long/String 直用）不再合格。R15 + 负证明探针锁死。（源：`DddArchitectureRules.AGGREGATE_ROOTS_USE_TYPED_IDENTIFIERS`；实形 `domain/order/id/OrderId.java`、`domain/product/id/ProductId.java`；负证明 `IdentifierRuleProofTest` 四锁 4/4）
 ##### Scenario: 混放编译锁
 - GIVEN `OrderRepository.findById` 期望 `OrderId` ｜ WHEN 调用位传入 `ProductId` ｜ THEN 编译失败（javac 期望失败取证，实录 → implement §3）
 - AND GIVEN 根为裸类型 UUID 的教例 ｜ WHEN R15 扫描 ｜ THEN 必咬
 
 #### Requirement: BP-14 跨聚合引用槽类型化（蓝图 §2）   ← AC-1
-domain 层跨聚合引用 ID 槽（字段、方法参数、集合与 Map 键）SHALL 使用目标聚合的 `{OtherAgg}Id`；跨聚合 import 仅准入目标 `id` 包。（源：待回填 → implement §3）
+domain 层跨聚合引用 ID 槽（字段、方法参数、集合与 Map 键）SHALL 使用目标聚合的 `{OtherAgg}Id`；跨聚合 import 仅准入目标 `id` 包。（源：`domain/order/model/OrderItem.java` productId=`ProductId`、`domain/shared/service/InventoryDomainService.java` 签名；`OrderTest`/`InventoryDomainServiceTest` 绿）
 
 #### Requirement: BP-15 类型化豁免面（蓝图 §2）   ← AC-3
-契约层 CQE/CO、PO、读侧端口与读 DTO、聚合内子实体 PK SHALL 维持原生类型承载，`{Agg}Id` 不入这些槽位；读侧不入的根据 = RC-6 读侧 domain 独立性宪章（读端口禁泄漏 domain 类型，现行法，本案不为其开 id 包例外——裁定 Q6）。（源：待回填 → implement §3）
+契约层 CQE/CO、PO、读侧端口与读 DTO、聚合内子实体 PK SHALL 维持原生类型承载，`{Agg}Id` 不入这些槽位；读侧不入的根据 = RC-6 读侧 domain 独立性宪章（读端口禁泄漏 domain 类型，现行法，本案不为其开 id 包例外——裁定 Q6）。（源：`application/order/repository/OrderQueryRepository.java` 与 `OrderViewDTO` 裸 UUID 签名零动、`OrderPO` 原生 id、contract 模块 diff-zero；探针锁三 `IdentifierProbes.BareEntityPk`/`ExemptReadPort` 不误咬绿）
 
 #### Requirement: WC-13 写侧入口身份定型（写链卷 §1）   ← AC-1
-写 Handler（含批量与 Scheduler 入口）SHALL 在调用任何 domain 接口前，把 CQE 携入的全部裸 ID 经 `{Agg}Id.of(...)` 一点定型；禁止任何隐式自动转换（全局 Converter、AOP、Jackson 直灌 domain）代劳此步。（源：待回填 → implement §3）
+写 Handler（含批量与 Scheduler 入口）SHALL 在调用任何 domain 接口前，把 CQE 携入的全部裸 ID 经 `{Agg}Id.of(...)` 一点定型；禁止任何隐式自动转换（全局 Converter、AOP、Jackson 直灌 domain）代劳此步。（源：`PayOrderHandler.java:34` 恰一行 `OrderId.of(command.getOrderId())`、`PlaceOrderHandler.java:68/91` 批量行项定型；全局 Jackson/Converter 零增设=contract 与 config diff-zero）
 ##### Scenario: 一点定型
 - GIVEN `PayOrderCommand` 携 `UUID orderId` ｜ WHEN Handler 体 ｜ THEN 恰见一行 `OrderId.of(command.getOrderId())`，其后链路全为 `OrderId`
 
 #### Requirement: BP-16 身份来源三分法（蓝图 §2）   ← AC-5
-聚合身份来源 SHALL 分三档：①应用铸造（默认姿，经框架铸造唯一入口，创建即合法不破）；②自然键（`{Agg}Id` 包业务值事实，无铸造）；③DB 代铸（insert 省 id + useGeneratedKeys 通道；其「创建即合法」例外语义未立，首用者另案）。`{Agg}Id` 之 V 准任意单值可比较原生类型，机制不绑定 UUID。（源：待回填 → implement §3）
+聚合身份来源 SHALL 分三档：①应用铸造（默认姿，经框架铸造唯一入口，创建即合法不破）；②自然键（`{Agg}Id` 包业务值事实，无铸造）；③DB 代铸（insert 省 id + useGeneratedKeys 通道；其「创建即合法」例外语义未立，首用者另案）。`{Agg}Id` 之 V 准任意单值可比较原生类型，机制不绑定 UUID。（源：`Identifier<V>` 泛型位＋R15 反射臂只验接口不验承载（`AGGREGATE_ROOTS_USE_TYPED_IDENTIFIERS`）；`OrderFactory` 源① `OrderId.of(AggregateIds.mint())`；源③ 半槽=DddMapper javadoc「DB 自增省 id 列 + useGeneratedKeys」契约在库；Long 承载教例为纸面同形证明，见 P-7）
 
 #### Requirement: BP-17 非聚合持久对象豁免（蓝图 §2）   ← AC-5
-纯查询表、配置表、关联中间表及无合适单值代理主键的老表 SHALL 可被业务包声明为非聚合持久对象：不强套聚合蓝图套件、不为过铸造假主键；治理归读端口与 CRUD 旁路条款。反面向：欲入写侧聚合链路者，先须具备三档合法身份之一。（源：待回填 → implement §3）
+纯查询表、配置表、关联中间表及无合适单值代理主键的老表 SHALL 可被业务包声明为非聚合持久对象：不强套聚合蓝图套件、不为过铸造假主键；治理归读端口与 CRUD 旁路条款。反面向：欲入写侧聚合链路者，先须具备三档合法身份之一。（源：R15 主语谓词只罩 `AggregateRoot` 具体子类与 `Repository` 端口、豁免位零误伤实证 `IdentifierRuleProofTest.rule_passes_exempt_positions`＋sample 读侧/PO 全绿）
 
 ### MODIFIED
 #### Requirement: BP-6 契约 ID 承载条款行（蓝图 §2）   ← AC-3   <!-- 折叠时整行替换 current/ BP-6 -->
@@ -79,13 +79,15 @@ Portal 接口引用 ID 参数用目标 `{RefAgg}Id`（domain 侧），Gateway �
 `UUID.randomUUID()` 构造位改 `{Agg}Id.of(UUID.randomUUID())` 形态。
 #### Requirement: 编码公约 §2.1 后缀表与 §2.2 结构映射   ← AC-7   <!-- 两节整替换（本卷为命名 canonical） -->
 增行：`{Agg}Id` = 聚合身份终类型 record，落位 `domain/{agg}/id/`。
+#### Requirement: test 模块卷 TR-1 编号纪律条（规则集治理节）   ← AC-1/AC-7   <!-- 折叠时整行替换 TR-1 规范句：「永不复用」改「废号可顶」 -->
+TR-1 编号纪律句改为：编号永不重排；规则删除时编号作废、留一行作废记录，**废号准后续规则顶位**（顶位=新语义接管，旧作废账原位不改，作废账处补一行顶位承接注）。编号是教义锚点不是历史文物（裁定 Q8）。R15 现行语义 = 聚合根身份终类型化（BP-13），旧 R15（baomidou 全仓禁令）作废账保留。（源：`DddArchitectureRules` 类头编号纪律段现文（随本案更新）＋顶位注；作废账 → `docs/explanation/architecture-rules.md`「废止也是账」段顶位承接句）
 
 ### REMOVED
 （无——裸 UUID 教义全部以改写承接，无整条废止。）
 
 ## §3 波及面与回退
 - **代码**：common-ddd +1 文件（Identifier）+ javadoc 指针随动（Identifiable/AggregateIds 配对句、MybatisPersistence 钩子注）；common-test +R15 +探针组；sample main 两聚合套件与全部写 Handler/DomainService/DTO/Converter、测试随动（样本 119 测试 + archproof 全量）；**契约模块、PO、XML、db-migration、common-pg/security/cloud 零动**（AC-3/AC-4 取证面）。
-- **文档与工具**：槽位换号波及按 P-8 白名单执行——skills 四件（new-aggregate 全篇重号+套件数+新件模板、scheduled-task/new-service 引用行、ddd-review 检查项挂 R15 并重号）、写链/scheduler 卷各 2 引用行、折叠前逐线复核存疑两件（docs/README、explanation/architecture-rules 长行内圈号语境）；另 glossary 术语行、docs 宽松件同题节（common-ddd api 篇、聚合蓝图设计卡）、theory-map 账本行（③⁺）、折叠日解读篇复写（⑨⁺）；AGENTS.md 九条速查不涉（未触其面）。
+- **文档与工具**：槽位换号波及按 P-8 白名单执行——skills 四件（new-aggregate 全篇重号+套件数+新件模板、scheduled-task/new-service 引用行、ddd-review 检查项挂 R15 并重号）、写链/scheduler 卷各 2 引用行、折叠前逐线复核存疑两件（docs/README、explanation/architecture-rules 长行内圈号语境）；另 glossary 术语行、docs 宽松件同题节（common-ddd api 篇、聚合蓝图设计卡）、theory-map 账本行（③⁺）、折叠日解读篇复写（⑨⁺）；AGENTS.md 九条速查不涉（未触其面）。**Q8 顶位波及**：glossary §DddArchitectureRules 行「编号作废不复用」措辞改顶位语义、解读篇 architecture-rules 旧 R15 作废段补一行顶位承接注、`ywf-ddd-common/AGENTS.md` 局部守则「R1-R14/C1 系；R15 已删」行随 R15 顶位改「R1-R15/C1 系」。
 - **并行案卷协调（硬约束，P-8）**：代码施工即刻可行、与 `2026-09-pattern-taxonomy` 案零交集；本案折叠写回 current/ 排于该案折叠完成后（卷路径以其迁都结果为锚，delta 按卷逻辑名解析）；该案若撤，约束解除、按当时 current/ 布局落位。
 - **执法**：C2 计数宣称改动齐（23）；C1 {agg} 模板实例化新句可扫描；C3 符号在册。
 - **回退**：未折叠前 current/ 一字未动，撤本案=回退全部施工 commit + 删案卷目录即净；已折叠后要推翻=新案 supersede（旧案在位不改）。

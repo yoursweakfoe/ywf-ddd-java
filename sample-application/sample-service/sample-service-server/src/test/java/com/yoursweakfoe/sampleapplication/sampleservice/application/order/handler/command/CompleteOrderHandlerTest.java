@@ -39,7 +39,7 @@ class CompleteOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
-        OrderDTO result = handler.handle(new CompleteOrderCommand(order.getId()));
+        OrderDTO result = handler.handle(new CompleteOrderCommand(order.getId().value()));
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.COMPLETED);
         verify(orderRepository).update(order);
@@ -51,7 +51,7 @@ class CompleteOrderHandlerTest {
         Order order = TestOrders.rebuilt(OrderStatus.PAID);
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> handler.handle(new CompleteOrderCommand(order.getId())))
+        assertThatThrownBy(() -> handler.handle(new CompleteOrderCommand(order.getId().value())))
                 .isInstanceOf(BusinessException.class);
     }
 

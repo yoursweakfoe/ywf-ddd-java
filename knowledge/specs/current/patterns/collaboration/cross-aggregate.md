@@ -13,7 +13,7 @@
 | CA-4 | 跨聚合的读需求各走各的读端口（RC-1）。禁止经他人聚合根取数 | R13 | ArchUnit |
 | CA-5 | Domain Service 标注 `@Service`，由 Spring 组件扫描自动注册。禁止手写注册样板。Spring 是生态基座，标注注解即标准做法；领域层允许 stereotype 系 A2 豁免 | A2 规则（援引）；本卷 §2.2 形状 | CA-1 同族 |
 | CA-6 | Domain Service 可调用 Repository、可修改实体状态，是副作用担当。纯决策、无副作用的规则改用 Policy（DP 卷互指） | policy 同题篇「Policy vs Domain Service 职责边界」对比表；本卷 §2.2 形状 | DP-5 互指 |
-| CA-7 | 跨聚合批量操作按 ID 集合**单次 IN 批量查询**，杜绝逐项 `findById` 的 N+1。方法 `findAllById`，签名 `List<{Agg}> findAllById(Collection<UUID> ids)`。同一引用 ID 出现在多条明细时，数量合并为一次聚合行为加一次持久化，避免同事务对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空 | 本卷 §2.2/§2.3 形状（单次 IN、数量合并） | §3 真实例链路 |
+| CA-7 | 跨聚合批量操作按 ID 集合**单次 IN 批量查询**，杜绝逐项 `findById` 的 N+1。方法 `findAllById`，签名 `List<{Agg}> findAllById(Collection<{Agg}Id> ids)`。同一引用 ID 出现在多条明细时，数量合并为一次聚合行为加一次持久化，避免同事务对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空 | 本卷 §2.2/§2.3 形状（单次 IN、数量合并） | §3 真实例链路 |
 
 ## §2 规范形状（统一用法唯一样本）
 
@@ -50,7 +50,7 @@ public class InventoryDomainService implements DomainService {
 
     /** 批量扣减（开票时调用）：批量加载 + 同项数量合并 */
     public void deductStock(List<InvoiceItem> items) {
-        Map<UUID, Inventory> inventoryMap = loadInventories(items);   // CA-7：单次 IN 批量查询，杜绝逐项 findById
+        Map<InventoryId, Inventory> inventoryMap = loadInventories(items);   // CA-7：单次 IN 批量查询，杜绝逐项 findById
         quantitiesByRef(items).forEach((refId, totalQuantity) -> {    // CA-7：同一引用 ID 数量合并为一次处理
             Inventory inventory = requireInventory(inventoryMap, refId);
             inventory.deductStock(totalQuantity);                     // 聚合行为留在聚合根（WC-3 互指）
@@ -60,7 +60,7 @@ public class InventoryDomainService implements DomainService {
 
     /** 批量回补（作废账单时调用）——补偿动作同事务直调（CA-3） */
     public void replenishStock(List<InvoiceItem> items) {
-        Map<UUID, Inventory> inventoryMap = loadInventories(items);   // CA-7
+        Map<InventoryId, Inventory> inventoryMap = loadInventories(items);   // CA-7
         quantitiesByRef(items).forEach((refId, totalQuantity) -> {    // CA-7
             Inventory inventory = requireInventory(inventoryMap, refId);
             inventory.restoreStock(totalQuantity);                    // 与 deductStock 对称复用
@@ -88,7 +88,7 @@ public class CreateInvoiceHandler implements CommandHandler<CreateInvoiceCommand
     @Transactional(rollbackFor = Exception.class)   // CA-2：事务边界在 Handler（WC-2），Domain Service 不吞
     public InvoiceDTO handle(CreateInvoiceCommand command) {
         // 1. 批量加载（单次 IN 查询，CA-7），以真实单价构建账单明细
-        Map<UUID, Inventory> inventoryMap = inventoryRepository.findAllById(refIds(command)).stream()
+        Map<InventoryId, Inventory> inventoryMap = inventoryRepository.findAllById(refIds(command)).stream()
                 .collect(Collectors.toMap(Inventory::getId, Function.identity()));
         List<InvoiceItem> items = command.getItems().stream()
                 .map(dto -> new InvoiceItem(dto.getRefId(), dto.getQuantity(),

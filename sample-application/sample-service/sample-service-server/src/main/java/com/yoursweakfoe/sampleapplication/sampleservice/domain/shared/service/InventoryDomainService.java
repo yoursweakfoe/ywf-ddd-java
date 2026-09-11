@@ -1,15 +1,16 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.ddd.domain.service.DomainService;
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,6 +26,8 @@ import org.springframework.stereotype.Service;
  * <p>锁序契约：所有事务对 Product 聚合的更新顺序统一为 <strong>productId 全局升序</strong>——
  * 两个并发订单即使以相反顺序触及相同商品，也按同一顺序加行锁，消除交叉持锁死锁
  * （「订单内首次出现序」只保证单事务内稳定，不足以防跨事务死锁）。
+ * 币种 {@link ProductId} 不比自身、按底值 UUID 比较（{@code Comparator.comparing(ProductId::value)}），
+ * 锁序语义与迁移前逐字等价。
  *
  * <p>标注 {@code @Service} 由 Spring 组件扫描自动注册（stereotype 注解为纯元数据，
  * 属共享规则 R4「Domain 框架中立」的既定白名单，见 common-test {@code DddArchitectureRules}）。
@@ -47,7 +50,7 @@ public class InventoryDomainService implements DomainService {
      * @throws BusinessException 商品不存在或库存不足时
      */
     public void deductStock(List<OrderItem> items) {
-        Map<UUID, Product> products = loadProducts(items);
+        Map<ProductId, Product> products = loadProducts(items);
         quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
             Product product = requireProduct(products, productId);
             product.deductStock(totalQuantity);
@@ -62,7 +65,7 @@ public class InventoryDomainService implements DomainService {
      * @throws BusinessException 商品不存在时
      */
     public void replenishStock(List<OrderItem> items) {
-        Map<UUID, Product> products = loadProducts(items);
+        Map<ProductId, Product> products = loadProducts(items);
         quantitiesByProduct(items).forEach((productId, totalQuantity) -> {
             Product product = requireProduct(products, productId);
             product.restoreStock(totalQuantity);
@@ -73,8 +76,8 @@ public class InventoryDomainService implements DomainService {
     // region 内部方法
 
     /** 按 ID 集合批量加载商品（单次 IN 查询）。 */
-    private Map<UUID, Product> loadProducts(List<OrderItem> items) {
-        List<UUID> ids = items.stream().map(OrderItem::productId).distinct().toList();
+    private Map<ProductId, Product> loadProducts(List<OrderItem> items) {
+        List<ProductId> ids = items.stream().map(OrderItem::productId).distinct().toList();
         return productRepository.findAllById(ids).stream()
                 .collect(LinkedHashMap::new, (map, p) -> map.put(p.getId(), p), Map::putAll);
     }
@@ -83,11 +86,11 @@ public class InventoryDomainService implements DomainService {
      * 同商品订单项数量合并，并按 productId <strong>全局升序</strong>排列。
      *
      * <p><b>锁序约定</b>：TreeMap 天然升序迭代，使所有并发事务对 Product 的 UPDATE
-     * 遵循同一加锁顺序（见类级「锁序契约」）。UUID 键的 compareTo 为全序一致比较，
-     * 跨事务锁序稳定性不受影响。
+     * 遵循同一加锁顺序（见类级「锁序契约」）。比较器按币种底值 UUID 比较
+     * （UUID.compareTo 为全序一致比较），跨事务锁序稳定性不受币种包装影响。
      */
-    private Map<UUID, Integer> quantitiesByProduct(List<OrderItem> items) {
-        Map<UUID, Integer> quantities = new TreeMap<>();
+    private Map<ProductId, Integer> quantitiesByProduct(List<OrderItem> items) {
+        Map<ProductId, Integer> quantities = new TreeMap<>(Comparator.comparing(ProductId::value));
         for (OrderItem item : items) {
             quantities.merge(item.productId(), item.quantity(), Integer::sum);
         }
@@ -99,7 +102,7 @@ public class InventoryDomainService implements DomainService {
      *
      * @throws BusinessException 商品不存在时
      */
-    private Product requireProduct(Map<UUID, Product> products, UUID productId) {
+    private Product requireProduct(Map<ProductId, Product> products, ProductId productId) {
         Product product = products.get(productId);
         if (product == null) {
             throw new BusinessException("product:err.notFound");

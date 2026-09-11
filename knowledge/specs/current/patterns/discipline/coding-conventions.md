@@ -34,6 +34,7 @@
 | 持久化对象 | `XxxPO` | `PaymentPO` |
 | Domain 外部接口 | `XxxPortal` | `PaymentPortal` |
 | Infra 外部实现 | `XxxGateway` | `StripePaymentGateway` |
+| 聚合身份终类型（record 实现 `Identifier<V>`，落位 `domain/{agg}/id/`，法卷锚 蓝图 BP-13） | `XxxId` | `PaymentId` |
 | 聚合根 | `Xxx extends AggregateRoot<ID>` | `Payment` |
 | Repository 接口 | `XxxRepository` | `PaymentRepository` |
 | Repository 实现 | `XxxRepositoryImpl` | `PaymentRepositoryImpl` |

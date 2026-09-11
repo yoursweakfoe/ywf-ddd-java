@@ -2,6 +2,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
 import com.yoursweakfoe.common.ddd.domain.factory.Factory;
 import com.yoursweakfoe.common.ddd.domain.model.AggregateIds;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.id.OrderId;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,8 @@ import org.springframework.stereotype.Component;
  *
  * <p>与重建路径的分工：持久化恢复走 {@link Order#reconstitute}（惰性，无校验），
  * 本工厂只负责「从无到有」。ID 由框架铸造唯一入口 {@link AggregateIds#mint()} 铸造
- * （RFC 9562 UUIDv7，时间有序；铸造策略是框架装配宣言的一部分，业务侧不裸 import JUG）——
+ * （RFC 9562 UUIDv7，时间有序；铸造策略是框架装配宣言的一部分，业务侧不裸 import JUG），
+ * 再经 {@link OrderId#of} 装箱为专属币种（法卷锚 BP-13，案卷 2026-09-typed-identifier）——
  * 身份在持久化之前即存在，内存关联与 API 返回均依赖这一前提。
  *
  * <p>本类与 {@link Order} 同包：聚合的业务构造器为包私有，仅工厂可访问——
@@ -34,7 +36,7 @@ public class OrderFactory implements Factory {
      *         （订单项为空 / 客户 ID 缺失 / 总金额非正）
      */
     public Order create(String customerId, List<OrderItem> items) {
-        Order order = new Order(AggregateIds.mint(), items, customerId);
+        Order order = new Order(OrderId.of(AggregateIds.mint()), items, customerId);
         order.place();
         return order;
     }

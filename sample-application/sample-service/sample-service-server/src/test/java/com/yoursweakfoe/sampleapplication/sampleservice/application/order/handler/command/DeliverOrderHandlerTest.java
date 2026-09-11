@@ -38,7 +38,7 @@ class DeliverOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
-        OrderDTO result = handler.handle(new DeliverOrderCommand(order.getId()));
+        OrderDTO result = handler.handle(new DeliverOrderCommand(order.getId().value()));
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
         verify(orderRepository).update(order);
@@ -50,7 +50,7 @@ class DeliverOrderHandlerTest {
         Order order = TestOrders.rebuilt(OrderStatus.PENDING);
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> handler.handle(new DeliverOrderCommand(order.getId())))
+        assertThatThrownBy(() -> handler.handle(new DeliverOrderCommand(order.getId().value())))
                 .isInstanceOf(BusinessException.class);
     }
 }

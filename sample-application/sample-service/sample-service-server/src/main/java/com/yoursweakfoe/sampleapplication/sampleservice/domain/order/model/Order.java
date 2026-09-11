@@ -2,21 +2,23 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.id.OrderId;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 订单聚合根 —— 管理订单生命周期（下单→支付→确认→发货→签收→完成，可取消）。
+ *
+ * <p>身份槽实参为专属币种 {@link OrderId}（法卷锚 BP-13，案卷 2026-09-typed-identifier）。
  */
-public class Order extends AggregateRoot<UUID> {
+public class Order extends AggregateRoot<OrderId> {
 
     // region 字段与构造器
-    private UUID id;
+    private OrderId id;
     @Getter
     private OrderStatus status;
     private List<OrderItem> items;
@@ -39,7 +41,7 @@ public class Order extends AggregateRoot<UUID> {
      * 包私有业务构造器 —— 新建路径已收口至同包的 {@code OrderFactory}（创建即合法：
      * 构造后立即 place() 完成校验）。包结构在编译期锁死「谁能 new 一个订单」。
      */
-    Order(UUID id, List<OrderItem> items, String customerId) {
+    Order(OrderId id, List<OrderItem> items, String customerId) {
         this.id = id;
         this.status = OrderStatus.PENDING;
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
@@ -51,7 +53,7 @@ public class Order extends AggregateRoot<UUID> {
      * 私有全参构造器 —— 惰性重建专用：直接赋值快照，
      * 不计算派生字段、不校验（重建绝不能改历史）。
      */
-    private Order(UUID id, OrderStatus status, List<OrderItem> items, BigDecimal totalAmount,
+    private Order(OrderId id, OrderStatus status, List<OrderItem> items, BigDecimal totalAmount,
                   String customerId, String trackingNumber, String cancelReason,
                   OffsetDateTime createdAt, OffsetDateTime updatedAt, Long version) {
         this.id = id;
@@ -70,7 +72,7 @@ public class Order extends AggregateRoot<UUID> {
      * 重建构造器（持久化层 Converter 使用）—— 惰性：不触发校验。
      * 新建请走 {@code OrderFactory.create(...)}。
      */
-    public static Order reconstitute(UUID id, OrderStatus status, List<OrderItem> items,
+    public static Order reconstitute(OrderId id, OrderStatus status, List<OrderItem> items,
                                      BigDecimal totalAmount, String customerId,
                                      String trackingNumber, String cancelReason,
                                      OffsetDateTime createdAt, OffsetDateTime updatedAt,
@@ -80,7 +82,7 @@ public class Order extends AggregateRoot<UUID> {
     }
 
     @Override
-    public UUID getId() {
+    public OrderId getId() {
         return id;
     }
 

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.common.exception.type.BusinessException;
@@ -22,8 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InventoryDomainServiceTest {
 
-    private static final UUID PRODUCT_ID = UUID.randomUUID();
-    private static final UUID PRODUCT_ID_2 = UUID.randomUUID();
+    private static final ProductId PRODUCT_ID = ProductId.of(UUID.randomUUID());
+    private static final ProductId PRODUCT_ID_2 = ProductId.of(UUID.randomUUID());
 
     @Mock private ProductRepository productRepository;
     @InjectMocks private InventoryDomainService service;
@@ -42,7 +43,7 @@ class InventoryDomainServiceTest {
     @Test
     void deductStock_shouldThrowWhenProductNotFound() {
         // 共享变量：确保 findAllById 桩参数与实际调用参数一致（Mockito 严格模式）
-        UUID missingId = UUID.randomUUID();
+        ProductId missingId = ProductId.of(UUID.randomUUID());
         when(productRepository.findAllById(List.of(missingId))).thenReturn(List.of());
 
         assertThatThrownBy(() -> service.deductStock(List.of(

@@ -17,12 +17,14 @@
 | `inventory:err.insufficientStock` | 库存不足 |
 | `inventory:err.priceRequired` | 单价缺失 |
 | `inventory:err.priceNegative` | 单价不允许为负 |
+| `order:err.idRequired` | 订单身份底值缺失（币种 null 闸，真实例） |
+| `product:err.idRequired` | 商品身份底值缺失（币种 null 闸，真实例） |
 
 > 真实例：示例应用的两个聚合实际使用前缀 order 与 product，形如 `<聚合名>:err.<场景>`。源码见 sample-application 的 domain model，映射位记录在法卷 §5.3。
 
 ## 业务场景
 
-> 上文登记簿现存 key 属**虚构教例**：payment 与 inventory 两个聚合，sample 未实现。真实前缀见上注。
+> 上文登记簿中 payment 与 inventory 行属**虚构教例**（sample 未实现），标「真实例」者为示例应用实际位点。真实前缀见上注。
 
 下面走一遍完整链路。场景：对非 PENDING 状态的支付单扣款，状态机校验失败。聚合行为方法显式抛 `BusinessException`，携带 i18n 位点。异常沿调用栈向上传播，中途无人 catch。框架 advice 自动把它翻译成 RFC 9457 JSON。前端用 `t(messageKey, params)` 渲染本地化文案。指针：传播链见法卷 EV-7，链路形状见 §5.1。
 

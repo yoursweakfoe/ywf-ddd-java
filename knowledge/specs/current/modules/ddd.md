@@ -12,20 +12,26 @@
 </dependency>
 ```
 
+### 身份词汇发行：`Identifier<V>`
+
+系统 SHALL 于 common-ddd `domain/id` 发行纯 Java 身份词汇接口 `Identifier<V>`（唯一方法 `V value()`，零 JDK 外依赖），作为聚合身份终类型的唯一类型学锚点；架名段与业务落位 `domain/{agg}/id/` 镜像对偶；框架不发行抽象基类、解析器或任何运行期设施。
+
+> Scenario: 域纯度不破 —— GIVEN 新接口文件 ｜ WHEN R4 现行域纯度规则扫描 ｜ THEN 绿，零新增依赖边。取证：`common-ddd/.../domain/id/Identifier.java` 在库；框架扫描 `DddArchitectureTest` r3/r4 绿 11/11＝域纯度不破。
+
 ### 场景 1：聚合根（状态机 + 不变量校验）
 
 > §3 场景 1–4 共用同一套虚构教例：Payment 家族，与 `knowledge/docs/how-to/new-aggregate.md` 同族。全部是虚构教例，sample 未实现；真实例形态见 sample-application，两者同构。字段形状与该篇现状对齐，每个场景只取所需子集。
 
 ```java
-public class Payment extends AggregateRoot<UUID> {
-    private UUID id;
-    private UUID orderId;
+public class Payment extends AggregateRoot<PaymentId> {   // 身份槽实参 = 聚合身份终类型（蓝图 BP-13，见上节词汇发行）
+    private PaymentId id;
+    private UUID orderId;   // BP-14：跨聚合引用槽准目标币种（教例未铸 OrderId，实形见真实例订单项商品槽）
     private PaymentStatus status;
     private BigDecimal amount;
     private Long version;
 
     /** 业务构造器（创建新支付） */
-    public Payment(UUID id, UUID orderId, BigDecimal amount) {
+    public Payment(PaymentId id, UUID orderId, BigDecimal amount) {
         this.id = id;
         this.orderId = orderId;
         this.amount = amount;
@@ -33,7 +39,7 @@ public class Payment extends AggregateRoot<UUID> {
     }
 
     /** 重建构造器（Converter 使用） */
-    public static Payment reconstitute(UUID id, UUID orderId, PaymentStatus status,
+    public static Payment reconstitute(PaymentId id, UUID orderId, PaymentStatus status,
                                        BigDecimal amount, Long version) {
         Payment payment = new Payment(id, orderId, amount);
         payment.status = status;
@@ -41,7 +47,7 @@ public class Payment extends AggregateRoot<UUID> {
         return payment;
     }
 
-    @Override public UUID getId() { return id; }
+    @Override public PaymentId getId() { return id; }
 
     /** 支付成功：状态机校验 + 状态变迁 */
     public void succeed() {
@@ -96,7 +102,7 @@ RepositoryImpl 继承 `MybatisPersistence`，构造器注入四件依赖：Mappe
 ```java
 @Component
 public class PaymentRepositoryImpl
-        extends MybatisPersistence<PaymentMapper, PaymentPO, Payment, UUID>
+        extends MybatisPersistence<PaymentMapper, PaymentPO, Payment, PaymentId>
         implements PaymentRepository {
 
     private final PaymentConverter converter;
@@ -112,16 +118,16 @@ public class PaymentRepositoryImpl
 
     @Override protected BasicConverter<Payment, PaymentPO> getConverter() { return converter; }
 
-    /** 领域 ID（UUID）→ PO 主键（String）；类型一致时无需覆写 */
-    @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
+    /** 领域 ID（PaymentId）→ PO 主键原生值（UUID）：唯一转换位，每仓储恰一处（PO/Mapper/XML/schema 零修改） */
+    @Override protected Serializable toPersistenceId(PaymentId id) { return id.value(); }
 
-    @Override public Optional<Payment> findById(UUID id) { return findDomainById(id); }
+    @Override public Optional<Payment> findById(PaymentId id) { return findDomainById(id); }
 
     @Override public void save(Payment domain) { saveDomain(domain); }
 
     @Override public void update(Payment domain) { updateDomain(domain); }
 
-    @Override public void deleteById(UUID id) { removeDomainById(id); }
+    @Override public void deleteById(PaymentId id) { removeDomainById(id); }
 }
 ```
 

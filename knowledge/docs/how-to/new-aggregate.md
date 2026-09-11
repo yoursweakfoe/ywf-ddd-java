@@ -1,6 +1,6 @@
 ﻿# 新建聚合 · 设计卡
 
-> **本篇 = 设计卡（宽松件）**：只回答"该不该拆新聚合、怎么定案"。全套规范形状与逐件教学走查已整体归卷 → [aggregate-blueprint.md](../../specs/current/patterns/building-block/aggregate-blueprint.md)：§1 槽位清单、§2 条款（BP-1~BP-12 / BP-X1~X3）、§3 验收单、§4 逐件走查。冲突以法卷为准，见归属法卷 §2。本篇零形状代码。
+> **本篇 = 设计卡（宽松件）**：只回答"该不该拆新聚合、怎么定案"。全套规范形状与逐件教学走查已整体归卷 → [aggregate-blueprint.md](../../specs/current/patterns/building-block/aggregate-blueprint.md)：§1 槽位清单、§2 条款（BP-1~BP-17 / BP-X1~X3）、§3 验收单、§4 逐件走查。冲突以法卷为准，见归属法卷 §2。本篇零形状代码。
 > 包结构参考 → [aggregate-blueprint 法卷 §5](../../specs/current/patterns/building-block/aggregate-blueprint.md)；写/读全链路走查 → [write-path.md](write-path.md) / [read-path.md](read-path.md)
 
 ## 什么时候需要新聚合
@@ -22,9 +22,9 @@
 
 ## 边界与代价
 
-- **22 个文件不是 22 层抽象**。它是同一套分层的槽位占位，各件职责与归属看法卷 §1 槽位注。真实代价是：每个新用例要横跨契约、应用、领域、基础设施、适配五端同步落件。
+- **23 个文件不是 23 层抽象**。它是同一套分层的槽位占位，各件职责与归属看法卷 §1 槽位注。真实代价是：每个新用例要横跨契约、应用、领域、基础设施、适配五端同步落件。
 - 聚合间协作不归本模式。走 Domain Service 同事务直调，见 [cross-aggregate.md](cross-aggregate.md)。
-- 设计原理纵深 → [../explanation/domain.md](../explanation/domain.md)、[../explanation/application.md](../explanation/application.md)。
+- 设计原理纵深 → [../explanation/domain.md](../explanation/domain.md)、[../explanation/application.md](../explanation/application.md)、[../explanation/typed-identifier.md](../explanation/typed-identifier.md)（身份槽为何是终类型）。
 
 ## 落地顺序与验收
 

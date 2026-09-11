@@ -17,7 +17,7 @@
 | 7 | 设计卡 | `docs/how-to/`（13 篇） | [card.md](../how-to/_template/card.md) | 新增"该不该用、怎么选"指引 |
 | 8 | API 字典 | `docs/reference/api/`（8 篇） | [api.md](api/_template/api.md) | common 模块的查表文档 |
 | 9 | 解读·层篇 | `docs/explanation/`（5 篇） | [layer.md](../explanation/_template/layer.md) | 一个架构层一篇的深读 |
-| 10 | 解读·专论 | 同上（6 篇） | [treatise.md](../explanation/_template/treatise.md) | 跨层的"为什么"长篇 |
+| 10 | 解读·专论 | 同上（8 篇） | [treatise.md](../explanation/_template/treatise.md) | 跨层的"为什么"长篇 |
 | 11 | 解读·账本 | 同上（1 篇） | [ledger.md](../explanation/_template/ledger.md) | 理论采纳/拒绝台账 |
 | 12 | 教程 | `docs/tutorials/`（1 篇） | [tutorial.md](../tutorials/_template/tutorial.md) | 从零跑通的操作手册 |
 | 13 | 术语表 | `docs/reference/`（1 篇） | [glossary.md](_template/glossary.md) | 术语 → canonical 指针表 |

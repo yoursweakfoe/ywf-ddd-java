@@ -89,7 +89,7 @@ knowledge/
 │   ├── tutorials/  quickstart：从 clone 到跑通
 │   ├── how-to/     设计卡（{agg} 中立教例，零形状代码，规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
-│   └── explanation/ 分层设计 5 篇 + 专论 7 篇（知识系统/云集成/安全/可观测/测试/规则集设计/摆架 rationale）+ theory-map 理论账本
+│   └── explanation/ 分层设计 5 篇 + 专论 8 篇（知识系统/云集成/安全/可观测/测试/规则集设计/摆架 rationale/类型化身份）+ theory-map 理论账本
 ├── specs/          法律·框架区 | current/modules/ 模块法卷 · current/patterns/<十摊>/ 模式法卷（摊进路径；摆架宪法 → patterns/meta/pattern-taxonomy.md）· changes/ 审议中案卷 · archive/ 封存（业务法在 ../sample-application/specs/）
 └── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置
 ```

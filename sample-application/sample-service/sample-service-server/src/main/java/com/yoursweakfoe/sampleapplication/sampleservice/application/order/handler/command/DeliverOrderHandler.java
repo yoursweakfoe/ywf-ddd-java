@@ -3,6 +3,7 @@ package com.yoursweakfoe.sampleapplication.sampleservice.application.order.handl
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.assembler.OrderAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.order.dto.OrderDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.order.dto.command.DeliverOrderCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.id.OrderId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
@@ -29,7 +30,9 @@ public class DeliverOrderHandler implements CommandHandler<DeliverOrderCommand, 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderDTO handle(DeliverOrderCommand command) {
-        Order order = orderRepository.findById(command.getOrderId())
+        // 入口一点定型（WC-13，法卷锚 BP-13／案卷 2026-09-typed-identifier）：CQE 裸 UUID → 币种，其后链路全为 OrderId
+        OrderId orderId = OrderId.of(command.getOrderId());
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("order:err.notFound"));
         order.deliver();
         orderRepository.update(order);

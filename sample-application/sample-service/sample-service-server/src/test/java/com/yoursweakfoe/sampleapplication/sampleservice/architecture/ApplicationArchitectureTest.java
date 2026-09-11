@@ -148,6 +148,11 @@ class ApplicationArchitectureTest {
     static final ArchRule r13_query_handlers_no_write_repository =
             DddArchitectureRules.QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES;
 
+    /** R15 —— 聚合根 ID 泛型实参必须实现 Identifier 且端口 ID 槽与根槽一致（法卷锚 BP-13；顶位承旧 R15 废号）。 */
+    @ArchTest
+    static final ArchRule r15_typed_identifiers =
+            DddArchitectureRules.AGGREGATE_ROOTS_USE_TYPED_IDENTIFIERS;
+
     // ── 应用特有规则 ───────────────────────────────────────────────────
 
     /** A3 —— 领域 Repository 接口（继承框架 Repository）必须在 domain..repository.. 包下（读端口 QueryRepository 除外）。 */

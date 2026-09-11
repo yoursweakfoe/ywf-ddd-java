@@ -20,11 +20,23 @@ DDD 战术框架：领域建模基类、CQRS 应用层契约、MyBatis 仓储支
 | `AggregateRoot<ID>` | 聚合根基类。`validate()` 是不变量校验模板，save/update 持久化前由仓储自动调用 |
 | `ValueObject` | 值对象标记接口，推荐用 Java record 实现 |
 | `Identifiable<ID>` | 标识接口，约束 `getId()` |
+| `Identifier<V>` | 聚合身份词汇接口（纯 Java，唯一方法 `value()`）：聚合身份终类型 `{Agg}Id` 的类型学锚点，框架不发行基类或解析机制 |
 | `DomainService` | 领域服务标记接口，用于跨聚合协调的无状态服务 |
 | `Factory<T>` | 领域工厂标记接口 |
 | `Policy<C>` | 可插拔领域规则接口，`isApplicable(C)` 判断适用性 |
 | `Portal` | 外部资源访问标记接口：Domain 定义 XxxPortal，Infrastructure 实现 XxxGateway |
 | `DomainEvent` | 领域事件标记接口（`domain/event/`），表达「领域已发生的事实」，仅进程内消费；跨边界用契约层 `IntegrationEvent` |
+
+### 聚合身份终类型（{Agg}Id）
+
+每个聚合为身份铸造专属 record 终类型（教例 `PaymentId`，虚构教例，sample 未实现），作聚合根身份槽与跨聚合引用槽的实参：`public record {Agg}Id(V value) implements Identifier<V>, Serializable`，住该聚合 domain 段自家 `id` 包。
+
+- **写侧币种**：Handler 入口经 `of(...)` 一点定型后，DTO、聚合行为、DomainService 签名全按类型流通；调用位混入他聚合 ID = 编译失败，防错从运行时提前到编译期。
+- **装箱不站岗**：构造器只做 null 检查——出生合法性归铸造入口，类型不复验格式、不查 UUID 版本位（存量行装载照样过 `of()`）。
+- **豁免位不入**：契约 CQE/CO、PO、读侧端口与读 DTO、聚合内子实体 PK 维持原生承载；领域 ID → 原生主键的转换收敛在仓储 `toPersistenceId` 一位。
+- **底层不绑定**：`V` 可为任意单值可比较原生类型（Long 等照样成立），铸造入口三来源（应用铸造 / 自然键 / DB 代铸）与类型无关。
+
+严格条款与执法（ArchUnit R15、负证明）→ [blueprint 法卷 BP-13~16](../../../specs/current/patterns/building-block/aggregate-blueprint.md)、[写链法卷 WC-13](../../../specs/current/patterns/chain/write-chain.md)；论证 → [typed-identifier.md](../../explanation/typed-identifier.md)；决策快照 → 案卷 2026-09-typed-identifier §裁决记录。宽松指引止于此。
 
 ### 事件角色标记（词汇，非机制）
 
@@ -128,7 +140,7 @@ common-ddd → common-contract（Command / Query / CO / IntegrationEvent 标记�
 ## 5. 设计原则
 
 - **对偶原则（包结构镜像）**：框架支撑类的包层级，与业务使用它的层级对齐。业务在 domain 层用的放 `common-ddd/domain`：`AggregateRoot`、`Repository`、`DomainService`。业务在 application 层用的放 `common-ddd/application`：`QueryHandler`、`BasicAssembler`、`ApplicationService`、`ApplicationDTO`。业务在 adapter 层用的放 `common-ddd/adapter`：`RestAdapter`、`ScheduledAdapter`。业务在 infrastructure 层用的放 `common-ddd/infrastructure`：`MybatisPersistence`、`BasicConverter`。`PageResult`/`PageableQuery` 放 `common-contract/dto/query`，契约层定位论证见 §2。
-- **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，子类自由声明 UUID / Long / String
+- **基类不绑定 ID 类型**：`Entity<ID>` / `AggregateRoot<ID>` 泛型化，原生承载仍由业务自选 UUID / Long / String；聚合根身份槽的实参须为专属终类型 `{Agg}Id`（见 §2），非聚合持久对象可继续裸值
 - **基类不持有 id/version 字段**：子类按业务需要自行声明，避免继承污染
 - **全量 UPDATE**：不做脏检查，保证 `update_time` 审计字段始终刷新
 - **SQL 文本即契约**：每条执行的语句都在仓库里（手写 XML），无动态生成、无运行时织入

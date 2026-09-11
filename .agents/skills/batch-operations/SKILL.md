@@ -22,6 +22,7 @@ description: 为已有聚合新增批量写操作（批量 Command + 批量 Hand
 3. **contract**：在 `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` 契约接口新增方法签名（REST 映射注解同处声明，WC-9）
 4. **application**：创建 `application/{agg}/handler/command/Batch{Action}{Agg}Handler.java`，照法卷 §2.2（全批原子）或 §2.3（部分失败）形状施工，两形态互斥选用（BW-6）
    - 实现 `CommandHandler<Batch{Action}{Agg}Command, List<{Agg}DTO>>`
+   - 契约输入维持 `List<UUID>`（BP-6 裸值契约不变）；Handler 入口逐条经 `{Agg}Id.of(...)` 定型后才进下方链路（法条写链 WC-13；决策快照 → 案卷 2026-09-typed-identifier §裁决记录）
    - 全批原子：标 `@Transactional(rollbackFor = Exception.class)`——事务边界在本层、框架批量通道刻意不标（BW-3，R11 机器强制）；部分失败/逐条独立：不标，逐条 try-catch 收集双列表返回
    - 四拍批量形态：批量 load → 逐条聚合行为（规则在聚合根内，禁绕聚合直改表，WC-3/BW-7）→ 基类批量通道 `updateDomainBatch` 落库（内部逐条 validate，BW-4）→ 批量 toDTO
    - 消费契约：批量通道 = 单事务逐条循环（非多值 SQL），建议 ≤500 条/批由调用方自行分片、框架不设护栏（BW-5，细则见 `MybatisPersistence` javadoc「消费契约」节）

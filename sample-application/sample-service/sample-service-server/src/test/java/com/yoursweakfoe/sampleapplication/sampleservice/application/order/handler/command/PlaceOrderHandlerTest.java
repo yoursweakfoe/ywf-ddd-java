@@ -16,6 +16,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderStatus;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
@@ -33,9 +34,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PlaceOrderHandlerTest {
 
-    private static final UUID PRODUCT_ID = UUID.randomUUID();
-    private static final UUID PRODUCT_ID_2 = UUID.randomUUID();
-    private static final UUID MISSING_PRODUCT_ID = UUID.randomUUID();
+    private static final ProductId PRODUCT_ID = ProductId.of(UUID.randomUUID());
+    private static final ProductId PRODUCT_ID_2 = ProductId.of(UUID.randomUUID());
+    private static final ProductId MISSING_PRODUCT_ID = ProductId.of(UUID.randomUUID());
 
     @Mock private ProductRepository productRepository;
     @Mock private InventoryDomainService inventoryDomainService;
@@ -63,7 +64,7 @@ class PlaceOrderHandlerTest {
         when(productRepository.findAllById(List.of(PRODUCT_ID))).thenReturn(List.of(product));
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
-        OrderDTO result = handler.handle(command(PRODUCT_ID, 2));
+        OrderDTO result = handler.handle(command(PRODUCT_ID.value(), 2));
 
         verify(inventoryDomainService).deductStock(any());
         verify(orderRepository).save(argThat((Order order) ->
@@ -77,7 +78,7 @@ class PlaceOrderHandlerTest {
     void handle_shouldThrowWhenProductNotFound() {
         when(productRepository.findAllById(List.of(MISSING_PRODUCT_ID))).thenReturn(List.of());
 
-        assertThatThrownBy(() -> handler.handle(command(MISSING_PRODUCT_ID, 1)))
+        assertThatThrownBy(() -> handler.handle(command(MISSING_PRODUCT_ID.value(), 1)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("product:err.notFound");
     }
@@ -94,7 +95,7 @@ class PlaceOrderHandlerTest {
 
         PlaceOrderCommand command = new PlaceOrderCommand();
         command.setCustomerId("customer-1");
-        command.setItems(List.of(itemView(PRODUCT_ID, 1), itemView(PRODUCT_ID_2, 999)));
+        command.setItems(List.of(itemView(PRODUCT_ID.value(), 1), itemView(PRODUCT_ID_2.value(), 999)));
 
         assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(BusinessException.class)

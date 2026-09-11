@@ -39,15 +39,15 @@ Infrastructure 层实现（Gateway）
 package com.yoursweakfoe.sampleapplication.sampleservice.domain.payment.portal;
 
 import com.yoursweakfoe.common.ddd.domain.portal.Portal;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.payment.id.PaymentId;
 import java.math.BigDecimal;
-import java.util.UUID;
 
 /**
  * 支付能力门户 —— Domain 层定义"我需要什么"，不关心"谁提供、怎么调"。
  */
 public interface PaymentPortal extends Portal {                          // GW-5：Portal 结尾 + extends 标记，定义在 domain/{agg}/portal/
 
-    PaymentResult pay(UUID refId, BigDecimal amount, String currency);   // GW-1：参数与返回值全部领域语言，不引入 Alipay SDK 类型
+    PaymentResult pay(PaymentId refId, BigDecimal amount, String currency);   // GW-1：参数与返回值全部领域语言，不引入 Alipay SDK 类型；引用 ID 参数用目标终类型（domain 侧，蓝图 BP-14）
 }
 ```
 
@@ -75,6 +75,7 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.response.AlipayTradePayResponse;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.payment.portal.PaymentPortal;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.payment.model.PaymentResult;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.payment.id.PaymentId;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -92,9 +93,9 @@ public class AlipayPaymentGateway implements PaymentPortal {
     }
 
     @Override
-    public PaymentResult pay(UUID refId, BigDecimal amount, String currency) {
-        // ① 技术调用：对接具体 SDK
-        AlipayTradePayResponse resp = alipayClient.execute(buildRequest(refId, amount, currency));
+    public PaymentResult pay(PaymentId refId, BigDecimal amount, String currency) {
+        // ① 技术调用：对接具体 SDK——入站终类型在此 value() 出站还原原生值传外部 SDK，币种不出 domain
+        AlipayTradePayResponse resp = alipayClient.execute(buildRequest(refId.value(), amount, currency));
 
         // ② ACL 翻译：外部模型 → 领域模型（防止外部概念污染领域，GW-2：外部 SDK 类型不出 Gateway 边界）
         return new PaymentResult(

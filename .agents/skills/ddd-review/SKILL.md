@@ -13,7 +13,7 @@ description: DDD 架构合规审查。完成编码后必跑自查、人工要求
 |---|---|---|
 | 禁令卷 | `knowledge/specs/current/patterns/discipline/prohibitions.md` | §1~§4 四层禁止面、§5 契约、§6 持久化铁律、§7 时间与线程、§8 通用、§9 Common 登记表、§10 Git 工作法 |
 | 编码公约卷 | `knowledge/specs/current/patterns/discipline/coding-conventions.md` | CC-1~CC-9；§2.1 类型后缀表；§2.2 结构映射表 |
-| blueprint 卷（聚合构建宪） | `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` | §1 槽位表（㉠-㉒）、§2 BP 条款、§3 验收单、§5 服务骨架通式 |
+| blueprint 卷（聚合构建宪） | `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` | §1 槽位表（①-㉓）、§2 BP 条款、§3 验收单、§5 服务骨架通式 |
 | ArchUnit 编号表 | `knowledge/docs/reference/api/common-test.md` §2 | R 系 / C1 规则编号表（规则 `as()` 前缀与 `DddArchitectureRules` 源码自对账；检查项只引编号不复述） |
 | 归属法卷 | `knowledge/specs/current/patterns/meta/attribution-law.md` | §2 事实归属表、§4 强制同步规则（「文档与契约」维度用） |
 
@@ -36,8 +36,8 @@ description: DDD 架构合规审查。完成编码后必跑自查、人工要求
 
 ### 持久化
 
-- [ ] 写端口接口在 `domain/{agg}/repository/`、读端口在 `application/{agg}/repository/`；两侧实现合并同包 `infrastructure/persistence/{ds}/{agg}/repository/`（RepositoryImpl / QueryRepositoryImpl 后缀区分）（违反 = R5a/R5b；槽位法条 blueprint 卷 §1 ⑭⑳⑱㉑、BP-X3）
-- [ ] PO 零 ORM 注解 + XML 七语句契约——逐条对照 BP-X1/BP-X2（禁止面 禁令卷 §6；详表镜像 `knowledge/docs/reference/api/common-ddd.md` §2；XML 槽位 = blueprint 卷 §1 ⑲）
+- [ ] 写端口接口在 `domain/{agg}/repository/`、读端口在 `application/{agg}/repository/`；两侧实现合并同包 `infrastructure/persistence/{ds}/{agg}/repository/`（RepositoryImpl / QueryRepositoryImpl 后缀区分）（违反 = R5a/R5b；槽位法条 blueprint 卷 §1 ⑮㉑⑲㉒、BP-X3）
+- [ ] PO 零 ORM 注解 + XML 七语句契约——逐条对照 BP-X1/BP-X2（禁止面 禁令卷 §6；详表镜像 `knowledge/docs/reference/api/common-ddd.md` §2；XML 槽位 = blueprint 卷 §1 ⑳）
 - [ ] Converter.toDomain() 使用 `reconstitute()`（不走业务构造器——法条 CC-4/BP-X2；聚合构造两扇门 = BP-8）
 - [ ] 无跨聚合共享 PO / Mapper（法条 禁令卷 §4；聚合自包含 → blueprint 卷 §5）
 - [ ] `application/{agg}/dto/` 下 DTO 实现 `ApplicationDTO` 标记（违反 = R10a/R10b；法条 blueprint 卷 §3 验收单）
@@ -50,6 +50,7 @@ description: DDD 架构合规审查。完成编码后必跑自查、人工要求
 
 - [ ] 新增文件位于正确的聚合子包内（必含子段：`handler/command|query/`、`repository/`、`adapter/rest/controller/`——槽位法条 blueprint 卷 §1，Handler 定位 = CC-1）
 - [ ] 命名符合 CC-2 后缀制（法条：编码公约卷 §2.1 类型后缀表——Command/Query/CO/DTO/PO/Portal/Gateway，禁自创第六种载体）
+- [ ] 聚合根身份槽为专属终类型 `{Agg}Id`（record implements `Identifier`，落位 `domain/{agg}/id/`），且 `Repository` 端口 ID 槽与根槽一致；契约 CQE/CO、PO、读侧端口与读 DTO、子实体 PK 维持原生值（违反 = R15；法条 blueprint 卷 §1 ⑫ / §2 BP-13、BP-15；决策快照 → 案卷 2026-09-typed-identifier §裁决记录）
 
 ### 异常
 

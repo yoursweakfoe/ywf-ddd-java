@@ -25,6 +25,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 2. **contract**：在 `contract/{agg}/adapter/rest/controller/{Agg}Controller.java` 契约接口新增方法签名（映射与文档注解全住契约接口 → WC-9）
 3. **application**：创建 `application/{agg}/handler/command/{Action}{Agg}Handler.java`
    - 实现 `CommandHandler<{Action}{Agg}Command, {Agg}DTO>`
+   - 入口一点定型：调用任何 domain 接口前，把 Command 携入的裸 ID 经 `{Agg}Id.of(...)` 换型，其后链路全类型化；禁隐式自动转换代劳（法条写链 WC-13；决策快照 → 案卷 2026-09-typed-identifier §裁决记录）
    - 四拍链：load → 聚合行为 → save → assembler.toDTO()（→ WC-2，形状唯一样本写链卷 §2.5）
    - 标注 `@Transactional(rollbackFor = Exception.class)`（R11 机器强制：事务边界在 CommandHandler.handle）
    - 影响 0 行处置：基类 `MybatisPersistence` 已按写失败语义三分通道分类抛送，Handler 不加判 0 分支、绝不吞错（三分细则 → WC-12，取证 `MybatisPersistence.throwUpdateFailed` javadoc）
@@ -42,6 +43,7 @@ description: 为已有聚合新增写操作（Command）或读操作（Query）�
 3. **application**：读 DTO `application/{agg}/dto/{X}ViewDTO.java`（实现 `ApplicationDTO` 标记，R10a/R10b；读侧无 version → AO-5；已有可复用则跳过）
 4. **application**：在 `application/{agg}/repository/{Agg}QueryRepository.java` 新增读方法签名
    - 该接口 `extends QueryRepository` 标记（读端口，方法签名自由 → RC-6）；不存在则新建此文件
+   - 读端口签名维持原生值承载（契约层裸值，`{Agg}Id` 不入读侧——案卷 2026-09-typed-identifier 裁 Q1/Q6）
 5. **infrastructure**：在 `infrastructure/persistence/master/{agg}/repository/{Agg}QueryRepositoryImpl.java` 实现
    - Mapper 取 PO → 实现侧 `toViewDTO` **直投读 DTO**（→ RC-1，形状唯一样本读链卷 §2.8），不 reconstitute 聚合根、不经 domain Repository
    - 分页 = 具名双语句（取数 + 计数共享 XML `<sql>` 条件片段），实现侧消费 `safePageNum()`/`safePageSize()` 钳制（→ RC-7）

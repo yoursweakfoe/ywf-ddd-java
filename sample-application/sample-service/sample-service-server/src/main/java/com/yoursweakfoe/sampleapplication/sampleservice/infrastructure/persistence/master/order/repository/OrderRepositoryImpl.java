@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.repository;
 
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.id.OrderId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.order.converter.OrderConverter;
@@ -12,7 +13,6 @@ import com.yoursweakfoe.common.ddd.infrastructure.mybatis.persistence.MybatisPer
 import java.io.Serializable;
 import java.time.Clock;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class OrderRepositoryImpl
-        extends MybatisPersistence<OrderMapper, OrderPO, Order, UUID>
+        extends MybatisPersistence<OrderMapper, OrderPO, Order, OrderId>
         implements OrderRepository {
 
     // region 依赖注入
@@ -47,10 +47,17 @@ public class OrderRepositoryImpl
         return converter;
     }
 
-    // toPersistenceId：不覆写——PO.id 即 UUID（BP-S1），基类恒等透传为正确形状
+    /**
+     * 币种 → 持久化主键的唯一转换位（案卷 2026-09-typed-identifier plan P-4（形状法源见蓝图 §4.⑲），每仓储恰一处）：
+     * PO.id 维持原生 UUID，{@link OrderId} 在此一行拆箱，Mapper / XML / schema 对币种零感知。
+     */
+    @Override
+    protected Serializable toPersistenceId(OrderId id) {
+        return id.value();
+    }
 
     @Override
-    public Optional<Order> findById(UUID id) {
+    public Optional<Order> findById(OrderId id) {
         return findDomainById(id);
     }
 
@@ -65,12 +72,12 @@ public class OrderRepositoryImpl
     }
 
     @Override
-    public boolean exists(UUID id) {
+    public boolean exists(OrderId id) {
         return existsDomainById(id);
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(OrderId id) {
         removeDomainById(id);
     }
 }

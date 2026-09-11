@@ -24,7 +24,7 @@ description: 从框架骨架创建新的 DDD 微服务（Maven 模块 + 分层�
 ### Phase 2: contract 模块
 
 1. 只依赖 `common-contract`（标记接口 + 注解级依赖：HTTP 映射 / 校验 / 文档注解一律声明在 Controller 契约接口上，CC-7）
-2. 模块内容白名单 = Controller 契约接口 + CQE 三件套 + CO + 契约枚举（CC-7；目录槽位 `contract/{agg}/adapter/rest/controller + dto/{command,query,co} + enums` → blueprint §5，逐件清单 → blueprint §1 ①-④+㉒）。聚合建成走 skill `new-aggregate`，本文件不手抄包树
+2. 模块内容白名单 = Controller 契约接口 + CQE 三件套 + CO + 契约枚举（CC-7；目录槽位 `contract/{agg}/adapter/rest/controller + dto/{command,query,co} + enums` → blueprint §5，逐件清单 → blueprint §1 ①-④+㉓）。聚合建成走 skill `new-aggregate`，本文件不手抄包树
 
 ### Phase 3: server 模块
 

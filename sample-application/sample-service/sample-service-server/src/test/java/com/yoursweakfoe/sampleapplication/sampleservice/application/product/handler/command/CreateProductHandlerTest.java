@@ -9,6 +9,7 @@ import com.yoursweakfoe.common.ddd.domain.model.AggregateIds;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.assembler.ProductAssembler;
 import com.yoursweakfoe.sampleapplication.sampleservice.application.product.dto.ProductDTO;
 import com.yoursweakfoe.sampleapplication.sampleservice.contract.product.dto.command.CreateProductCommand;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.ProductFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
@@ -40,7 +41,7 @@ class CreateProductHandlerTest {
     @Test
     void handle_shouldCreateViaFactoryAndSave() {
         var dto = new ProductDTO();
-        dto.setId(UUID.randomUUID());
+        dto.setId(ProductId.of(UUID.randomUUID()));
         when(productAssembler.toDTO(any())).thenReturn(dto);
 
         CreateProductCommand command = new CreateProductCommand();
@@ -60,14 +61,14 @@ class CreateProductHandlerTest {
     void handle_createdProductId_isUuidV7() {
         // 框架铸造入口（装配公开 API，生产身份同源）生成真正的 v7 UUID 作为测试数据
         var dto = new ProductDTO();
-        dto.setId(AggregateIds.mint());
+        dto.setId(ProductId.of(AggregateIds.mint()));
         when(productAssembler.toDTO(any())).thenReturn(dto);
 
         var result = handler.handle(command());
 
-        // 应用侧 UUIDv7：id 在持久化前即存在，无需反查
+        // 应用侧 UUIDv7：id 在持久化前即存在，无需反查（币种承载，底值版本位照验）
         assertThat(result.getId()).isNotNull();
-        assertThat(result.getId().version()).isEqualTo(7);
+        assertThat(result.getId().value().version()).isEqualTo(7);
     }
 
     private CreateProductCommand command() {

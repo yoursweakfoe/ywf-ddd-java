@@ -61,10 +61,16 @@ import java.util.UUID;
  *       仍可抽中相同熵（真随机碰撞），其概率对 74 位熵域低于硬件宇宙射线位翻转，非工程关切。</li>
  * </ul>
  *
- * <p>用法（业务聚合工厂内）：{@code new Order(AggregateIds.mint(), ...)}——身份在持久化之前
+ * <p>用法（业务聚合工厂内）：{@code new Payment(PaymentId.of(AggregateIds.mint()), ...)}——身份在持久化之前
  * 即存在，内存关联与 API 返回均依赖这一前提（Factory 教义「创建即合法」的上游一环）。
  * 与同包 {@link Identifiable} 互为配对：那边约定「身份可取」（契约面），本类约定
  * 「身份从何而来」（策略面），聚合身份一枚硬币的两面共居 model 包。
+ *
+ * <p><strong>类型化身份姿势（指针，不复述法条）</strong>：{@link #mint()} 照旧出仓裸
+ * {@code UUID}——底层类型由各聚合自定，机制不绑定 UUID（案卷 2026-09-typed-identifier
+ * §裁决记录 Q4）；聚合以 <code>{Agg}Id.of(mint())</code> 把原生值装箱为专属币种
+ * （{@link com.yoursweakfoe.common.ddd.domain.id.Identifier} 词汇，法卷锚 BP-13），币种自铸造入口起流通至持久钩子
+ * {@code toPersistenceId} 一位拆箱为止。
  */
 public final class AggregateIds {
 
@@ -81,6 +87,9 @@ public final class AggregateIds {
 
     /**
      * 铸造一个新的聚合身份（UUIDv7，毫秒粒度时间有序、逐值独立，见类 javadoc 之性质与边界）。
+     *
+     * <p>返回裸值出仓：类型化聚合在其上再装箱为专属币种 <code>{Agg}Id.of(mint())</code>
+     * （{@link com.yoursweakfoe.common.ddd.domain.id.Identifier}，法卷锚 BP-13——装箱只 null 检查、不站岗）。
      *
      * @return 全局唯一、{@code version() == 7} 的 UUID，携带铸造时刻毫秒时间戳
      */

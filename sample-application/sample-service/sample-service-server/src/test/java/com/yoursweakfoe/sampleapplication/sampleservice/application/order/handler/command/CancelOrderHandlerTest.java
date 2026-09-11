@@ -45,7 +45,7 @@ class CancelOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
         // When
-        handler.handle(new CancelOrderCommand(order.getId(), "no longer needed"));
+        handler.handle(new CancelOrderCommand(order.getId().value(), "no longer needed"));
 
         // Then
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
@@ -63,7 +63,7 @@ class CancelOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
         // When
-        handler.handle(new CancelOrderCommand(order.getId(), "refund"));
+        handler.handle(new CancelOrderCommand(order.getId().value(), "refund"));
 
         // Then
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
@@ -88,7 +88,7 @@ class CancelOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
         // When & Then
-        assertThatThrownBy(() -> handler.handle(new CancelOrderCommand(order.getId(), "too late")))
+        assertThatThrownBy(() -> handler.handle(new CancelOrderCommand(order.getId().value(), "too late")))
                 .isInstanceOf(BusinessException.class);
     }
 }

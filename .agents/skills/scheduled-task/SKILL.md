@@ -26,7 +26,7 @@ description: 为已有聚合新增定时任务入口（adapter 层 Scheduler）�
    - 时间一律经注入 `Clock` 派生，禁裸调 `OffsetDateTime.now()`（SC-3，与审计填充同一时间源、可测试可冻结）
    - 典型编排：条件查询 → 聚合行为 × N（状态变迁与校验在聚合根内）→ 基类批量通道落库（SC-6：`updateDomainBatch` 为 `MybatisPersistence` 基行为、非 domain Repository 契约成员；超大批量自行分片 → batch-write 卷 BW-5）
    - 需联动其他聚合时 Handler / DomainService 同事务直调，调度入口无特权下游（SC-7 → §2.9，细则 cross-aggregate 卷）
-4. **domain**（如需新决策型读）：在 `{Agg}Repository` 子接口按业务命名新增方法签名（SC-6；读端口配对义务 → `knowledge/docs/how-to/new-aggregate.md` ⑭/⑰）
+4. **domain**（如需新决策型读）：在 `{Agg}Repository` 子接口按业务命名新增方法签名（SC-6；读端口配对义务 → `knowledge/docs/how-to/new-aggregate.md` ⑮/⑱）
 5. **infrastructure**：在 `{Agg}RepositoryImpl` 实现条件查询——具名 Mapper 方法 + 具名 XML 语句，禁 Wrapper 动态条件（禁令卷 §6）
 6. **启动类**：自建模式需确认 `@EnableScheduling` 已标注（§2.6；sample 已带则跳过）——平台化 handler 模式无需（SC-5）
 

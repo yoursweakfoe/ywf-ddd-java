@@ -19,6 +19,7 @@
 | WC-10 | 仓储义务：持久化必须走基类通道，即 saveDomain/updateDomain 系。基类在 save/update 前自动执行 `validate()`，并经 `AuditFieldFiller` 显式填充审计字段。仓储层不声明事务，事务边界在 Handler，与 WC-2 互指。跨聚合协调 = 同事务直调，规范见跨聚合卷 | `MybatisPersistence` javadoc「内置行为契约」「事务边界（上收至应用层）」两节 | C5 同区 |
 | WC-11 | 持久化文本形态：PO 是纯 `@Data` POJO，零 ORM 注解。表名、乐观锁版本条件、逻辑删除过滤全部写在 XML SQL 文本里、逐条可见；禁止任何运行时拦截器参与 | `MybatisPersistence` javadoc + 本卷 §2.10 形状 | 评审项 |
 | WC-12 | 写失败语义三分，绝不静默失败。UPDATE 影响 0 行且版本条件未命中、实体仍在 → `OptimisticLockConflictException`：409，可重试，属正常并发流。UPDATE 影响 0 行且目标已被并发删除 → 普通 `IllegalStateException`：409，业务竞态，重试无意义，且不应被重试器吞掉。INSERT/DELETE 影响 0 行 → `SilentWriteLossException`，类型在 `com.yoursweakfoe.common.exception.type`：写丢失级不可能状态，500 + ERROR 告警通道，勿重试，需人工介入 | `MybatisPersistence` javadoc「内置行为契约」三分通道条；异常→HTTP 映射的唯一完整表在 `GlobalRestExceptionHandler` javadoc，docs 侧 canonical 见 [common-exception.md](../../../../docs/reference/api/common-exception.md) | C5 同区 |
+| WC-13 | 写 Handler（含批量与 Scheduler 入口）SHALL 在调用任何 domain 接口前，把 CQE 携入的全部裸 ID 经 `{Agg}Id.of(...)` 一点定型；禁止任何隐式自动转换（全局 Converter、AOP、Jackson 直灌 domain）代劳此步。场景「一点定型」：GIVEN `PayOrderCommand` 携 `UUID orderId` ｜ WHEN Handler 体 ｜ THEN 恰见一行 `OrderId.of(command.getOrderId())`，其后链路全为 `OrderId`。 | `PayOrderHandler.java:34` 恰一行 `OrderId.of(command.getOrderId())`、`PlaceOrderHandler.java:68/91` 批量行项定型；全局 Jackson/Converter 零增设=contract 与 config diff-zero | — |
 
 ## §2 规范形状（统一用法唯一样本）
 
@@ -147,7 +148,8 @@ public class ConfirmReservationHandler implements CommandHandler<ConfirmReservat
     @Override
     @Transactional(rollbackFor = Exception.class)            // WC-2：事务边界在 Handler（仓储不标，WC-10）
     public ReservationDTO handle(ConfirmReservationCommand command) {   // WC-4：Handler 返回 DTO
-        Reservation reservation = reservationRepository.findById(command.getReservationId())
+        ReservationId reservationId = ReservationId.of(command.getReservationId());   // WC-13：入口一点定型，其后链路全为终类型
+        Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException("reservation:err.notFound"));   // WC-2：load（i18n 位点见 WC-6）
         reservation.confirm();                                        // WC-3：业务规则在聚合根内，Handler 零分支
         reservationRepository.update(reservation);                    // WC-10：基类通道（自动 validate + 审计填充）
@@ -165,7 +167,7 @@ public class ReservationAssembler implements BasicAssembler<Reservation, Reserva
     @Override
     public ReservationDTO toDTO(Reservation reservation) {
         ReservationDTO dto = new ReservationDTO();
-        dto.setId(reservation.getId().toString());
+        dto.setId(reservation.getId());                                 // 写 DTO 携币种（WC-13 流通域；实形见真实例 OrderAssembler）
         dto.setStatus(reservation.getStatus().name());                // WC-8：DTO 恒 String，枚举收口在呈现层
         dto.setItems(reservation.getItems().stream()
                 .map(item -> new ReservationDTO.ReservationItemDTO(
@@ -182,7 +184,7 @@ public class ReservationAssembler implements BasicAssembler<Reservation, Reserva
 
     // BasicAssembler 是单向契约：仅声明 toDTO，List/Set 批量方法由接口 default 委托。
     // DTO 只是只读出口视图——聚合构造入口恒为 Factory / reconstitute() 两扇门，
-    // 接口不声明 DTO → Domain 方法（最小契约见 new-aggregate.md ⑧）。
+    // 接口不声明 DTO → Domain 方法（最小契约见 new-aggregate.md ⑨）。
 }
 ```
 
@@ -195,7 +197,7 @@ public class ReservationPresenter implements BasicPresenter<ReservationDTO, Rese
     @Override
     public ReservationCO present(ReservationDTO dto) {
         ReservationCO co = new ReservationCO();
-        co.setId(dto.getId());
+        co.setId(dto.getId().value().toString());                     // BP-6：String 只在 wire 出口（呈现位拆箱定型）
         // 内部 DTO 恒为 String（Assembler 走 domain.name()）；String → 契约枚举在呈现层收口，
         // 值域奇偶由守卫测试锁死、脏值当场 fail-fast，映射不外溢
         co.setStatus(ReservationStatus.valueOf(dto.getStatus()));      // WC-8：呈现层收口，脏值 fail-fast
@@ -213,9 +215,9 @@ public class ReservationPresenter implements BasicPresenter<ReservationDTO, Rese
 ### 2.8 Domain — 聚合根 + 值对象
 
 ```java
-public class Reservation extends AggregateRoot<UUID> {                 // WC-1：零框架运行时依赖（纯 Java + common-ddd）
+public class Reservation extends AggregateRoot<ReservationId> {         // WC-1：零框架运行时依赖（纯 Java + common-ddd）；身份槽实参 = 终类型（蓝图 BP-13）
 
-    private UUID id;
+    private ReservationId id;
     private ReservationStatus status;
     private List<ReservationItem> items;
     private BigDecimal totalAmount;
@@ -242,7 +244,7 @@ public class Reservation extends AggregateRoot<UUID> {                 // WC-1�
 }
 
 // 值对象：首选 record，天然不可变
-public record ReservationItem(UUID serviceId, int quantity, BigDecimal unitPrice) implements ValueObject {
+public record ReservationItem(UUID serviceId, int quantity, BigDecimal unitPrice) implements ValueObject {   // BP-14：跨聚合引用槽准目标币种（教例未铸 ServiceId，实形见真实例订单项商品槽）
 
     public ReservationItem {
         if (serviceId == null) throw new BusinessException("reservation:err.serviceIdRequired");
@@ -258,14 +260,14 @@ public record ReservationItem(UUID serviceId, int quantity, BigDecimal unitPrice
 ### 2.9 Domain — Repository 接口
 
 ```java
-public interface ReservationRepository extends Repository<Reservation, UUID> {
+public interface ReservationRepository extends Repository<Reservation, ReservationId> {   // BP-13：端口 ID 槽与根槽一致
     // 继承：findById / save / update / exists / deleteById
 }
 ```
 
 ### 2.10 Infrastructure — PO / Converter / Mapper + XML / RepositoryImpl
 
-PO 是纯 `@Data` POJO，零 ORM 注解（WC-11）。表名、乐观锁版本条件、逻辑删除过滤全部在 XML 的 SQL 文本里。语句模板见 [new-aggregate.md](../../../../docs/how-to/new-aggregate.md) ⑲：
+PO 是纯 `@Data` POJO，零 ORM 注解（WC-11）。表名、乐观锁版本条件、逻辑删除过滤全部在 XML 的 SQL 文本里。语句模板见 [new-aggregate.md](../../../../docs/how-to/new-aggregate.md) ⑳：
 
 ```java
 @Data
@@ -293,7 +295,7 @@ public class ReservationConverter implements BasicConverter<Reservation, Reserva
     @Override
     public Reservation toDomain(ReservationPO po) {
         return Reservation.reconstitute(
-                po.getId(), ReservationStatus.valueOf(po.getStatus()),
+                ReservationId.of(po.getId()), ReservationStatus.valueOf(po.getStatus()),
                 deserializeItems(po.getItems()), po.getTotalAmount(),
                 po.getCustomerId(), po.getConfirmationCode(), po.getCancelReason(),
                 po.getCreatedAt(), po.getUpdatedAt(), po.getVersion());
@@ -302,7 +304,7 @@ public class ReservationConverter implements BasicConverter<Reservation, Reserva
     @Override
     public ReservationPO toPO(Reservation domain) {
         ReservationPO po = new ReservationPO();
-        po.setId(domain.getId());
+        po.setId(domain.getId().value());
         po.setStatus(domain.getStatus().name());
         po.setItems(serializeItems(domain.getItems()));
         po.setTotalAmount(domain.getTotalAmount());
@@ -318,7 +320,7 @@ public class ReservationConverter implements BasicConverter<Reservation, Reserva
 
 @Component
 public class ReservationRepositoryImpl
-        extends MybatisPersistence<ReservationMapper, ReservationPO, Reservation, UUID>   // WC-10：基类通道
+        extends MybatisPersistence<ReservationMapper, ReservationPO, Reservation, ReservationId>   // WC-10：基类通道
         implements ReservationRepository {                       // WC-1：domain 定义接口、infra 实现（依赖倒置）
 
     private final ReservationConverter converter;
@@ -333,12 +335,13 @@ public class ReservationRepositoryImpl
     }
 
     @Override protected BasicConverter<Reservation, ReservationPO> getConverter() { return converter; }
-    @Override protected Serializable toPersistenceId(UUID id) { return id.toString(); }
-    @Override public Optional<Reservation> findById(UUID id) { return findDomainById(id); }
+    /** 领域 ID（ReservationId）→ PO 主键原生值（UUID）：唯一转换位，每仓储恰一处 */
+    @Override protected Serializable toPersistenceId(ReservationId id) { return id.value(); }
+    @Override public Optional<Reservation> findById(ReservationId id) { return findDomainById(id); }
     @Override public void save(Reservation domain) { saveDomain(domain); }       // WC-10：自动 validate + 审计填充
     @Override public void update(Reservation domain) { updateDomain(domain); }   // WC-10/WC-12：0 行走语义三分
-    @Override public boolean exists(UUID id) { return existsDomainById(id); }
-    @Override public void deleteById(UUID id) { removeDomainById(id); }
+    @Override public boolean exists(ReservationId id) { return existsDomainById(id); }
+    @Override public void deleteById(ReservationId id) { removeDomainById(id); }
 }
 ```
 
@@ -368,6 +371,7 @@ public class ReservationRepositoryImpl
 | application | `assembler/ReservationAssembler.java` | Domain → DTO |
 | application | `presenter/ReservationPresenter.java` | DTO → CO |
 | application | `dto/ReservationDTO.java` | 内部视图 |
+| domain | `id/ReservationId.java` | 聚合身份终类型（record implements `Identifier`，BP-13） |
 | domain | `model/Reservation.java` | 聚合根，承载业务规则 |
 | domain | `model/ReservationItem.java` | 值对象 |
 | domain | `model/ReservationStatus.java` | 状态枚举（domain） |
@@ -387,4 +391,5 @@ public class ReservationRepositoryImpl
 | WC-7 输入上界改型 | ✅ | 真实例：db-migration 0001 变更集列宽对账；PlaceOrderCommand / CancelOrderCommand / ShipOrderForm 已按此改型 |
 | WC-8 契约枚举奇偶 | ✅ | 真实例：sample `ContractEnumParityTest` 守卫在册；CO 内部字段不暴露 <!-- 待 ../../../changes/ 补全 --> |
 | WC-9~WC-12 | ✅ | 入口分工、仓储义务、持久化文本形态、写失败语义三分四条均已生效：本卷 §2 形状在册；框架侧规范文本在 `MybatisPersistence` 与 `GlobalRestExceptionHandler` javadoc |
+| WC-13 | ✅ | 入口一点定型条款随案卷 2026-09-typed-identifier 折叠生效。真实例：`PayOrderHandler.java:34` 恰一行 `OrderId.of(...)`、`PlaceOrderHandler.java:68/91` 批量行项定型；执法锚 = 蓝图 BP-13（R15 + 四锁探针），本卷 §2.5 形状已随动 |
 | Reservation 教例全链走查模板 | ⛔ 虚构教例，sample 未落地 | §2 即落地模板 + §2.12 文件清单；设计判断见 docs 设计卡 |

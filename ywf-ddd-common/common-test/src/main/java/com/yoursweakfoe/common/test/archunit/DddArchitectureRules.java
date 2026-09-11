@@ -12,12 +12,23 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.lang.conditions.ArchConditions;
 import com.tngtech.archunit.library.Architectures;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * DDD 分层架构守护规则集（ArchUnit 预定义规则工厂）。
@@ -28,9 +39,12 @@ import com.tngtech.archunit.library.Architectures;
  * canonical 住 {@code knowledge/docs/explanation/architecture-rules.md}（解读架）。
  * 论证勿回流本文件，亦勿在此剥空挂载契约。
  *
- * <p><strong>编号纪律（TR-1）</strong>：规则编号（R1、R1b、R4……）是教义锚点，法卷、
- * 字典镜像（{@code docs/reference/api/common-test.md} §2）与各文档以编号互指——
- * 永不重排、永不复用，规则删除时编号作废（作废账见解读篇「缺口账」节）。
+ * <p><strong>编号纪律（TR-1，2026-09 顶位裁定后现文）</strong>：规则编号（R1、R1b、R4……）是
+ * 教义锚点，法卷、字典镜像（{@code docs/reference/api/common-test.md} §2）与各文档以编号互指——
+ * 编号永不重排；规则删除时编号作废并留一行作废记录（作废账见解读篇「缺口账」节），
+ * <strong>废号准后续规则顶位</strong>（顶位＝新语义接管，旧作废账原位保留）——编号是教义锚点
+ * 不是历史文物（裁定 Q8／案卷 2026-09-typed-identifier；R15 现行语义＝聚合根身份终类型化，
+ * 旧 R15（baomidou 全仓禁令）作废账保留）。
  *
  * <h3>模块地图（常量按主题分块，代码内以横幅注释分隔）</h3>
  * <ul>
@@ -38,7 +52,7 @@ import com.tngtech.archunit.library.Architectures;
  *   <li><strong>块2 领域纯净</strong> —— domain 内部不许出现什么：R4 / R6 / R12</li>
  *   <li><strong>块3 装配位置契约</strong> —— 实现类与读写边界放哪：R5a / R5b / R11 / R13</li>
  *   <li><strong>块4 注解与标记契约</strong> —— 类型锚点（标记接口）与命名对偶双向锁：
- *       R8a / R8b / R10a / R10b / R14a / R14b</li>
+ *       R8a / R8b / R10a / R10b / R14a / R14b / R15</li>
  *   <li><strong>块5 契约模块</strong> —— contract 独立性：C1</li>
  * </ul>
  *
@@ -53,8 +67,10 @@ import com.tngtech.archunit.library.Architectures;
  *       包结构不被搬走。</li>
  *   <li><strong>负证明</strong> {@code DomainPurityRuleProofTest}：证明 R4 会失败而非恒真
  *       （三锁）；{@code TransactionBoundaryRuleProofTest}：证明 R11 会失败而非恒真（四锁：
- *       裸标／漏标必咬、显式标注必放、非 Handler 不咬）。夹具居 {@code FrameworkLeakProbe} 等
- *       archproof 包，在两扫描根之外。</li>
+ *       裸标／漏标必咬、显式标注必放、非 Handler 不咬）；{@code IdentifierRuleProofTest}：
+ *       证明 R15 会失败而非恒真（四锁：裸类型根必咬、类型化根必放、子实体 PK 与读端口
+ *       豁免位不误咬、端口 ID 槽失守必咬）。夹具居 {@code FrameworkLeakProbe}、
+ *       {@code IdentifierProbes} 等 archproof 包，在两扫描根之外。</li>
  * </ul>
  *
  * <h3>安全必读（一行索引，详情全在解读篇——红线图非全图）</h3>
@@ -424,12 +440,14 @@ public final class DddArchitectureRules {
                     .as("R13 QueryHandler 禁止依赖任何 Repository 类型（CQRS 读侧只走 QueryRepository 读端口）；法卷锚 RC-2/BP-11");
 
     // ═══════════════════════════════════════════════════════════════════════
-    // 块4 · 标记与命名契约 —— 类型锚点与命名后缀互为对偶（R8 / R10 / R14）
+    // 块4 · 标记与命名契约 —— 类型锚点与命名后缀互为对偶（R8 / R10 / R14 / R15）
     //
     // 共同设计：框架以「空标记接口」定型角色（RestAdapter / ApplicationDTO /
     // ScheduledAdapter）。每对规则双向锁死：正向——实现标记 ⇒ 必须在某层包段内；
     // 反向——包段/命名后缀 ⇒ 必须实现标记。识别一律用类型锚点而非名字猜测，
-    // 名字规则只负责「漂移即失败」，不负责「猜测角色」。R13 是同一哲学在禁则方向的延伸。
+    // 名字规则只负责「漂移即失败」，不负责「猜测角色」。R13 是同一哲学在禁则方向的延伸；
+    // R15 是其向身份维的延伸——身份槽以 Identifier 词汇定型（泛型实参，ArchUnit 不建模、
+    // 走反射解析）。
     // ═══════════════════════════════════════════════════════════════════════
 
     /**
@@ -546,6 +564,259 @@ public final class DddArchitectureRules {
                     .implement("com.yoursweakfoe.common.ddd.adapter.task.scheduler.ScheduledAdapter")
                     .allowEmptyShould(true)
                     .as("R14b 业务 ..adapter..scheduler.. 包下的类必须实现 ScheduledAdapter 标记；法卷锚 SC-1");
+
+    /** R15 主语锚点①：聚合根基类 FQN（框架基类自身抽象，天然出主语集）。 */
+    private static final String AGGREGATE_ROOT_TYPE =
+            "com.yoursweakfoe.common.ddd.domain.model.AggregateRoot";
+
+    /** R15 主语锚点②：写侧仓储端口标记接口 FQN（标记自身以全名排除——端口臂主语是业务端口）。 */
+    private static final String REPOSITORY_TYPE =
+            "com.yoursweakfoe.common.ddd.domain.repository.Repository";
+
+    /** R15 宾语锚点：身份词汇接口 FQN（common-test 不编译依赖 common-ddd，判定全程按名）。 */
+    private static final String IDENTIFIER_TYPE =
+            "com.yoursweakfoe.common.ddd.domain.id.Identifier";
+
+    /**
+     * R15 主语：{@code AggregateRoot} 的<strong>具体</strong>子类 ∪ {@code Repository} 的
+     * 端口接口（标记自身除外）。{@code Entity} 子实体 PK、{@code QueryRepository} 读端口
+     * 均不入主语——那是 BP-15 豁免面的锚点形状（读端口不罩 Repository 标记，天然在外）。
+     */
+    private static final DescribedPredicate<JavaClass> IDENTITY_SLOT_SUBJECTS =
+            new DescribedPredicate<JavaClass>("AggregateRoot 具体子类 或 Repository 端口接口") {
+                @Override
+                public boolean test(JavaClass javaClass) {
+                    if (javaClass.isInterface()) {
+                        return javaClass.isAssignableTo(REPOSITORY_TYPE)
+                                && !REPOSITORY_TYPE.equals(javaClass.getFullName());
+                    }
+                    return javaClass.isAssignableTo(AGGREGATE_ROOT_TYPE)
+                            && !javaClass.getModifiers().contains(JavaModifier.ABSTRACT);
+                }
+            };
+
+    /**
+     * R15 判定：ArchUnit 不建模泛型实参（字节码只存擦除后签名），故本条件走标准反射——
+     * 按二进制名加载类、解析 {@code getGenericSuperclass() / getGenericInterfaces()} 上的
+     * 泛型实参（含中间抽象父的类型变量代入）。类加载失败与裸类型继承一律报违例，
+     * 拒绝静默放行（案卷 P-5「新谓词不过负证明即空文」同一纪律）。
+     */
+    private static final ArchCondition<JavaClass> ID_SLOTS_ARE_TYPED =
+            new ArchCondition<>("聚合根身份槽实现 Identifier 且端口 ID 槽与根槽一致") {
+                @Override
+                public void check(JavaClass javaClass, ConditionEvents events) {
+                    String violation = inspectIdentitySlots(javaClass.getName());
+                    if (violation != null) {
+                        events.add(SimpleConditionEvent.violated(
+                                javaClass, javaClass.getFullName() + " —— " + violation));
+                    }
+                }
+            };
+
+    /**
+     * R15 —— 聚合根身份终类型化（顶位规则）：凡 {@code AggregateRoot} 具体子类，其
+     * {@code AggregateRoot<ID>} 泛型实参必须实现 {@code Identifier}；{@code Repository} 端口
+     * ID 槽同规且与根槽一致。
+     *
+     * <p><strong>顶位注记（裁定 Q8／案卷 2026-09-typed-identifier）</strong>：本 R15 顶位自
+     * 旧 R15（com.baomidou 全仓禁令，规则本体已删）——废号顶位＝新语义接管，旧作废账原位
+     * 保留于解读篇「缺口账」节，编号纪律见类头 TR-1。
+     *
+     * <p><strong>守护</strong>：聚合身份必须住专属币种 <code>{Agg}Id implements
+     * Identifier&lt;V&gt;</code>（法卷锚 BP-13）——全域裸用 UUID 时各聚合身份在类型系统里
+     * 同形，他聚合 ID 混入本聚合调用位编译器无从察觉、错误迟到运行时才暴露；本规则把
+     * 「混放即编译失败」的词汇层防线经 R15 锁死在架构面（跨聚合引用槽同法，法卷锚 BP-14）。
+     * <strong>怎么判</strong>：主语＝{@link #IDENTITY_SLOT_SUBJECTS}；判定＝{@link #ID_SLOTS_ARE_TYPED}
+     * （反射解析泛型实参——ArchUnit 谓词模型看不见 generics，这是本集唯一走反射臂的规则，
+     * 挂载最小契约不破、classfile 主语不破）。一致臂实弹勘验（施工时点）：
+     * {@code Repository<Domain extends Identifiable<ID>, ID>} 的 F-边界已令端口-根槽混放在
+     * javac 即拒（含裸类型根变体，实证于案卷取证件）——一致臂为边界放宽/字节码手改场景的
+     * 反射备胎，无编译期夹具可锁，据实登记于「空转或局限」。<strong>挂载</strong>：仅业务扫描
+     * r15（真实聚合恒非空）；框架扫描<strong>不挂</strong>——common-ddd 无具体聚合根，挂载＝
+     * 结构性空转（禁则见 {@code DddArchitectureTest} 类头挂载原则）。
+     * <strong>空转或局限</strong>：{@code allowEmptyShould} 随消费方零聚合时空转（全局
+     * {@code failOnEmptyShould=false} 同档）；主语按名锚定框架 FQN——业务在扫描根外自建
+     * 骨架不在射程（全集共同盲区）；中间抽象父的类型变量代入止于泛型实参直取，
+     * 嵌套参数化（如 {@code Base<Map<String,T>>}）不深入解析（登记账）。<strong>负证明</strong>：
+     * {@code IdentifierRuleProofTest}（四锁：裸类型根必咬／类型化根必放／豁免位不误咬／
+     * 端口 ID 槽失守必咬）。
+     */
+    public static final ArchRule AGGREGATE_ROOTS_USE_TYPED_IDENTIFIERS =
+            classes()
+                    .that(IDENTITY_SLOT_SUBJECTS)
+                    .should(ID_SLOTS_ARE_TYPED)
+                    .allowEmptyShould(true)
+                    .as("R15 聚合根 ID 泛型实参必须实现 Identifier 且 Repository 端口 ID 槽与根槽一致；法卷锚 BP-13/BP-14");
+
+    /** 反射解析单类身份槽；返回 {@code null} 即合格，非 {@code null} 为违例描述。 */
+    private static String inspectIdentitySlots(String binaryName) {
+        Class<?> clazz;
+        try {
+            clazz = Class.forName(binaryName, false, DddArchitectureRules.class.getClassLoader());
+        } catch (Throwable loadFailure) {
+            return "类无法加载、身份槽无从解析（" + loadFailure + "）——拒绝静默放行";
+        }
+        return clazz.isInterface() ? inspectRepositoryPort(clazz) : inspectAggregateRoot(clazz);
+    }
+
+    /** 根臂：沿继承链上溯取 {@code AggregateRoot<…>} 的 ID 实参，须实现 {@code Identifier}。 */
+    private static String inspectAggregateRoot(Class<?> root) {
+        Type idSlot = resolveRootIdSlot(root);
+        if (idSlot == null) {
+            return "裸类型继承 AggregateRoot（未声明 ID 泛型实参，身份槽无从判定）";
+        }
+        return requireIdentifier(idSlot, "聚合根身份槽");
+    }
+
+    /**
+     * 端口臂：ID 槽（第 2 泛型实参）须实现 {@code Identifier}；端口-根槽一致为 F-边界备胎臂
+     * （混放形态 javac 即拒，见规则 javadoc「怎么判」勘验注）。
+     */
+    private static String inspectRepositoryPort(Class<?> port) {
+        ParameterizedType declaration = findRepositoryParameterization(port);
+        if (declaration == null) {
+            return "裸类型继承 Repository（端口未声明 <Domain, ID> 泛型实参，ID 槽失守）";
+        }
+        Type domainSlot = declaration.getActualTypeArguments()[0];
+        Type idSlot = declaration.getActualTypeArguments()[1];
+        if (idSlot instanceof TypeVariable<?> variable) {
+            return "端口 ID 槽为未代入类型变量 " + variable.getName() + "（非终类型，币种无从锚定）";
+        }
+        String violation = requireIdentifier(idSlot, "Repository 端口 ID 槽");
+        if (violation != null) {
+            return violation;
+        }
+        Class<?> domain = erase(domainSlot);
+        if (domain != null && isAggregateRootSubtype(domain)) {
+            Type rootSlot = resolveRootIdSlot(domain);
+            if (rootSlot != null && !rootSlot.getTypeName().equals(idSlot.getTypeName())) {
+                return "端口 ID 槽 " + idSlot.getTypeName() + " 与根身份槽 " + rootSlot.getTypeName() + " 不一致";
+            }
+        }
+        return null;
+    }
+
+    /** 自具体根沿 {@code getGenericSuperclass()} 上溯至 {@code AggregateRoot<…>} 取 ID 实参（类型变量逐层代入）；裸继承返回 {@code null}。 */
+    private static Type resolveRootIdSlot(Class<?> start) {
+        Map<String, Type> bindings = new HashMap<>();
+        Class<?> current = start;
+        while (current != null && !Object.class.equals(current)) {
+            Type superType = current.getGenericSuperclass();
+            if (superType instanceof ParameterizedType parameterized) {
+                Class<?> raw = (Class<?>) parameterized.getRawType();
+                if (AGGREGATE_ROOT_TYPE.equals(raw.getName())) {
+                    return substitute(parameterized.getActualTypeArguments()[0], bindings);
+                }
+                TypeVariable<?>[] variables = raw.getTypeParameters();
+                Type[] arguments = parameterized.getActualTypeArguments();
+                for (int i = 0; i < arguments.length; i++) {
+                    bindings.put(variables[i].getName(), substitute(arguments[i], bindings));
+                }
+                current = raw;
+            } else if (superType instanceof Class<?> superclass) {
+                if (AGGREGATE_ROOT_TYPE.equals(superclass.getName())) {
+                    return null;
+                }
+                current = superclass;
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /** 在端口接口图中广度优先寻 {@code Repository<…>} 的参数化声明；仅以裸类型触及时返回 {@code null}。 */
+    private static ParameterizedType findRepositoryParameterization(Class<?> port) {
+        Deque<Class<?>> queue = new ArrayDeque<>();
+        Set<Class<?>> visited = new HashSet<>();
+        queue.add(port);
+        while (!queue.isEmpty()) {
+            Class<?> current = queue.poll();
+            if (!visited.add(current)) {
+                continue;
+            }
+            for (Type iface : current.getGenericInterfaces()) {
+                if (iface instanceof ParameterizedType parameterized) {
+                    Class<?> raw = (Class<?>) parameterized.getRawType();
+                    if (REPOSITORY_TYPE.equals(raw.getName())) {
+                        return parameterized;
+                    }
+                    queue.add(raw);
+                } else if (iface instanceof Class<?> rawInterface
+                        && !REPOSITORY_TYPE.equals(rawInterface.getName())) {
+                    queue.add(rawInterface);
+                }
+            }
+        }
+        return null;
+    }
+
+    /** 类型变量代入（bindings 逐层累积；未绑定即原样返回，由调用侧判非具体形态）。 */
+    private static Type substitute(Type type, Map<String, Type> bindings) {
+        Type current = type;
+        int guard = 0;
+        while (current instanceof TypeVariable<?> variable && guard++ < 16) {
+            Type mapped = bindings.get(variable.getName());
+            if (mapped == null) {
+                return current;
+            }
+            current = mapped;
+        }
+        return current;
+    }
+
+    /** ID 槽合格判据：擦除后类型须实现 {@code Identifier}（按名传递闭包，不依赖 common-ddd 在编译类路径）。 */
+    private static String requireIdentifier(Type idSlot, String slotLabel) {
+        Class<?> erasure = erase(idSlot);
+        if (erasure == null) {
+            return slotLabel + "实参 " + idSlot.getTypeName() + " 非可解析具体类型，无法判定币种";
+        }
+        if (!implementsIdentifier(erasure)) {
+            return slotLabel + "实参 " + erasure.getName() + " 未实现 " + IDENTIFIER_TYPE
+                    + "（聚合身份须为终类型 {Agg}Id，法卷锚 BP-13）";
+        }
+        return null;
+    }
+
+    private static Class<?> erase(Type type) {
+        if (type instanceof Class<?> clazz) {
+            return clazz;
+        }
+        if (type instanceof ParameterizedType parameterized
+                && parameterized.getRawType() instanceof Class<?> raw) {
+            return raw;
+        }
+        return null;
+    }
+
+    private static boolean isAggregateRootSubtype(Class<?> candidate) {
+        for (Class<?> c = candidate; c != null; c = c.getSuperclass()) {
+            if (AGGREGATE_ROOT_TYPE.equals(c.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean implementsIdentifier(Class<?> start) {
+        Deque<Class<?>> stack = new ArrayDeque<>();
+        Set<Class<?>> visited = new HashSet<>();
+        stack.add(start);
+        while (!stack.isEmpty()) {
+            Class<?> current = stack.pop();
+            if (!visited.add(current)) {
+                continue;
+            }
+            if (IDENTIFIER_TYPE.equals(current.getName())) {
+                return true;
+            }
+            stack.addAll(Arrays.asList(current.getInterfaces()));
+            if (current.getSuperclass() != null) {
+                stack.add(current.getSuperclass());
+            }
+        }
+        return false;
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // 块5 · 契约模块 —— contract 的对外纯洁性（C1）

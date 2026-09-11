@@ -2,14 +2,17 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
 
 import com.yoursweakfoe.common.ddd.domain.model.ValueObject;
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import java.math.BigDecimal;
-import java.util.UUID;
 
 /**
  * 订单项值对象 —— 描述订单中一条商品明细。
+ *
+ * <p>商品引用槽使用目标聚合币种 {@link ProductId}（跨聚合 import 仅准入 id 包，
+ * 法卷锚 BP-14／案卷 2026-09-typed-identifier）。
  */
 public record OrderItem(
-        UUID productId,
+        ProductId productId,
         int quantity,
         BigDecimal unitPrice
 ) implements ValueObject {

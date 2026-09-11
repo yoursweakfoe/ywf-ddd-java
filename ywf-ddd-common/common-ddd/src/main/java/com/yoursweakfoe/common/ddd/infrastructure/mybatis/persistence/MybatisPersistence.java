@@ -60,6 +60,9 @@ import org.springframework.beans.factory.ObjectProvider;
  *
  * <p>当领域 ID 与 PO 主键类型不一致时（如领域用 {@code UUID}、PO 用 {@code String} 存其文本），
  * 子类覆写 {@link #toPersistenceId(Serializable)} 完成映射；类型一致时无需覆写（默认透传）。
+ * 类型化身份姿势（<code>{Agg}Id</code> 币种，法卷锚 BP-13／案卷 2026-09-typed-identifier）下，
+ * 本钩子即领域 ID → 持久化主键的<strong>唯一转换位</strong>——每仓储恰一处覆写、一行拆箱，
+ * PO / Mapper / XML / schema 对币种零感知，详见钩子 javadoc。
  *
  * <h3>读侧方法约定</h3>
  * <p>读侧（CQRS 查询）<strong>不经过本类</strong>：读路径绕过 domain，由独立的读端口
@@ -140,6 +143,12 @@ public abstract class MybatisPersistence<
     /**
      * 领域 ID → PO 主键的映射钩子。
      *
+     * <p><strong>类型化身份姿势下的唯一转换位</strong>（法卷锚 BP-13／案卷
+     * 2026-09-typed-identifier）：聚合以 <code>{Agg}Id</code> 币种住身份槽后，领域 ID →
+     * 持久化主键的转换<strong>只</strong>发生在本钩子——每仓储恰一处覆写、一行
+     * {@code id.value()} 拆箱；PO、Mapper 接口、XML 语句、DB schema 对币种零感知，
+     * {@link DddMapper} javadoc「业务铸造 ID 的聚合显式插入 id」句在转换后仍逐字为真。
+     *
      * <p>默认透传（领域 ID 与 PO 主键同类型）。当二者类型不一致时（如领域用
      * {@code UUID}、PO 用 {@code String}），子类覆写本方法完成转换：
      *
@@ -147,6 +156,15 @@ public abstract class MybatisPersistence<
      * @Override
      * protected Serializable toPersistenceId(UUID id) {
      *     return id.toString();
+     * }
+     * }</pre>
+     *
+     * <p>币种姿势（教例 Payment 家族，本树教学中立）：
+     *
+     * <pre>{@code
+     * @Override
+     * protected Serializable toPersistenceId(PaymentId id) {
+     *     return id.value(); // 一行拆箱，币种止步于持久接缝
      * }
      * }</pre>
      *

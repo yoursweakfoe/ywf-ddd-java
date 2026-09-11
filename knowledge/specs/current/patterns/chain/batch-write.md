@@ -51,7 +51,7 @@ public class BatchConfirmPaymentHandler implements CommandHandler<BatchConfirmPa
     @Override
     @Transactional(rollbackFor = Exception.class)          // BW-3：原子性在此层，框架通道不标
     public List<PaymentDTO> handle(BatchConfirmPaymentCommand command) {
-        List<Payment> payments = command.getPaymentIds().stream()   // BW-2：ID 已是 UUID，直接传
+        List<Payment> payments = command.getPaymentIds().stream()   // BW-2：契约输入 List<UUID> 维持（BP-6 不变），入口 of() 定型后进 Handler 链路
                 .map(id -> paymentRepository.findById(id)
                         .orElseThrow(() -> new BusinessException("payment:err.notFound")))
                 .toList();

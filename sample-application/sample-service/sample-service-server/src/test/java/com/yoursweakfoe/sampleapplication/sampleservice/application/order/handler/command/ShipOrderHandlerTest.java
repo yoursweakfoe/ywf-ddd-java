@@ -39,7 +39,7 @@ class ShipOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
-        OrderDTO result = handler.handle(new ShipOrderCommand(order.getId(), "TRACK-001"));
+        OrderDTO result = handler.handle(new ShipOrderCommand(order.getId().value(), "TRACK-001"));
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.SHIPPED);
         assertThat(order.getTrackingNumber()).isEqualTo("TRACK-001");
@@ -52,7 +52,7 @@ class ShipOrderHandlerTest {
         Order order = TestOrders.rebuilt(OrderStatus.PENDING);
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> handler.handle(new ShipOrderCommand(order.getId(), "TRACK")))
+        assertThatThrownBy(() -> handler.handle(new ShipOrderCommand(order.getId().value(), "TRACK")))
                 .isInstanceOf(BusinessException.class);
     }
 

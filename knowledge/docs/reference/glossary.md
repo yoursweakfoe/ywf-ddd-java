@@ -25,6 +25,8 @@
 | Gateway | Infrastructure 层对 Portal 的技术实现类：发起真实外部调用，并把外部模型翻译成领域语言 | → 见 [external-gateway 法卷 GW-2](../../specs/current/patterns/boundary/external-gateway.md)、[infrastructure.md](../explanation/infrastructure.md) |
 | QueryRepository（读端口） | application 层读端口标记接口。读侧绕过聚合、直查存储投影，只准经这个端口，是 R13 的落点 | → 见 [read-chain 法卷 RC-1](../../specs/current/patterns/chain/read-chain.md) |
 | reconstitute | 从持久化数据重建聚合根的静态工厂方法。只被 `Converter.toDomain()` 调用；重建不是新建，不走业务构造器 | → 见 [common-ddd.md §2 对象转换](api/common-ddd.md)、[blueprint 法卷 BP-8](../../specs/current/patterns/building-block/aggregate-blueprint.md) |
+| `Identifier<V>` | common-ddd 发行的纯 Java 身份词汇接口（唯一方法 `value()`）：聚合身份终类型的类型学锚点；无基类、无解析器、零运行期机制 | → 见 [common-ddd.md §2 聚合身份终类型](api/common-ddd.md)；→ 案卷 2026-09-typed-identifier §裁决记录（决策快照） |
+| {Agg}Id（聚合身份终类型） | 每聚合专属 record 终类型，implements `Identifier`：他聚合 ID 传入调用位 = 编译失败；只装箱不站岗（出生合法性归铸造入口）；流通域 = 写侧，契约/读侧/PO 维持裸值承载 | → 见 [common-ddd.md §2 聚合身份终类型](api/common-ddd.md)、[blueprint 法卷 BP-13~16](../../specs/current/patterns/building-block/aggregate-blueprint.md)、[common-test.md §2 R15](api/common-test.md)；论证 [typed-identifier.md](../explanation/typed-identifier.md)；→ 案卷 2026-09-typed-identifier §裁决记录（决策快照） |
 | ACL（Anti-Corruption Layer） | 防腐层：在 Gateway 内部把外部 SDK 的模型翻译成自己的领域语言，防止外部形状渗入领域模型 | → 见 [external-gateway 法卷](../../specs/current/patterns/boundary/external-gateway.md)、[infrastructure.md](../explanation/infrastructure.md) |
 | Assembler | 应用层转换组件：把 Domain 转成 DTO，由 Handler 调用 | → 见 [common-ddd.md §2 对象转换](api/common-ddd.md)、[write-chain 法卷 WC-5](../../specs/current/patterns/chain/write-chain.md) |
 | Presenter | 应用层呈现组件：把 DTO 单向转成 CO，由 AppService 调用。与 Assembler 强制分离，转换和呈现不混在一个类 | → 见 [common-ddd.md §2 对象转换](api/common-ddd.md)、[write-chain 法卷 WC-5](../../specs/current/patterns/chain/write-chain.md) |
@@ -43,7 +45,8 @@
 | DomainService | 跨聚合协调的无状态领域服务标记接口 | → 见 [cross-aggregate 法卷 CA-1](../../specs/current/patterns/collaboration/cross-aggregate.md) |
 | opt-in | common 模块的按需引入设计：依赖不强制传递，需要该能力的项目自己显式声明 | → 见 [common-cloud.md §1 / §5](api/common-cloud.md) |
 | PgArrayType | common-pg 的枚举：维护 Java 数组类型到 PG 数组类型名的映射 | → 见 [common-pg.md §2](api/common-pg.md) |
-| DddArchitectureRules | ArchUnit 预置规则常量类：装 R1–R14/C1 系规则；R15 已删除，编号作废不复用 | → 见 [common-test.md §2](api/common-test.md)、[architecture-rules.md](../explanation/architecture-rules.md) |
+| DddArchitectureRules | ArchUnit 预置规则常量类：装 R1–R15/C1 系规则；R15 系废号顶位——现 R15 = 聚合根身份终类型化，旧 R15（baomidou 禁令）作废账原位保留 | → 见 [common-test.md §2](api/common-test.md)、[architecture-rules.md](../explanation/architecture-rules.md) |
+| 废号顶位 | 规则编号纪律：编号永不重排；删则作废、留一行作废账；缺坑准后续规则顶位——顶位 = 新语义接管该号，旧作废账不改（编号是教义锚点不是历史文物） | → 见法卷 [test.md TR-1](../../specs/current/modules/test.md)、[architecture-rules.md](../explanation/architecture-rules.md)；→ 案卷 2026-09-typed-identifier §裁决记录 Q8（决策快照） |
 | RFC 9457 | HTTP API 错误响应标准 Problem Details：定义 type/title/status/detail/instance 五字段与 `application/problem+json` 媒体类型，取代旧标准 RFC 7807 | → 见 [common-exception.md §2](api/common-exception.md) |
 | 枚举双份（contract / domain） | 同名枚举在 contract 与 domain 各存一份、各用各的，这是刻意的上下文隔离：契约形状求稳定，领域建模求自由，两边独立演化。**禁止为「去重」合并共享**。本行即该词的权威定义；sample 有真实双份可对照 | 本行 |
 

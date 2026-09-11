@@ -2,12 +2,12 @@ package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model;
 
 import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
 import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 商品聚合根 —— 管理商品基本信息、单价和库存。
@@ -15,13 +15,14 @@ import java.util.UUID;
  * <p>库存扣减/回补通过行为方法完成，内聚业务校验。
  * 乐观锁由持久化层手写 SQL 的版本条件保护，领域层无需感知。
  *
- * <p>身份铸造收口于 {@link ProductFactory}（应用侧 UUIDv7，创建即合法）；
+ * <p>身份槽实参为专属币种 {@link ProductId}（法卷锚 BP-13，案卷 2026-09-typed-identifier）。
+ * 身份铸造收口于 {@link ProductFactory}（应用侧 UUIDv7，创建即合法）；
  * 业务构造器包私有，「谁能 new 一个商品」由包结构在编译期锁死。
  */
-public class Product extends AggregateRoot<UUID> {
+public class Product extends AggregateRoot<ProductId> {
 
     // region 字段与构造器
-    private UUID id;
+    private ProductId id;
     @Getter
     private String name;
     /** 商品单价（下单时订单项单价的唯一来源） */
@@ -37,7 +38,7 @@ public class Product extends AggregateRoot<UUID> {
     private Long version;
 
     /** 业务构造器（创建新商品）—— 包私有：创建路径收口于 {@link ProductFactory} */
-    Product(UUID id, String name, BigDecimal price, int stock) {
+    Product(ProductId id, String name, BigDecimal price, int stock) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -45,7 +46,7 @@ public class Product extends AggregateRoot<UUID> {
     }
 
     /** 重建构造器（持久化层 Converter 使用，跳过校验） */
-    public static Product reconstitute(UUID id, String name, BigDecimal price, int stock,
+    public static Product reconstitute(ProductId id, String name, BigDecimal price, int stock,
                                        OffsetDateTime createdAt, OffsetDateTime updatedAt,
                                        Long version) {
         Product product = new Product(id, name, price, stock);
@@ -56,7 +57,7 @@ public class Product extends AggregateRoot<UUID> {
     }
 
     @Override
-    public UUID getId() {
+    public ProductId getId() {
         return id;
     }
 
@@ -75,8 +76,9 @@ public class Product extends AggregateRoot<UUID> {
             throw new BusinessException("product:err.quantityMustBePositive");
         }
         if (stock < quantity) {
+            // 异常载荷维持原生值承载（错误消息面向日志/响应，币种不入）
             throw new BusinessException("product:err.insufficientStock",
-                    Map.of("productId", id, "required", quantity, "available", stock));
+                    Map.of("productId", id.value(), "required", quantity, "available", stock));
         }
         this.stock -= quantity;
     }

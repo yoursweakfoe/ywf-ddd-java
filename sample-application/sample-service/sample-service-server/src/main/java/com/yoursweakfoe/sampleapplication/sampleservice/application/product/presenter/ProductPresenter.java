@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
  * <p>写/读 Presenter 解耦：写侧由本类呈现 {@link ProductDTO}（含 version），读侧由
  * {@link ProductViewPresenter} 呈现 {@code ProductViewDTO}（不含 version）。
  * 审计字段（createdAt/updatedAt）、乐观锁版本（version）不映射即不暴露。
+ *
+ * <p>币种 → 原生值的唯一出契约拆箱位（案卷 2026-09-typed-identifier plan P-3；法卷锚 BP-6）：
+ * 契约 CO 维持原生 UUID 承载，wire 形态与迁移前逐字节一致。
  */
 @Component
 public class ProductPresenter implements BasicPresenter<ProductDTO, ProductCO> {
@@ -18,7 +21,7 @@ public class ProductPresenter implements BasicPresenter<ProductDTO, ProductCO> {
     @Override
     public ProductCO present(ProductDTO dto) {
         ProductCO co = new ProductCO();
-        co.setId(dto.getId());
+        co.setId(dto.getId().value());
         co.setName(dto.getName());
         co.setPrice(dto.getPrice());
         co.setStock(dto.getStock());

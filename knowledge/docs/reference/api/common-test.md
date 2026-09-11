@@ -14,7 +14,7 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DddArchitectureRules` 类。每条规则的 `as(...)` 描述文本自带 R 编号前缀与法卷锚条款号，失败消息自带路由，与下表一致。**本表=字典镜像**，论证与治理条款在文末指针。规则集设计论证的现行版 → [architecture-rules.md](../../explanation/architecture-rules.md)：为什么这样判、类型锚点 vs 段匹配、空转与缺口账、沿革。治理条款 → [法卷 test.md](../../specs/current/modules/test.md)「规则集治理」节：编号稳定性、载体分工。
+公开常量位于 `DddArchitectureRules` 类。每条规则的 `as(...)` 描述文本自带 R 编号前缀与法卷锚条款号，失败消息自带路由，与下表一致。**本表=字典镜像**，论证与治理条款在文末指针。规则集设计论证的现行版 → [architecture-rules.md](../../explanation/architecture-rules.md)：为什么这样判、类型锚点 vs 段匹配、空转与缺口账、沿革。治理条款 → [法卷 test.md](../../../specs/current/modules/test.md)「规则集治理」节：编号稳定性、载体分工。
 
 | 常量名 | 编号 | 守护内容 |
 |--------|------|---------|
@@ -35,6 +35,7 @@
 | `QUERY_HANDLERS_DO_NOT_TOUCH_WRITE_REPOSITORIES` | R13 | QueryHandler 禁依赖任何写侧 `Repository` 类型——2026-09 起宾语从段匹配切换为**类型锚点**（assignableTo Repository，布局无关）；CQRS 读侧只走 QueryRepository 读端口 |
 | `SCHEDULED_ENTRIES_ARE_MARKED_AND_IN_ADAPTER` | R14a | 实现 ScheduledAdapter 标记的类必须位于 adapter 层（定时任务入口角色） |
 | `SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED` | R14b | 业务 `..adapter..scheduler..` 包下非接口类必须实现 ScheduledAdapter 标记 |
+| `AGGREGATE_ROOTS_USE_TYPED_IDENTIFIERS` | R15 | 聚合根 ID 泛型实参必须实现 `Identifier` 且 `Repository` 端口 ID 槽与根一致（法条锚 BP-13/BP-14）——废号顶位首例，旧 R15（baomidou 禁令）作废账 → [architecture-rules.md「废止也是账」节](../../explanation/architecture-rules.md)，顶位论证 → [typed-identifier.md](../../explanation/typed-identifier.md)；挂业务扫描（框架扫描无具体聚合根，不挂），负证明 `IdentifierRuleProofTest` 四锁 |
 | `CONTRACT_DOES_NOT_DEPEND_ON_SERVER` | C1 | Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施 |
 
 > **保留段唯一语义**：adapter / application / domain / infrastructure / contract 五个包段名只允许出现在类的真实层位置，读写与接口归属改由类名后缀 + 标记接口表达。这一不变量由 2026-09-05 包扁平化迁移确立，现行规则因此直接用裸段谓词、零层排除。历史病灶：infrastructure 曾按「实现哪层接口」命名出 `repository.domain` / `repository.application` 子包，会同时命中 `..domain..` 与 `..application..` 段，业务测试当年需以根包前缀覆写 R1/R3/R6。该碰撞已根治，旧防撞姿势随之退役：sample 的 ApplicationArchitectureTest 已全量挂载共享常量、零本地覆写，勿再覆写。完整论证与迁移坐标对照表 → [architecture-rules.md](../../explanation/architecture-rules.md)「保留段唯一语义」节。

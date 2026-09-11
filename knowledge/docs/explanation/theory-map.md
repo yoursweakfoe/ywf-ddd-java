@@ -31,6 +31,7 @@
 | Aggregate (Evans) | 聚合根封装所有业务规则，外部不可绕过聚合根修改内部状态；按聚合分包 |
 | Rich Domain Model (Fowler) | 充血模型：行为内聚于聚合根方法，不暴露 setter；渐进式充血，领域服务为过渡态 |
 | Value Object (Evans) | 不可变、属性值判等、推荐 Java record 实现 |
+| Typed Identifier（类型化标识符 / 强类型 ID） | 2026-09 typed-identifier 案（裁 Q1–Q8）：common-ddd 发行纯 Java 身份词汇 `Identifier<V>`，聚合身份槽用专属终类型 `{Agg}Id`（record，只装箱不站岗），写侧入口 `of()` 一点定型、调用位混入他聚合 ID = 编译失败（R15 执法，废号顶位首例）；契约/读侧/PO 维持裸值。借 jMolecules 词汇、不借其 jar。旧「强类型 ID 未采纳」账由本行接管。条文住蓝图 BP-13~16、写链 WC-13；论证现行版 → [typed-identifier.md](typed-identifier.md)；→ 案卷 2026-09-typed-identifier §裁决记录（决策快照） |
 | Repository (Evans / Fowler) | Domain 层定义接口，Infrastructure 层实现；写侧 reconstitute 聚合，读侧投影 DTO |
 | Factory (Evans) | 复杂创建逻辑抽离为独立工厂，仅当构造器不足以表达创建语义时使用 |
 | Domain Service (Evans) | 跨聚合协调、或逻辑不自然归属任何实体时使用；无状态 |
@@ -49,7 +50,7 @@
 | 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸，且仍需转换为错误码 |
 | 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw 加错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
-| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放，ID 类型由子类决定。仅当跨聚合引用、Money 等需要领域语义时才就地封装；框架不提供基类，how-to 篇提供复制粘贴示例 |
+| 强类型 ID 的框架基类 / Phantom 泛型 `Id<A>` | jMolecules、COLA、部分 Hexagonal 实践 | 基类路线拒（record 无法继承类）、phantom 泛型拒（类型擦除下 A/B 互赋编译放行 = 假安全）、jMolecules 制品不借（只取其词汇）。身份隔离本身已采纳——纯 Java 词汇接口 + 每聚合终类型，账见采纳表同题行（2026-09 typed-identifier 案接管旧「裸 ID 刻意开放」姿势） |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略（XML 逐列枚举），本框架场景下脏检查收益极低且增加复杂度 |
 | 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影，绕过 domain；分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
 | 分页参数默认值注入（@DefaultValue / Integer 缺省回填） | Spring Data Web、多数 REST 脚手架惯例 | 不采纳。2026-09 立法定案，条款 CC-9/RC-3/OR-6。**逼迫调用方显式传参、拒不兜底**：静默补默认会把漏参错误伪装成"查第 1 页"的成功请求。项目主代码品味：接口不替调用方猜参数。现行行为：缺参原始绑定 0 → @Min(1) 拒绝 → 400 |

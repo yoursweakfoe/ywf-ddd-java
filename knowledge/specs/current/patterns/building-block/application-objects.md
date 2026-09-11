@@ -14,7 +14,7 @@
 | AO-5 | 乐观锁 version 是写侧关注点：写侧 DTO 承载它，Presenter 不得把它暴露进 CO。读侧 ViewDTO 一律不含 version。写侧 DTO 与读侧 ViewDTO 分离，不互相复用，各自独立演进。 | docs 设计卡写/读投影对比表与关键点段；本卷 §2.1 形状；真实例确认：sample OrderDTO / OrderViewDTO 与模板一致 | — |
 | AO-6 | 读侧多视图：同一个 ViewDTO 呈现多个 CO，详情版全字段，列表版精简字段；Presenter 按场景提供方法裁剪。ViewPresenter 实现 `BasicPresenter`，与写侧 Presenter 平行。 | docs 设计卡写/读投影关键点段；本卷 §2.1 形状 | — |
 | AO-7 | 领域工厂的入参是 Params 参数对象，不是裸 Command。Command 只含契约字段；安全上下文、配置中心、查库计算这些富化结果一律装进 Params 再入厂。 | docs 设计卡入路径富化关键点段：「Params 隔离外部契约与内部领域参数」；本卷 §2.2 形状 | — |
-| AO-8 | 外部报文先经 `toRecord` 一次解析定型，再进主流程。ID 在防腐入口定型成 UUID，不在 Handler 内手工 String→UUID。领域方法只接收内部类型。对已存在的聚合，持久化走 `update`。 | docs 设计卡防腐层教学注释与关键点段：领域模型不接触外部格式，即 Anti-Corruption Layer 的落地；本卷 §2.3 形状 | BW-2 同类互指 |
+| AO-8 | 外部报文先经 `toRecord` 一次解析定型，再进主流程。ID 在防腐入口定型成目标 `{Agg}Id`，不在 Handler 内手工 String→UUID。领域方法只接收内部类型。对已存在的聚合，持久化走 `update`。 | docs 设计卡防腐层教学注释与关键点段：领域模型不接触外部格式，即 Anti-Corruption Layer 的落地；本卷 §2.3 形状 | BW-2 同类互指 |
 
 ## §2 规范形状
 
@@ -99,7 +99,7 @@ public class {Action}{Agg}Handler implements CommandHandler<{Action}{Agg}Command
 // application/payment/dto/PaymentCallbackRecordDTO.java —— 防腐层中间格式（虚构教例）
 @Data   // ⚠ AO-4：法卷要求私有构造 + 静态工厂唯一入口，禁止裸 setter 构造——本模板形态与法条冲突，以 AO-4 为准
 public class PaymentCallbackRecordDTO {
-    private UUID refId;                      // 关联聚合 ID（外部报文经 toRecord 一次解析定型，不在 Handler 里 String→UUID）← AO-8
+    private PaymentId refId;                     // 关联聚合 ID（目标聚合终类型；外部报文经 toRecord 一次解析定型，不在 Handler 里 String→UUID）← AO-8
     private String externalTransactionId;    // 外部系统交易 ID
     private String externalStatus;           // 外部系统状态码（如 "SUCCESS" / "FAILED"）
     private String rawPayload;               // 原始消息体（审计用）

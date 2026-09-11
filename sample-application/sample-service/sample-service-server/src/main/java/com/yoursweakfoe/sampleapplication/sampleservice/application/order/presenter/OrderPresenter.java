@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
  * <p>写/读 Presenter 解耦：写侧由本类呈现 {@link OrderDTO}（含 version），读侧由
  * {@link OrderViewPresenter} 呈现 {@code OrderViewDTO}（不含 version）。决定外部消费方看到什么：
  * 审计字段（createdAt/updatedAt）、乐观锁版本（version）不映射即不暴露。
+ *
+ * <p>币种 → 原生值的唯一出契约拆箱位（案卷 2026-09-typed-identifier plan P-3；法卷锚 BP-6）：契约 CO 维持
+ * 原生承载（id=String、productId=UUID），wire 形态与迁移前逐字节一致。
  */
 @Component
 public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
@@ -20,7 +23,7 @@ public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
     @Override
     public OrderCO present(OrderDTO dto) {
         OrderCO co = new OrderCO();
-        co.setId(dto.getId().toString());
+        co.setId(dto.getId().value().toString());
         // 内部 DTO 恒为 String（Assembler 映 domain.name()）；String→契约枚举在呈现层收口，
         // 奇偶守卫锁死值域、脏值当场 fail-fast，映射不外溢
         co.setStatus(OrderStatus.valueOf(dto.getStatus()));
@@ -39,7 +42,7 @@ public class OrderPresenter implements BasicPresenter<OrderDTO, OrderCO> {
         }
         return items.stream()
                 .map(item -> new OrderCO.OrderItemCO(
-                        item.getProductId(), item.getQuantity(), item.getUnitPrice()))
+                        item.getProductId().value(), item.getQuantity(), item.getUnitPrice()))
                 .toList();
     }
 }

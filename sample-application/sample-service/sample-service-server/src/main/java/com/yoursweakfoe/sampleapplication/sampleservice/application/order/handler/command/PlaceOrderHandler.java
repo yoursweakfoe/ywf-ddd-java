@@ -7,6 +7,7 @@ import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.Order
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderFactory;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model.OrderItem;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.repository.OrderRepository;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.shared.service.InventoryDomainService;
@@ -14,7 +15,6 @@ import com.yoursweakfoe.common.ddd.application.handler.command.CommandHandler;
 import com.yoursweakfoe.common.exception.type.BusinessException;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -57,12 +57,18 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderDTO handle(PlaceOrderCommand command) {
-        // 1. 批量加载商品（单次 IN 查询），以真实单价构建订单项
-        Map<UUID, Product> products = productRepository.findAllById(productIds(command)).stream()
+        // 1. 入口一点定型（WC-13，法卷锚 BP-13/BP-14／案卷 2026-09-typed-identifier）：
+        //    CQE 裸商品 UUID → ProductId 币种（productIds 一处装箱），批量加载 + 订单项构建其后链路全为币种；
+        //    单次 IN 查询取商品，以真实单价构建订单项
+        List<ProductId> productIds = productIds(command);
+        Map<ProductId, Product> products = productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
         List<OrderItem> items = command.getItems().stream()
-                .map(dto -> new OrderItem(dto.getProductId(), dto.getQuantity(),
-                        requireProduct(products, dto.getProductId()).getPrice()))
+                .map(dto -> {
+                    ProductId productId = ProductId.of(dto.getProductId());
+                    return new OrderItem(productId, dto.getQuantity(),
+                            requireProduct(products, productId).getPrice());
+                })
                 .toList();
 
         // 2. 扣减库存（跨聚合协调；DomainService 内部批量加载，同商品数量自动合并）
@@ -79,10 +85,10 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
 
     // region 内部方法
 
-    /** 去重后的商品 ID 集合（单次 IN 查询的输入）。 */
-    private List<UUID> productIds(PlaceOrderCommand command) {
+    /** 去重后的商品 ID 集合（入口定型位：CQE 裸值经 {@link ProductId#of} 换型，单次 IN 查询的输入）。 */
+    private List<ProductId> productIds(PlaceOrderCommand command) {
         return command.getItems().stream()
-                .map(PlaceOrderCommand.OrderItemView::getProductId)
+                .map(dto -> ProductId.of(dto.getProductId()))
                 .distinct()
                 .toList();
     }
@@ -92,7 +98,7 @@ public class PlaceOrderHandler implements CommandHandler<PlaceOrderCommand, Orde
      *
      * @throws BusinessException 商品不存在时
      */
-    private Product requireProduct(Map<UUID, Product> products, UUID productId) {
+    private Product requireProduct(Map<ProductId, Product> products, ProductId productId) {
         Product product = products.get(productId);
         if (product == null) {
             throw new BusinessException("product:err.notFound");

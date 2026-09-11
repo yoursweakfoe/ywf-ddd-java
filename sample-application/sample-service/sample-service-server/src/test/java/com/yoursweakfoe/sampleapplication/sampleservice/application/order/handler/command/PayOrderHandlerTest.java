@@ -47,7 +47,7 @@ class PayOrderHandlerTest {
         when(orderAssembler.toDTO(any(Order.class))).thenReturn(new OrderDTO());
 
         // When
-        OrderDTO result = handler.handle(new PayOrderCommand(order.getId()));
+        OrderDTO result = handler.handle(new PayOrderCommand(order.getId().value()));
 
         // Then
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
@@ -73,7 +73,7 @@ class PayOrderHandlerTest {
         when(orderRepository.findById(any())).thenReturn(Optional.of(order));
 
         // When & Then（重复支付应抛异常）
-        assertThatThrownBy(() -> handler.handle(new PayOrderCommand(order.getId())))
+        assertThatThrownBy(() -> handler.handle(new PayOrderCommand(order.getId().value())))
                 .isInstanceOf(BusinessException.class);
     }
 }

@@ -1,5 +1,6 @@
 package com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.repository;
 
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model.Product;
 import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.repository.ProductRepository;
 import com.yoursweakfoe.sampleapplication.sampleservice.infrastructure.persistence.master.product.converter.ProductConverter;
@@ -14,7 +15,6 @@ import java.time.Clock;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ProductRepositoryImpl
-        extends MybatisPersistence<ProductMapper, ProductPO, Product, UUID>
+        extends MybatisPersistence<ProductMapper, ProductPO, Product, ProductId>
         implements ProductRepository {
 
     // region 依赖注入
@@ -46,10 +46,17 @@ public class ProductRepositoryImpl
         return converter;
     }
 
-    // toPersistenceId：不覆写——PO.id 即 UUID（BP-S1），基类恒等透传为正确形状
+    /**
+     * 币种 → 持久化主键的唯一转换位（案卷 2026-09-typed-identifier plan P-4（形状法源见蓝图 §4.⑲），每仓储恰一处）：
+     * PO.id 维持原生 UUID，{@link ProductId} 在此一行拆箱，Mapper / XML / schema 对币种零感知。
+     */
+    @Override
+    protected Serializable toPersistenceId(ProductId id) {
+        return id.value();
+    }
 
     @Override
-    public Optional<Product> findById(UUID id) {
+    public Optional<Product> findById(ProductId id) {
         return findDomainById(id);
     }
 
@@ -66,17 +73,17 @@ public class ProductRepositoryImpl
     }
 
     @Override
-    public boolean exists(UUID id) {
+    public boolean exists(ProductId id) {
         return existsDomainById(id);
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(ProductId id) {
         removeDomainById(id);
     }
 
     @Override
-    public List<Product> findAllById(Collection<UUID> ids) {
+    public List<Product> findAllById(Collection<ProductId> ids) {
         return findDomainsByIds(ids);
     }
 }
