@@ -1,87 +1,99 @@
 ﻿# knowledge/ —— 项目知识伞（组织宣言）
 
-这把伞治仓库文档的一个老病：**同一句话住在多处，腐烂时没人知道该谁改**。目录为什么长这样，是五个问题的答案——读完五答，树形不言自明。
+这是全仓库文档的统一住所。它解决一个问题：**同一件事写在好几处，代码变了没人知道该改哪份，最后每份都烂掉**。目录结构由下面五个问题的答案决定，读完五答，树形自然清楚。
 
 ## 五问五答
 
-| # | 问题 | 本仓答案 | 落在 |
+| # | 问题 | 本仓的答案 | 落在 |
+|---|------|-----------|------|
+| 1 | **谁听谁的？** 一句话烂了，轮谁改？ | 文档只有两类。**地图**：描述代码，代码变了它必须跟着变。**法律**：承诺行为，代码违反了就去修代码。裁决和当时的理由不单独成第三类，记在做出裁决的那份案卷里 | `docs/`、`specs/` 两区；案卷住 `specs/changes/` 与 `archive/` |
+| 2 | **一条规矩从讨论到废止，身份怎么变？** | 法律有三个身份：草案（`changes/`，随便改）→ 现行本（`current/`，只能在折叠生效那一刻写入）→ 封存（`archive/`，入封后在位不改，到期整册清掉）。全套文档的同步修补只发生在"草案折进现行"那一刻，平时不动 | 各区 `specs/` 的三个目录；业务法同构镜像在 `sample-application/specs/` |
+| 3 | **读者打开文档时想要什么？** | 地图区按 Diátaxis 四象限摆架：教程 / 设计卡 / 字典 / 解读，一篇文档只进一个架 | `docs/` 内四书架，见 §2 |
+| 4 | **知识摆出来还是藏起来？** | 项目知识全部公开摆在 `knowledge/`。只有"教 AI 怎么干活"的 SOP 收进 `.agents/`：那个路径是各工具钉死的扫描位置，工具可以换，知识不丢 | 伞内 vs 伞外 |
+| 5 | **离代码放多近？** | 不贴源码——一纸契约跨五个模块，贴哪边都偏心；不分仓——跟代码同库同 PR 同步更值钱。根级一把 `knowledge/` 收齐。将来若需独立评审，`specs/` 可以整袋搬出去（先例：PEP、KEP） | 根级 `knowledge/` |
+
+两套框架分工明确，互不冲突：**两分类（问一）管分区**，Diátaxis（问三）只管地图区内部摆架。法律区不进四象限，它按身份分架（问二）。
+
+## 1 · 两分类：一区一法律
+
+| 区 | 性质 | 规则一句话 | 法律全文在哪 |
 |---|---|---|---|
-| 1 | **谁听谁的？** 一句话腐烂了，轮谁改？ | 两分类：地图（文档跟代码）、法律（代码跟文档）——裁决事件与当时思考住案卷 §裁决记录，不再独立成态 | `docs/` `specs/` 两区（案卷住 `specs/changes|archive/`） |
-| 2 | **身份何时会变？** 同一念头从讨论到定法到废止，改法完全不同 | 法律分三层：过程稿 → 现行本 → 存档；归档折叠那一刻是文档同步义务**唯一**发生的时点 | 各区 `specs/` 的 changes/ archive/（current/ 首案开册）；业务法同构镜像在 `sample-application/specs/` |
-| 3 | **读者打开时想要什么？** | Diátaxis 四象限：教程 / 手册 / 字典 / 解读 | `docs/` 内四书架（§2） |
-| 4 | **藏起来还是摆出来？** | 知识全摆明面；教 agent 怎么干活的"方法"藏 `.agents/`（工具原生扫描路径钉死，且工具可弃、知识不可弃） | 伞内 vs 伞外 |
-| 5 | **离代码放多近？** | 不贴源码（一纸契约跨五个模块，贴哪都偏心），不分仓（暂无独立治理需求，同 PR 原子同步更值钱）——**根级一伞统一存放，知识不散落多处** | 根级 `knowledge/`；退路：将来需要独立评审时 `specs/` 整袋迁出（先例：PEP、KEP） |
+| `docs/` | 地图（描述） | 代码变了它没跟 → 这是文档 bug，改文档 | [归属法](specs/current/patterns/attribution-law.md) |
+| `specs/` | 法律（框架契约） | 代码违反它 → 改代码。改法必须走 `changes/` 程序，禁止为了迁就代码偷改法条。docs 同题文章与法卷冲突时，法卷为准。`archive/` 只进不改，到期整册归零 | `specs/README.md` |
+| `scripts/` | 执法（工具链） | 不是知识，是守护前两区的机器检查。工具行为以代码为准，说明书住字典架 | [docs/reference/doc-guards.md](docs/reference/doc-guards.md) |
 
-品味说明：本仓同时实现两套经典方案，不冲突因为它们作用在不同层——**两分类（问一）管分区，Diátaxis（问三）只管地图区内部摆架**。法律区不入四象限，它的分架轴是问二的效力身份（卷宗不再独立成区——裁决归案卷，2026-09 判例归卷案）。
+为什么必须拆开：地图区的规则是"烂了就直接改文档"。法律如果也住在那，等于允许随手改法。所以两区互不相犯，各区的法只在自己目录生效，**伞本身不立法**。旧方案里裁决曾独立成区，现已并入案卷——裁决与立法过程同件封存。
 
-## 1 · 两分类：一区一法律（问一的答案）
+**业务契约不入伞**（2026-09-06 辖域裁定）：伞只装框架/脚手架层的通识。示例业务的行为法住镜像区 [`sample-application/specs/`](../sample-application/specs/README.md)——契约写的是生意，容器跟着内容走。
 
-| 区 | 态 | 守则一句话 | 法律全文 |
-|---|---|---|---|
-| `docs/` | **地图**（描述） | 代码变了它没跟 → 文档是 bug，修文档 | `knowledge/specs/current/patterns/attribution-law.md`（归属法） |
-| `specs/` | **法律**（框架契约：行为承诺 + 严格用法规范） | 代码违反它 → 修代码；要改法 → 走 changes/ 程序，禁止迁就代码偷改；docs 同题指引为宽松件，冲突法卷赢；`archive/` 在位只进不改，**到期整册归零** | `specs/README.md` |
-| `scripts/` | **执法**（工具链） | 非知识，是守护前两区的机器检查；行为以代码本体为准，说明住字典架 | [docs/reference/doc-guards.md](docs/reference/doc-guards.md) |
+## 2 · Diátaxis：地图区摆架法
 
-为什么要拆开：地图区守则"烂了修文档"是溶剂——法律若寄居地图区，执法力就被泡掉。故两区互不相犯、每区法律在自己目录生效，**伞本身不立法**；判例不再独立成区——裁决快照与立法过程同件同封、同袋同灭，别区双写正是旧两栖病灶（根治见 2026-09 判例归卷案）。
-
-**业务不入伞**（2026-09-06 辖域裁定）：伞只装框架/脚手架层的通识。示例业务的行为法住镜像区 [`sample-application/specs/`](../sample-application/specs/README.md)——契约天然记生意，容器跟着内容走。
-
-## 2 · Diátaxis：地图区的摆架法（问三的答案）
-
-两条轴切四格：横轴问"来学习还是来工作"，纵轴问"要动手还是要认知"。
+两条轴切四格：读者是来学习还是来工作？要动手还是要认知？
 
 | | 学习 | 工作 |
 |---|---|---|
-| **动手** | `tutorials/` 教程：零基础练习场，线性步骤带你完成第一次 | `how-to/` 设计卡：该不该用、怎么选（浅层指引；一切用法形状在 specs 法卷） |
-| **认知** | `explanation/` 解读：背景、权衡、设计原理——讲"为什么" | `reference/` 字典：描述性事实，结构严格，供查证（用法条款已入法卷） |
+| **动手** | `tutorials/` 教程：零基础线性步骤，带你第一次跑通 | `how-to/` 设计卡：该不该用、怎么选。具体形状全在法卷 |
+| **认知** | `explanation/` 解读：背景、权衡、设计动机，讲"为什么" | `reference/` 字典：描述性事实，供查证（用法条款已迁入法卷） |
 
-一篇文档按读者处境进一个架，不拆写四份——这是摆架的全部意义。**但象限只管描述**：规定句（"必须/禁止/应当这样写"）在四格里没有执照，一律上移一层住 `specs/` 法卷（2026-09-06 宽严双份裁定）。判据：**这句话能机械化执行吗？能→法卷；不能（语气/步骤/语境）→ docs。**
+一篇文档按读者处境进一个架，不拆成四份。**四个书架只放描述**："必须/禁止"这类规定句在架上没有住处，一律上移住 `specs/` 法卷（宽严双份制）。归属判据一句话：**这句话能机械化执行吗？能 → 法卷；不能（依赖语气、步骤、语境）→ docs。**
 
 ### 2.1 驱动关系（D2 图）
 
-「地图=代码驱动」是 §1 表的压缩口号——四书架的真相源其实分叉。本图两类边：**带圈编号 ①–⑩ = 立法流程的先后序**（箭头太多，光靠方向表达不了顺序，编号即工序，**上标 ⁺ = 挂在该步时刻的分支义务**（如 ③⁺/⑨⁺ 论证沉淀，不改主干十步）；门回合一箭双号——②③、⑤⑥各乘一条双向边，同端点同向平行边是 TALA 标签漂移病灶之旧案学费）；流程的发起方与裁决方是**同一个人：开发者＝项目主**（AI 只递案卷，批准门硬停等拍板）——代码只是被驱动的事实，不立案、不施工）；**无编号 = 常态驱动归属**（含案卷内派生约束：plan→tasks→implement 的图纸/账链——非工序时刻、结构恒常；docs 四象限每架认一个主：tutorials/reference=纯地图受代码驱动、how-to=法条宽松副本受 `current/` 直驱、explanation=知识沉淀件——**架构决策的论证现行版（"今天为什么如此"）canonical 居本架**，同时是**全系统引用面最广的 canonical 库**——how-to 全卡/字典见行/教程延伸/法卷论证指针四路引用它，图上淡虚线=阅读时引用（非驱动）。图外引用面还有两处：根 AGENTS 路由「为什么 → explanation/」与 skills 同步清单（`new-service`/`modify-common-module`/`ddd-review` 均指针到解读架）。**一切按流程安排，非法路径（偷改 `current/`、未批先施工）不入图**：意图的唯一合法出口就是 ①，画歪门反而稀释正门。每条边都可在 [specs/current/patterns/attribution-law.md](specs/current/patterns/attribution-law.md) §1/§2/§4 或 `new-bill` 步骤翻到法源（锚见表），本图只作导览、不立法（伞不立法）。
+这张图回答两件事：**立法流程的十个步骤**（编号边 ①–⑩）和**平时谁驱动谁改**（无编号边）。读图前记住三条：
+
+- 上标 ⁺（③⁺、⑨⁺）是挂靠在该步骤时刻的分支动作，不增加主干步数。
+- 流程的发起方和裁决方是同一个人：开发者，即项目主。AI 只起草案卷、执行施工；两道批准门必须停下等人拍板。代码本身只是被改的对象，不立案、不施工。
+- 图只画合法路径。偷改 `current/`、未批先施工这类行为不入图——非法路径没有资格占用版面。
 
 ![驱动关系图](diagrams/gen/knowledge/README/drive-relations.svg)
 
 > 图源 = [`diagrams/knowledge/README/drive-relations.d2`](diagrams/knowledge/README/drive-relations.d2)（唯一可编辑面）。改源后重刷：`powershell -NoProfile -ExecutionPolicy Bypass -File knowledge/scripts/render-diagrams.ps1`（TALA 引擎）；防陈旧对账：同法跑 `check-diagrams.ps1`。
 
-| 边（编号=工序，无编号=常态） | 法源锚 |
-|---|---|
-| ① 开发者 → changes.specify「① 立案起草｜全名：判断立案·起草四件（Specify 先行）」 | 立案发起人是**开发者的意图**（想新增行为/发现现实与法不合），不是代码自己——代码只是被驱动的事实。工序锚：`new-bill` 步骤 1–3（归属法 §4 强制同步表逐行判触发，对不上不立空案；模板 `_template/`） |
-| ②③ changes.specify ⇄ 开发者（＝项目主）「② Specify 门送审 · ③ 裁定落笔」 | `new-bill` 步骤 4 批准门：agent 递案必须硬停等人，批准前禁施工；**裁先翻旧案**（拍板前查 `archive/` 各案 §裁决记录与解读架——案卷先行，旧「判例先行」收编于此边）；裁定写进 specify §裁决记录（表决行＋当时理由＋门次收据 → 归属法 §2「裁决与当时思考」行）；放行豁免唯会话中项目主明示 |
-| ④ changes.specify → changes.plan「④ 裁定入稿」 | 裁决转写 plan P-x 与修卷 delta 草稿（审议期纪律：`changes/` 内=审议稿随便改；门分档常制：Specify 门验验收、Plan 门验方案与修卷量——2026-09 四段案卷法立，supersede 历元一两阶段批准判例） |
-| ⑤⑥ changes.plan ⇄ 开发者（＝项目主）「⑤ Plan 门送审 · ⑥ 放行裁定」 | 每案两停不论大小；两门收据均落 §裁决记录（法面刚性、出口在对话 → 案卷 2026-09-sdd-four-stage §裁决记录） |
-| ⑦ changes.tasks → 代码「⑦ 按约施工（完成即勾）」 | `new-bill` 步骤 5：按 tasks.md 推进、完成一条勾一条、取证入 implement.md 执行账、范围要扩回批准门并记漂移 |
-| ⑧ 代码 → changes.implement「⑧ 取证回填（implement 账 + delta 源回填）」 | 步骤 5–7：勾账 + 构建/测试全绿按变更性质定档；plan §delta 每条 SHALL 的源须在折叠前经 implement §3 回填为真实 文件:行/测试名 |
-| ⑨ changes.plan → current/「⑨ 折叠落实（delta 起量）」 | `new-bill` 步骤 6.1（plan §修卷 delta 起量：ADDED 入位/MODIFIED 整节替换/REMOVED 删节留因）= 归属法 §4 文档同步义务**唯一时点** |
-| ⑩ changes → archive/「⑩ 归档整袋(瘦身闸)｜整目录 git mv」 | 步骤 6.2 整目录 `git mv` 不拆件 + 6.3 只进不改 + 6.4 瘦身闸（→ 归属法 §4「案卷折叠入 archive 前」行新形） |
-| **③⁺/⑨⁺ 分支** changes.specify → 解读架(explanation)「设计（修改与决策构成一次设计）驱动文档修改：论证沉淀 ③⁺ theory-map 账本行／⑨⁺ 同题散文强制复写（解释立法原因）」 | 挂在时刻上的分支义务（上标 ⁺ 不改主干）：③⁺ 裁定落笔当刻在 [theory-map](docs/explanation/theory-map.md) 记账本行——归属法 §4「新设计决策」行把 §裁决记录落条与账本登记钉同案；⑨⁺ 折叠当刻**沉淀论证强制复写进同题解读篇、篇脚回指 `→ 案卷 <date-slug> §裁决记录（决策快照）`**——[归属法 §4「案卷折叠时（⑨⁺）」行](specs/current/patterns/attribution-law.md)。旧「decisions/ → 解读架」边随判例区废止（2026-09 判例归卷案） |
-| （沿革注）旧八步 ①–⑧/③⁺/⑦⁺ | 2026-09 判例归卷案换号，映射表住该案 plan §1 P-4；archive 旧案卷内八步语=历史语不回改 |
-| changes.plan → changes.tasks「派生约束：条项只指 P-x」（无编号=常态） | tasks 条项 = 一个可验收动作、零设计参数不抄——施工图唯一源自 plan §1 P-x（[changes/README](specs/changes/README.md) 四件职责、归属法 §4「施工与验收（案卷执行期）」行） |
-| changes.tasks → changes.implement「映账：执行账 1:1 条项」（无编号=常态） | implement §1 执行账与 tasks 条项 1:1 镜像、完成即勾禁攒批（→ 归属法 §4 同一行）；取证后账目经 ⑧ 由代码事实灌注 |
-| 代码 → 教程架(tutorials)「代码驱动文档修改」 | 归属法 §1 docs 行「与代码不符=文档是 bug；写入时钟：代码之后」；可运行性含环境前置（[docs/README](docs/README.md) 四架表：从零跑通） |
-| 代码 → 字典架(reference)「代码驱动文档修改」 | §2「包路径/类名/方法签名 → 源代码」「异常→HTTP 映射 → javadoc+法卷+C5」两行 |
-| current/ → 设计卡架(how-to)「法卷驱动文档修改·宽松副本」 | §2「用法规范/规范代码形状」行：docs 同题=设计卡（宽松件）、**冲突法卷赢**（宽严双份制） |
-| current/ ⇢ 解读架（淡边）「引用·论证指针」 | **时效上无直驱边**（法条改论证存活，影响必经新裁决中转——批准门回合落案卷 §裁决记录，见 ②③ 边——与设计卡架"直驱宽松副本"恰成对照）；**引用上有真边**：法卷涉论证/对照表处只放指针不复制（D6 零复制），`external-gateway.md`「对偶结构对照表 canonical 只在解读架」、CC-6 理由账本 → theory-map、归属法 §2 设计论证行 canonical=`docs/explanation/` 自身 |
-| how-to 全卡 ⇢ 解读架「引用·原理槽」 | 每张设计卡首行固定位 `> 设计原理 → ../explanation/*.md`（13/13 全卡覆盖，[how-to/README](docs/how-to/README.md) 三架分工表） |
-| reference ⇢ 解读架「引用·见行」 | [glossary](docs/reference/glossary.md) 多行「→ 见 theory-map / infrastructure / adapter」；「理论账本」词条 |
-| tutorials ⇢ 解读架「引用·延伸」 | [quickstart](docs/tutorials/quickstart.md) 末节「读懂每层为什么这样设计 → explanation/」 |
+每条边的法源都能在 [归属法](specs/current/patterns/attribution-law.md) §1/§2/§4 或 `new-bill` 技能对应步骤找到。图只做导览，不立法。下面两张表列全图所有边。
+
+**立法十步**（编号即工序先后；②③、⑤⑥ 是两道门的往返）：
+
+| 步骤 | 发生什么 | 法源锚 |
+|---|---|---|
+| ① 立案起草 | 开发者对照归属法 §4 强制同步表判断要不要立案；立则在 `changes/{slug}/` 铺四件套。对不上表的分支不立空案 | `new-bill` 步骤 1–3 |
+| ②③ Specify 门 | agent 递验收账（AC-n）、边界、待裁问句，硬停等项目主。拍板前先翻 `archive/` 旧案卷确认无撞案。裁定写进 specify §裁决记录：表决行、当时理由、门次收据 | `new-bill` 步骤 4；归属法 §2 |
+| ④ 裁定入稿 | 把裁定转写成 plan 的技术裁量（P-x）和修卷 delta 草稿。`changes/` 内是审议稿，随便改 | `new-bill` 步骤 4 |
+| ⑤⑥ Plan 门 | 项目主裁方案和修卷量；过这道门才可施工。每案两停不论大小；并门或豁免只允许在会话中由项目主明示 | `new-bill` 步骤 4；案卷 2026-09-sdd-four-stage |
+| ⑦ 按约施工 | 按 tasks.md 推进，完成一条勾一条 | `new-bill` 步骤 5 |
+| ⑧ 取证回填 | 勾账和证据落 implement.md；plan delta 每条 SHALL 的取证源，折叠前回填成真实 文件:行/测试名。构建测试全绿按变更性质定档 | `new-bill` 步骤 5–7 |
+| ⑨ 折叠落实 | 把 plan 修卷 delta 写回 `current/`：ADDED 入位、MODIFIED 整节替换、REMOVED 删节留原因。这是文档同步义务的唯一时点 | `new-bill` 步骤 6.1；归属法 §4 |
+| ⑩ 归档 | 整个案卷目录 `git mv` 进 `archive/`，不拆件；此后在位只进不改，到期由清册 bill 整册归零 | `new-bill` 步骤 6.2–6.4 |
+| ③⁺ / ⑨⁺ 分支 | ③⁺：裁定落笔当刻在 [theory-map](docs/explanation/theory-map.md) 记一行账。⑨⁺：折叠当刻把沉淀论证（现行版）复写进同题解读篇，篇脚回指"→ 案卷 <date-slug> §裁决记录（决策快照）" | 归属法 §4 对应两行 |
+
+**常态驱动边**（无编号）：
+
+| 边 | 规则 | 法源锚 |
+|---|---|---|
+| plan → tasks | tasks 条目只是可验收动作，零参数、指回 P-x；施工图唯一来自 plan | [changes/README](specs/changes/README.md) |
+| tasks → implement | implement 执行账与 tasks 条目 1:1 镜像，完成即勾，禁攒批 | 归属法 §4 |
+| 代码 → tutorials、reference | 纯地图：与代码不符就是 bug，当天修 | 归属法 §1、§2 |
+| current/ → how-to | 设计卡是法条的宽松副本，冲突时法卷赢 | 归属法 §2 |
+| current/ ⇢ explanation | 淡边 = 引用不是驱动。修法不直接动解读篇：法的修改要生效，论证要变，必须经过一次新裁决。法卷涉论证处只放指针（零复制原则） | 归属法 §2 |
+| how-to ⇢ explanation | 每张设计卡首行固定"设计原理 → ../explanation/*.md"（13/13 全覆盖） | [how-to/README](docs/how-to/README.md) |
+| reference、tutorials ⇢ explanation | 字典"→ 见"行、教程末节延伸都指解读架。解读架是全系统被引用最广的论证库 | [glossary](docs/reference/glossary.md)、[quickstart](docs/tutorials/quickstart.md) |
+
+图外还有两处引用面：根 AGENTS.md 的路由（"为什么 → explanation/"），以及 `new-service`、`modify-common-module`、`ddd-review` 三个技能的同步清单指针。
 
 ## 3 · 树
 
 ```
 knowledge/
-├── README.md       本页：组织宣言（导览五问两分类，自身不立法）
-├── docs/           地图 | README 唯一文档索引
-├── diagrams/       配图 | .d2 源按「文档仓库相对路径」镜像入册，gen/ 存 TALA 渲染 SVG 产物（render/check-diagrams.ps1 双件，源为唯一可编辑面）
-│   ├── tutorials/  quickstart：clone 到第一次跑通（真实例操作手册）
-│   ├── how-to/     设计卡（{agg} 中立教例，零形状代码——规范在法卷）
+├── README.md       本页：组织宣言（讲清结构为什么这样，本身不立法）
+├── docs/           地图区 | README 是唯一文档索引
+├── diagrams/       配图 | .d2 源按文档相对路径镜像存放；gen/ 存渲染出的 SVG（render/check-diagrams.ps1 两脚本，源是唯一可编辑面）
+│   ├── tutorials/  quickstart：从 clone 到跑通
+│   ├── how-to/     设计卡（{agg} 中立教例，零形状代码，规范在法卷）
 │   ├── reference/  api/ 框架模块 8 篇 · doc-guards.md 工具说明 · glossary 术语表
 │   └── explanation/ 分层设计 5 篇 + 专论 6 篇（知识系统/云集成/安全/可观测/测试/规则集设计）+ theory-map 理论账本
-├── specs/          法律·框架 | current/{modules|patterns}/ 法卷 · changes/ 审议稿（案卷含 §裁决记录）· archive/ 存档（在位不改·到期整册归零）（业务法→ ../sample-application/specs/）
+├── specs/          法律·框架区 | current/{modules|patterns}/ 法卷 · changes/ 审议中案卷 · archive/ 封存（业务法在 ../sample-application/specs/）
 └── scripts/        执法 | check-docs.ps1 七校验 + 豁免白名单 + lychee 配置
 ```
 
 ## 4 · 机器执法
 
-靠自觉的守则一定腐烂。`scripts/check-docs.ps1` 七校验——幽灵路径、计数漂移、符号鬼魂、教学词违规、映射表漏更、案卷在位改判与废号零容忍、技能闸，全部当场变红；交付前必跑（`ddd-review` 末步已内置），白名单只删不增。
+靠自觉的守则一定会腐烂，所以全部文档纪律都配了机器检查。`scripts/check-docs.ps1` 跑七道校验，任何一道不过就红：幽灵路径（写了源码不存在的目录）、计数漂移（"13 篇"之类宣称与磁盘不符）、符号鬼魂（引了不存在的类）、教学词违规（文档夹带 order/product 业务名）、映射表漏更（异常映射三方不一致）、案卷在位改判与废号零容忍、技能闸（skill 引用失效）。交付前必跑，`ddd-review` 末步已内置；豁免白名单只删不增。

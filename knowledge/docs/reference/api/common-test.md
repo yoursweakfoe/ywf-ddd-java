@@ -14,7 +14,7 @@
 
 ### ArchUnit 规则清单
 
-公开常量位于 `DddArchitectureRules` 类（每条规则的 `as(...)` 描述文本自带 R 编号前缀与法卷锚条款号——失败消息自带路由，与下表一致）。**本表=字典镜像**；规则集设计论证的现行版（为什么这样判、类型锚点 vs 段匹配、空转与缺口账、沿革）→ [architecture-rules.md](../../explanation/architecture-rules.md)；治理条款（编号稳定性、载体分工）→ [法卷 test.md](../../specs/current/modules/test.md)「规则集治理」节：
+公开常量位于 `DddArchitectureRules` 类。每条规则的 `as(...)` 描述文本自带 R 编号前缀与法卷锚条款号，失败消息自带路由，与下表一致。**本表=字典镜像**，论证与治理条款在文末指针。规则集设计论证的现行版 → [architecture-rules.md](../../explanation/architecture-rules.md)：为什么这样判、类型锚点 vs 段匹配、空转与缺口账、沿革。治理条款 → [法卷 test.md](../../specs/current/modules/test.md)「规则集治理」节：编号稳定性、载体分工。
 
 | 常量名 | 编号 | 守护内容 |
 |--------|------|---------|
@@ -37,13 +37,7 @@
 | `SCHEDULER_PACKAGE_CLASSES_MUST_BE_MARKED` | R14b | 业务 `..adapter..scheduler..` 包下非接口类必须实现 ScheduledAdapter 标记 |
 | `CONTRACT_DOES_NOT_DEPEND_ON_SERVER` | C1 | Contract 纯契约，不得依赖 server 四层及 Spring/MyBatis 运行时基础设施 |
 
-> **段匹配碰撞沿革（已根治，勿再覆写）**：历史上 infrastructure 按「实现哪层接口」命名的
-> `repository.domain` / `repository.application` 子包会同时命中 `..domain..` / `..application..`
-> 段，业务测试需以根包前缀覆写 R1/R3/R6。2026-09-05 包扁平化迁移确立了「保留段唯一语义」不变量
-> （adapter / application / domain / infrastructure / contract 五段只允许出现在其真实层位置，
-> 读写与接口归属改由类名后缀 + 标记接口表达），现行规则直接用裸段谓词、零层排除——sample 的
-> ApplicationArchitectureTest 已全量挂载共享常量、零本地覆写，旧防撞姿势随之退役。
-> 不变量完整论证与迁移坐标对照表 → [architecture-rules.md](../../explanation/architecture-rules.md)「保留段唯一语义」节。
+> **保留段唯一语义**：adapter / application / domain / infrastructure / contract 五个包段名只允许出现在类的真实层位置，读写与接口归属改由类名后缀 + 标记接口表达。这一不变量由 2026-09-05 包扁平化迁移确立，现行规则因此直接用裸段谓词、零层排除。历史病灶：infrastructure 曾按「实现哪层接口」命名出 `repository.domain` / `repository.application` 子包，会同时命中 `..domain..` 与 `..application..` 段，业务测试当年需以根包前缀覆写 R1/R3/R6。该碰撞已根治，旧防撞姿势随之退役：sample 的 ApplicationArchitectureTest 已全量挂载共享常量、零本地覆写，勿再覆写。完整论证与迁移坐标对照表 → [architecture-rules.md](../../explanation/architecture-rules.md)「保留段唯一语义」节。
 
 ### Spring Boot Test 统一版本
 
@@ -51,7 +45,7 @@ JUnit 5 + Mockito + AssertJ + Spring Test，版本由 Spring Boot BOM 管理。
 
 ## 3. 使用方式
 
-> **严格规范在法卷**：本节正文已入法 → [../../../specs/current/modules/test.md](../../../specs/current/modules/test.md)（条款、代码形状、禁则以法卷为准）。本字典架只余宽松语感。
+> **严格规范在法卷**：本节正文已入法，见 [../../../specs/current/modules/test.md](../../../specs/current/modules/test.md)。条款、代码形状、禁则以法卷为准，本文只留宽松指引。
 
 ## 4. 依赖关系
 
@@ -80,7 +74,7 @@ common-test（独立，test scope 使用）
 
 ## 6. 设计决策（已迁出）
 
-> 本模块历史决策日志已随史卷宗归零（法不考古，无编号映射）。现行归属：裁决快照住封存案卷 §裁决记录、论证现行版住 `docs/explanation/`，地图只留指针——本区不维护决策正文。
+> 本模块的历史决策日志已随案卷到期清册删除，本区不再维护。旧编号制已废，无编号可查。当时的裁决看封存案卷 §裁决记录；今天仍成立的论证看 `docs/explanation/` 同题篇。本文只留指针，不留决策正文。
 
 ## 7. 职责边界与技术债
 

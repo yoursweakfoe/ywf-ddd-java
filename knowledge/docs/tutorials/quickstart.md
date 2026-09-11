@@ -8,7 +8,7 @@
 ## 0. 前置
 
 - JDK 21 + Maven（无其它要求，Node/IDE 可选）
-- PostgreSQL 16（本机或容器）——**两条路线都要**：路线 A 的测试基座 = 真 PG 测试库（前置 = ywf-infra `postgres` 环节在跑 + db-migration 对测试库建形，见路线 A 步 0 与 TC-5/TC-9）；路线 B 的服务库同理
+- PostgreSQL 16（本机或容器）。**两条路线都要**：路线 A 的测试基座是真 PG 测试库，前提是 ywf-infra `postgres` 环节在跑、且 db-migration 已对测试库建形，详见路线 A 步 0 与 TC-5/TC-9；路线 B 的服务库同理
 
 ## 路线 A｜一条命令跑全量验收（推荐第一步）
 
@@ -17,8 +17,8 @@ mvn clean install
 ```
 
 - 14 个模块 reactor 顺序构建；common 6 模块测试 + sample 119 用例全跑
-- **测试基座 = 真 PG 测试库**：前置为 ywf-infra `postgres` 环节在跑 + 对 `ddd_sample_application_test` 建形（见路线 A 步 0；TC-5/TC-9，库形状权威 = db-migration，测试不建表）
-- 内含 ArchUnit 双端规则集与 `ContractEnumParityTest`、`OptimisticLockConcurrencyTest` 等行为实证——绿了即证明：你拿到的是文档承诺的那套框架
+- **测试基座 = 真 PG 测试库**：前置为 ywf-infra `postgres` 环节在跑 + 对 `ddd_sample_application_test` 建形。库形状权威 = db-migration，测试不建表；详见路线 A 步 0 与 TC-5/TC-9
+- 内含 ArchUnit 双端规则集与 `ContractEnumParityTest`、`OptimisticLockConcurrencyTest` 等行为实证。全绿即证明：你拿到的就是文档承诺的那套框架
 
 预期尾行：`BUILD SUCCESS`，sample 模块 `Tests run: 119, Failures: 0, Errors: 0, Skipped: 0`。
 
@@ -30,8 +30,9 @@ mvn clean install
 # 0. 测试/运行前一次性建形（幂等，库形状权威 = db-migration）：
 #   建两库（postgres 环节在跑时）：docker exec postgres psql -U ywf -d postgres -c 'CREATE DATABASE ddd_sample_application OWNER ywf'（_test 库同法）
 #   跑 Job（换 DB_MIGRATION_URL 即切库，命令见 db-migration/README.md）
+```
 
-DDL 权威唯一 = `db-migration` 变更集（BP-S1）：测试与运行共两库（`ddd_sample_application` / `ddd_sample_application_test`），同份变更集双库实证字节级同形；不再存在手工 schema 文件。
+DDL 权威唯一 = `db-migration` 变更集（BP-S1）。测试与运行共两库：`ddd_sample_application` / `ddd_sample_application_test`，同份变更集双库实证字节级同形；不再存在手工 schema 文件。
 
 ### 2. 启动（dev profile）
 
@@ -41,8 +42,8 @@ mvn -q package -DskipTests
 SPRING_PROFILES_ACTIVE=dev java -jar target/sample-service-server-0.0.1-SNAPSHOT.jar
 ```
 
-- 缺省连 `jdbc:postgresql://localhost:5432/ddd_sample_application`（user/pass `ywf/ywf-local-123`）——全部可被 `DB_MASTER_URL` / `DB_MASTER_USER` / `DB_MASTER_PASSWORD` 覆盖；自配 URL 必须带 pgjdbc 超时三参数 `connectTimeout=10&socketTimeout=60&tcpKeepAlive=true`（教义见 datasource 配置注释）
-- **不加 profile 会 fail-fast 启动失败**——这是 B1 轮的刻意设计（无默认 profile；`${DB_MASTER_URL}` 占位符无兜底），不是 bug
+- 缺省连 `jdbc:postgresql://localhost:5432/ddd_sample_application`，user/pass `ywf/ywf-local-123`。三项均可被 `DB_MASTER_URL` / `DB_MASTER_USER` / `DB_MASTER_PASSWORD` 覆盖；自配 URL 必须带 pgjdbc 超时三参数 `connectTimeout=10&socketTimeout=60&tcpKeepAlive=true`（教义见 datasource 配置注释）
+- **不加 profile 会 fail-fast 启动失败**。这是 B1 轮的刻意设计：无默认 profile，`${DB_MASTER_URL}` 占位符无兜底。不是 bug
 - 容器路线：`docker compose up --build` 起 app 容器（8080）；PG/Nacos 服务在 `docker-compose.yml` 内是注释态，取消注释即得全套
 
 ### 3. 健康确认
@@ -75,7 +76,7 @@ curl -s localhost:8080/api/orders/$ID
 curl -s "localhost:8080/api/orders/page?pageNum=1&pageSize=20&status=COMPLETED"
 ```
 
-每步返回 OrderCO（含 status 流转）；`items` 明细仅详情端点给出（分页面是精简投影）。
+每步返回 OrderCO，含 status 流转；`items` 明细仅详情端点给出，分页面是精简投影。
 
 ### 5. 体验失败通道（文档三分法的手感版）
 

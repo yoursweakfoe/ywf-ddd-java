@@ -1,24 +1,24 @@
 ﻿# 用法规范法卷：应用层内部对象（框架法 · 严格件）
 
-> **身份**：本卷是应用层内部数据对象（DTO / ViewDTO / Params / Record）**统一用法**的唯一权威——全套规范形状在此，全仓他处不得复写形状；违反本卷=修代码，修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/application-layer-objects.md`）为设计卡（选型与边界叙事，零形状代码）。
-> **机器对账**：C1/C3/C4 扫本卷；教例家族 {Agg} 通式 + Payment（虚构教例）。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
+> **身份**：本卷是应用层内部数据对象统一用法的唯一权威，对象共四种：DTO、ViewDTO、Params、Record。规范形状只写在本卷，全仓其他文档不得复写。违反本卷就改代码；修改本卷必须走 `../../changes/` 立案。docs 同题篇 `../../../docs/how-to/application-layer-objects.md` 是设计卡，只讲选型与边界的叙事，零形状代码。
+> **机器对账**：C1/C3/C4 扫本卷；教例家族 = {Agg} 通式 + Payment（虚构教例）。
 
 ## §1 条款
 
 | # | SHALL | 取证 | 背书 |
 |---|---|---|---|
-| AO-1 | 中间对象三不准入：无契约投影需求、无聚合行为需求、无外部格式需求时，一律走 DTO + CO 标准链路（WC-4/WC-5），不得发明第四种载体 | `how-to/application-layer-objects.md` 结论段入法：「没有契约视图、没有复杂参数、没有外部格式 → 不需要这些中间对象」 | — |
-| AO-2 | ViewDTO 仅承载读侧多视图投影，位置 `application/{agg}/dto/`，实现 `ApplicationDTO` 标记（R10b）；ViewPresenter 专职 DTO→CO | R10b；RC-4 互指 | ArchUnit |
-| AO-3 | Params 仅在方法签名聚合参数 >3 时使用，不跨 Handler 边界传播 | 原篇适用场景节入法 | — |
-| AO-4 | Record 为不可变状态载体：私有构造 + 静态工厂唯一入口（与聚合重建 `reconstitute()` 同型）；禁止裸 setter 构造 | `BasicConverter` 重建契约（`modules/ddd.md` 场景 2）；TC-2 互指 | — |
-| AO-5 | 写侧 DTO 承载乐观锁 version（写侧关注点，经 Presenter 不暴露进 CO）；读侧 ViewDTO 一律不含 version；写侧 DTO 与读侧 ViewDTO 分离，不互相复用、各自独立演进 | 原篇写/读投影对比表 + 关键点段入法；本卷 §2.1 形状；真实例字段形态确认（真实例：sample OrderDTO / OrderViewDTO 与模板一致） | — |
-| AO-6 | 读侧多视图：同一 ViewDTO → 多个 CO（详情全字段 / 列表精简字段），Presenter 按场景方法裁剪；ViewPresenter 实现 `BasicPresenter`，与写侧 Presenter 平行 | 原篇 §写/读投影关键点段 + 本卷 §2.1 形状 | — |
-| AO-7 | 领域工厂入参为 Params 参数对象而非裸 Command；Command 只含契约字段，富化结果（安全上下文 / 配置中心 / 查库计算）一律经 Params 承载入厂 | 原篇 §入路径富化关键点段入法（「Params 隔离外部契约与内部领域参数」）；本卷 §2.2 形状 | — |
-| AO-8 | 外部报文经 `toRecord` 一次解析定型后进主流程（ID 在防腐入口定型，不在 Handler 内手工 String→UUID）；领域方法只接收内部类型；对已存在聚合持久化走 `update` | 原篇 §防腐层教学注释 + 关键点段入法（「领域模型不接触外部格式——这就是防腐层 Anti-Corruption Layer 的落地」）；本卷 §2.3 形状 | BW-2 同类互指 |
+| AO-1 | 三种中间对象各有准入门槛。没有契约投影需求、没有聚合行为需求、也没有外部格式需求时，一律走 DTO + CO 标准链路（WC-4/WC-5），不得发明第四种载体。 | `how-to/application-layer-objects.md` 结论段：「没有契约视图、没有复杂参数、没有外部格式 → 不需要这些中间对象」 | — |
+| AO-2 | ViewDTO 只承载读侧多视图投影，放 `application/{agg}/dto/`，必须实现 `ApplicationDTO` 标记。ViewPresenter 专职 DTO→CO。 | R10b；RC-4 互指 | ArchUnit |
+| AO-3 | Params 只在方法签名需要聚合超过 3 个参数时使用；不跨 Handler 边界传播。 | docs 设计卡「适用场景」段 | — |
+| AO-4 | Record 是不可变状态载体：唯一入口是私有构造 + 静态工厂，与聚合重建的 `reconstitute()` 同型。禁止裸 setter 构造。 | `BasicConverter` 重建契约 → `modules/ddd.md` 场景 2；TC-2 互指 | — |
+| AO-5 | 乐观锁 version 是写侧关注点：写侧 DTO 承载它，Presenter 不得把它暴露进 CO。读侧 ViewDTO 一律不含 version。写侧 DTO 与读侧 ViewDTO 分离，不互相复用，各自独立演进。 | docs 设计卡写/读投影对比表与关键点段；本卷 §2.1 形状；真实例确认：sample OrderDTO / OrderViewDTO 与模板一致 | — |
+| AO-6 | 读侧多视图：同一个 ViewDTO 呈现多个 CO，详情版全字段，列表版精简字段；Presenter 按场景提供方法裁剪。ViewPresenter 实现 `BasicPresenter`，与写侧 Presenter 平行。 | docs 设计卡写/读投影关键点段；本卷 §2.1 形状 | — |
+| AO-7 | 领域工厂的入参是 Params 参数对象，不是裸 Command。Command 只含契约字段；安全上下文、配置中心、查库计算这些富化结果一律装进 Params 再入厂。 | docs 设计卡入路径富化关键点段：「Params 隔离外部契约与内部领域参数」；本卷 §2.2 形状 | — |
+| AO-8 | 外部报文先经 `toRecord` 一次解析定型，再进主流程。ID 在防腐入口定型成 UUID，不在 Handler 内手工 String→UUID。领域方法只接收内部类型。对已存在的聚合，持久化走 `update`。 | docs 设计卡防腐层教学注释与关键点段：领域模型不接触外部格式，即 Anti-Corruption Layer 的落地；本卷 §2.3 形状 | BW-2 同类互指 |
 
-## §2 规范形状（统一用法唯一样本）
+## §2 规范形状
 
-> 落地状态逐件登记于 §3：§2.1 示例应用已实现；§2.2/§2.3 示例应用未实现（展示模式，虚构教例）。
+本节是全仓统一的唯一形状样本。落地状态逐件登记于 §3：§2.1 示例应用已实现；§2.2、§2.3 示例应用未实现，为展示模式（虚构教例）。
 
 ### 2.1 写/读投影：DTO vs ViewDTO vs Presenter
 
@@ -54,7 +54,7 @@ public class {Agg}ViewPresenter implements BasicPresenter<{Agg}ViewDTO, {Agg}CO>
 }
 ```
 
-> 真实例映射位：sample-application/.../application/order/dto/OrderDTO.java、OrderViewDTO.java（真实例，示例应用已实现，字段形态与上文一致）。
+> 真实例映射位：sample-application/.../application/order/dto/OrderDTO.java、OrderViewDTO.java。真实例，示例应用已实现，字段形态与上文一致。
 
 ### 2.2 入路径富化：ParamsDTO
 
@@ -93,7 +93,7 @@ public class {Action}{Agg}Handler implements CommandHandler<{Action}{Agg}Command
 
 ### 2.3 防腐层中间数据：RecordDTO
 
-> ⚠ 与法条冲突点登记：落地一律以 AO-4 为准（不可变：私有构造 + 静态工厂唯一入口）；下方教学模板为可 set 形态，模板↔法条之差异裁决 `<!-- 待 ../../changes/ 补全 -->`。
+> ⚠ 未决冲突登记：落地一律以 AO-4 为准，即不可变、私有构造 + 静态工厂唯一入口。下方教学模板是可 set 形态；模板与法条的差异如何裁决，尚未定案：`<!-- 待 ../../changes/ 补全 -->`。
 
 ```java
 // application/payment/dto/PaymentCallbackRecordDTO.java —— 防腐层中间格式（虚构教例）
@@ -123,7 +123,7 @@ public class ReconcilePaymentHandler implements CommandHandler<ReconcilePaymentC
 
 ### 2.4 四对象角色总表
 
-Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数据 ↔ 契约 CO）之间，用**语义明确的后缀**区分用途，而非泛化 `DTO`。写侧基线 `DTO` + 三种扩展场景对象：
+Handler 负责领域与内部数据互转，Presenter 负责内部数据与契约 CO 互转。两者之间的数据对象用语义明确的后缀区分用途，不许只叫泛化的 `DTO`。写侧基线是 `DTO`，另有三种扩展场景对象：
 
 | 场景 | 后缀 | 方向 | 示例 |
 |------|------|------|------|
@@ -134,7 +134,7 @@ Application 层在 Handler（领域 ↔ 内部数据）和 Presenter（内部数
 
 ### 2.5 写/读投影承载对比
 
-DTO（内部视图）与 CO（契约输出）的职责分工规范表 canonical 在 `knowledge/specs/current/patterns/coding-conventions.md`（DTO / CO 强制分离），本卷不复制。在其之上，写侧与读侧 DTO 进一步**解耦**（避免"一个肥 DTO 贯穿所有层"的耦合）：
+DTO（内部视图）与 CO（契约输出）的职责分工规范表，canonical 在 `knowledge/specs/current/patterns/coding-conventions.md`，即 DTO/CO 强制分离条款，本卷不复制。本卷在它之上再加一层解耦：写侧 DTO 与读侧 DTO 分开，避免一个肥 DTO 贯穿所有层。
 
 | DTO | 承载 | Presenter | 说明 |
 |-----|------|-----------|------|
@@ -149,15 +149,15 @@ DTO（内部视图）与 CO（契约输出）的职责分工规范表 canonical 
 | **`ParamsDTO`** | Handler → Domain Factory | 入参需要富化（查库/查配置/安全上下文） |
 | **`RecordDTO`** | External → Handler → Domain | 外部数据格式与领域模型差异大 |
 
-如果没有多视图、没有富化、没有外部格式差异 → 不需要这些中间对象，沿用 Handler 产 DTO + Presenter 产 CO 的标准链路即可（AO-1；Assembler 不得跨层直产 CO）。
+三种需求都没有时，不需要这些中间对象：沿用 Handler 产 DTO、Presenter 产 CO 的标准链路即可。见 AO-1。另记一条：Assembler 不得跨层直产 CO。
 
 ## §3 生效登记
 
 | 环节 | 状态 | 位置 |
 |---|---|---|
-| AO-1~4 形态条款（框架法） | ✅ | §1（AO-2 sample ViewDTO 现行） |
+| AO-1~4 形态条款（框架法） | ✅ | §1；AO-2 在 sample 已有现行 ViewDTO |
 | AO-5~8 形态条款（框架法） | ✅ | §1；形状见 §2.1~§2.3 |
 | 写/读投影 DTO / ViewDTO / ViewPresenter（真实例：sample OrderDTO、OrderViewDTO 已实现） | ✅ | §2.1 真实例映射位 |
 | ParamsDTO 富化教例件 | ⛔ 示例应用未实现（展示模式） | §2.2 即落地模板 |
-| RecordDTO 防腐教例件 | ⛔ 示例应用未实现（展示模式） | §2.3 即落地模板；模板 @Data 形态与 AO-4 之冲突待 changes/ 裁决 |
-| AO-3/AO-4 未引入件 | ✅（真空满足） | 按需引入件，未引入即无违反，无 ⛔ |
+| RecordDTO 防腐教例件 | ⛔ 示例应用未实现（展示模式） | §2.3 即落地模板；模板 @Data 形态与 AO-4 的冲突待 changes/ 裁决 |
+| AO-3/AO-4 未引入件 | ✅（真空满足） | 按需引入件。未引入就不存在违反，不挂 ⛔ |

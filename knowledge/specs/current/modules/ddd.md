@@ -1,7 +1,7 @@
 ﻿# 模块用法法卷：common-ddd（框架法 · 严格件）
 
-> **身份**：本卷是用法规范与规范代码形状的**唯一权威**（严格件）——消费代码必须遵循，违反本卷=修代码；修卷只走 `../../changes/` 程序。docs 同题节（`reference/api/common-ddd.md` §3）为宽松件：语感与指针，冲突以本卷为准（宽严双份，2026-09-06）。
-> **机器对账**：本卷在 check-docs C1（`{agg}` 模板实例化）/ C3（符号解析）/ C4（教学中立）扫描面内。开册法案：2026-09 框架成典案。
+> **身份**：本卷是用法规范与规范代码形状的唯一权威（严格件）。消费代码必须遵循本卷；违反本卷就修代码。修改本卷只能走 `../../changes/` 程序。docs 同题节（`reference/api/common-ddd.md` §3）是宽松件，只承载语感与指针；两者冲突时以本卷为准。
+> **机器对账**：本卷在 check-docs 扫描面内。C1 校验 `{agg}` 模板实例化，C3 校验符号解析，C4 校验教学中立。
 
 ---
 
@@ -14,7 +14,7 @@
 
 ### 场景 1：聚合根（状态机 + 不变量校验）
 
-> §3 场景 1–4 共用同一套虚构教例 Payment 家族（与 `knowledge/docs/how-to/new-aggregate.md` 同族）：虚构教例，sample 未实现（真实例形态见 sample-application，同构）。字段形状与该篇现状对齐、按场景取所需子集。
+> §3 场景 1–4 共用同一套虚构教例：Payment 家族，与 `knowledge/docs/how-to/new-aggregate.md` 同族。全部是虚构教例，sample 未实现；真实例形态见 sample-application，两者同构。字段形状与该篇现状对齐，每个场景只取所需子集。
 
 ```java
 public class Payment extends AggregateRoot<UUID> {
@@ -65,7 +65,7 @@ public class Payment extends AggregateRoot<UUID> {
 
 ### 场景 2：PO + Mapper + XML + RepositoryImpl（仓储实现）
 
-PO 是**零 ORM 注解**的纯 `@Data` POJO——表名、主键、版本条件、逻辑删除过滤全部写在 XML 的 SQL 文本里：
+PO 是纯 `@Data` POJO，**零 ORM 注解**。表名、主键、版本条件、逻辑删除过滤全部写在 XML 的 SQL 文本里：
 
 ```java
 @Data
@@ -80,7 +80,7 @@ public class PaymentPO {
 }
 ```
 
-Mapper 扩展框架契约接口，通用七条语句 + 业务查询同一篇 XML 承载：
+Mapper 扩展框架契约接口即可。通用七条语句和业务查询放在同一篇 XML 里承载：
 
 ```java
 @Mapper
@@ -91,7 +91,7 @@ public interface PaymentMapper extends DddMapper<PaymentPO> {
 }
 ```
 
-RepositoryImpl 继承 `MybatisPersistence`，构造器注入四件依赖（Mapper / Clock / AuditProperties / CurrentUserProvider）：
+RepositoryImpl 继承 `MybatisPersistence`，构造器注入四件依赖：Mapper / Clock / AuditProperties / CurrentUserProvider。
 
 ```java
 @Component
@@ -127,7 +127,7 @@ public class PaymentRepositoryImpl
 
 ### 场景 3：批量操作
 
-`saveDomainBatch` / `updateDomainBatch` 语义为**单事务循环**（逐条 insert/update），非多行 VALUES SQL——每条聚合须独立 `validate()`，多行 UPDATE/INSERT 无法触发逐聚合行为；批量原子性由调用方（Handler 标 `@Transactional`）保证。
+`saveDomainBatch` / `updateDomainBatch` 的语义是**单事务循环**：逐条 insert/update，不是多行 VALUES SQL。原因是每条聚合都必须独立走一遍 `validate()`，多行 UPDATE/INSERT 触发不了逐聚合行为。批量原子性由调用方保证：Handler 标 `@Transactional`。
 
 ```java
 repository.saveDomainBatch(List.of(payment1, payment2, payment3));      // 批量保存
@@ -157,8 +157,6 @@ public class GetPaymentPageHandler implements QueryHandler<GetPaymentPageQuery, 
 }
 ```
 
-> 读侧完全绕过 domain 层（不 reconstitute 聚合根、不建领域读模型），基础设施层实现读端口
-> （infrastructure → application，写侧依赖倒置的读侧镜像），直接从 PO 投影读 DTO。
-> 读侧无业务判断，派生值在写侧计算并物化到 PO 列。详见 `knowledge/docs/how-to/read-path.md`。
+> 读侧完全绕过 domain 层：不 reconstitute 聚合根，也不建领域读模型，直接从 PO 投影读 DTO。读端口由基础设施层实现，方向是 infrastructure → application，即写侧依赖倒置的读侧镜像。读侧没有业务判断；派生值全部在写侧计算，并物化到 PO 列。详见 `knowledge/docs/how-to/read-path.md`。
 
 写侧完整示例见 `knowledge/docs/how-to/write-path.md`。

@@ -1,23 +1,23 @@
 ﻿# 用法规范法卷：跨聚合协作（框架法 · 严格件）
 
-> **身份**：本卷是跨聚合协调**统一用法**的唯一权威——全套规范形状在此，全仓他处不得复写形状；违反本卷=修代码，修卷走 `../../changes/`。docs 同题篇（`../../../docs/how-to/cross-aggregate.md`）为设计卡（选型与边界叙事，零形状代码）。
-> **机器对账**：C1/C3/C4 扫本卷；教例家族 invoice/inventory（虚构教例，系 sample 真实下单链路的同构改写）。开册法案：2026-09 设计卡降格案；统一用法归卷：2026-09 用法归卷案。
+> **身份**：本卷是跨聚合协调统一用法的唯一权威。规范代码形状只在本卷登记，全仓其他位置不得复写形状。代码违反本卷就修代码；要修改本卷，走 `../../changes/` 立案。docs 同题篇 `../../../docs/how-to/cross-aggregate.md` 是设计卡，只讲选型与边界叙事，零形状代码。
+> **机器对账**：C1/C3/C4 扫本卷。教例家族 invoice、inventory 为虚构教例，是示例应用真实下单链路的同构改写。
 
 ## §1 条款
 
 | # | SHALL | 取证 | 背书 |
 |---|---|---|---|
-| CA-1 | 涉及多聚合的业务逻辑落在 Domain Service：位置 `domain/shared/service/`，实现 `DomainService` 标记接口（stereotype 豁免见 R4，纯 Java 本体） | R4；AGENTS 九条 4 的延伸（规则仍归聚合，Service 只编排） | C3 |
-| CA-2 | Domain Service 只注入各聚合的写侧 Repository；不吞事务——事务边界在调用它的 Handler（WC-2） | WC-2 互指 | — |
-| CA-3 | 同事务内的跨聚合补偿动作（如回补类操作）必须同步直调、处于同一 Handler 事务边界；禁止异步化「尽力而为」 | 示例聚合行为守恒测试（补偿原子化） | 测试名 |
-| CA-4 | 跨聚合的读需求各走各的读端口（RC-1），禁止经他人聚合根取数 | R13 | ArchUnit |
-| CA-5 | Domain Service 标注 `@Service` 由 Spring 组件扫描自动注册，禁止手写注册样板（Spring 是生态基座，标注注解即标准做法；领域层允许 stereotype 系 A2 豁免） | 原篇 §1 要点段入法（A2 规则援引）+ 本卷 §2.2 形状 | CA-1 同族 |
-| CA-6 | Domain Service 可调用 Repository、可修改实体状态（副作用担当）；纯决策无副作用的规则用 Policy（DP 卷互指） | 原篇 §1 要点段入法 + policy 同题篇「Policy vs Domain Service 职责边界」对比表 | DP-5 互指 |
-| CA-7 | 跨聚合批量操作按 ID 集合**单次 IN 批量查询**（`findAllById`，签名 `List<{Agg}> findAllById(Collection<UUID> ids)`），杜绝逐项 `findById` 的 N+1；同一引用 ID 出现在多条明细时数量合并为一次聚合行为 + 一次持久化，避免同事务对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空 | 原篇要点段入法（附理由）+ 本卷 §2.2/§2.3 形状 | §3 真实例链路 |
+| CA-1 | 涉及多聚合的业务逻辑落在 Domain Service。位置 `domain/shared/service/`；实现 `DomainService` 标记接口。标记接口本体是纯 Java，stereotype 豁免见 R4 | R4；AGENTS 九条 4 的延伸：规则仍归聚合，Service 只编排 | C3 |
+| CA-2 | Domain Service 只注入各聚合的写侧 Repository。它不吞事务，事务边界在调用它的 Handler（WC-2） | WC-2 互指 | — |
+| CA-3 | 跨聚合补偿动作（如回补类操作）必须同步直调，处于同一个 Handler 的事务边界内。禁止异步化做「尽力而为」 | 示例聚合行为守恒测试（补偿原子化） | 测试名 |
+| CA-4 | 跨聚合的读需求各走各的读端口（RC-1）。禁止经他人聚合根取数 | R13 | ArchUnit |
+| CA-5 | Domain Service 标注 `@Service`，由 Spring 组件扫描自动注册。禁止手写注册样板。Spring 是生态基座，标注注解即标准做法；领域层允许 stereotype 系 A2 豁免 | A2 规则（援引）；本卷 §2.2 形状 | CA-1 同族 |
+| CA-6 | Domain Service 可调用 Repository、可修改实体状态，是副作用担当。纯决策、无副作用的规则改用 Policy（DP 卷互指） | policy 同题篇「Policy vs Domain Service 职责边界」对比表；本卷 §2.2 形状 | DP-5 互指 |
+| CA-7 | 跨聚合批量操作按 ID 集合**单次 IN 批量查询**，杜绝逐项 `findById` 的 N+1。方法 `findAllById`，签名 `List<{Agg}> findAllById(Collection<UUID> ids)`。同一引用 ID 出现在多条明细时，数量合并为一次聚合行为加一次持久化，避免同事务对同一聚合连续两次乐观锁 UPDATE 导致版本号踩空 | 本卷 §2.2/§2.3 形状（单次 IN、数量合并） | §3 真实例链路 |
 
 ## §2 规范形状（统一用法唯一样本）
 
-> 本节为**虚构教例**「开票」（invoice / inventory 聚合系，是对示例应用真实下单链路的同构改写，规则与结构逐一对应）；真实例落地映射见 §2.4 表后行与 §3。
+> 本节是虚构教例「开票」。invoice、inventory 聚合系是对示例应用真实下单链路的同构改写，规则与结构逐一对应。真实例落地位置见 §2.4 表后行与 §3。
 
 ### 2.1 调用链路
 
@@ -110,7 +110,7 @@ public class CreateInvoiceHandler implements CommandHandler<CreateInvoiceCommand
 
 ### 2.4 完整文件清单（通式模板落位）
 
-> 通式模板落位（虚构教例）；本链路在示例应用**已真实落地**为下单形态，真实例映射行见下表之后。
+> 下表是通式模板落位，全部为虚构教例。这条链路在示例应用已以下单形态真实落地，真实例映射行见表后。
 
 | 层 | 文件 | 职责 |
 |----|------|------|
@@ -123,7 +123,7 @@ public class CreateInvoiceHandler implements CommandHandler<CreateInvoiceCommand
 | domain | `invoice/model/Invoice.java` | 账单聚合根（place 行为） |
 | domain | `inventory/model/Inventory.java` | 库存聚合根（deductStock 行为） |
 
-> 真实例（sample-application 实际文件，非虚构）：对照 `sample-application/.../application/order/handler/command/PlaceOrderHandler.java`、`.../handler/command/RetryablePlaceOrderHandler.java`、`.../domain/shared/service/InventoryDomainService.java`、`.../domain/order/model/Order.java`、`.../domain/product/model/Product.java`（真实例映射位）——其中 `InventoryDomainService` 连名字都是真实的，虚构系仅替换了 Order/Product 两个聚合名。
+> 真实例映射行（sample-application 实际文件，非虚构）：`sample-application/.../application/order/handler/command/PlaceOrderHandler.java`、`.../handler/command/RetryablePlaceOrderHandler.java`、`.../domain/shared/service/InventoryDomainService.java`、`.../domain/order/model/Order.java`、`.../domain/product/model/Product.java`。其中 `InventoryDomainService` 连名字都是真实的；虚构只替换了 Order、Product 两个聚合名。
 
 ## §3 生效登记
 

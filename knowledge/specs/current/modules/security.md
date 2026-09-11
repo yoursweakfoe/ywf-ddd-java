@@ -1,7 +1,7 @@
 ﻿# 模块用法法卷：common-security（框架法 · 严格件）
 
-> **身份**：本卷是用法规范与规范代码形状的**唯一权威**（严格件）——消费代码必须遵循，违反本卷=修代码；修卷只走 `../../changes/` 程序。docs 同题节（`reference/api/common-security.md` §3）为宽松件：语感与指针，冲突以本卷为准（宽严双份，2026-09-06）。
-> **机器对账**：本卷在 check-docs C1（`{agg}` 模板实例化）/ C3（符号解析）/ C4（教学中立）扫描面内。开册法案：2026-09 框架成典案。
+> **身份**：本卷是用法规范与规范代码形状的唯一权威（严格件）。消费代码必须遵循本卷；违反本卷就修代码。修改本卷只能走 `../../changes/` 程序。docs 同题节（`reference/api/common-security.md` §3）是宽松件，只承载语感与指针；两者冲突时以本卷为准。
+> **机器对账**：本卷在 check-docs 扫描面内。C1 校验 `{agg}` 模板实例化，C3 校验符号解析，C4 校验教学中立。
 
 ---
 
@@ -31,9 +31,9 @@
       return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
   }
   ```
-- **多方案**：见 §2 的 `DelegatingJwtDecoder`。
+- **多方案**：见 `reference/api/common-security.md` §2 的 `DelegatingJwtDecoder`。
 
-### 配置：角色 claim 名 + 权限前缀（可选，唯一字段缝）
+### 配置：角色 claim 名 + 权限前缀（可选）
 
 ```yaml
 ywf:
@@ -43,11 +43,9 @@ ywf:
     authority-prefix: ROLE_  # 角色 → 权限前缀，默认 ROLE_
 ```
 
-其余身份字段不配置、不写死——各服务按名字自取。
+身份字段只有这一处开放配置。其余身份字段不配置、不写死，各服务按名字自取。
 
-> **opt-out 门控**：`ywf.security.enabled=false` 时整条安全链不注册（无 `SecurityFilterChain`、
-> 不启用 `@EnableWebSecurity`/`@EnableMethodSecurity`）。面向「不想要安全链、只想复用 `SecurityUtil`
-> 读 JWT」的消费方（如纯内部服务）。`SecurityUtil` 是静态工具类，与安全链无耦合，关闭后仍可用。
+> **opt-out 门控**：`ywf.security.enabled=false` 时整条安全链不注册：没有 `SecurityFilterChain`，`@EnableWebSecurity` 与 `@EnableMethodSecurity` 也不启用。面向「不想要安全链、只想复用 `SecurityUtil` 读 JWT」的消费方，例如纯内部服务。`SecurityUtil` 是静态工具类，与安全链无耦合，关闭后仍可用。
 
 ### 场景 1：获取当前用户身份（字段自取）
 

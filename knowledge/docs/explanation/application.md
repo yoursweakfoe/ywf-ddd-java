@@ -2,29 +2,28 @@
 
 ## 职责
 
-编排业务用例，**极薄，不含业务逻辑**。所有决策委托给 Domain 层。
-AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 呈现为 CO 返回。
+application 层编排业务用例。**极薄，不含业务逻辑**，所有决策委托给 Domain 层。流程分两步：AppService 委托 Handler 执行用例，Handler 返回 DTO；AppService 再经 Presenter 把 DTO 呈现为 CO 返回。
 
 ## 设计原则
 
-- **AppService 为聚合协调入口**：一个聚合一个 AppService 类，包含该聚合全部用例方法
-- **Handler 返回 DTO**：Handler 负责编排领域逻辑，通过 Assembler 转为 DTO 返回
-- **AppService 做呈现**：接收 Handler 的 DTO，通过 Presenter 转为 CO 返回给调用方
-- **写侧不绕过 Domain**：CommandHandler 的业务决策始终在领域模型内，Handler 只做编排
-- **读侧完全绕过 domain**：QueryHandler 不加载领域模型，依赖 application 层 `{Agg}QueryRepository` 读端口（`application/{agg}/repository/`，接口直接平铺无二级子包），由 infra 读实现从 PO 直接投影读 DTO（论证 canonical → [cookbook/read-path.md](../how-to/read-path.md)）
-- **按聚合自包含**：每个聚合子包内含 AppService + handler + assembler + presenter + dto，打开即全貌
+- **AppService 为聚合协调入口**：一个聚合一个 AppService 类，包含该聚合全部用例方法。
+- **Handler 返回 DTO**：Handler 负责编排领域逻辑，通过 Assembler 转为 DTO 返回。
+- **AppService 做呈现**：接收 Handler 的 DTO，通过 Presenter 转为 CO 返回给调用方。
+- **写侧不绕过 Domain**：CommandHandler 的业务决策始终在领域模型内，Handler 只做编排。
+- **读侧完全绕过 domain**：QueryHandler 不加载领域模型。它依赖 application 层的 `{Agg}QueryRepository` 读端口——接口位于 `application/{agg}/repository/`，直接平铺，无二级子包——由 infra 读实现从 PO 直接投影读 DTO。论证 canonical → [cookbook/read-path.md](../how-to/read-path.md)。
+- **按聚合自包含**：每个聚合子包内含 AppService、handler、assembler、presenter、dto，打开即全貌。
 
 ## 包结构
 
 → [aggregate-blueprint §5](../../specs/current/patterns/aggregate-blueprint.md)
 
-> 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md)（写路径）| [cookbook/read-path.md](../how-to/read-path.md)（读路径）
+> 完整代码示例 → [cookbook/write-path.md](../how-to/write-path.md) 看写路径 | [cookbook/read-path.md](../how-to/read-path.md) 看读路径
 
 ## 核心组件
 
 ### AppService（聚合协调入口）
 
-一个聚合一个类，标注 `@Service`。职责：委托 Handler 执行用例，然后通过 Presenter 将 DTO 呈现为 CO。
+一个聚合一个类，标注 `@Service`。职责只有一条链：委托 Handler 执行用例，再通过 Presenter 把 DTO 呈现为 CO。
 
 - 有返回值：`presenter.present(handler.handle(command))`
 - 无返回值：直接 `handler.handle(command)`
@@ -33,26 +32,26 @@ AppService 委托 Handler 执行用例（返回 DTO），然后通过 Presenter 
 
 ### Handler（用例执行单元）
 
-每个用例对应一个 Handler，实现 `CommandHandler<C, R>` 或 `QueryHandler<Q, R>`（common-ddd 提供）。
+每个用例对应一个 Handler，实现 `CommandHandler<C, R>` 或 `QueryHandler<Q, R>`，两个基接口由 common-ddd 提供。
 
-两侧类型信息刻意不对称：契约里的 Command / Query 标记不带泛型，处理器接口却带——返回类型锚在处理器的方法签名上。对外契约只声明「问什么」，「答什么」由这里的签名承载；Command / Query 处理器之分同时充当架构校验的类型锚点，读写分途靠类型被盯住，不靠包名猜测。
+两侧的类型信息刻意不对称：契约里的 Command / Query 标记不带泛型，处理器接口却带——返回类型锚在处理器的方法签名上。对外契约只声明「问什么」，「答什么」由这里的签名承载。Command / Query 处理器之分同时充当架构校验的类型锚点：读写分途靠类型被盯住，不靠包名猜测。
 
 | 特征 | CommandHandler（写侧） | QueryHandler（读侧） |
 |---|---|---|
-| 返回类型 | DTO（不是 CO） | DTO 或 PageResult&lt;DTO&gt;（不是 CO） |
-| 事务 | `@Transactional` | 可省略（只读） |
-| 依赖 | Repository、DomainService、Assembler | XxxQueryRepository（读端口） |
-| 路径 | load 聚合 → 调用行为 → save → Assembler.toDTO() | XxxQueryRepository.findPage() → PO 直接投影读 DTO（绕过 domain） |
-| 拆分标准 | 每个 Command 对应一个 Handler（1:1） | 每个 Query 对应一个 Handler（1:1） |
+| 返回类型 | DTO，不是 CO | DTO 或 PageResult&lt;DTO&gt;，不是 CO |
+| 事务 | `@Transactional` | 可省略，只读 |
+| 依赖 | Repository、DomainService、Assembler | XxxQueryRepository 读端口 |
+| 路径 | load 聚合 → 调用行为 → save → Assembler.toDTO() | XxxQueryRepository.findPage() → PO 直接投影读 DTO，绕过 domain |
+| 拆分标准 | 每个 Command 对应一个 Handler，1:1 | 每个 Query 对应一个 Handler，1:1 |
 
-- **写侧**（经过 Domain）：load 聚合 → 调用行为 → save → Assembler.toDTO()
-- **读侧**（绕过 domain）：XxxQueryRepository（application 读端口）→ infra 实现 PO 直接投影读 DTO，不加载聚合
+- **写侧**经过 Domain：load 聚合 → 调用行为 → save → Assembler.toDTO()
+- **读侧**绕过 domain：经 application 读端口 XxxQueryRepository，infra 实现把 PO 直接投影为读 DTO，不加载聚合
 
 → 完整代码见 [cookbook/write-path.md §3 Application（CommandHandler）](../how-to/write-path.md) | [cookbook/read-path.md §4 Application（QueryHandler）](../how-to/read-path.md)
 
-> 写侧 Repository 接口定义在 Domain 层、实现在 Infrastructure 层；读端口 `XxxQueryRepository`
-> 定义在 Application 层、实现在 Infrastructure 层（内部用 Mapper 投影 DTO）。Application 层
-> 始终只依赖接口，不触碰 Mapper / PO。
+> 写侧 Repository 接口定义在 Domain 层、实现在 Infrastructure 层；读端口
+> `XxxQueryRepository` 定义在 Application 层、实现在 Infrastructure 层，内部用
+> Mapper 投影 DTO。Application 层始终只依赖接口，不触碰 Mapper / PO。
 
 ### Assembler + Presenter（两层转换）
 
@@ -74,8 +73,8 @@ adapter/facade ──→ AppService ──→ CommandHandler ──→ Domain（
 ```
 
 - **adapter** 透传调用 AppService
-- **domain** 被 CommandHandler 编排（聚合根行为 + Repository 存取）；QueryHandler 完全绕过 domain，改走 application 层读端口
-- **infrastructure** 实现 Domain 写侧 Repository 接口（reconstitute 聚合）与 application 读端口（Mapper 直接投影 DTO）
+- **domain** 被 CommandHandler 编排：聚合根行为 + Repository 存取。QueryHandler 完全绕过 domain，改走 application 层读端口。
+- **infrastructure** 实现 Domain 写侧 Repository 接口——reconstitute 聚合——与 application 读端口——Mapper 直接投影 DTO。
 - **contract** 提供 CO 类型定义，由 Presenter 产出
 
 ## 专题
@@ -89,7 +88,7 @@ DTO 和 CO 是**两个不同职责的边界对象**，强制分离，不可合�
 | 职责 | 领域模型的完整内部投影 | 内部细节清洗后的外部安全视图 |
 | 变更影响 | 内部重构，无外部影响 | Breaking change，需协调消费方 |
 
-> 归属 / 生产者 / 可包含字段等命名规范行 → 见 [knowledge/specs/current/patterns/coding-conventions.md](../../specs/current/patterns/coding-conventions.md)「DTO / CO 强制分离」表（canonical）。
+> 归属、生产者、可包含字段等命名规范行，canonical 见 [knowledge/specs/current/patterns/coding-conventions.md](../../specs/current/patterns/coding-conventions.md)「DTO / CO 强制分离」表，本文不复制。
 
 ```
 Handler 内部：Domain → Assembler.toDTO() → DTO
@@ -98,7 +97,7 @@ AppService：DTO → Presenter.present() → CO（返回给调用方）
 
 ### 跨聚合编排与微服务拆分
 
-**单体阶段（当前）**：跨聚合 Handler 放在**用例发起方**的 `handler/` 下（教例为通式，非 sample 源码）：
+**单体阶段（当前）**：跨聚合 Handler 放在**用例发起方**的 `handler/` 下。教例为通式，非 sample 源码：
 
 ```
 application/{agg}/handler/command/{Xxx}CommandHandler.java
@@ -110,21 +109,19 @@ application/{agg}/handler/command/{Xxx}CommandHandler.java
 
 归属判断原则：**谁发起用例、谁承担一致性责任，编排逻辑就归谁。**
 
-**微服务拆分后**：Handler 零迁移——仍在发起方服务的 `application/{agg}/handler/`，
-只是原来直接调对方聚合的 Repository，变为经对方服务的 REST 契约接口（RestClient 直连）远程调用。
+**微服务拆分后**：Handler 零迁移，仍在发起方服务的 `application/{agg}/handler/`。变的只有一处：原来直接调对方聚合的 Repository，改为经对方服务的 REST 契约接口远程调用，RestClient 直连。
 
-**无主长流程（Saga）**：引入独立的 Saga/Process Manager 服务，不在某个业务服务的 application 层内塞入跨服务编排。
+**无主长流程（Saga）**：引入独立的 Saga/Process Manager 服务承载，不在某个业务服务的 application 层内塞入跨服务编排。
 
 ## 规则
 
 | 允许 | 禁止 |
 |------|------|
 | CommandHandler 调用 Repository 存取聚合根 | 在 Handler 内写业务规则 |
-| QueryHandler 调用 application 读端口 `{Agg}QueryRepository` 直接投影读 DTO（绕过 domain） | Handler 直接使用 Mapper / PO（破坏依赖方向） |
+| QueryHandler 调用 application 读端口 `{Agg}QueryRepository` 直接投影读 DTO，绕过 domain | Handler 直接使用 Mapper / PO，破坏依赖方向 |
 | Handler 调用 Assembler 转 DTO | AppService 包含编排逻辑 |
 | AppService 调用 Presenter 转 CO | 包含 if-else 业务判断 |
 | AppService 返回 CO | CO 暴露内部实现细节 |
 | DTO 携带内部字段 | |
 
-> 完整禁止清单（含「禁止 Handler 返回 CO」等）→ [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「Application 层禁止」（法条 canonical，AGENTS 核心约束 #2 为规范行）。
-
+> 完整禁止清单——含「禁止 Handler 返回 CO」等——见 [knowledge/specs/current/patterns/prohibitions.md](../../specs/current/patterns/prohibitions.md)「Application 层禁止」。法条 canonical 在那份法卷；AGENTS 核心约束 #2 是其规范行复述位。

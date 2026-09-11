@@ -7,11 +7,11 @@
 | 架构 / 理论 | 本项目采纳要素 |
 |------|--------|
 | Evans DDD 四层 | adapter / application / domain / infrastructure 分层基准 |
-| Clean Architecture (Robert C. Martin) | 依赖规则——内层不知道外层存在；Domain 零框架依赖 |
+| Clean Architecture (Robert C. Martin) | 依赖规则：内层不知道外层存在；Domain 零框架依赖 |
 | Onion Architecture (Jeffrey Palermo) | 同心圆分层，Domain 在核心，依赖方向始终向内 |
 | Hexagonal / Ports & Adapters (Cockburn) | adapter 命名（in/out 方向）、Portal/Gateway 对偶、Domain 通过端口与外界交互 |
 | COLA (张建飞) | 单 Module + Package 分层、adapter 命名、按聚合分包 |
-| Screaming Architecture (Uncle Bob) | 包结构按聚合名尖叫业务语义（每个聚合一个目录），而非按技术类型（entity/ vo/ service/） |
+| Screaming Architecture (Uncle Bob) | 包结构按聚合名尖叫业务语义（每个聚合一个目录），而非按技术类型分包（entity/ vo/ service/） |
 | Package by Feature | 按聚合自包含（打开即全貌），而非按技术类型分包 |
 
 **未采纳：**
@@ -29,30 +29,30 @@
 | 模式 | 本项目采纳要素 |
 |------|--------|
 | Aggregate (Evans) | 聚合根封装所有业务规则，外部不可绕过聚合根修改内部状态；按聚合分包 |
-| Rich Domain Model (Fowler) | 充血模型——行为内聚于聚合根方法，不暴露 setter；渐进式充血（领域服务为过渡态） |
+| Rich Domain Model (Fowler) | 充血模型：行为内聚于聚合根方法，不暴露 setter；渐进式充血，领域服务为过渡态 |
 | Value Object (Evans) | 不可变、属性值判等、推荐 Java record 实现 |
 | Repository (Evans / Fowler) | Domain 层定义接口，Infrastructure 层实现；写侧 reconstitute 聚合，读侧投影 DTO |
 | Factory (Evans) | 复杂创建逻辑抽离为独立工厂，仅当构造器不足以表达创建语义时使用 |
-| Domain Service (Evans) | 跨聚合协调 / 逻辑不自然归属任何实体时使用；无状态 |
-| Specification (Evans) | 纯接口（可选工具）：领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用；查询过滤用具名 Mapper 方法 + 手写 XML 动态条件（读侧绕过 domain），简单校验仍用聚合根内 if-throw，不强制走规约 |
+| Domain Service (Evans) | 跨聚合协调、或逻辑不自然归属任何实体时使用；无状态 |
+| Specification (Evans) | 纯接口，可选工具。领域规则的 and/or/not 可组合表达（null 安全），供规则复杂到值得命名的校验场景使用。查询过滤用具名 Mapper 方法加手写 XML 动态条件，读侧绕过 domain；简单校验仍用聚合根内 if-throw，不强制走规约 |
 | Bounded Context (Evans) | 每个微服务 = 一个限界上下文；contract 模块定义上下文对外边界 |
 | Shared Kernel (Evans) | common-contract / common-ddd 为多个限界上下文共享的构建块 |
 | Customer-Supplier (Evans) | contract jar 是消费方唯一依赖；CO 变更需协调消费方（Breaking Change） |
 | Published Language (Evans) | contract 模块即跨上下文共享语言：CQE / CO 是发布方与消费方的共同词汇表，避免逐点翻译 |
-| Context Map 策略集 | 已知策略显式定档：Shared Kernel（common-contract/ common-ddd）、Customer-Supplier（contract jar）。Conformist（顺从外部模型）/ Open Host Service / Anti-Corruption 的上下文级 Partner 关系**按需在业务上下文引入**（当前无此场景，不预设）；Separate Ways（无协作上下文）默认为未协作服务的常态 |
-| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》「一事务一聚合实例」经验法则：用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast——任一聚合校验失败整体回滚，以 PO version 列 + UPDATE 语句版本条件（手写 XML）防超卖替代事件补偿；事后副作用（取消订单回补库存）同样同事务直调补偿（`CancelOrderHandler` → DomainService，补偿与状态原子提交，无中间态）。跨服务一致性由 Seata + HTTP 显式调用承担。不采纳「先建单再异步扣库存」：会引入『单建成而库存未扣』的中间态难题，用户体验与实现复杂度双输 |
+| Context Map 策略集 | 已知策略显式定档：Shared Kernel（common-contract/ common-ddd）、Customer-Supplier（contract jar）。Conformist（顺从外部模型）、Open Host Service、Anti-Corruption 的上下文级 Partner 关系**按需在业务上下文引入**，当前无此场景、不预设。Separate Ways（无协作上下文）默认为未协作服务的常态 |
+| 同事务跨聚合写入（写路径强一致） | 本项目自定，**有意偏离** Vernon《IDDD》"一事务一聚合实例"的经验法则。用户同步等待的写用例（如下单 = 扣库存 + 建订单）采用同事务 fail-fast：任一聚合校验失败整体回滚；以 PO version 列加 UPDATE 语句版本条件（手写 XML）防超卖，替代事件补偿。事后副作用（取消订单回补库存）同样同事务直调补偿：`CancelOrderHandler` → DomainService，补偿与状态变更原子提交，无中间态。跨服务一致性由 Seata 加 HTTP 显式调用承担。不采纳"先建单再异步扣库存"：会引入"单建成而库存未扣"的中间态难题，用户体验与实现复杂度双输 |
 
 **未采纳：**
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸且仍需转换为错误码 |
-| 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw + 错误码已足够，不设 exception/ 包 |
+| 具名领域异常 | Evans 原著、Vernon IDDD、多数 DDD 开源项目 | 统一 BusinessException + i18n 错误码；具名异常导致类爆炸，且仍需转换为错误码 |
+| 领域层异常目录 (exception/) | 多数 DDD 开源项目、COLA 示例 | 显式 if-throw 加错误码已足够，不设 exception/ 包 |
 | 聚合根 ID 自动生成策略 | COLA、Axon Framework、Spring Data | ID 生成与业务强相关（UUID / 雪花 / 业务编码），由子类构造器自行决定 |
-| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放——ID 类型由子类决定；仅当跨聚合引用、Money 等需要领域语义时才就地封装，框架不提供基类，how-to 篇提供复制粘贴示例 |
+| 强类型 ID / Domain Primitives 基类 | jMolecules、COLA、部分 Hexagonal 实践 | 裸 ID（UUID / Long）刻意开放，ID 类型由子类决定。仅当跨聚合引用、Money 等需要领域语义时才就地封装；框架不提供基类，how-to 篇提供复制粘贴示例 |
 | 脏检查 / 变更追踪 (Unit of Work) | JPA/Hibernate、Axon Framework | 采用全量 UPDATE 策略（XML 逐列枚举），本框架场景下脏检查收益极低且增加复杂度 |
-| 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影（绕过 domain），分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
-| 分页参数默认值注入（@DefaultValue / Integer 缺省回填） | Spring Data Web、多数 REST 脚手架惯例 | 不采纳（2026-09 立法定案，CC-9/RC-3/OR-6）：**逼迫调用方显式传参、拒不兜底**——静默补默认会把漏参错误伪装成「查第 1 页」的成功请求；项目主代码品味：接口不替调用方猜参数。现行行为：缺参原始绑定 0 → @Min(1) 拒绝 → 400 |
+| 仓储泛型分页方法 | COLA、多数 MyBatis-Plus 脚手架 | 读侧已改为 application 层 `XxxQueryRepository` 直接 PO → 读 DTO 投影，绕过 domain；分页不在 Domain 层 Repository 接口暴露（属读侧 CQRS Query） |
+| 分页参数默认值注入（@DefaultValue / Integer 缺省回填） | Spring Data Web、多数 REST 脚手架惯例 | 不采纳。2026-09 立法定案，条款 CC-9/RC-3/OR-6。**逼迫调用方显式传参、拒不兜底**：静默补默认会把漏参错误伪装成"查第 1 页"的成功请求。项目主代码品味：接口不替调用方猜参数。现行行为：缺参原始绑定 0 → @Min(1) 拒绝 → 400 |
 
 ### CQRS 与事件架构
 
@@ -60,8 +60,8 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| CQRS (Greg Young) | Command / Query 双通道分离；写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 同居契约层，框架级分页 |
-| 标记接口定型体系 | 空标记接口 + ArchUnit 锚点：RestAdapter / ScheduledAdapter / ApplicationDTO / QueryRepository 各定型一层角色（REST 入口 / 定时任务入口 / 应用层内部视图 / 读端口），供架构规则按类型锚点识别与约束（非包名猜测） |
+| CQRS (Greg Young) | Command / Query 双通道分离。写侧走聚合根，读侧绕过聚合根；PageableQuery + PageResult 同居契约层，框架级分页 |
+| 标记接口定型体系 | 空标记接口 + ArchUnit 锚点：RestAdapter / ScheduledAdapter / ApplicationDTO / QueryRepository 各定型一层角色，即 REST 入口、定时任务入口、应用层内部视图、读端口。供架构规则按类型锚点识别与约束，而非按包名猜测 |
 | Saga / Process Manager | 无主长流程引入独立 Saga 服务，不在业务服务内塞入跨服务编排 |
 
 **未采纳：**
@@ -69,9 +69,9 @@
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
 | Mediator / Dispatcher (MediatR) | MediatR (.NET)、Spring Modulith、COLA ExtensionExecutor | Handler 数量少时直接注入更简单透明；引入 Mediator 增加间接层但无实际收益 |
-| Event Sourcing | Axon Framework、EventStoreDB、Greg Young | 当前业务无审计回放 / 时间旅行需求；CRUD + 乐观锁已满足 |
+| Event Sourcing | Axon Framework、EventStoreDB、Greg Young | 当前业务无审计回放、时间旅行需求；CRUD + 乐观锁已满足 |
 | 读模型投影 / 物化视图 | Greg Young CQRS、EventStoreDB、Axon | CQRS 读侧直接通过 Repository 投影 DTO，数据量未达需要物化视图的规模 |
-| Change Data Capture (CDC) | Debezium、Canal、Maxwell | 无事件溯源 / 实时同步需求，不引入额外中间件 |
+| Change Data Capture (CDC) | Debezium、Canal、Maxwell | 无事件溯源、实时同步需求，不引入额外中间件 |
 | 事件存储 (Event Store) | EventStoreDB、Axon Server | 非 Event Sourcing 架构，无事件持久化重放需求 |
 | Application Service 拆分 Command/Query 两个类 | 部分 CQRS 严格实践 | 一个聚合一个 AppService 已足够内聚；拆分增加类数量无实际收益 |
 
@@ -82,10 +82,10 @@
 | 模式 | 本项目采纳要素 |
 |------|--------|
 | Anti-Corruption Layer (Evans DDD) | Gateway 实现内部将外部 SDK 模型翻译为领域语言，防止外部概念污染 Domain |
-| Strategy Pattern (GoF) | Domain Policy——isApplicable + 业务方法；三种形态（互斥 / 叠加 / 精准路由）；OCP |
+| Strategy Pattern (GoF) | Domain Policy：isApplicable + 业务方法；三种形态（互斥 / 叠加 / 精准路由）；满足 OCP |
 | Facade Pattern (GoF) | adapter/rest 纯透传 AppService，不含业务逻辑、不含转换 |
 | Presenter / ViewModel (MVP 变体) | Handler 返回 DTO（内部视图），AppService 通过 Presenter 呈现为 CO（外部安全视图） |
-| Contract-First / API-First | contract 模块定义完整 REST 契约（Controller 契约接口 + CQE + CO + HTTP 映射注解 + 文档注解）、零实现；消费方仅依赖 contract jar |
+| Contract-First / API-First | contract 模块定义完整 REST 契约：Controller 契约接口 + CQE + CO + HTTP 映射注解 + 文档注解，零实现。消费方仅依赖 contract jar |
 
 ### SOLID 与工程原则
 
@@ -94,7 +94,7 @@
 | 依赖倒置 (DIP) | Domain 定义 Repository / Portal 接口，Infrastructure 实现；Application 只依赖 Domain 接口 |
 | 单一职责 (SRP) | Handler 与 CQE 1:1；一个聚合一个 AppService；Policy 一条规则一个类 |
 | 开闭原则 (OCP) | Policy 新增规则只需加新类，不改旧代码；Handler 新增用例不影响已有 Handler |
-| 关注点分离 | DTO（内部）vs CO（外部）强制分离；Assembler vs Presenter 两层转换 |
+| 关注点分离 | DTO（内部）与 CO（外部）强制分离；Assembler 与 Presenter 两层转换 |
 | 最小知识 / 迪米特法则 | adapter 不认识 Handler / Domain；Handler 不认识 Mapper / PO；消费方只看到 contract |
 | 显式依赖 / 无隐式路由 | 无 Bus/Mediator；依赖可见、Ctrl+Click 可达 |
 
@@ -104,16 +104,16 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| Resilience4j（熔断） | common-cloud 以 **optional** 提供 `spring-cloud-starter-circuitbreaker-resilience4j`（消费方按需显式声明），规则经 `resilience4j.*` 配置；采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
+| Resilience4j（熔断） | common-cloud 以 **optional** 提供 `spring-cloud-starter-circuitbreaker-resilience4j`，消费方按需显式声明；规则经 `resilience4j.*` 配置。采用 circuitbreaker-resilience4j，**不引入 Sentinel** |
 
 **未采纳：**
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| Sentinel（熔断/降级） | Spring Cloud Alibaba | 功能与 Resilience4j 重叠；Sentinel 控制台 + 配置体系增加部署复杂度 |
+| Sentinel（熔断/降级） | Spring Cloud Alibaba | 功能与 Resilience4j 重叠；Sentinel 控制台加配置体系增加部署复杂度 |
 | 服务网格 / Sidecar (Istio / Linkerd) | CNCF 生态 | 当前部署规模不需要 Mesh；Higress 网关已提供流量治理能力 |
 | 灰度发布 / 流量染色 SDK | Spring Cloud Alibaba | 由 Higress 网关层路由规则实现，不需要 SDK 级支持 |
-| 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装；common-cloud 仅以 **optional** 提供 nacos-config starter（消费方按需显式声明），不做强传 |
+| 配置中心封装 (Nacos Config Starter) | Spring Cloud Alibaba | 各服务已直接使用 `spring.config.import=nacos:` 按需接入，无需框架封装。common-cloud 仅以 **optional** 提供 nacos-config starter，消费方按需显式声明，不做强传 |
 | 链路追踪 SDK (SkyWalking / Zipkin) | Spring Cloud Sleuth、SkyWalking | 由 OTel Java Agent 零侵入方式覆盖，不在代码中引入 SDK |
 | API 版本管理框架 | Spring Boot、API 网关插件 | REST 路径由 Spring MVC 显式声明，天然支持版本（`/v1/orders`），无需框架级抽象 |
 | 幂等性框架 | 各类幂等 starter、分布式锁方案 | 幂等逻辑与业务强相关（唯一键、状态机、Token），通用抽象反而增加理解成本 |
@@ -125,10 +125,10 @@
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
-| JWT 签发 / Token 刷新套件（Keycloak、Spring Authorization Server） | Spring Security OAuth2、Keycloak | 服务下沉为 OAuth2 资源服务器**自验 JWT**（零信任，`DelegatingJwtDecoder` 按 `alg` 分发），Higress 网关层仍可做粗筛（PEP）；签发 / 刷新 / 登出归独立认证服务（IdP），服务侧不提供签发能力，本框架不内置登录套件 |
+| JWT 签发 / Token 刷新套件（Keycloak、Spring Authorization Server） | Spring Security OAuth2、Keycloak | 服务下沉为 OAuth2 资源服务器**自验 JWT**，零信任：`DelegatingJwtDecoder` 按 `alg` 分发。Higress 网关层仍可做粗筛（PEP）。签发、刷新、登出归独立认证服务（IdP），服务侧不提供签发能力，本框架不内置登录套件 |
 | URL 级鉴权 FilterChain | Spring Security 官方 | 鉴权决策收口在网关；服务层仅提供 permit-all 边界链（common-security），方法级用 `@PreAuthorize` |
-| RBAC 权限模型（数据库存储） | Spring Security、Apache Shiro | 角色/权限管理属于业务域，各服务按需实现；框架只提供身份原语——principal 为原生 `Jwt`、claims 按名字自取，不投影固定身份结构 |
-| OAuth2 / SSO 登录流程 | Spring Authorization Server、Keycloak | 登录由独立认证服务 + 网关处理，业务微服务不参与登录流程 |
+| RBAC 权限模型（数据库存储） | Spring Security、Apache Shiro | 角色/权限管理属于业务域，各服务按需实现。框架只提供身份原语：principal 为原生 `Jwt`，claims 按名字自取，不投影固定身份结构 |
+| OAuth2 / SSO 登录流程 | Spring Authorization Server、Keycloak | 登录由独立认证服务加网关处理，业务微服务不参与登录流程 |
 | 数据权限（行级过滤） | MyBatis-Plus DataPermissionInterceptor | 数据权限与业务模型强耦合，由业务层 SQL 条件自行实现 |
 
 ### 测试与工程
@@ -137,17 +137,17 @@
 
 | 模式 | 本项目采纳要素 |
 |------|--------|
-| 注解属性存在级执法（R11 严格化，2026-09，「修码就法」无案裁决——见 OL/WC 卷生效登记） | 法卷（BP-10/WC-2）承诺 `@Transactional(rollbackFor = Exception.class)` 而 Spring 默认回滚规则不覆盖受检异常——裸标注解＝半途提交缝；红线升级为「注解 ∧ 属性显式存在」双查，严格度定档**存在性、不判值**（`Throwable.class` 等价更严变体放行）；配四锁负证明（裸标/漏标必咬、显式必放、非主语不咬）。旧「只查存在性」缺口账 A 就此销账 → [architecture-rules.md](architecture-rules.md)「装配位置块」节 |
+| 注解属性存在级执法（R11 严格化） | 2026-09 "修码就法"无案裁决，见 OL/WC 卷生效登记。法卷 BP-10/WC-2 承诺 `@Transactional(rollbackFor = Exception.class)`，而 Spring 默认回滚规则不覆盖受检异常：裸标注解会留下半途提交缝。红线升级为「注解存在 ∧ 属性显式存在」双查；严格度定档为**存在性、不判值**，`Throwable.class` 等等价更严的写法放行。配四锁负证明：裸标必咬、漏标必咬、显式必放、非主语不咬。旧"只查存在性"的缺口账 A 就此销账 → [architecture-rules.md](architecture-rules.md)「装配位置块」节 |
 
 **未采纳：**
 
 | 模式 | 常见出处 | 不采纳原因 |
 |------|---------|----------|
 | Testcontainers | Spring Boot 官方推荐 | 各服务数据库/中间件组合不同，由业务项目自行引入 |
-| 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 东西向消费方依赖同一 contract jar（纯 Java 强类型契约），编译期即可发现契约不兼容 |
+| 契约测试 (Spring Cloud Contract / Pact) | Spring Cloud、Pact Foundation | 东西向消费方依赖同一 contract jar，是纯 Java 强类型契约，编译期即可发现契约不兼容 |
 | 测试数据工厂 (Fixture Builder) | Test Data Builder 模式、Instancio | 领域对象构造与业务强相关，通用工厂反而增加维护成本 |
 | 性能/压力测试工具 | JMeter、k6、Gatling | 属于 CI/CD 流水线职责，不纳入代码仓库依赖 |
-| H2 内存库（任何轨的测试基座） | Spring 测试惯例、多数脚手架默认 | 不采纳（2026-09 全仓退役，历元旧案，TC-1）：兼容模式永远隔一层方言，「H2 量不到真东西」，且兼容库的脚本习惯会反向侵蚀产库设计——测试基座唯真 PG（sample 轨 + 框架试验场轨，双库隔离 TC-9） |
+| H2 内存库（任何轨的测试基座） | Spring 测试惯例、多数脚手架默认 | 不采纳。2026-09 全仓退役（历元旧案），条款 TC-1。兼容模式永远隔一层方言，"H2 量不到真东西"；兼容库的脚本习惯还会反向侵蚀产库设计。测试基座唯真 PG：sample 轨加框架试验场轨，双库隔离（TC-9） |
 
 ### 框架与工具链
 
@@ -161,9 +161,9 @@
 | PG TypeHandler 自动注册 | PgTypeHandlerAutoConfiguration 启动时批量注册，无需配置 type-handlers-package；@MappedTypes 自动路由 |
 | 模式匹配 switch | 状态转换守卫使用 JDK 21 穷尽性 switch，新增枚举值时编译器强制处理 |
 | 时间类型约定 | 全框架统一 `OffsetDateTime`，唯一时间源 = 框架注入 `Clock`；`timestamptz` 写入方偏移被丢弃、读回恒 `+00:00` |
-| PG 原生形状与 schema 命名（2026-09 定案） | 表形状跟终库不跟测试工具：uuidv7 主键（DB 默认仅兜底、应用侧铸造传值覆盖）、timestamptz、全词蛇形审计列、jsonb 半结构化；聚合边界=schema 边界、领域词单数、保留字冲突升格行业 UB 术语不逃逸——论证 → [infrastructure.md](infrastructure.md)「为何 PG 原生形状与 schema 命名法」 |
-| sealed 类型（框架适用性决策） | **不施加于框架扩展点**：`AggregateRoot` / `Entity` / `ValueObject` / `Repository` / `Policy` / `Portal` / `DomainService` 是业务扩展点，sealed 会锁死业务继承；框架内唯一封闭层级 `PgArrayType` 已是 enum。sealed / pattern-matching switch 留给**业务侧**：状态转换守卫在聚合根内使用 JDK 21 穷尽性 switch（框架无 enum-switch 场景，不强制） |
-| swagger-annotations | REST 面文档注解（`@Operation` / `@Tag` / `@Schema` 纯注解 jar，零运行时零端点），契约层声明语义，配合 Apifox IDE 插件识别 |
+| PG 原生形状与 schema 命名 | 2026-09 定案。表形状跟终库，不跟测试工具：uuidv7 主键，DB 默认值仅兜底、应用侧铸造传值覆盖；timestamptz；全词蛇形审计列；jsonb 半结构化。聚合边界=schema 边界；领域词用单数；保留字冲突时升格为行业 UB 术语，不逃逸。论证 → [infrastructure.md](infrastructure.md)「为何 PG 原生形状与 schema 命名法」 |
+| sealed 类型（框架适用性决策） | **不施加于框架扩展点**：`AggregateRoot` / `Entity` / `ValueObject` / `Repository` / `Policy` / `Portal` / `DomainService` 是业务扩展点，sealed 会锁死业务继承。框架内唯一封闭层级 `PgArrayType` 已是 enum。sealed 与 pattern-matching switch 留给**业务侧**：状态转换守卫在聚合根内使用 JDK 21 穷尽性 switch；框架无 enum-switch 场景，不强制 |
+| swagger-annotations | REST 面文档注解：`@Operation` / `@Tag` / `@Schema`，纯注解 jar，零运行时零端点。契约层声明语义，配合 Apifox IDE 插件识别 |
 
 **未采纳：**
 
@@ -172,9 +172,9 @@
 | Axon Framework | AxonIQ | 全套 Event Sourcing + CQRS 框架，过重；本项目只需轻量 CQRS 分离 |
 | jMolecules | xMolecules 项目 | DDD 注解库（@AggregateRoot、@Repository），本项目用 common-ddd 构建块替代 |
 | Spring Modulith | Spring 官方 | 模块化单体框架，本项目已是微服务架构，无需模块级事件/验证 |
-| MapStruct（代码生成映射） | 多数 CRUD 脚手架 | 未采纳（曾用后移除，旧案定案）：AI 辅助开发下手写模板代码成本归零，而生成器的认知负担（注解处理链、生成代码不可见、Lombok 桥接、@MapperScan 误扫）仍在；Converter/Assembler/Presenter 统一纯手写显式映射，富领域模型走 reconstitute，完整性由往返测试守护 |
-| MyBatis-Plus（ORM 增强框架） | 国内 MyBatis 生态主流增强库 | 未采纳（2026-09 移除，旧案）：Wrapper 动态生成 SQL + 拦截器织入使「真正执行的 SQL 不在代码库里」，与全链路可见性目标冲突；乐观锁 / 逻辑删除 / 审计填充 / 分页全部由每聚合手写 XML 的 SQL 文本承担。注：baomidou 系中独立于 ORM 增强的 dynamic-datasource 经一手调研证实与 MyBatis-Plus 零耦合，仍作消费方多数据源 opt-in 方案（见 knowledge/docs/explanation/infrastructure.md） |
-| Lombok @Data 用于领域模型 | 多数业务项目 | 充血模型禁止暴露 setter；@Data 生成 equals/hashCode 与 Entity ID 判等冲突 |
+| MapStruct（代码生成映射） | 多数 CRUD 脚手架 | 不采纳，曾用后移除（旧案定案）。AI 辅助开发下手写模板代码成本归零，生成器的认知负担却仍在：注解处理链、生成代码不可见、Lombok 桥接、@MapperScan 误扫。Converter/Assembler/Presenter 统一纯手写显式映射；富领域模型走 reconstitute；完整性由往返测试守护 |
+| MyBatis-Plus（ORM 增强框架） | 国内 MyBatis 生态主流增强库 | 不采纳，2026-09 移除（旧案）。Wrapper 动态生成 SQL 加拦截器织入，使"真正执行的 SQL 不在代码库里"，与全链路可见性目标冲突。乐观锁、逻辑删除、审计填充、分页全部由每聚合手写 XML 的 SQL 文本承担。另注：baomidou 系中独立于 ORM 增强的 dynamic-datasource，经一手调研证实与 MyBatis-Plus 零耦合，仍作消费方多数据源 opt-in 方案（见 knowledge/docs/explanation/infrastructure.md） |
+| Lombok @Data 用于领域模型 | 多数业务项目 | 充血模型禁止暴露 setter；@Data 生成的 equals/hashCode 与 Entity ID 判等冲突 |
 
 ### 知识体系（自指）
 
@@ -182,11 +182,11 @@
 
 | 模式 / 制度 | 本项目采纳要素 |
 |------|--------|
-| 两类件分家 + 论证沉淀分层 + 判例归卷（知识系统自指裁决，2026-09，论证沉淀案立、判例归卷案成） | 同一决策事实按时间属性两分：立法过程与裁决事件（判决快照＋Confirmation 收据＋supersede 宣告）归案卷（四件，specify §裁决记录为裁决唯一居所，封存）、沉淀道理的现行版归 `docs/explanation/`（活的地图，⑨⁺ 强制复写 + 篇脚回指案卷快照）；案卷↔解读论证重叠是源流非双写——全文 → [knowledge-system.md](knowledge-system.md) |
-| 案卷四段制（specify → plan → tasks → implement，2026-09，四段案卷案） | 过程件内部一件一身份：Specify 定做什么/验收（AC 账）、Plan 定怎么做+改哪些法（技术 P-x + 修卷 delta 条文唯一居所）、Tasks 纯清单（条内零参数指回 P-x）、Implement 记做了多少/凭什么是（勾验/AC→证据/源回填/漂移/收官闸）；批准门 = Specify 门 → Plan 门，**每案两停不论大小——法面刚性、出口在对话**（豁免只出自会话明示 → 案卷 2026-09-sdd-four-stage §裁决记录）；采证谱系 = Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）合流，命名取 Spec Kit 避与 delta `### Requirement:` 撞名——全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
-| 卷宗清册制（到期归零，2026-09 清册案立、判例归卷案缩面） | 两侧 archive 案卷袋 = 可清册存储（`decisions/` 区已随判例归卷案废并入卷）：发布节点经清册 bill **彻底抹除**（本体整袋删 + 账行同裁 + 活面标识符净空，行灭理存）；前置自足判据=每案四栏因果（立因/取舍/被拒方案及拒因/生效边界）全文先住解读架，再核表随 bill 递交缺案不批；编号制已废、清册只重启案数；法不考古（git 历史非知识依赖）；仪式产物不豁免于仪式——全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
-| 规则集论证载体分工（ArchUnit 守护，案卷 2026-09-archunit-rule-doc §裁决记录） | 一行三判：论证现行版 canonical 住解读专论、代码 javadoc 只携挂载最小契约（守护/怎么判/挂载/空转四栏）、R 编号稳定性等规范行上收法卷 TR 系（法卷外不留裸法）——全文 → [architecture-rules.md](architecture-rules.md) |
-| 宽严双份与法典化三部曲（宽严双份，2026-09） | 规范内容两份表达而权威唯一：法卷=严格件（条款+取证+形状）、docs=宽松件（判据+指针），冲突法卷赢；判据一句话：**这句话能机械化执行吗**；所治之病——应然句寄居地图架时，规范的「保证」二字会被地图守则的被动跟随溶剂掉（代码漂移时轮不到文档说不）；三步 = api 用法节入典（8 模块法卷）→ how-to 降设计卡 → 统一用法形状归卷全仓唯一样本——全文 → [knowledge-system.md](knowledge-system.md) |
+| 两类件分家、论证沉淀分层、判例归卷 | 知识系统自指裁决，2026-09；论证沉淀案立、判例归卷案成。同一决策事实按时间属性两分：立法过程与裁决事件（判决快照、Confirmation 收据、supersede 宣告）归案卷，四件案卷，specify §裁决记录是裁决唯一居所，封存后不动。沉淀道理的现行版归 `docs/explanation/`，是活的地图：⑨⁺ 强制复写，篇脚回指案卷快照。案卷与解读的论证重叠是源流关系，不是双写。全文 → [knowledge-system.md](knowledge-system.md) |
+| 案卷四段制（specify → plan → tasks → implement） | 2026-09 四段案卷案。过程件内部一件一身份：Specify 定做什么与验收（AC 账）；Plan 定怎么做与改哪些法，技术裁量 P-x 加修卷 delta，条文唯一居所；Tasks 纯清单，条内零参数、指回 P-x；Implement 记做了多少、凭什么是，即勾验、AC→证据、源回填、漂移、收官闸。批准门为 Specify 门 → Plan 门，**每案两停、不论大小**：法面刚性、出口在对话，豁免只出自会话明示 → 案卷 2026-09-sdd-four-stage §裁决记录。采证谱系是 Kiro（Requirements/Design/Tasks）与 Spec Kit（specify/plan/tasks/implement）的合流；命名取 Spec Kit，避开与 delta `### Requirement:` 撞名。全文 → [knowledge-system.md](knowledge-system.md)「过程件内部为什么再分四段」节 |
+| 卷宗清册制（到期归零） | 2026-09 清册案立、判例归卷案缩面。两侧 archive 案卷袋是可清册存储，不是永久档案馆（`decisions/` 区已废，并入案卷）。发布节点经清册 bill **彻底抹除**：本体整袋删、账行同裁、活面标识符净空；快照随册灭，论证留下。前置门槛是自足判据：每案四栏因果（立因、取舍、被拒方案及拒因、生效边界）先全文住进解读架，再核表随 bill 递交，缺案不批。旧编号制已废，清册只重启案数。不拿 git 历史当知识依赖。执行清册的 bill 自身也到期归零：仪式产物不豁免于仪式。全文 → [knowledge-system.md](knowledge-system.md)「清册制」节 |
+| 规则集论证载体分工 | ArchUnit 守护，案卷 2026-09-archunit-rule-doc §裁决记录。一行三判：论证现行版 canonical 住解读专论；代码 javadoc 只携挂载最小契约，四栏为守护、怎么判、挂载、空转；R 编号稳定性等规范行上收法卷 TR 系，法卷之外不留裸法条。全文 → [architecture-rules.md](architecture-rules.md) |
+| 宽严双份与法典化三部曲 | 2026-09。同一份规范两份表达，权威唯一：法卷是严格件，载条款、取证源、形状；docs 是宽松件，载判据与指针。冲突时法卷赢。归属判据一句话：**这句话能机械化执行吗**。所治之病：应然句寄居地图架时，规范的"保证"二字会被地图守则的被动跟随溶剂掉，代码漂移时轮不到文档说不。三步：api 用法节入典（8 模块法卷）→ how-to 降为设计卡 → 统一用法形状归卷，成全仓唯一样本。全文 → [knowledge-system.md](knowledge-system.md) |
 
 ### 书籍与文章
 
@@ -203,4 +203,4 @@
 
 ## 裁决索引（案卷先行）
 
-> 活的裁决 = `specs/current/` 法卷条文与本页/解读架现行论证；历史裁决 = `specs/archive/` 各封存案卷 specify §裁决记录（随册清册归零，**法不考古**——无总索引、无旧号映射，编号制已废故无同号歧义）。先拍新板者，必先翻此两址确认无撞案（案卷先行）。本账本仅保留理论模式与治理制度的采纳/未采纳裁决（不复述案卷——归属法）。
+> 本页只是通往法律的地图，本身不是法律：只记理论模式与治理制度的采纳/未采纳账目，不复述案卷内容，这是归属法的规定。现行裁决两处可查：`specs/current/` 法卷条文，以及本页与解读架的现行论证。历史裁决住 `specs/archive/` 各封存案卷的 specify §裁决记录，随清册归零。本仓不拿 git 历史当知识依据（法不考古），因此没有裁决总索引，也没有旧编号映射；旧编号制已废，不存在同号歧义。拍新板前必先翻这两处，确认无撞案（案卷先行）。
