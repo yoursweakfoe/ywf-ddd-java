@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe.application</groupId>
+        <artifactId>sample-service</artifactId>
+        <version>0.2.0</version>
+    </parent>
+
+    <artifactId>sample-service-server</artifactId>
+    <name>sample-service-server</name>
+    <description>示例服务实现 —— Spring Boot 应用（adapter + application + domain + infrastructure）</description>
+
+    <dependencies>
+        <!-- 公开契约（Service 接口 + Command/Query + CO） -->
+        <dependency>
+            <groupId>com.yoursweakfoe.application</groupId>
+            <artifactId>sample-service-contract</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- DDD 框架（领域模型 + MyBatis 持久化） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-ddd</artifactId>
+        </dependency>
+        <!-- 统一异常体系（Domain 层直接使用 BusinessException，显式声明避免仅依赖传递） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-exception</artifactId>
+        </dependency>
+        <!-- 可观测性（Actuator + Prometheus） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-observability</artifactId>
+        </dependency>
+        <!-- REST 面：Spring MVC + 内嵌 Tomcat（对外端点经 Higress 网关入口） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <!-- Jackson 3（显式声明：OrderConverter / OrderQueryRepositoryImpl 主代码直接使用 tools.jackson.*，
+             此前仅靠传递依赖编译，严格 classpath 下会失败；版本由 Boot BOM 管理） -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- PG 生态（opt-in）：common-pg 自动注册 UUID/JSONB 等 TypeHandler（历元旧案），
+             pgjdbc 驱动经其 compile 依赖传递入 runtime classpath。
+             2026-09 镜像案：test profile 直连真 PG 测试库，H2 依赖随 tc-9 裁决退役 -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-pg</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 安全上下文（测试 SecurityUtil / AuthConstants） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-security</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 测试（JUnit 5 + Mockito + AssertJ + ArchUnit） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <!-- Mapper XML 与 Java 源码同目录，需额外扫描 -->
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

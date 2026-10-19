@@ -1,0 +1,117 @@
+package com.yoursweakfoe.sampleapplication.sampleservice.domain.product.model;
+
+import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
+import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.product.id.ProductId;
+import lombok.Getter;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.Map;
+
+/**
+ * 商品聚合根 —— 管理商品基本信息、单价和库存。
+ *
+ * <p>库存扣减/回补通过行为方法完成，内聚业务校验。
+ * 乐观锁由持久化层手写 SQL 的版本条件保护，领域层无需感知。
+ *
+ * <p>身份槽实参为专属币种 {@link ProductId}（法卷锚 BP-13，案卷 2026-09-typed-identifier）。
+ * 身份铸造收口于 {@link ProductFactory}（应用侧 UUIDv7，创建即合法）；
+ * 业务构造器包私有，「谁能 new 一个商品」由包结构在编译期锁死。
+ */
+public class Product extends AggregateRoot<ProductId> {
+
+    // region 字段与构造器
+    private ProductId id;
+    @Getter
+    private String name;
+    /** 商品单价（下单时订单项单价的唯一来源） */
+    @Getter
+    private BigDecimal price;
+    @Getter
+    private int stock;
+    @Getter
+    private OffsetDateTime createdAt;
+    @Getter
+    private OffsetDateTime updatedAt;
+    @Getter
+    private Long version;
+
+    /** 业务构造器（创建新商品）—— 包私有：创建路径收口于 {@link ProductFactory} */
+    Product(ProductId id, String name, BigDecimal price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    /** 重建构造器（持久化层 Converter 使用，跳过校验） */
+    public static Product reconstitute(ProductId id, String name, BigDecimal price, int stock,
+                                       OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                                       Long version) {
+        Product product = new Product(id, name, price, stock);
+        product.createdAt = createdAt;
+        product.updatedAt = updatedAt;
+        product.version = version;
+        return product;
+    }
+
+    @Override
+    public ProductId getId() {
+        return id;
+    }
+
+    // endregion
+
+    // region 行为方法
+
+    /**
+     * 扣减库存。
+     *
+     * @param quantity 扣减数量
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 库存不足时
+     */
+    public void deductStock(int quantity) {
+        if (quantity <= 0) {
+            throw new BusinessException("product:err.quantityMustBePositive");
+        }
+        if (stock < quantity) {
+            // 异常载荷维持原生值承载（错误消息面向日志/响应，币种不入）
+            throw new BusinessException("product:err.insufficientStock",
+                    Map.of("productId", id.value(), "required", quantity, "available", stock));
+        }
+        this.stock -= quantity;
+    }
+
+    /**
+     * 回补库存。
+     *
+     * @param quantity 回补数量
+     */
+    public void restoreStock(int quantity) {
+        if (quantity <= 0) {
+            throw new BusinessException("product:err.quantityMustBePositive");
+        }
+        this.stock += quantity;
+    }
+    // endregion
+
+    // region 不变量校验
+
+    @Override
+    public void validate() {
+        if (name == null) {
+            throw new BusinessException("product:err.nameRequired");
+        }
+        if (price == null) {
+            throw new BusinessException("product:err.priceRequired");
+        }
+        if (price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("product:err.priceNegative");
+        }
+        if (stock < 0) {
+            throw new BusinessException("product:err.stockNegative");
+        }
+    }
+    // endregion
+}

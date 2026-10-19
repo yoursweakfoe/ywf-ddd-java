@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe</groupId>
+        <artifactId>ywf-ddd-common</artifactId>
+        <version>0.2.0</version>
+    </parent>
+
+    <artifactId>common-ddd</artifactId>
+    <description>DDD 框架 - 领域模型、CQRS 契约、MyBatis 仓储实现（手写 XML）、乐观锁</description>
+
+    <dependencies>
+        <!-- CQRS 契约标记接口（Command / Query / CO / IntegrationEvent） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-contract</artifactId>
+        </dependency>
+        <!-- 统一异常体系（BusinessException） -->
+        <dependency>
+            <groupId>com.yoursweakfoe</groupId>
+            <artifactId>common-exception</artifactId>
+        </dependency>
+
+        <!-- ========== 领域层 ========== -->
+
+        <!-- JUG（java-uuid-generator）：聚合身份铸造的<b>命运依赖</b>（定型装配戒律②：已被本包代码
+             封装——domain/model/AggregateIds 为全系统 UUIDv7 铸造唯一入口，消费方经该公开 API
+             使用、不裸 import com.fasterxml.uuid；戒律登记见 .agents/rules/04「Common 模块约束」）。
+             版本经父 pom dependencyManagement 统一管理 -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+
+        <!-- ========== 基础设施层 ========== -->
+        <!-- MyBatis（纯 MyBatis + 手写 XML SQL；starter 传递 mybatis / mybatis-spring / spring-boot-starter-jdbc） -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>

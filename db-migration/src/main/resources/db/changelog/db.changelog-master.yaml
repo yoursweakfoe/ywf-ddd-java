@@ -1,0 +1,11 @@
+# ============================================================================
+# Liquibase master changelog —— 结构薄壳
+#
+# 存在理由：纯 SQL formatted 格式不具备 include/includeAll 聚合能力（Liquibase
+# 格式限制），唯一一处非 SQL 文件只能由此壳承担目录聚合；本壳零 DDL 内容。
+# 正文合同：所有 changeset 一律住 <库名>/changes/*.sql（纯 SQL，逐条可审阅）。
+# ============================================================================
+databaseChangeLog:
+  - includeAll:
+      path: ddd_sample_application/changes/
+      relativeToChangelogFile: true

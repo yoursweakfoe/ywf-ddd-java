@@ -1,0 +1,60 @@
+# ============================================================================
+# db-migration 应用配置
+#
+# 设计原则（与全仓纪律同构）：
+#   - 数据源零默认值：漏配即启动失败（fail-fast），杜绝静默套弱口令默认值；
+#     本地开发默认值住 application-dev.yml、生产收紧住 application-prod.yml，
+#     画像一律外部显式激活（本文件刻意不声明 spring.profiles.active——sample 判例）。
+#   - 一次性 Job：不起 web 容器、开完即退，退出码透传给 CI/K8s/docker。
+#   - 执行序：启动 → 账表 schema 引导（LiquibaseSchemaBootstrapConfig，幂等
+#     CREATE SCHEMA + 显式 dependsOn，实证 Boot 4.1 的 spring.sql.init 不先于
+#     Liquibase、亦无 MigrationStrategy 钩子，只能自带装配）→ Liquibase 自动
+#     update（classpath:db/changelog/）→ SchemaSnapshotRunner 取回事实现状
+#     （db/current/）→ 进程退出。
+# ============================================================================
+
+spring:
+  application:
+    name: db-migration
+  main:
+    web-application-type: none
+    banner-mode: off
+
+  # ------ 数据源（主配置一律环境变量，无默认值）------
+  datasource:
+    url: ${DB_MIGRATION_URL}
+    username: ${DB_MIGRATION_USER}
+    password: ${DB_MIGRATION_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # ------ Liquibase 自动 update ------
+  liquibase:
+    enabled: true
+    # master 只是 includeAll 结构薄壳（纯 SQL formatted 无聚合能力，Liquibase 格式限制）；
+    # 变更集正文一律 <库名>/changes/*.sql
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    # 账表（DATABASECHANGELOG / DATABASECHANGELOGLOCK）住独立 schema：工具维护表与
+    # 业务聚合 schema（sales_order/product，规范见变更集头注释）不混列。schema 本体由
+    # LiquibaseSchemaBootstrapConfig 幂等自建（SpringLiquibase 不会自动建，实测 3F000）。
+    liquibase-schema: ${DB_MIGRATION_LIQUIBASE_SCHEMA:liquibase}
+
+# ------ 事实现状快照（SchemaSnapshotRunner）------
+ywf:
+  migration:
+    snapshot:
+      # 待取回 schema 清单（逗号分隔）。业务聚合 schema（sales_order/product）与工具
+      # 账表 schema（liquibase）同属库内事实，一并取回；public 为 PG 默认系统 schema，
+      # 收录以忠实反映库现状（当前为空目录）。
+      #（旧 omate-bi-flyway 亦收录 flyway_schema_history.sql，同一语义。）
+      schemas: ${DB_MIGRATION_SNAPSHOT_SCHEMAS:sales_order,product,public,liquibase}
+      # 输出根目录：一 schema 一层子目录、一表一文件。相对路径以进程工作目录为基准，
+      # 源码目录内跑（mvn spring-boot:run / 项目根下 java -jar）默认值即正确；
+      # 打包 jar 部署到别处时须用 DB_MIGRATION_SNAPSHOT_DIR 指绝对路径。
+      output-dir: ${DB_MIGRATION_SNAPSHOT_DIR:src/main/resources/db/current/ddd_sample_application}
+
+logging:
+  level:
+    root: INFO
+  pattern:
+    # 一次性 Job：时间 | 级别 | logger | 消息即可，无 trace 语境
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger{36}] - %msg%n"

@@ -1,0 +1,31 @@
+﻿name: ywf-application
+
+services:
+  # 仅启动示例服务；PostgreSQL 18 由宿主机提供，并先经 db-migration 建形。
+  service:
+    build:
+      context: ./sample-service/sample-service-server
+      dockerfile: Dockerfile
+    container_name: service
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - OTEL_SERVICE_NAME=service
+      # 本地容器默认不向外部采集器导出：
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      # 对接 ARMS 时替换为：
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=https://<region>-arms.aliyuncs.com:8090
+      # 默认访问宿主机 PG；可通过同名环境变量覆盖到其他数据库。
+      - DB_MASTER_URL=${DB_MASTER_URL:-jdbc:postgresql://host.docker.internal:5432/ddd_sample_application?connectTimeout=10&socketTimeout=60&tcpKeepAlive=true}
+      - DB_MASTER_USER=${DB_MASTER_USER:-ywf}
+      - DB_MASTER_PASSWORD=${DB_MASTER_PASSWORD:-ywf-local-123}
+    ports:
+      - "8080:8080"    # REST 面（对外经 Higress 网关入口，东西向服务间 HTTP 直连）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # dev 的 Actuator 与业务共用 8080，覆盖镜像默认的 prod 探针。
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/actuator/health"]
+    restart: always
+    # 优雅停机窗口：docker stop 发送 SIGTERM 后等待的最大时长（需 ≥ spring.lifecycle.timeout-per-shutdown-phase）
+    stop_grace_period: 40s

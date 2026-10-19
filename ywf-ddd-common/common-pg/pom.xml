@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe</groupId>
+        <artifactId>ywf-ddd-common</artifactId>
+        <version>0.2.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>common-pg</artifactId>
+    <description>PostgreSQL TypeHandler 扩展 - UUID/JSONB/数组类型处理器（opt-in，使用 PG 时引入）</description>
+
+    <dependencies>
+        <!-- MyBatis 基础设施（TypeHandler 继承 BaseTypeHandler；ConfigurationCustomizer 来自 mybatis-spring-boot 自动装配） -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- PostgreSQL 驱动（编译期需访问 PGobject） -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Jackson 3（JsonNodeTypeHandler 需要；统一到 Spring Boot 4 基线，剔除 Jackson 2） -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>

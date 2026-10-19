@@ -1,0 +1,22 @@
+# ============================================================================
+# 本地开发画像（profile: dev）
+#
+# 激活方式（本 Job 一次性运行、无常驻容器注入形态，激活总是命令行显式传入）：
+#   mvn -B spring-boot:run "-Dspring-boot.run.profiles=dev"
+#   java -jar target/db-migration-*.jar --spring.profiles.active=dev
+# ⚠ dev 不是默认：主配置刻意不声明 spring.profiles.active（内置 :dev 默认值会让
+#   部署漏配被静默套上本地画像——判例见 sample-service-server 主配置注释），
+#   不带 profile 裸跑 = 最严格的生产形（一切连接项零默认）。
+#
+# 默认值指向 ywf-infra 实态：postgres:18 @ localhost:5432，超管 ywf
+# （基线见 ywf-infra/stages/postgres/compose.yml，口令为本地开发基线）。
+# 与主配置同一模式：同名环境变量优先，默认值只兜本地。生产/CI 走 application-prod.yml
+# + 显式注入，不使用本画像。
+# ============================================================================
+
+spring:
+  datasource:
+    # pgjdbc 超时三参数随 URL 给出（全仓规约：消费方 URL 必须自带，见 sample 主配置注释）
+    url: ${DB_MIGRATION_URL:jdbc:postgresql://localhost:5432/ddd_sample_application?connectTimeout=10&socketTimeout=60&tcpKeepAlive=true}
+    username: ${DB_MIGRATION_USER:ywf}
+    password: ${DB_MIGRATION_PASSWORD:ywf-local-123}

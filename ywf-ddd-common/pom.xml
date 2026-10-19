@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>ywf-ddd-common</artifactId>
+    <version>0.2.0</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>common-contract</module>
+        <module>common-ddd</module>
+        <module>common-pg</module>
+        <module>common-security</module>
+        <module>common-test</module>
+        <module>common-observability</module>
+        <module>common-cloud</module>
+        <module>common-exception</module>
+        <!-- 试验场（§9 三分法第三身份）：全部 common 测试集中地，不发布 -->
+        <module>common-packages-integration-test</module>
+    </modules>
+
+    <properties>
+        <!-- ========== Java / 编译器 ========== -->
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- ========== 微服务基础设施（common-cloud） ========== -->
+        <nacos-client.version>3.2.3</nacos-client.version>
+        <seata.version>2.6.0</seata.version>
+
+        <!-- ========== Spring Cloud 官方（common-cloud 消费） ========== -->
+        <!-- 2025.1.x Oakwood：兼容 Spring Boot 4.0.x / 4.1.x（2025.1.2 起支持 4.1.0） -->
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
+
+        <!-- ========== Spring Cloud Alibaba（common-cloud 消费 Nacos 集成） ========== -->
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
+
+        <!-- ========== REST API 文档标注（common-contract 消费） ========== -->
+        <swagger-annotations.version>2.2.53</swagger-annotations.version>
+
+        <!-- ========== 持久化层（common-ddd / common-pg） ========== -->
+        <!-- mybatis-spring-boot-starter 4.1.0：面向 Spring Boot 4.1.0 / mybatis 3.5.19 /
+             mybatis-spring 4.1.0（Java 17 基线，Maven Central 实证） -->
+        <mybatis-spring-boot-starter.version>4.1.0</mybatis-spring-boot-starter.version>
+        <!-- mybatis-spring 与 starter 锁步（见 dependencyManagement 显式 pin 的缘由注释） -->
+        <mybatis-spring.version>4.1.0</mybatis-spring.version>
+        <dynamic-datasource-spring-boot4-starter.version>4.5.0</dynamic-datasource-spring-boot4-starter.version>
+        <postgresql.version>42.7.13</postgresql.version>
+
+        <!-- ========== 标识生成（common-ddd 消费） ========== -->
+        <java-uuid-generator.version>5.2.0</java-uuid-generator.version>
+
+        <!-- ========== 代码生成 / 注解处理器 ========== -->
+        <lombok.version>1.18.46</lombok.version>
+
+        <!-- ========== 测试（common-test） ========== -->
+        <archunit-junit5.version>1.4.2</archunit-junit5.version>
+
+        <!-- ========== 构建插件 ========== -->
+        <dependency-check-maven.version>12.2.2</dependency-check-maven.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- Spring Cloud 官方 BOM（Feign / LoadBalancer / CircuitBreaker 版本统一管理；
+                 BOM 不传递，消费方需自行 import） -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud Alibaba BOM（仅取 Nacos 注册发现/配置中心集成；
+                 nacos-client / seata 版本由下方显式声明覆盖，不随 SCA 引入 Sentinel） -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- ==================== 内部模块（业务服务通过 BOM import 统一版本） ==================== -->
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-contract</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-ddd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-pg</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-observability</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-cloud</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-exception</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yoursweakfoe</groupId>
+                <artifactId>common-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- ==================== 微服务基础设施（精确声明，不引入整包 BOM） ==================== -->
+            <!-- Nacos 客户端：版本独立管理（覆盖 SCA BOM 的 3.1.1） -->
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-client</artifactId>
+                <version>${nacos-client.version}</version>
+            </dependency>
+
+            <!-- ==================== 分布式事务（common-cloud 消费） ==================== -->
+            <!-- Apache Seata：独立 starter + 版本独立管理（覆盖 SCA BOM 的 2.5.0）。
+                 依赖卫生集中于本 pom dependencyManagement（策略文件）；子 pom 声明处禁止
+                 exclusions——局部清单会整体覆盖 managed 清单（Maven replace 语义），
+                 卫生政策即被静默拆除（判例：dynamic-datasource 条目）。
+                 以下排除为 opt-in 路径的卫生项，仅作用于引用本 managed 条目的声明：
+                 项目不需要 fastjson（SCA BOM 激活了 seata-all 的该依赖）、
+                 项目用 HikariCP 排除 druid、不走 Dubbo RPC 排除 dubbo-filter-seata。 -->
+            <dependency>
+                <groupId>org.apache.seata</groupId>
+                <artifactId>seata-spring-boot-starter</artifactId>
+                <version>${seata.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.alibaba</groupId>
+                        <artifactId>fastjson</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.alibaba</groupId>
+                        <artifactId>druid</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.dubbo.extensions</groupId>
+                        <artifactId>dubbo-filter-seata</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- ==================== REST API 文档标注（common-contract 消费） ==================== -->
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
+
+            <!-- ==================== 持久化层（common-ddd / common-pg 消费） ==================== -->
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis-spring-boot-starter.version}</version>
+            </dependency>
+            <!-- 多数据源路由（@DS 注解切换，底层 HikariCP；独立模块，非 MyBatis 增强一部分）。
+                 供应链护栏（release-audit A1，2026-09，dependency:tree 实证后加装）：
+                 ① 排除 Oracle UCP 传递链——dynamic-datasource-spring-boot-common 硬带
+                   oracle-spring-boot-starter-ucp（Boot 3 血统、自带自动配置元数据）与
+                   ojdbc11/ucp ≈8MB 驱动，本框架及预设消费方无一使用；dependencyManagement
+                   条目上的 exclusions 会传染给以 managed 方式引用的消费方（一处装配、全员受益）。
+                 ② mybatis-spring 版本显式 pin（见下一条），终结深度仲裁轮盘。
+                 ③ 版本表态——4.5.0 为当前 Central 唯一 boot4 release；上游 SpEL 注入加固
+                   （PR #767，2026-04 合入主干）未随其发布，4.5.x 出现即升级；在此之前
+                   spring.datasource.dynamic.* 任何配置键不得接攻击者可 influence 的输入
+                   （含 ENC 密文投喂与 SpEL 解析的 @DS 键）。 -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot4-starter</artifactId>
+                <version>${dynamic-datasource-spring-boot4-starter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.database.spring</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.database.jdbc</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- mybatis-spring pin：dynamic-datasource-spring 硬传递 2.1.2（Spring 5 血统，供其
+                 Atomikos 事务工厂用），此前仅靠 mybatis starter 在依赖深度上侥幸压过（实测 4.1.0 胜出，
+                 但声明顺序/深度一变即可能降级引爆运行期 NoSuchMethodError）；dependencyManagement
+                 显式仲裁终结此赌局。版本与 mybatis-spring-boot-starter 锁步，两者必须同升。 -->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>${mybatis-spring.version}</version>
+            </dependency>
+            <!-- PostgreSQL JDBC 驱动（scope 统一为 compile：common-pg 具体 TypeHandler 编译期直接引用
+                 PGobject 类；若仅声明 runtime 会迫使子模块重复覆写 scope） -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <!-- ==================== 标识生成（common-ddd 消费） ==================== -->
+            <!-- JUG：RFC 9562 UUIDv7 生成器（FasterXML 出品，Apache-2.0，零传递依赖） -->
+            <dependency>
+                <groupId>com.fasterxml.uuid</groupId>
+                <artifactId>java-uuid-generator</artifactId>
+                <version>${java-uuid-generator.version}</version>
+            </dependency>
+
+            <!-- ==================== 代码生成 / 注解处理器 ==================== -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+
+            <!-- ==================== 测试（common-test 消费） ==================== -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit-junit5.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 所有子模块共享的依赖 -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+
+                <!-- 测试 JVM 编码钉死 UTF-8：@DisplayName 中文在 GBK 默认编码的 Windows/CI
+                     环境下报告与控制台不乱码（file.encoding JDK18+ 本就默认 UTF-8，此为跨
+                     老旧 CI agent 的兜底；若未来接入 JaCoCo 需改为 @{argLine} 追加写法） -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <argLine>-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8</argLine>
+                    </configuration>
+                </plugin>
+
+                <!-- OWASP 依赖漏洞扫描：仅生成报告，不绑定 phase、不阻止构建
+                     手动触发：mvn org.owasp:dependency-check-maven:aggregate
+                     报告输出：target/dependency-check-report.html
+                     完全本地化：禁用一切会上传依赖信息到第三方的 analyzer -->
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${dependency-check-maven.version}</version>
+                    <configuration>
+                        <!-- CVSS 阈值设为 11（实际最高 10），等同于永不 fail -->
+                        <failBuildOnCVSS>11</failBuildOnCVSS>
+                        <format>HTML</format>
+                        <skipProvidedScope>true</skipProvidedScope>
+                        <skipSystemScope>true</skipSystemScope>
+                        <skipTestScope>true</skipTestScope>
+                        <!-- 关闭所有会上传依赖信息到第三方的 analyzer -->
+                        <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+                        <centralAnalyzerEnabled>false</centralAnalyzerEnabled>
+                        <nexusAnalyzerEnabled>false</nexusAnalyzerEnabled>
+                        <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+                        <!-- NVD API Key：申请地址 https://nvd.nist.gov/developers/request-an-api-key
+                             不配置仍可运行（有速率限制），配置后加速 CVE 数据下载 -->
+                        <!-- <nvdApiKey>YOUR_API_KEY</nvdApiKey> -->
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        
+        <plugins>
+            <plugin>
+                <!-- JavaDoc 文档生成插件 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <!-- 编码设置 -->
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <charset>UTF-8</charset>
+
+                    <!-- 输出目录不再覆写：默认 ${project.build.directory}/apidocs，
+                         避免在每个模块根目录污染出 docs/ 与顶层项目文档混淆 -->
+
+                    <!-- 只包含 common 相关的包（递归包含子包） -->
+                    <subpackages>com.yoursweakfoe.common</subpackages>
+
+                    <!-- 排除测试代码 -->
+                    <excludePackageNames>*.test.*</excludePackageNames>
+
+                    <!-- 文档标题 -->
+                    <windowtitle>Common API</windowtitle>
+                    <doctitle>Common API Documentation</doctitle>
+
+                    <!-- 显示级别：protected 及以上 -->
+                    <show>protected</show>
+
+                    <!-- 不生成帮助链接 -->
+                    <nohelp>true</nohelp>
+
+                    <!-- 链接到 JDK 文档 -->
+                    <detectJavaApiLink>true</detectJavaApiLink>
+
+                    <!-- 失败时不中断构建（避免注释格式问题导致构建失败） -->
+                    <failOnError>false</failOnError>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

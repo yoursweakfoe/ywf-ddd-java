@@ -1,6 +1,0 @@
-[submodule "sample-application"]
-	path = sample-application
-	url = git@github.com:yoursweakfoe/ywf-ddd-java-sample-application.git
-[submodule "ywf-ddd-common"]
-	path = ywf-ddd-common
-	url = git@github.com:yoursweakfoe/ywf-ddd-java-ywf-ddd-common.git

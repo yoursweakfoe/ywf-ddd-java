@@ -1,147 +1,62 @@
 # ywf-ddd-java
 
-基于 DDD 战术模式的 Java 微服务基础框架 + 示例应用。  
-基本上纯AI生成，人类只提供审核下的代码品味意见。也是想测试AI辅助究竟能走到哪一步。  
-~~你将会看到 Java后端开发 在AI时代的最后一丝余晖~~
+一个以 **AI 辅助开发 DDD Java 框架**为主题的实验仓库，保留框架源码、订单与商品示例，以及约束 AI 编码行为的知识产物。
 
-## 项目背景
+## 实验结束：0.2.0 封存
 
-这是一个面向生产环境的微服务基础框架，目标是将 DDD 战术模式落地为可复用的公共模块 + 可参照的示例应用。
+**0.2.0 是本实验的最终源代码版本。实验已经结束，封存后不再继续开发、维护或提供安全更新。**
 
-技术栈深度绑定阿里巴巴生态：Dubbo 3 (Triple) 服务通信、Nacos 注册发现与配置中心、Seata 分布式事务、Higress 云原生网关，部署目标为阿里云。
+本项目**非生产就绪**。源码、测试和文档是一次探索留下的结果，不构成对可用性、技术成熟度、正确性或安全性的承诺。不要将它作为获得持续支持的业务基础设施；如需研究或修改，请自行评估、复现并承担后续维护。
 
-> **当前状态**：探索性脚手架项目，外围环境暂未备齐，未经历真实生产考验。比较适合用作结构参考和学习，暂时不推荐直接用于生产环境。
+## 探索了什么
 
-## 开发环境
+实验尝试把 DDD 的聚合、仓储、用例处理与分层约束组织成可复用的 Java 模块，并观察 AI 在源码、行为契约、架构检查和操作技能共同约束下如何工作。仓库既保存实现，也保存设计解释、约束与历史裁决，供阅读和比较；这些产物并不意味着实验已经证明某种工程方法有效。
 
-这基本上是一个 **AI Coding 含量99.999%** 的项目（纯天然AI，无人工添加，请提心吊胆食用）  
-项目主要使用 **Qoder** 作为开发工具，选择 **Qwen3.7/Qwen3.8** 模型  
-部分时间使用 **OpenCode** 作为开发工具，选择 **DeepSeek V4** 模型（仅作小范围修改）  
-AI审核使用 **Qoder** 作为开发工具，选择 **Ultimate** 模型  
-人工审核使用 **IntelliJ IDEA** 进行手动调整
+当前代码基线是 **JDK 21、Spring Boot 4.1.0、MyBatis 与 PostgreSQL 18**。持久化采用手写 XML SQL；数据库变更由独立的 Liquibase 执行器管理。
 
-## 快速开始
+- `ywf-ddd-common` 包含 8 个公共模块：`common-contract`、`common-ddd`、`common-pg`、`common-security`、`common-test`、`common-observability`、`common-cloud`、`common-exception`。另有不发布的 `common-packages-integration-test` 测试试验场；模块存在不代表相关能力已经完成生产验证。
+- `sample-application` 是订单与商品的单服务示例，展示 REST 接口、用例编排、聚合行为、库存协调及数据库读写，不是完整电商系统。
+- `db-migration` 是不进入根 Maven reactor 的独立工程，执行数据库迁移并取回 schema 快照。应用与测试都依赖预先迁移好的数据库。
+- 示例当前没有 Nacos 运行时依赖。不要把知识文档中的扩展设想理解为已接入的注册发现、事件投递或分布式系统能力。
 
-> 目前项目的测试代码全量 AI 生成，并未经过真实生产测试。真实的运行环境和示例场景仍在构建中。
+## 从哪里读起
 
-```bash
-# 克隆（含 submodule）
-git clone --recurse-submodules git@github.com:yoursweakfoe/ywf-ddd-java.git
+| 目的 | 入口 |
+|---|---|
+| 浏览说明与设计背景 | [文档索引](knowledge/docs/README.md) |
+| 尝试构建、运行与 HTTP 示例 | [快速开始](knowledge/docs/tutorials/quickstart.md) |
+| 阅读订单与商品实现 | [示例应用](sample-application/README.md) |
+| 准备运行库与测试库 | [数据库迁移说明](db-migration/README.md) |
+| 了解源码所受的行为约束 | [框架规范](knowledge/specs/README.md)、[示例业务规范](sample-application/specs/README.md) |
+| 查看 AI 开发入口与技能 | [AGENTS.md](AGENTS.md)、[.agents](.agents/README.md) |
 
-# 一键构建全项目（根聚合 pom 统一构建顺序）
-mvn clean install
-```
+现存知识文档保留了实验过程中的设计语境与扩展讨论；涉及运行方式时，以当前源码、配置及上述运行说明相互核对，不将历史讨论视为后续交付计划。
 
-## 架构概览
+## 目录
 
-```mermaid
-graph TB
-    EXT(["调用方 / MQ"])
-
-    subgraph contract["contract jar - 消费方唯一依赖"]
-        direction LR
-        SVC["Service接口 + CQE + CO + IntegrationEvent"]
-    end
-
-    subgraph server["server 部署单元"]
-        ADAPTER["adapter<br>Facade / Consumer / Scheduler<br>纯透传"]
-        APP["application<br>AppService / Handler / Presenter<br>用例编排"]
-        DOMAIN["domain<br>聚合根 / 领域事件 / Repository接口 / Portal接口<br>零框架依赖"]
-        INFRA["infrastructure<br>persistence / gateway / config<br>技术实现"]
-    end
-
-    EXT -->|"请求"| ADAPTER
-    ADAPTER -->|"透传"| APP
-    APP -->|"写侧 编排聚合根"| DOMAIN
-    APP -->|"读侧 绕过聚合投影DTO"| DOMAIN
-    INFRA -->|"实现 Repository / Portal"| DOMAIN
-    ADAPTER -.->|"实现接口"| contract
-    APP -.->|"产出 CO"| contract
-
-    style contract fill:#2d333b,stroke:#539bf5,color:#e6edf3
-    style ADAPTER fill:#2d333b,stroke:#f0883e,color:#e6edf3
-    style APP fill:#2d333b,stroke:#a371f7,color:#e6edf3
-    style DOMAIN fill:#2d333b,stroke:#3fb950,color:#e6edf3
-    style INFRA fill:#2d333b,stroke:#8b949e,color:#e6edf3
-    style EXT fill:#2d333b,stroke:#8b949e,color:#e6edf3
-```
-
-## 仓库结构
-
-```
+```text
 ywf-ddd-java/
-├── ywf-ddd-common/        # 公共基础框架（submodule → ywf-ddd-java-ywf-ddd-common）
-├── sample-application/    # 示例业务服务（submodule → ywf-ddd-java-sample-application）
-├── docs/                  # 项目级文档（架构理论 + 应用架构设计）
-├── .agents/               # AI 辅助开发规范（dotagents 约定，工具中立）
-└── AGENTS.md              # AI 代理入口文件（厂商中立标准）
+├── pom.xml                 # common 与 sample 的根构建入口
+├── ywf-ddd-common/          # 公共模块及测试试验场
+├── sample-application/      # 订单 / 商品示例与应用容器配置
+├── db-migration/            # 独立迁移工程、变更集与 schema 快照
+├── knowledge/               # 描述文档、规范、历史案卷与检查脚本
+├── .agents/                 # AI 辅助开发技能与入口说明
+└── AGENTS.md                # 代理阅读入口
 ```
 
-> 两个子项目均为 git submodule：
-> - `ywf-ddd-common/` → [ywf-ddd-java-ywf-ddd-common](https://github.com/yoursweakfoe/ywf-ddd-java-ywf-ddd-common)
-> - `sample-application/` → [ywf-ddd-java-sample-application](https://github.com/yoursweakfoe/ywf-ddd-java-sample-application)
->
-> 克隆本仓库时使用 `git clone --recurse-submodules` 以获取完整代码。
-> 外部项目可将 `ywf-ddd-java-ywf-ddd-common` 以 submodule 引入，供 AI 直接阅读框架源码。
+## 可选：复现实验
 
-## AI 辅助开发
+这些步骤用于自行研究，不是已验证的生产部署方案。需要本地 JDK 21、Maven，以及能够解析项目依赖的仓库访问环境；容器方式还需要可用的 Docker Engine / Docker Compose。
 
-本项目采用 [dotagents](https://github.com/bgreenwell/dotagents) 约定，提供工具中立的 AI 辅助开发规范：
+1. **自行准备 PostgreSQL 18**、数据库用户和连接权限。仓库的应用 Compose 不提供数据库或 Nacos。创建运行库 `ddd_sample_application` 与测试库 `ddd_sample_application_test`；本地配置默认用户/口令为 `ywf` / `ywf-local-123`，仅供隔离实验使用。
+2. 按 [db-migration 说明](db-migration/README.md) 从该目录运行迁移。通过 `DB_MIGRATION_URL` 分别连接两个库，对两库应用同一变更集；自配用户和口令时同时设置 `DB_MIGRATION_USER` / `DB_MIGRATION_PASSWORD`。示例服务的测试不会自动建表。
+3. 回到仓库根目录执行 `mvn clean install`。示例测试使用 `DB_TEST_URL` / `DB_TEST_USER` / `DB_TEST_PASSWORD` 覆盖默认连接；common 测试另用 `DB_IT_HOST` / `DB_IT_PORT` / `DB_IT_DB` / `DB_IT_USER` / `DB_IT_PASSWORD`，默认在本机 5432 自动创建 `ddd_framework_test` 并复位其中的专用 schema，需要建库权限。不要将测试配置指向业务数据。
+4. 本机运行可使用 `java -jar sample-application/sample-service/sample-service-server/target/sample-service-server-0.2.0.jar --spring.profiles.active=dev`。`dev` 默认连接本机运行库；可用 `DB_MASTER_URL` / `DB_MASTER_USER` / `DB_MASTER_PASSWORD` 覆盖。自配 JDBC URL 保留 `connectTimeout=10&socketTimeout=60&tcpKeepAlive=true`。
+5. 如使用容器，先在根目录执行 `mvn package -DskipTests` 生成 JAR，再进入 `sample-application` 执行 `docker compose up --build`。Compose 显式使用 `dev`，默认经 `host.docker.internal:5432` 连接宿主数据库；Docker Desktop 下也须确保宿主 PostgreSQL 允许来自容器的连接。非默认地址通过同名 `DB_MASTER_*` 环境变量覆盖。
 
-- **入口**：[`AGENTS.md`](AGENTS.md)（轻量路由器，厂商中立标准）
-- **规则**（`.agents/rules/`）：分层架构、编码规范、禁止清单
-- **技能**（`.agents/skills/`）：新建聚合、新增用例、新增事件、架构审查
-- **术语**：[`docs/glossary.md`](docs/glossary.md)
+服务的实验接口与健康检查入口见 [快速开始](knowledge/docs/tutorials/quickstart.md)。构建及运行还依赖本机环境、依赖仓库访问和数据库准备，不能据此推导生产可用性。
 
-任何 AI 编码工具（Cursor / Copilot / Claude Code / Qoder / Windsurf / Aider 等）均可接入。
-详见 [`.agents/README.md`](.agents/README.md) 中的工具接入指南。
+## 许可
 
-## 文档导航
-
-**公共框架（ywf-ddd-common）：**
-
-```
-ywf-ddd-common/
-├── README.md                    # 框架总览（模块结构、依赖拓扑、快速开始）
-└── docs/
-    ├── common-contract.md       # CQRS 契约标记接口
-    ├── common-ddd.md            # DDD 战术框架（核心模块）
-    ├── common-exception.md      # 统一异常体系
-    ├── common-cloud.md          # 微服务治理
-    ├── common-pg.md             # PostgreSQL 类型映射
-    ├── common-security.md       # 身份上下文
-    ├── common-observability.md  # 可观测性
-    └── common-test.md           # 测试基础设施
-```
-
-**项目级（docs/）：**
-
-```
-docs/
-├── references.md                        # 架构理论参考（采纳 / 未采纳及原因）
-└── sample-application/
-    ├── module-design/                   # 应用架构设计（分层职责、组件、规则）
-    │   ├── contract.md
-    │   ├── adapter.md
-    │   ├── application.md
-    │   ├── domain.md
-    │   └── infrastructure.md
-    ├── directory-structure/             # 目录结构参考（包结构速查）
-    │   ├── overview.md
-    │   ├── contract/contract.md
-    │   └── server/{adapter,application,domain,infrastructure}.md
-    └── cookbook/                        # 端到端代码实战（完整可编译示例）
-        ├── write-path.md
-        ├── read-path.md
-        ├── cross-aggregate.md
-        ├── event-flow.md
-        ├── policy-pattern.md
-        ├── gateway.md
-        ├── new-aggregate.md
-        ├── error-handling.md
-        ├── batch-operations.md
-        ├── scheduled-task.md
-        ├── mq-consumer.md
-        ├── distributed-transaction.md
-        └── optimistic-lock-retry.md
-```
+采用 [MIT License](LICENSE)，版权信息见许可证原文。软件按原样提供，不附带担保；使用或再分发时请保留相应版权和许可声明。

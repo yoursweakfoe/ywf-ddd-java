@@ -1,0 +1,72 @@
+# ywf-ddd-common
+
+DDD 公共基础模块，为业务项目提供领域建模、持久化基础设施、微服务治理等通用能力。
+所有模块均为 opt-in 设计，业务服务按需引入。各模块详细文档见 [knowledge/docs/reference/api/](../knowledge/docs/reference/api/)。
+
+## 模块结构
+
+```
+ywf-ddd-common/
+├── common-contract/       # CQRS 契约标记接口（Command / Query / CO / IntegrationEvent）
+├── common-ddd/            # DDD 框架（领域模型 + CQRS 契约 + MyBatis 仓储支撑，手写 XML SQL）
+├── common-exception/      # 统一异常体系（BusinessException + REST 全局异常处理）
+├── common-pg/             # PostgreSQL TypeHandler 扩展（UUID / JSONB / 数组）
+├── common-security/       # 零信任身份（JWT 资源服务器，服务自验 JWT）
+├── common-cloud/          # 微服务治理（Nacos + Seata + Feign/LB/CircuitBreaker + JWT 透传）
+├── common-observability/  # 可观测性（结构化日志 + Actuator + Prometheus）
+├── common-test/           # 测试基础设施（ArchUnit 架构守护 + Spring Boot Test）
+└── common-packages-integration-test/  # 试验场（禁令卷 §9 第三身份）：全部 common 测试集中地，
+                                       # 真 PG 基座自建自清（PgTestSupport），不发布、src/main 永空置
+```
+
+## 模块依赖拓扑
+
+```
+── 独立模块（无 common 模块 compile 依赖） ──
+
+common-contract     纯标记接口 + 注解（swagger / spring-web / jakarta-validation）
+common-exception    统一异常体系（BusinessException + REST 全局异常处理）
+common-security     零信任身份（JWT 资源服务器）
+common-observability 可观测性（Actuator + Prometheus）
+common-pg           PG TypeHandler 扩展（仅依赖 MyBatis / PG 驱动 / Jackson 3）
+
+── 编译依赖链 ──
+
+common-ddd  →  common-contract + common-exception    DDD 框架
+common-cloud →  common-security（optional）          微服务治理（东西向 JWT 透传，消费方按需显式声明）
+
+── 测试依赖（test scope） ──
+
+各 library 模块零测试栈（2026-09 集中法，法卷 TC-10）：
+common-test  ←  common-packages-integration-test（全仓 common 测试唯一居所，compile 全 common）
+```
+
+## 快速开始
+
+```bash
+cd ywf-ddd-common
+mvn clean install -DskipTests
+```
+
+业务项目引入（BOM 方式）：
+
+```xml
+<!-- 父 POM dependencyManagement -->
+<dependency>
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>ywf-ddd-common</artifactId>
+    <version>0.2.0</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+
+<!-- 子模块 dependencies（按需选择） -->
+<dependency>
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>common-ddd</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.yoursweakfoe</groupId>
+    <artifactId>common-cloud</artifactId>
+</dependency>
+```

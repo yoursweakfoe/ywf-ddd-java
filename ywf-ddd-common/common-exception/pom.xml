@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.yoursweakfoe</groupId>
+        <artifactId>ywf-ddd-common</artifactId>
+        <version>0.2.0</version>
+    </parent>
+
+    <artifactId>common-exception</artifactId>
+    <description>统一异常体系 - 业务异常定义 + REST 全局 ControllerAdvice（RFC 9457）</description>
+
+    <dependencies>
+        <!-- Boot 自动装配（@AutoConfiguration / 条件注解） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <!-- Jakarta Validation（ConstraintViolationException 处理） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- spring-web（@RestControllerAdvice / ResponseEntity；optional：非 Web 服务无需 REST 通道） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- spring-webmvc（optional：NoResourceFoundException 等 MVC 异常翻译所需，与 spring-web 同策略） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jakarta Servlet API（ControllerAdvice 读取请求 URI，运行时由 Web 容器提供） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

@@ -1,26 +1,42 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## Project purpose
 
 DDD 战术模式微服务框架。修改代码前必须理解分层约束。
 
-## Context routing
+## 三态知识地图（谁听谁的）
 
-- **每次交互前（必读）：** READ `.agents/rules/`（01-05，硬约束）
-- **项目术语不确定时：** READ `docs/glossary.md`
-- **执行结构化任务时：** USE `.agents/skills/` 中对应技能
-  - 新建聚合 → `.agents/skills/new-aggregate/SKILL.md`
-  - 新增用例 → `.agents/skills/new-usecase/SKILL.md`
-  - 新增领域事件 → `.agents/skills/new-domain-event/SKILL.md`
-  - 新增外部集成 → `.agents/skills/new-portal/SKILL.md`
-  - 新建微服务 → `.agents/skills/new-service/SKILL.md`
-- **完成编码后自查：** USE `.agents/skills/ddd-review/SKILL.md`
-- **需要设计原理时：** CONSULT `docs/sample-application/module-design/`
-- **需要完整代码模板时：** CONSULT `docs/sample-application/cookbook/`
-- **审查架构合规性时：** ADOPT `.agents/personas/ddd-architect-reviewer.md`
+| 区 | 态 | 守则一句话 |
+|---|---|---|
+| `knowledge/docs/` | 地图·描述 | 代码变了它必须跟着变，烂了修文档 |
+| `knowledge/specs/` | 法律·框架契约 | 代码违反它=修代码；改法走 `changes/`，禁止迁就代码偷改；`archive/` 在位不改、到期整册归零（清册制）；裁决快照住案卷 specify §裁决记录，同袋同灭 |
+| `.agents/` | 工作台·流程 | SOP 约束干活方式（skills only）；法律已入典——法条正文住 `knowledge/specs/current/` 法卷，本树不载法 |
+
+法律全文 = `knowledge/specs/current/patterns/meta/attribution-law.md`（事实归属法）；伞宣言 = `knowledge/README.md`。业务包契约不入伞，住镜像区 `sample-application/specs/`（框架法=knowledge/specs，业务法=sample 树内）。
+
+## Context routing（按需触发，非全量预读）
+
+- **动手改码前按层详读法条**：分层/依赖 → `禁令卷`；命名/惯例 → `编码公约卷`；禁令全表 → `禁令卷`；文档义务 → `归属法卷`；项目背景 → `根 README`
+- **新行为先立契约**：写码前在行为所属区的 `changes/<slug>/` 出四件套（specify → plan → tasks → implement；框架 → `knowledge/specs/`，示例业务 → `sample-application/specs/`；模板统一在 `knowledge/specs/changes/_template/`），完成后归档折叠回所属区 `current/`——文档同步义务只在那一刻发生
+- **执行结构化任务 USE 对应技能**（12 个，全部显式点名）：
+  - 创建：新建聚合 `new-aggregate` ｜ 新增用例 `new-usecase` ｜ 新建微服务 `new-service` ｜ 新增外部集成 `new-portal`
+  - 增量：批量写操作 `batch-operations` ｜ 定时任务 `scheduled-task` ｜ 编写测试 `new-test` ｜ 修改 common 模块 `modify-common-module`
+  - 审查：架构合规自查 `ddd-review`（编码完成必跑）｜ 生产就绪 `ops-review` ｜ 测试充分性 `test-review`
+  - 立法：起草/推进/折叠法案 `new-bill`（一切规范变更先立约，见下条）
+- **查知识（指针驱动，用到才取）**：结构速查→ 源码树直查（glob/IDE）；服务骨架组成法 → `knowledge/specs/current/patterns/building-block/aggregate-blueprint.md` §5；框架 API→ `reference/api/common-*.md`；为什么→ `explanation/`；旧裁决→ `specs/archive/` 封存案卷 §裁决记录＋`explanation/`（先查旧案再拍新板——案卷先行）；框架行为与用法规范→ `knowledge/specs/`（current/ 法卷=条款与规范形状唯一权威，docs 是人类向描述架〔how-to=操作指南〕，冲突法卷赢）、业务行为现状→ `sample-application/specs/current/`；术语→ `knowledge/docs/reference/glossary.md`；全索引→ `knowledge/docs/README.md`
+- **进入模块目录时就近读**：`ywf-ddd-common/AGENTS.md`、`sample-application/AGENTS.md`（nearest-wins）
+- **文档防腐**：交付前跑 `knowledge/scripts/check-docs.ps1`（七校验；ddd-review 末步已内置）；工具说明见 `knowledge/docs/reference/doc-guards.md`
 
 ## Core constraints (quick reference)
 
-- Domain 层零框架依赖（纯 Java + common-ddd）
-- Handler 返回 DTO，AppService 返回 CO，Adapter 纯透传
-- 异常统一 BusinessException + i18n 位点，禁止具名异常
+每次交互必须遵守的硬约束（完整法条见 `knowledge/specs/current/`）：
+
+1. 分层依赖单向：`adapter → application → domain ← infrastructure`；domain 零框架**运行时**依赖（stereotype 豁免；纯 Java + common-ddd）
+2. Handler 返回 DTO，AppService 返回 CO，Adapter 纯透传
+3. 写侧：load → 聚合行为 → save → toDTO（Handler 标 `@Transactional`）；读侧绕过聚合根投影 DTO
+4. 业务规则封装在聚合根内，Handler 不含 if-else 判断
+5. 依赖倒置：Domain 定义 Repository/Portal 接口，Infrastructure 实现；Application 永不直接引用 Mapper/PO
+6. Assembler（Domain→DTO）与 Presenter（DTO→CO）强制分离
+7. 异常统一 `BusinessException` + i18n 位点（`{aggregate}:err.{scene}`），禁止具名领域异常
+8. 时间统一 `OffsetDateTime`；虚拟线程下禁止 `synchronized`（用 `ReentrantLock`）
+9. Lombok：Domain 层禁 `@Data`（仅 `@Getter`），PO / DTO / CQE / CO 用 `@Data`

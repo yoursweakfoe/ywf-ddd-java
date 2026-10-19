@@ -1,0 +1,32 @@
+# ============================================================================
+# 开发环境配置（profile: dev）
+#
+# 激活方式：SPRING_PROFILES_ACTIVE=dev（ide-dev.env / docker-compose 已配置）
+# 与 prod 的差异：
+#   - 数据源：本文件提供本地默认值（localhost / postgres），可被同名环境变量覆盖；
+#     主配置占位符无默认值，故本地开发必须激活本 profile（或显式注入全部环境变量）
+#   - Actuator：与业务同端口，不拆分独立管理端口
+# ============================================================================
+
+spring:
+  # 单数据源本地默认值（driver-class-name 继承主配置；可被同名环境变量覆盖）。
+  # 连接 ywf-infra 起的 postgres:18（超管基线见 ywf-infra/stages/postgres/compose.yml）；
+  # 库 ddd_sample_application 由 db-migration 工程建形（库形状权威在该工程，勿手工 DDL）。
+  # pgjdbc 超时三参数随模板 URL 给出（主配置占位符处已立规：消费方 URL 必须自带）
+  datasource:
+    url: ${DB_MASTER_URL:jdbc:postgresql://localhost:5432/ddd_sample_application?connectTimeout=10&socketTimeout=60&tcpKeepAlive=true}
+    username: ${DB_MASTER_USER:ywf}
+    password: ${DB_MASTER_PASSWORD:ywf-local-123}
+
+# MyBatis Slf4jImpl 的 SQL 输出条件：mapper 所在 infrastructure 包（含其 logger 名）开 DEBUG
+# 才真正打印每条语句；仅 dev——prod 保持 INFO 防线洪（配置键见主 yml log-impl 注释）
+logging:
+  level:
+    com.yoursweakfoe.sampleapplication.sampleservice.infrastructure: DEBUG
+
+# Nacos 配置中心（二期恢复；部署多服务时启用，本地开发无需开启）
+# spring:
+#   config:
+#     import:
+#       - nacos:common.yml                          # 所有服务共享配置（DB/Redis/公共参数）
+#       - nacos:${spring.application.name}.yml      # 本服务专属配置

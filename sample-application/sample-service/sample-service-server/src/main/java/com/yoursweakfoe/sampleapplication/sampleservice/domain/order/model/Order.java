@@ -1,0 +1,217 @@
+package com.yoursweakfoe.sampleapplication.sampleservice.domain.order.model;
+
+import com.yoursweakfoe.common.ddd.domain.model.AggregateRoot;
+import com.yoursweakfoe.common.exception.type.BusinessException;
+import com.yoursweakfoe.sampleapplication.sampleservice.domain.order.id.OrderId;
+import lombok.Getter;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 订单聚合根 —— 管理订单生命周期（下单→支付→确认→发货→签收→完成，可取消）。
+ *
+ * <p>身份槽实参为专属币种 {@link OrderId}（法卷锚 BP-13，案卷 2026-09-typed-identifier）。
+ */
+public class Order extends AggregateRoot<OrderId> {
+
+    // region 字段与构造器
+    private OrderId id;
+    @Getter
+    private OrderStatus status;
+    private List<OrderItem> items;
+    @Getter
+    private BigDecimal totalAmount;
+    @Getter
+    private String customerId;
+    @Getter
+    private String trackingNumber;
+    @Getter
+    private String cancelReason;
+    @Getter
+    private OffsetDateTime createdAt;
+    @Getter
+    private OffsetDateTime updatedAt;
+    @Getter
+    private Long version;
+
+    /**
+     * 包私有业务构造器 —— 新建路径已收口至同包的 {@code OrderFactory}（创建即合法：
+     * 构造后立即 place() 完成校验）。包结构在编译期锁死「谁能 new 一个订单」。
+     */
+    Order(OrderId id, List<OrderItem> items, String customerId) {
+        this.id = id;
+        this.status = OrderStatus.PENDING;
+        this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
+        this.customerId = customerId;
+        this.totalAmount = calculateTotal();
+    }
+
+    /**
+     * 私有全参构造器 —— 惰性重建专用：直接赋值快照，
+     * 不计算派生字段、不校验（重建绝不能改历史）。
+     */
+    private Order(OrderId id, OrderStatus status, List<OrderItem> items, BigDecimal totalAmount,
+                  String customerId, String trackingNumber, String cancelReason,
+                  OffsetDateTime createdAt, OffsetDateTime updatedAt, Long version) {
+        this.id = id;
+        this.status = status;
+        this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
+        this.totalAmount = totalAmount;
+        this.customerId = customerId;
+        this.trackingNumber = trackingNumber;
+        this.cancelReason = cancelReason;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.version = version;
+    }
+
+    /**
+     * 重建构造器（持久化层 Converter 使用）—— 惰性：不触发校验。
+     * 新建请走 {@code OrderFactory.create(...)}。
+     */
+    public static Order reconstitute(OrderId id, OrderStatus status, List<OrderItem> items,
+                                     BigDecimal totalAmount, String customerId,
+                                     String trackingNumber, String cancelReason,
+                                     OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                                     Long version) {
+        return new Order(id, status, items, totalAmount, customerId,
+                trackingNumber, cancelReason, createdAt, updatedAt, version);
+    }
+
+    @Override
+    public OrderId getId() {
+        return id;
+    }
+
+    public List<OrderItem> getItems() {
+        return List.copyOf(items);
+    }
+
+    // endregion
+
+    // region 行为方法
+
+    /**
+     * 下单：校验不变量（状态保持 PENDING）。
+     */
+    public void place() {
+        validate();
+    }
+
+    /**
+     * 支付订单。
+     *
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 PENDING 时
+     */
+    public void pay() {
+        requireStatus("order:err.status.pending", OrderStatus.PENDING);
+        this.status = OrderStatus.PAID;
+    }
+
+    /**
+     * 商家确认订单。
+     *
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 PAID 时
+     */
+    public void confirm() {
+        requireStatus("order:err.status.paid", OrderStatus.PAID);
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    /**
+     * 发货。
+     *
+     * @param trackingNumber 快递单号
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 CONFIRMED 时
+     */
+    public void ship(String trackingNumber) {
+        requireStatus("order:err.status.confirmed", OrderStatus.CONFIRMED);
+        this.status = OrderStatus.SHIPPED;
+        this.trackingNumber = trackingNumber;
+    }
+
+    /**
+     * 签收。
+     *
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 SHIPPED 时
+     */
+    public void deliver() {
+        requireStatus("order:err.status.shipped", OrderStatus.SHIPPED);
+        this.status = OrderStatus.DELIVERED;
+    }
+
+    /**
+     * 完成订单。
+     *
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不是 DELIVERED 时
+     */
+    public void complete() {
+        requireStatus("order:err.status.delivered", OrderStatus.DELIVERED);
+        this.status = OrderStatus.COMPLETED;
+    }
+
+    /**
+     * 取消订单（仅允许从 PENDING 或 PAID 状态取消）。
+     *
+     * @param reason 取消原因
+     * @throws com.yoursweakfoe.common.exception.type.BusinessException 状态不允许取消时
+     */
+    public void cancel(String reason) {
+        requireStatus("order:err.status.cancellable", OrderStatus.PENDING, OrderStatus.PAID);
+        this.status = OrderStatus.CANCELLED;
+        this.cancelReason = reason;
+    }
+    // endregion
+
+    // region 不变量校验
+
+    @Override
+    public void validate() {
+        if (items == null || items.isEmpty()) {
+            throw new BusinessException("order:err.itemsEmpty");
+        }
+        if (customerId == null) {
+            throw new BusinessException("order:err.customerIdRequired");
+        }
+        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("order:err.totalMustBePositive");
+        }
+    }
+    // endregion
+
+    // region 内部方法
+
+    /**
+     * 状态转换守卫 —— 确认当前状态在允许集合内，否则拒绝转换。
+     *
+     * <p>使用 JDK 21 模式匹配 switch：新增枚举值时编译器强制要求处理（穷尽性检查）。
+     */
+    private void requireStatus(String errorKey, OrderStatus... validStatuses) {
+        boolean allowed = switch (status) {
+            case PENDING -> contains(validStatuses, OrderStatus.PENDING);
+            case PAID -> contains(validStatuses, OrderStatus.PAID);
+            case CONFIRMED -> contains(validStatuses, OrderStatus.CONFIRMED);
+            case SHIPPED -> contains(validStatuses, OrderStatus.SHIPPED);
+            case DELIVERED -> contains(validStatuses, OrderStatus.DELIVERED);
+            case COMPLETED -> contains(validStatuses, OrderStatus.COMPLETED);
+            case CANCELLED -> contains(validStatuses, OrderStatus.CANCELLED);
+        };
+        if (!allowed) {
+            throw new BusinessException(errorKey);
+        }
+    }
+
+    private static boolean contains(OrderStatus[] statuses, OrderStatus target) {
+        return List.of(statuses).contains(target);
+    }
+
+    private BigDecimal calculateTotal() {
+        return items.stream()
+                .map(OrderItem::subtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    // endregion
+}
